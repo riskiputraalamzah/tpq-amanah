@@ -152,14 +152,24 @@ const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1)
 
 const availableMonths = computed(() => {
   const months = []
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
-    months.push({
-      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-      label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`
-    })
+  const startYear = 2026
+  const startMonth = 0 // January (0-indexed)
+  
+  // Generate months from January 2026 up to current month
+  for (let year = startYear; year <= today.getFullYear(); year++) {
+    const monthStart = (year === startYear) ? startMonth : 0
+    const monthEnd = (year === today.getFullYear()) ? today.getMonth() : 11
+    
+    for (let month = monthStart; month <= monthEnd; month++) {
+      months.push({
+        value: `${year}-${String(month + 1).padStart(2, '0')}`,
+        label: `${monthNames[month]} ${year}`
+      })
+    }
   }
-  return months
+  
+  // Sort descending (newest first)
+  return months.reverse()
 })
 
 const monthlyStats = computed(() => {
