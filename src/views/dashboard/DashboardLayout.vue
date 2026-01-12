@@ -147,7 +147,7 @@
 
     <!-- Mobile Top Header Bar (Guru Only) -->
     <header v-if="isGuru" class="mobile-header">
-      <div class="mobile-header-brand">
+      <div class="mobile-header-brand" @click="router.push('/')">
         <img :src="logoUrl" alt="TPQ" class="mobile-logo" />
         <span class="mobile-title">TPQ AMANAH</span>
       </div>

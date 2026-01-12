@@ -68,6 +68,52 @@ const customStyle = computed(() => ({
 </script>
 
 <style scoped>
+/* Skeleton base styles */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e0e0e0 25%,
+    #f0f0f0 50%,
+    #e0e0e0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md, 8px);
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Text skeleton */
+.skeleton-text {
+  height: 1rem;
+}
+
+/* Title skeleton */
+.skeleton-title {
+  height: 1.5rem;
+  width: 60%;
+  margin-bottom: 0.5rem;
+}
+
+/* Avatar skeleton */
+.skeleton-avatar {
+  border-radius: 50%;
+}
+
+/* Card skeleton */
+.skeleton-card {
+  border-radius: var(--radius-lg, 12px);
+}
+
+/* Paragraph skeleton container */
 .skeleton-paragraph {
   display: flex;
   flex-direction: column;
