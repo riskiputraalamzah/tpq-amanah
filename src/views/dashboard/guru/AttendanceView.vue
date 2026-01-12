@@ -14,7 +14,14 @@
       </div>
 
       <div class="today-content">
-        <div v-if="isWeekend" class="weekend-notice">
+        <!-- Loading State -->
+        <div v-if="loading" class="loading-today">
+          <SkeletonLoader type="text" height="40px" width="60%" style="margin: 0 auto var(--space-md);" />
+          <SkeletonLoader type="text" height="60px" width="80%" style="margin: 0 auto var(--space-md);" />
+          <SkeletonLoader type="text" height="30px" width="50%" style="margin: 0 auto;" />
+        </div>
+
+        <div v-else-if="isWeekend" class="weekend-notice">
           <span class="weekend-icon">🏖️</span>
           <p>Hari ini adalah akhir pekan.<br/>Absensi hanya untuk hari Senin - Jumat.</p>
         </div>
@@ -487,7 +494,12 @@ onMounted(fetchAttendance)
 
 @media (max-width: 768px) {
   .recap-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+  
+  .recap-card.salary {
+    grid-column: 1 / -1; /* Full width - spans both columns */
   }
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'guru-layout': isGuru }">
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
       <div class="sidebar-header">
@@ -112,8 +112,8 @@
       </div>
     </aside>
 
-    <!-- Mobile Sidebar Toggle -->
-    <button class="sidebar-toggle" @click="toggleSidebar">
+    <!-- Mobile Sidebar Toggle (Admin Only) -->
+    <button v-if="isAdmin" class="sidebar-toggle" @click="toggleSidebar">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="3" y1="12" x2="21" y2="12"/>
         <line x1="3" y1="6" x2="21" y2="6"/>
@@ -144,6 +144,74 @@
         </router-view>
       </div>
     </main>
+
+    <!-- Mobile Top Header Bar (Guru Only) -->
+    <header v-if="isGuru" class="mobile-header">
+      <div class="mobile-header-brand">
+        <img :src="logoUrl" alt="TPQ" class="mobile-logo" />
+        <span class="mobile-title">TPQ AMANAH</span>
+      </div>
+      <button class="mobile-profile-btn" @click="showProfileMenu = !showProfileMenu">
+        <img v-if="user?.photoURL" :src="user.photoURL" class="mobile-avatar" />
+        <div v-else class="mobile-avatar-placeholder">{{ getInitials(user?.displayName) }}</div>
+      </button>
+      
+      <!-- Profile Dropdown Menu -->
+      <Transition name="slide-down">
+        <div v-if="showProfileMenu" class="profile-menu glass-card">
+          <div class="profile-header">
+            <img v-if="user?.photoURL" :src="user.photoURL" class="profile-menu-avatar" />
+            <div v-else class="profile-menu-avatar-placeholder">{{ getInitials(user?.displayName) }}</div>
+            <div class="profile-info">
+              <h4>{{ user?.displayName }}</h4>
+              <p>{{ getRoleLabel(user?.role) }}</p>
+            </div>
+          </div>
+          <button class="logout-btn" @click="handleLogout">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Keluar
+          </button>
+        </div>
+      </Transition>
+      
+      <!-- Profile Menu Overlay -->
+      <div v-if="showProfileMenu" class="profile-overlay" @click="showProfileMenu = false"></div>
+    </header>
+
+    <!-- Mobile Bottom Navigation (Guru Only) - 3 Items Symmetric -->
+    <nav v-if="isGuru" class="bottom-nav">
+      <router-link to="/dashboard" class="bottom-nav-item" exact-active-class="active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <span>Home</span>
+      </router-link>
+      
+      <router-link to="/dashboard/attendance" class="bottom-nav-item cta" :class="{ active: isActive('/dashboard/attendance') }">
+        <div class="cta-button">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <span>Absensi</span>
+      </router-link>
+      
+      <router-link to="/dashboard/grading" class="bottom-nav-item" :class="{ active: isActive('/dashboard/grading') }">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span>Nilai</span>
+      </router-link>
+    </nav>
   </div>
 </template>
 
@@ -164,6 +232,7 @@ const isGuru = computed(() => authStore.isGuru)
 
 const isSidebarOpen = ref(false)
 const isPageLoading = ref(false)
+const showProfileMenu = ref(false)
 
 // Watch for route changes to trigger loading
 watch(() => route.path, () => {
@@ -494,5 +563,319 @@ const handleLogout = async () => {
   opacity: 0;
 }
 
+/* ====================================
+   MOBILE HEADER BAR (Guru Only)
+   ==================================== */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-lg);
+  z-index: var(--z-fixed);
+}
+
+.mobile-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.mobile-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.mobile-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.mobile-profile-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.mobile-avatar,
+.mobile-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-light);
+}
+
+.mobile-avatar-placeholder {
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Profile menu positioned from header */
+.mobile-header .profile-menu {
+  position: fixed;
+  top: 70px;
+  right: var(--space-md);
+  bottom: auto;
+}
+
+/* ====================================
+   MOBILE BOTTOM NAVIGATION (Guru Only)
+   ==================================== */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  /* Only show bottom nav for guru layout on mobile */
+  .guru-layout .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 var(--space-lg);
+    z-index: var(--z-fixed);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Add padding to main content for bottom nav and top header */
+  .guru-layout .dashboard-main {
+    padding-top: 70px;
+    padding-bottom: 90px;
+  }
+
+  /* Hide sidebar for guru on mobile */
+  .guru-layout .sidebar {
+    display: none !important;
+  }
+  
+  /* Show mobile header for guru */
+  .guru-layout .mobile-header {
+    display: flex;
+  }
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-decoration: none;
+  color: var(--gray-500);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.bottom-nav-item span {
+  white-space: nowrap;
+}
+
+.bottom-nav-item svg {
+  stroke: currentColor;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
+.bottom-nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: var(--primary-gradient);
+  border-radius: 0 0 3px 3px;
+}
+
+/* CTA Button (Absensi) - Floating Style */
+.bottom-nav-item.cta {
+  position: relative;
+}
+
+.bottom-nav-item.cta .cta-button {
+  width: 56px;
+  height: 56px;
+  background: var(--primary-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 20px rgba(22, 101, 52, 0.4);
+  margin-top: -24px;
+  transition: all 0.3s ease;
+}
+
+.bottom-nav-item.cta:hover .cta-button,
+.bottom-nav-item.cta.active .cta-button {
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(22, 101, 52, 0.5);
+}
+
+.bottom-nav-item.cta span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* Profile Avatar in Bottom Nav */
+.profile-btn {
+  flex-direction: column;
+}
+
+.profile-avatar,
+.profile-avatar-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Profile Menu Dropdown */
+.profile-menu {
+  position: fixed;
+  bottom: 85px;
+  right: var(--space-md);
+  width: 280px;
+  padding: var(--space-lg);
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: calc(var(--z-fixed) + 1);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: var(--space-md);
+}
+
+.profile-menu-avatar,
+.profile-menu-avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-menu-avatar-placeholder {
+  background: var(--primary-gradient);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.profile-info h4 {
+  color: var(--primary-dark);
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+}
+
+.profile-info p {
+  margin: 0;
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--error);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.profile-overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: var(--z-fixed);
+}
+
+/* Slide Up Animation */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Slide Down Animation */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
 
 </style>
