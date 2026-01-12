@@ -16,9 +16,9 @@
       <div class="today-content">
         <!-- Loading State -->
         <div v-if="loading" class="loading-today">
-          <SkeletonLoader type="text" height="40px" width="60%" style="margin: 0 auto var(--space-md);" />
-          <SkeletonLoader type="text" height="60px" width="80%" style="margin: 0 auto var(--space-md);" />
-          <SkeletonLoader type="text" height="30px" width="50%" style="margin: 0 auto;" />
+          <SkeletonLoader type="text" height="24px" width="180px" />
+          <SkeletonLoader type="text" height="40px" width="220px" />
+          <SkeletonLoader type="text" height="20px" width="140px" />
         </div>
 
         <div v-else-if="isWeekend" class="weekend-notice">
@@ -352,6 +352,14 @@ onMounted(fetchAttendance)
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.loading-today {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
 }
 
 .weekend-notice {

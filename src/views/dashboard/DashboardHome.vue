@@ -52,7 +52,22 @@
 
       <!-- Guru Cards -->
       <template v-if="isGuru || isAdmin">
-        <div class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-300': isAdmin }">
+        <!-- Loading Skeleton for Kehadiran -->
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-300': isAdmin }">
+          <div class="stat-card-icon attendance">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="stat-card-info">
+            <SkeletonLoader type="text" width="50px" height="2rem" />
+            <span class="stat-card-label">Kehadiran Bulan Ini</span>
+          </div>
+        </div>
+        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-300': isAdmin }">
           <div class="stat-card-icon attendance">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -67,7 +82,22 @@
           </div>
         </div>
 
-        <div class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-400': isAdmin, 'delay-100': isGuru }">
+        <!-- Loading Skeleton for Periode Penilaian -->
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-400': isAdmin, 'delay-100': isGuru }">
+          <div class="stat-card-icon grading">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-card-info">
+            <SkeletonLoader type="text" width="40px" height="2rem" />
+            <span class="stat-card-label">Periode Penilaian Aktif</span>
+          </div>
+        </div>
+        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-400': isAdmin, 'delay-100': isGuru }">
           <div class="stat-card-icon grading">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -154,6 +184,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
 
 const authStore = useAuthStore()
 
@@ -162,6 +193,7 @@ const isAdmin = computed(() => authStore.isAdmin)
 const isGuru = computed(() => authStore.isGuru)
 const isSantri = computed(() => authStore.isSantri)
 
+const loading = ref(true)
 const stats = ref({
   totalUsers: 0,
   totalGuru: 0,
@@ -171,6 +203,7 @@ const stats = ref({
 })
 
 const fetchStats = async () => {
+  loading.value = true
   try {
     if (isAdmin.value) {
       const { data: users } = await api.get('/users')
@@ -193,6 +226,8 @@ const fetchStats = async () => {
     }
   } catch (error) {
     console.log('Stats fetch error (API may not be running):', error)
+  } finally {
+    loading.value = false
   }
 }
 
