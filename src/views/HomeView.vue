@@ -38,13 +38,51 @@
             </div>
           </div>
 
-          <!-- Logo Circle -->
-          <div class="flex justify-center animate-slide-up" style="animation-delay: 200ms;">
-            <div class="relative">
-              <div class="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full bg-white/10 backdrop-blur-lg flex items-center justify-center shadow-2xl animate-float border border-white/20">
-                <img :src="logoUrl" alt="TPQ AMANAH" class="w-3/4 h-3/4 object-contain drop-shadow-2xl" />
+          <!-- Hero Image with Permanent "Floating Stack" Design -->
+          <div class="flex justify-center lg:justify-end animate-slide-up relative z-10" style="animation-delay: 200ms;">
+            <div class="relative w-full max-w-lg lg:max-w-xl xl:max-w-2xl perspective-1000">
+              
+              <!-- Back Layer (Blurred & Rotated) - Permanent State -->
+              <div class="absolute inset-0 bg-gradient-to-tr from-accent-400 to-primary-400 rounded-[3rem] opacity-40 blur-2xl transform rotate-6 scale-95 animate-pulse-slow"></div>
+              
+              <!-- Middle Layer (White Outline) - Permanent State -->
+              <div class="absolute inset-0 border-2 border-white/30 rounded-[2.5rem] transform -rotate-3 scale-105"></div>
+
+              <!-- Main Image Container - Permanent State -->
+              <div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl transform -translate-y-2 animate-float">
+                <!-- Permanent Glossy Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent z-20 pointer-events-none"></div>
+
+                <img 
+                  src="/hero-section.png" 
+                  alt="Suasana Pembelajaran TPQ AMANAH" 
+                  class="w-full h-auto object-cover transform scale-100"
+                  loading="eager"
+                />
+
+                <!-- Modern Minimalist Badge (Top Right) - Enhanced -->
+                <div class="absolute top-6 right-6 bg-white/95 backdrop-blur-xl px-6 py-3 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/60 flex items-center gap-3 z-30 transform hover:scale-105 transition-transform duration-300">
+                  <div class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </div>
+                  <span class="text-sm font-bold text-gray-800 tracking-wide">Generasi Qurani</span>
+                </div>
+                
+                <!-- Bottom Gradient Text overlay - Permanent -->
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-8 pt-32 z-20">
+                  <div class="transform translate-y-0">
+                    <p class="text-white text-base md:text-lg font-medium leading-tight">
+                      Membangun Karakter <br/>
+                      <span class="text-accent-300 font-bold">Anak Sholeh & Sholehah</span>
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="absolute -inset-4 rounded-full bg-gradient-to-r from-accent-300/20 to-transparent blur-2xl"></div>
+              
+              <!-- Decorative Floating Elements -->
+              <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-yellow-400/20 rounded-full blur-xl animate-bounce-slow" style="animation-delay: 1s;"></div>
+
             </div>
           </div>
         </div>
@@ -185,14 +223,26 @@
             </div>
           </div>
 
-          <div class="glass-card p-4 overflow-hidden">
+          <div ref="mapRef" class="glass-card p-4 overflow-hidden">
+            <!-- Lazy load Google Maps iframe for better performance -->
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.5!2d112.7!3d-7.38!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMjMnMDAuMCJTIDExMsKwNDInMDAuMCJF!5e0!3m2!1sid!2sid!4v1700000000000"
+              v-if="isMapVisible"
+              :src="mapSrc"
               class="w-full h-80 rounded-xl"
               style="border:0;"
               allowfullscreen
               loading="lazy"
             ></iframe>
+            <!-- Placeholder while map is loading -->
+            <div v-else class="w-full h-80 rounded-xl bg-gray-100 flex items-center justify-center">
+              <div class="text-center text-gray-400">
+                <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p>Memuat peta...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -203,10 +253,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h } from 'vue'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import api from '@/services/api'
+
+// Google Maps URL
+const mapSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.5!2d112.7!3d-7.38!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMjMnMDAuMCJTIDExMsKwNDInMDAuMCJF!5e0!3m2!1sid!2sid!4v1700000000000'
+
+// Lazy loading for Google Maps
+const mapRef = ref(null)
+const isMapVisible = ref(false)
+let mapObserver = null
 
 const logoUrl = new URL('@/assets/logo.png', import.meta.url).href
 
@@ -323,5 +381,24 @@ const fetchContent = async () => {
 onMounted(() => {
   fetchTeachers()
   fetchContent()
+  
+  // Setup IntersectionObserver for lazy loading Google Maps
+  if (mapRef.value) {
+    mapObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          isMapVisible.value = true
+          mapObserver?.disconnect()
+        }
+      })
+    }, { rootMargin: '200px' })
+    
+    mapObserver.observe(mapRef.value)
+  }
+})
+
+// Cleanup observer on unmount
+onUnmounted(() => {
+  mapObserver?.disconnect()
 })
 </script>

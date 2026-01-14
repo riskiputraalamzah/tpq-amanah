@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { initializeApp } from 'firebase/app'
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth'
 import api from '../services/api'
 
 // Firebase config
@@ -14,10 +12,22 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig)
-const auth = getAuth(app)
-const googleProvider = new GoogleAuthProvider()
+// Lazy-loaded Firebase instances
+let firebaseApp = null
+let auth = null
+let googleProvider = null
+
+// Initialize Firebase lazily for better performance
+async function getFirebase() {
+    if (!firebaseApp) {
+        const { initializeApp } = await import('firebase/app')
+        const { getAuth, GoogleAuthProvider } = await import('firebase/auth')
+        firebaseApp = initializeApp(firebaseConfig)
+        auth = getAuth(firebaseApp)
+        googleProvider = new GoogleAuthProvider()
+    }
+    return { auth, googleProvider }
+}
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(null)
@@ -59,9 +69,12 @@ export const useAuthStore = defineStore('auth', () => {
             }
         }
 
-        // Also check Firebase auth state
+        // Also check Firebase auth state (lazy load Firebase)
+        const { auth: firebaseAuth } = await getFirebase()
+        const { onAuthStateChanged } = await import('firebase/auth')
+
         return new Promise((resolve) => {
-            const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            const unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser) => {
                 firebaseUser.value = fbUser
                 if (fbUser && !user.value) {
                     try {
@@ -98,12 +111,15 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    // Login dengan Google (untuk Santri)
+    // Login dengan Google (untuk Santri) - Firebase loaded lazily
     async function loginWithGoogle() {
         loading.value = true
         error.value = null
         try {
-            const result = await signInWithPopup(auth, googleProvider)
+            const { auth: firebaseAuth, googleProvider: provider } = await getFirebase()
+            const { signInWithPopup } = await import('firebase/auth')
+
+            const result = await signInWithPopup(firebaseAuth, provider)
             const fbToken = await result.user.getIdToken()
             api.defaults.headers.common['Authorization'] = `Bearer ${fbToken}`
             const { data } = await api.get('/users/me')
@@ -121,7 +137,9 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function logout() {
         try {
-            await signOut(auth)
+            const { auth: firebaseAuth } = await getFirebase()
+            const { signOut } = await import('firebase/auth')
+            await signOut(firebaseAuth)
         } catch (err) {
             console.log('Firebase signout error:', err)
         }
@@ -155,3 +173,4 @@ export const useAuthStore = defineStore('auth', () => {
         refreshToken
     }
 })
+

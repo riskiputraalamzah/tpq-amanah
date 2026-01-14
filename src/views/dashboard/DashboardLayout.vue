@@ -2,10 +2,10 @@
   <div class="dashboard-layout" :class="{ 'guru-layout': isGuru }">
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
-      <div class="sidebar-header">
+      <router-link to="/" class="sidebar-header">
         <img :src="logoUrl" alt="TPQ AMANAH" class="sidebar-logo" />
         <span class="sidebar-title">TPQ AMANAH</span>
-      </div>
+      </router-link>
 
       <nav class="sidebar-nav">
         <router-link to="/dashboard" class="sidebar-link" exact-active-class="active">
@@ -127,16 +127,6 @@
     <!-- Main Content -->
     <main class="dashboard-main">
       <div class="dashboard-content">
-        <!-- Loading Overlay -->
-        <Transition name="loading-fade">
-          <div v-if="isPageLoading" class="loading-overlay">
-            <div class="loading-spinner">
-              <div class="spinner"></div>
-              <p>Memuat...</p>
-            </div>
-          </div>
-        </Transition>
-
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
             <component :is="Component" :key="$route.path" />
@@ -231,16 +221,7 @@ const isAdmin = computed(() => authStore.isAdmin)
 const isGuru = computed(() => authStore.isGuru)
 
 const isSidebarOpen = ref(false)
-const isPageLoading = ref(false)
 const showProfileMenu = ref(false)
-
-// Watch for route changes to trigger loading
-watch(() => route.path, () => {
-  isPageLoading.value = true
-  setTimeout(() => {
-    isPageLoading.value = false
-  }, 300)
-})
 
 // Check if current route matches or starts with the given path
 const isActive = (path) => {
@@ -317,6 +298,13 @@ const handleLogout = async () => {
   gap: var(--space-md);
   padding: var(--space-lg);
   border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-header:hover {
+  opacity: 0.8;
 }
 
 .sidebar-logo {
@@ -587,6 +575,12 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.mobile-header-brand:hover {
+  opacity: 0.8;
 }
 
 .mobile-logo {

@@ -45,7 +45,7 @@
       </div>
 
       <div v-if="loading" class="loading-state">
-        <SkeletonLoader v-for="i in 5" :key="i" type="text" height="60px" />
+        <SkeletonLoader v-for="i in 5" :key="i" type="text" height="60px" class="skeleton-item" />
       </div>
 
       <div v-else-if="teachers.length === 0" class="empty-state">
@@ -121,67 +121,17 @@
         </div>
       </div>
     </div>
-
-    <!-- Detail History Modal -->
-    <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetail">
-      <div class="modal glass-card detail-modal">
-        <div class="detail-header" v-if="selectedTeacher">
-          <div class="detail-profile">
-            <div class="teacher-avatar large">{{ getInitials(selectedTeacher.displayName) }}</div>
-            <div>
-              <h3>{{ selectedTeacher.displayName }}</h3>
-              <p>{{ selectedTeacher.position || 'Pengajar' }}</p>
-            </div>
-          </div>
-          <button class="close-btn" @click="closeDetail">×</button>
-        </div>
-
-        <div class="detail-stats" v-if="selectedTeacher">
-          <div class="mini-stat">
-            <span class="label">Hadir</span>
-            <span class="value success">{{ selectedTeacher.hadirCount }}</span>
-          </div>
-          <div class="mini-stat">
-            <span class="label">Absen</span>
-            <span class="value danger">{{ selectedTeacher.tidakHadirCount }}</span>
-          </div>
-          <div class="mini-stat">
-            <span class="label">Gaji</span>
-            <span class="value warning">Rp {{ formatCurrency(selectedTeacher.hadirCount * 10000) }}</span>
-          </div>
-        </div>
-
-        <div class="history-list">
-          <div v-if="selectedTeacherRecords.length === 0" class="empty-history">
-            <p>Tidak ada data absensi bulan ini</p>
-          </div>
-          <div v-else v-for="(record, idx) in selectedTeacherRecords" :key="idx" class="history-item">
-            <div class="history-date">
-              <span class="date-day">{{ getDay(record.date) }}</span>
-              <span class="date-month">{{ getMonthShort(record.date) }}</span>
-            </div>
-            <div class="history-content">
-              <div class="history-row">
-                <span class="history-status" :class="record.status">
-                  {{ record.status === 'hadir' ? 'Hadir ✅' : 'Tidak Hadir ❌' }}
-                </span>
-                <span class="history-dayname">{{ formatDate(record.date).split(',')[0] }}</span>
-              </div>
-              <p v-if="record.notes" class="history-notes">"{{ record.notes }}"</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
 
+const router = useRouter()
 const { success, error: showError, warning } = useToast()
 
 const today = new Date()
@@ -203,8 +153,6 @@ const teachersWithStats = computed(() => {
 
 // Modal state
 const showModal = ref(false)
-const showDetailModal = ref(false)
-const selectedTeacher = ref(null)
 const saving = ref(false)
 const form = ref({ date: '', guruId: '', guruName: '', status: 'hadir', notes: '' })
 
@@ -290,13 +238,7 @@ const selectedTeacherRecords = computed(() => {
 })
 
 const openDetail = (teacher) => {
-  selectedTeacher.value = teacher
-  showDetailModal.value = true
-}
-
-const closeDetail = () => {
-  showDetailModal.value = false
-  selectedTeacher.value = null
+  router.push(`/dashboard/admin-attendance/${teacher.id}`)
 }
 
 const getInitials = (name) => {
@@ -485,6 +427,16 @@ onMounted(fetchData)
   padding: var(--space-2xl);
   text-align: center;
   color: var(--gray-500);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.skeleton-item {
+  margin-bottom: 0;
 }
 
 .teacher-list {

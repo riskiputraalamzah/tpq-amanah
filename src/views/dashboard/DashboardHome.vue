@@ -8,7 +8,22 @@
     <div class="dashboard-cards">
       <!-- Admin Cards -->
       <template v-if="isAdmin">
-        <div class="stat-card glass-card animate-fadeInUp">
+        <!-- Loading Skeleton for Total Users -->
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
+          <div class="stat-card-icon admin">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div class="stat-card-info">
+            <SkeletonLoader type="text" width="50px" height="2rem" />
+            <span class="stat-card-label">Total Users</span>
+          </div>
+        </div>
+        <div v-else class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon admin">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -23,7 +38,20 @@
           </div>
         </div>
 
-        <div class="stat-card glass-card animate-fadeInUp delay-100">
+        <!-- Loading Skeleton for Total Guru -->
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp delay-100">
+          <div class="stat-card-icon guru">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="stat-card-info">
+            <SkeletonLoader type="text" width="40px" height="2rem" />
+            <span class="stat-card-label">Total Guru</span>
+          </div>
+        </div>
+        <div v-else class="stat-card glass-card animate-fadeInUp delay-100">
           <div class="stat-card-icon guru">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -36,7 +64,20 @@
           </div>
         </div>
 
-        <div class="stat-card glass-card animate-fadeInUp delay-200">
+        <!-- Total Santri - Hidden (not functioning yet)
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp delay-200">
+          <div class="stat-card-icon santri">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="stat-card-info">
+            <SkeletonLoader type="text" width="45px" height="2rem" />
+            <span class="stat-card-label">Total Santri</span>
+          </div>
+        </div>
+        <div v-else class="stat-card glass-card animate-fadeInUp delay-200">
           <div class="stat-card-icon santri">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -48,12 +89,13 @@
             <span class="stat-card-label">Total Santri</span>
           </div>
         </div>
+        -->
       </template>
 
-      <!-- Guru Cards -->
-      <template v-if="isGuru || isAdmin">
+      <!-- Kehadiran Bulan Ini - Hidden for Admin (not functioning yet, only show for Guru) -->
+        <template v-if="isGuru">
         <!-- Loading Skeleton for Kehadiran -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-300': isAdmin }">
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon attendance">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -67,7 +109,7 @@
             <span class="stat-card-label">Kehadiran Bulan Ini</span>
           </div>
         </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-300': isAdmin }">
+        <div v-else class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon attendance">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -81,9 +123,12 @@
             <span class="stat-card-label">Kehadiran Bulan Ini</span>
           </div>
         </div>
+        </template>
 
+      <!-- Guru and Admin shared Cards -->
+      <template v-if="isGuru || isAdmin">
         <!-- Loading Skeleton for Periode Penilaian -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-400': isAdmin, 'delay-100': isGuru }">
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
           <div class="stat-card-icon grading">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -97,7 +142,7 @@
             <span class="stat-card-label">Periode Penilaian Aktif</span>
           </div>
         </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-400': isAdmin, 'delay-100': isGuru }">
+        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
           <div class="stat-card-icon grading">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -132,7 +177,7 @@
     <section v-if="isGuru || isAdmin" class="quick-actions">
       <h2>Aksi Cepat</h2>
       <div class="action-grid">
-        <router-link to="/dashboard/attendance" class="action-card glass-card">
+        <router-link to="/dashboard/attendance" class="action-card glass-card" v-if="isGuru">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 11l3 3L22 4"/>
@@ -140,6 +185,15 @@
             </svg>
           </div>
           <span>Isi Absensi</span>
+        </router-link>
+        <router-link to="/dashboard/admin-attendance" class="action-card glass-card" v-if="isAdmin">
+          <div class="action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <span>Rekap Absensi</span>
         </router-link>
 
         <router-link to="/dashboard/grading" class="action-card glass-card">

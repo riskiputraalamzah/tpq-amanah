@@ -48,6 +48,12 @@ const routes = [
                 meta: { role: 'admin' }
             },
             {
+                path: 'admin-attendance/:guruId',
+                name: 'TeacherAttendanceDetail',
+                component: () => import('../views/dashboard/admin/TeacherAttendanceDetail.vue'),
+                meta: { role: 'admin' }
+            },
+            {
                 path: 'admin-grading',
                 name: 'AdminGrading',
                 component: () => import('../views/dashboard/admin/AdminGradingView.vue'),
