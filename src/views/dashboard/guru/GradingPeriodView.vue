@@ -40,6 +40,10 @@
           <div class="student-info">
             <h4>{{ student.santriName }}</h4>
             <p class="student-meta">{{ student.criteria.length }} kriteria dinilai</p>
+            <!-- Cross-guru indicator -->
+            <p v-if="student.otherTeachersCount > 0" class="cross-guru-badge">
+              <span class="badge-icon">👥</span> Juga dinilai oleh {{ student.otherTeachersCount }} guru lain
+            </p>
           </div>
           <div class="student-summary">
             <div class="summary-item">
@@ -65,6 +69,27 @@
           </div>
         </div>
 
+        <!-- Other Teachers Grades Section (only show if there are actually other teachers) -->
+        <div v-if="student.otherTeachersCount > 0" class="other-teachers-section">
+          <button class="btn btn-link" @click="toggleOtherTeachers(student)">
+            {{ isStudentExpanded(student) ? '▼ Sembunyikan' : '▶ Lihat' }} penilaian dari {{ student.otherTeachersCount }} guru lain
+          </button>
+          <div v-if="isStudentExpanded(student)" class="other-teachers-grades">
+            <div v-for="(og, ogIdx) in student.otherTeachersGrades" :key="ogIdx" class="other-teacher-card">
+              <div class="other-teacher-header">
+                <span class="other-teacher-name">{{ og.guruName }}</span>
+                <span class="other-teacher-date">{{ formatDate(og.createdAt) }}</span>
+              </div>
+              <div class="other-teacher-criteria">
+                <div v-for="(ac, acIdx) in og.assessments" :key="acIdx" class="mini-criteria">
+                  <span>{{ ac.criteria }}</span>
+                  <span class="mini-score">{{ ac.score }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="student-actions">
           <button class="btn btn-sm btn-primary" @click="openAddCriteriaModal(student)">+ Tambah Kriteria</button>
           <button class="btn btn-sm btn-danger" @click="deleteStudent(student)">Hapus Santri</button>
@@ -79,18 +104,76 @@
         
         <!-- Student Selection (only if adding new student) -->
         <div v-if="!selectedStudent" class="form-group">
-          <div class="input-toggle">
-            <label class="form-label">Pilih Santri</label>
-            <label class="toggle-manual">
-              <input type="checkbox" v-model="manualInput" disabled> Input Manual
-            </label>
+          <label class="form-label">Cari atau Tambah Santri</label>
+          
+          <div class="santri-search-container">
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              class="form-input" 
+              placeholder="Ketik nama santri..." 
+              @input="onSearchInput"
+              @focus="showSuggestions = true"
+            />
+            
+            <!-- Loading indicator -->
+            <div v-if="searching" class="search-loading">
+              <span class="spinner-sm"></span> Mencari...
+            </div>
+            
+            <!-- Suggestions dropdown -->
+            <div v-if="showSuggestions && (suggestions.length > 0 || (searchQuery.length >= 2 && !searching))" class="suggestions-dropdown">
+              <!-- Existing santri suggestions -->
+              <div 
+                v-for="s in suggestions" 
+                :key="s.id" 
+                class="suggestion-item"
+                @click="selectSantri(s)"
+              >
+                <div class="suggestion-name">{{ s.name }}</div>
+                <div v-if="s.gradingInfo && s.gradingInfo.length > 0" class="suggestion-grading-info">
+                  <span class="grading-badge">Sudah dinilai oleh {{ s.gradingInfo.map(g => g.guruName).join(', ') }}</span>
+                </div>
+                <div v-else class="suggestion-new-badge">Belum ada penilaian</div>
+              </div>
+              
+              <!-- Add new santri option -->
+              <div 
+                v-if="searchQuery.length >= 2 && !suggestions.some(s => s.nameNormalized === searchQuery.toLowerCase().trim())" 
+                class="suggestion-item add-new"
+                @click="addNewSantri"
+              >
+                <span class="add-icon">+</span>
+                <span>Tambahkan "<strong>{{ searchQuery }}</strong>" sebagai santri baru</span>
+              </div>
+              
+              <!-- No results message -->
+              <div v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching" class="no-results">
+                <p>Tidak ditemukan santri dengan nama "{{ searchQuery }}"</p>
+              </div>
+            </div>
           </div>
           
-          <select v-if="!manualInput" v-model="form.santriId" class="form-input form-select" @change="onSantriChange">
-            <option value="">-- Pilih Santri dari Database --</option>
-            <option v-for="s in availableSantri" :key="s.id" :value="s.id">{{ s.displayName }}</option>
-          </select>
-          <input v-else v-model="form.santriName" type="text" class="form-input" placeholder="Ketik nama santri manual" />
+          <!-- Selected santri display -->
+          <div v-if="form.santriId && form.santriName" class="selected-santri">
+            <div class="selected-santri-info">
+              <span class="selected-name">{{ form.santriName }}</span>
+              <button type="button" class="btn-clear" @click="clearSelectedSantri">×</button>
+            </div>
+            
+            <!-- Previous grading info -->
+            <div v-if="selectedSantriGradingInfo && selectedSantriGradingInfo.length > 0" class="previous-grading-alert">
+              <div class="alert-icon">ℹ️</div>
+              <div class="alert-content">
+                <strong>Santri ini sudah dinilai oleh:</strong>
+                <ul>
+                  <li v-for="(g, gIdx) in selectedSantriGradingInfo" :key="gIdx">
+                    {{ g.guruName }} ({{ g.criteriaCount }} kriteria) - {{ formatDate(g.createdAt) }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -105,7 +188,7 @@
 
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="closeModal">Batal</button>
-          <button class="btn btn-primary" @click="saveCriteria" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan' }}</button>
+          <button class="btn btn-primary" @click="saveCriteria" :disabled="saving || (!selectedStudent && !form.santriId)">{{ saving ? 'Menyimpan...' : 'Simpan' }}</button>
         </div>
       </div>
     </div>
@@ -114,44 +197,88 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast, useConfirm } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 
 const { success, error: showError, warning } = useToast()
 const { confirm } = useConfirm()
+const authStore = useAuthStore()
 
 const route = useRoute()
+const router = useRouter()
 const periodId = route.params.periodId
 
 const period = ref(null)
 const grades = ref([])
-const santriList = ref([])
+const allGrades = ref([]) // All grades across all teachers for this period
 const loading = ref(true)
 const showModal = ref(false)
 const saving = ref(false)
 
-const manualInput = ref(true)
 const selectedStudent = ref(null)
 const form = ref({ santriId: '', santriName: '', criteria: '', score: null })
 
-// Group grades by student
+// Santri search
+const searchQuery = ref('')
+const suggestions = ref([])
+const showSuggestions = ref(false)
+const searching = ref(false)
+const selectedSantriGradingInfo = ref([])
+
+// Track which students have their other teachers section expanded
+const expandedStudents = ref(new Set())
+
+let searchTimeout = null
+
+// Normalize name for matching
+const normalizeName = (name) => {
+  if (!name) return ''
+  return name.toLowerCase().trim().replace(/\s+/g, ' ')
+}
+
+// Group grades by student (including cross-guru info)
 const groupedGrades = computed(() => {
   const grouped = {}
+  const currentUserId = authStore.user?.id || ''
+  
+  // First, group my own grades by normalized name (to handle duplicates)
   grades.value.forEach(g => {
-    if (!grouped[g.santriId]) {
-      grouped[g.santriId] = {
+    const normalizedName = normalizeName(g.santriName)
+    if (!grouped[normalizedName]) {
+      grouped[normalizedName] = {
         santriId: g.santriId,
         santriName: g.santriName,
+        normalizedName,
         gradeIds: [],
-        criteria: []
+        criteria: [],
+        otherTeachersGrades: [],
+        otherTeachersCount: 0,
+        showOtherTeachers: false
       }
     }
-    grouped[g.santriId].gradeIds.push(g.id)
+    grouped[normalizedName].gradeIds.push(g.id)
     if (g.assessments) {
       g.assessments.forEach(a => {
-        grouped[g.santriId].criteria.push({ ...a, gradeId: g.id })
+        grouped[normalizedName].criteria.push({ ...a, gradeId: g.id })
+      })
+    }
+  })
+
+  // Add other teachers' grades info - match by NORMALIZED NAME, not santriId
+  allGrades.value.forEach(g => {
+    if (!g.santriName) return
+    const normalizedName = normalizeName(g.santriName)
+    
+    // Check if this santri is in our grades list AND grade is from another teacher
+    if (grouped[normalizedName] && g.guruId !== currentUserId) {
+      grouped[normalizedName].otherTeachersGrades.push({
+        guruId: g.guruId,
+        guruName: g.guruName,
+        assessments: g.assessments || [],
+        createdAt: g.createdAt
       })
     }
   })
@@ -162,14 +289,13 @@ const groupedGrades = computed(() => {
     s.total = scores.reduce((sum, n) => sum + n, 0)
     s.average = scores.length > 0 ? s.total / scores.length : 0
     s.grade = getGrade(s.average)
+    
+    // Count unique other teachers
+    const uniqueTeachers = new Set(s.otherTeachersGrades.map(og => og.guruId))
+    s.otherTeachersCount = uniqueTeachers.size
+    
     return s
   })
-})
-
-// Available santri (excluding already added)
-const availableSantri = computed(() => {
-  const addedIds = new Set(groupedGrades.value.map(s => s.santriId))
-  return santriList.value.filter(s => !addedIds.has(s.id))
 })
 
 const getGrade = (avg) => {
@@ -198,41 +324,123 @@ const formatPeriodDate = (d) => {
   return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+const formatDate = (d) => {
+  if (!d) return '-'
+  let date
+  if (d._seconds !== undefined) date = new Date(d._seconds * 1000)
+  else if (d.seconds !== undefined) date = new Date(d.seconds * 1000)
+  else date = new Date(d)
+  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 const fetchData = async () => {
   loading.value = true
   try {
-    const [periodsRes, gradesRes, santriRes] = await Promise.all([
+    const [periodsRes, gradesRes, allGradesRes] = await Promise.all([
       api.get('/grading/periods'),
       api.get(`/grading/periods/${periodId}/grades`),
-      api.get('/grading/santri')
+      api.get(`/grading/periods/${periodId}/grades?allTeachers=true`)
     ])
     period.value = periodsRes.data.find(p => p.id === periodId)
     grades.value = gradesRes.data
-    santriList.value = santriRes.data
+    allGrades.value = allGradesRes.data
   } catch (e) { console.log('Fetch error', e) }
   finally { loading.value = false }
 }
 
-watch(manualInput, () => {
+// Santri search functions
+const onSearchInput = () => {
+  showSuggestions.value = true
+  
+  if (searchTimeout) clearTimeout(searchTimeout)
+  
+  if (searchQuery.value.length < 2) {
+    suggestions.value = []
+    return
+  }
+  
+  searching.value = true
+  searchTimeout = setTimeout(async () => {
+    try {
+      const { data } = await api.get(`/santri/search?q=${encodeURIComponent(searchQuery.value)}&periodId=${periodId}`)
+      suggestions.value = data
+    } catch (e) {
+      console.error('Search error:', e)
+      suggestions.value = []
+    } finally {
+      searching.value = false
+    }
+  }, 300)
+}
+
+const selectSantri = (santri) => {
+  form.value.santriId = santri.id
+  form.value.santriName = santri.name
+  selectedSantriGradingInfo.value = santri.gradingInfo || []
+  showSuggestions.value = false
+  searchQuery.value = ''
+}
+
+const addNewSantri = async () => {
+  if (!searchQuery.value || searchQuery.value.length < 2) return
+  
+  searching.value = true
+  try {
+    const { data } = await api.post('/santri', { name: searchQuery.value })
+    
+    if (data.alreadyExists) {
+      warning('Santri dengan nama ini sudah terdaftar')
+    } else {
+      success('Santri berhasil ditambahkan')
+    }
+    
+    form.value.santriId = data.id
+    form.value.santriName = data.name
+    selectedSantriGradingInfo.value = []
+    showSuggestions.value = false
+    searchQuery.value = ''
+  } catch (e) {
+    console.error('Add santri error:', e)
+    showError('Gagal menambahkan santri')
+  } finally {
+    searching.value = false
+  }
+}
+
+const clearSelectedSantri = () => {
   form.value.santriId = ''
   form.value.santriName = ''
-})
+  selectedSantriGradingInfo.value = []
+  searchQuery.value = ''
+}
 
-const onSantriChange = () => {
-  if (manualInput.value) return
-  const s = santriList.value.find(s => s.id === form.value.santriId)
-  form.value.santriName = s?.displayName || ''
+const toggleOtherTeachers = (student) => {
+  const key = student.normalizedName || student.santriName
+  if (expandedStudents.value.has(key)) {
+    expandedStudents.value.delete(key)
+  } else {
+    expandedStudents.value.add(key)
+  }
+  // Force reactivity update
+  expandedStudents.value = new Set(expandedStudents.value)
+}
+
+const isStudentExpanded = (student) => {
+  const key = student.normalizedName || student.santriName
+  return expandedStudents.value.has(key)
 }
 
 const openAddCriteriaModal = (student) => {
   selectedStudent.value = student
-  manualInput.value = true
   form.value = { 
     santriId: student?.santriId || '', 
     santriName: student?.santriName || '', 
     criteria: '', 
     score: null 
   }
+  searchQuery.value = ''
+  suggestions.value = []
+  selectedSantriGradingInfo.value = []
   showModal.value = true
 }
 
@@ -240,17 +448,17 @@ const closeModal = () => {
   showModal.value = false
   selectedStudent.value = null
   form.value = { santriId: '', santriName: '', criteria: '', score: null }
+  searchQuery.value = ''
+  suggestions.value = []
+  selectedSantriGradingInfo.value = []
+  showSuggestions.value = false
 }
 
 const saveCriteria = async () => {
   // Validate
-  if (!selectedStudent.value) {
-    if (manualInput.value) {
-      if (!form.value.santriName) { warning('Nama santri wajib diisi'); return }
-      form.value.santriId = `manual_${Date.now()}`
-    } else {
-      if (!form.value.santriId) { warning('Pilih santri dari daftar'); return }
-    }
+  if (!selectedStudent.value && !form.value.santriId) {
+    warning('Pilih atau tambah santri terlebih dahulu')
+    return
   }
 
   if (!form.value.criteria) { warning('Kriteria wajib diisi'); return }
@@ -303,7 +511,17 @@ const deleteStudent = async (student) => {
   } catch (e) { showError('Gagal menghapus santri') }
 }
 
-onMounted(fetchData)
+// Close suggestions when clicking outside
+const handleClickOutside = (e) => {
+  if (!e.target.closest('.santri-search-container')) {
+    showSuggestions.value = false
+  }
+}
+
+onMounted(() => {
+  fetchData()
+  document.addEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -346,6 +564,23 @@ onMounted(fetchData)
 .grade-badge.B { background: #2196f3; color: white; }
 .grade-badge.C { background: #ff9800; color: white; }
 
+/* Cross-guru badge */
+.cross-guru-badge { font-size: 0.75rem; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 8px; border-radius: 12px; margin-top: var(--space-xs); display: inline-flex; align-items: center; gap: 4px; }
+.badge-icon { font-size: 0.875rem; }
+
+/* Other Teachers Section */
+.other-teachers-section { margin-bottom: var(--space-lg); padding-top: var(--space-md); border-top: 1px dashed var(--gray-200); }
+.btn-link { background: none; border: none; color: var(--primary); font-size: 0.875rem; padding: 0; cursor: pointer; }
+.btn-link:hover { text-decoration: underline; }
+.other-teachers-grades { margin-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm); }
+.other-teacher-card { background: var(--gray-50); padding: var(--space-md); border-radius: var(--radius-md); border-left: 3px solid var(--primary-light); }
+.other-teacher-header { display: flex; justify-content: space-between; margin-bottom: var(--space-sm); }
+.other-teacher-name { font-weight: 600; color: var(--primary-dark); font-size: 0.875rem; }
+.other-teacher-date { font-size: 0.75rem; color: var(--gray-500); }
+.other-teacher-criteria { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.mini-criteria { background: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; display: flex; gap: 8px; }
+.mini-score { font-weight: 600; color: var(--primary); }
+
 /* Criteria List */
 .criteria-list { margin-bottom: var(--space-lg); }
 .criteria-item { display: flex; align-items: center; gap: var(--space-md); padding: var(--space-sm) var(--space-md); background: var(--gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-xs); }
@@ -363,9 +598,40 @@ onMounted(fetchData)
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: var(--z-modal); padding: var(--space-lg); overflow-y: auto; }
-.modal { width: 100%; max-width: 450px; padding: var(--space-xl); background: var(--white); max-height: 90vh; overflow-y: auto; }
+.modal { width: 100%; max-width: 500px; padding: var(--space-xl); background: var(--white); max-height: 90vh; overflow-y: auto; }
 .modal h3 { color: var(--primary-dark); margin-bottom: var(--space-lg); font-size: 1.1rem; }
-.input-toggle { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
-.toggle-manual { font-size: 0.875rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
 .modal-actions { display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl); }
+
+/* Santri Search */
+.santri-search-container { position: relative; }
+.search-loading { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--gray-500); display: flex; align-items: center; gap: 4px; }
+.spinner-sm { width: 14px; height: 14px; border: 2px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.suggestions-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; z-index: 100; }
+.suggestion-item { padding: var(--space-md); cursor: pointer; border-bottom: 1px solid var(--gray-100); }
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--gray-50); }
+.suggestion-name { font-weight: 600; color: var(--primary-dark); }
+.suggestion-grading-info { margin-top: 4px; }
+.grading-badge { font-size: 0.75rem; color: var(--accent-dark); background: rgba(255,152,0,0.1); padding: 2px 8px; border-radius: 10px; }
+.suggestion-new-badge { font-size: 0.75rem; color: var(--gray-500); margin-top: 4px; }
+.suggestion-item.add-new { background: rgba(var(--primary-rgb), 0.05); display: flex; align-items: center; gap: 8px; }
+.add-icon { width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.no-results { padding: var(--space-md); color: var(--gray-500); font-size: 0.875rem; text-align: center; }
+
+/* Selected Santri */
+.selected-santri { margin-top: var(--space-md); }
+.selected-santri-info { display: flex; align-items: center; justify-content: space-between; background: rgba(var(--primary-rgb), 0.1); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); }
+.selected-name { font-weight: 600; color: var(--primary-dark); }
+.btn-clear { background: none; border: none; font-size: 1.2rem; color: var(--gray-500); cursor: pointer; padding: 0 4px; }
+.btn-clear:hover { color: var(--error); }
+
+/* Previous Grading Alert */
+.previous-grading-alert { margin-top: var(--space-md); background: rgba(33,150,243,0.1); border-left: 3px solid #2196f3; padding: var(--space-md); border-radius: var(--radius-sm); display: flex; gap: var(--space-md); }
+.alert-icon { font-size: 1.25rem; }
+.alert-content { flex: 1; font-size: 0.875rem; }
+.alert-content strong { display: block; margin-bottom: var(--space-xs); color: var(--primary-dark); }
+.alert-content ul { margin: 0; padding-left: var(--space-lg); color: var(--gray-600); }
+.alert-content li { margin-bottom: 2px; }
 </style>
