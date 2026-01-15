@@ -10,11 +10,33 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
-      <SkeletonLoader type="text" width="200px" height="2rem" />
-      <div class="skeleton-spacer"></div>
-      <SkeletonLoader type="text" width="100%" height="100px" />
-      <div class="skeleton-spacer"></div>
-      <SkeletonLoader type="text" width="100%" height="300px" />
+      <!-- Header Skeleton -->
+      <div class="teacher-header glass-card skeleton-header">
+        <div class="teacher-profile">
+          <div class="skeleton-avatar-lg"></div>
+          <div class="skeleton-info">
+            <div class="skeleton-title"></div>
+            <div class="skeleton-subtitle"></div>
+          </div>
+        </div>
+        <div class="skeleton-stats-row">
+          <div class="skeleton-stat-box"></div>
+          <div class="skeleton-stat-box"></div>
+          <div class="skeleton-stat-box wide"></div>
+        </div>
+      </div>
+      
+      <!-- Calendar Skeleton -->
+      <div class="calendar-section glass-card skeleton-calendar">
+        <div class="skeleton-calendar-header">
+          <div class="skeleton-nav-btn"></div>
+          <div class="skeleton-month"></div>
+          <div class="skeleton-nav-btn"></div>
+        </div>
+        <div class="skeleton-grid">
+          <div v-for="i in 35" :key="i" class="skeleton-cell"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Content -->
@@ -80,11 +102,13 @@
             class="calendar-cell"
             :class="getCellClass(date)"
             @click="showDateDetail(date)"
+            :title="getHolidayForDate(date)?.name || ''"
           >
             <span class="cell-date">{{ date }}</span>
             <span class="cell-status" v-if="getAttendanceForDate(date)">
               {{ getAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
             </span>
+            <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
           </div>
         </div>
 
@@ -93,6 +117,7 @@
           <div class="legend-item"><span class="legend-dot hadir"></span> Hadir</div>
           <div class="legend-item"><span class="legend-dot tidak"></span> Tidak Hadir</div>
           <div class="legend-item"><span class="legend-dot empty"></span> Tidak Ada Data</div>
+          <div class="legend-item"><span class="legend-dot libur"></span> Hari Libur</div>
         </div>
       </section>
 
@@ -101,6 +126,15 @@
         <div class="popup-header">
           <h3>{{ formatFullDate(selectedDate) }}</h3>
           <button class="close-btn" @click="selectedDate = null">×</button>
+        </div>
+        
+        <!-- Holiday Banner -->
+        <div v-if="getHolidayForDate(selectedDate)" class="holiday-banner">
+          <span class="holiday-icon">🎉</span>
+          <div class="holiday-info">
+            <span class="holiday-label">Hari Libur Nasional</span>
+            <span class="holiday-name">{{ getHolidayForDate(selectedDate).name }}</span>
+          </div>
         </div>
         
         <!-- View Mode -->
@@ -161,6 +195,7 @@ import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
+import { fetchHolidays, getHolidaysForMonth } from '@/services/holidayService'
 
 const { success, error: showError } = useToast()
 
@@ -171,6 +206,8 @@ const loading = ref(true)
 const teacher = ref(null)
 const attendanceData = ref([])
 const selectedDate = ref(null)
+const holidays = ref([])
+const monthHolidays = ref([])
 
 // Edit mode state
 const isEditing = ref(false)
@@ -238,9 +275,29 @@ const getAttendanceForDate = (date) => {
 }
 
 const getCellClass = (date) => {
+  const classes = []
   const attendance = getAttendanceForDate(date)
-  if (!attendance) return 'no-data'
-  return attendance.status === 'hadir' ? 'hadir' : 'tidak'
+  
+  if (!attendance) {
+    classes.push('no-data')
+  } else {
+    classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
+  }
+  
+  // Check if this date is a holiday
+  if (getHolidayForDate(date)) {
+    classes.push('libur')
+  }
+  
+  return classes.join(' ')
+}
+
+const getHolidayForDate = (date) => {
+  return monthHolidays.value.find(h => h.date === date)
+}
+
+const updateMonthHolidays = () => {
+  monthHolidays.value = getHolidaysForMonth(currentMonth.value, currentYear.value, holidays.value)
 }
 
 const formatFullDate = (date) => {
@@ -307,6 +364,7 @@ const prevMonth = () => {
     currentMonth.value--
   }
   fetchAttendance()
+  updateMonthHolidays()
 }
 
 const nextMonth = () => {
@@ -318,6 +376,7 @@ const nextMonth = () => {
     currentMonth.value++
   }
   fetchAttendance()
+  updateMonthHolidays()
 }
 
 const goBack = () => {
@@ -361,6 +420,10 @@ const fetchAttendance = async () => {
 
 onMounted(async () => {
   loading.value = true
+  // Fetch holidays first
+  holidays.value = await fetchHolidays()
+  updateMonthHolidays()
+  
   await Promise.all([fetchTeacher(), fetchAttendance()])
   loading.value = false
 })
@@ -401,10 +464,101 @@ onMounted(async () => {
 .loading-container {
   display: flex;
   flex-direction: column;
+  gap: var(--space-xl);
 }
 
-.skeleton-spacer {
-  height: var(--space-lg);
+/* Skeleton Animation */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar-lg,
+.skeleton-title,
+.skeleton-subtitle,
+.skeleton-stat-box,
+.skeleton-nav-btn,
+.skeleton-month,
+.skeleton-cell {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.skeleton-avatar-lg {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 180px;
+}
+
+.skeleton-subtitle {
+  height: 18px;
+  width: 120px;
+}
+
+.skeleton-stats-row {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.skeleton-stat-box {
+  width: 80px;
+  height: 60px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-stat-box.wide {
+  width: 110px;
+}
+
+.skeleton-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-lg);
+}
+
+.skeleton-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-month {
+  width: 150px;
+  height: 28px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 0 var(--space-lg) var(--space-lg);
+}
+
+.skeleton-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
 }
 
 /* Teacher Header */
@@ -584,6 +738,57 @@ onMounted(async () => {
   border: 1px dashed var(--gray-300);
 }
 
+.calendar-cell.libur {
+  background: rgba(255, 193, 7, 0.25) !important;
+  border: 2px solid #ffc107 !important;
+  position: relative;
+}
+
+.calendar-cell.libur.no-data {
+  border-style: solid !important;
+}
+
+.cell-holiday-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.5rem;
+  line-height: 1;
+}
+
+/* Holiday Banner in Popup */
+.holiday-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.2));
+  border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.holiday-icon {
+  font-size: 1.5rem;
+}
+
+.holiday-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.holiday-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #e65100;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.holiday-name {
+  font-size: 0.9rem;
+  color: #e65100;
+  font-weight: 500;
+}
+
 .cell-date {
   font-weight: 600;
   font-size: 1rem;
@@ -625,6 +830,7 @@ onMounted(async () => {
 .legend-dot.hadir { background: rgba(76, 175, 80, 0.3); border: 2px solid #4caf50; }
 .legend-dot.tidak { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
 .legend-dot.empty { background: var(--gray-100); border: 1px dashed var(--gray-300); }
+.legend-dot.libur { background: rgba(255, 193, 7, 0.4); border: 2px solid #ffc107; }
 
 /* Date Detail Popup */
 .popup-overlay {

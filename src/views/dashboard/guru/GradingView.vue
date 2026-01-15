@@ -8,9 +8,16 @@
     </header>
 
     <div class="periods-grid">
-      <div v-if="loading" v-for="i in 3" :key="i" class="period-card glass-card">
-        <SkeletonLoader type="title" />
-        <SkeletonLoader type="paragraph" />
+      <!-- Skeleton Loading State -->
+      <div v-if="loading" v-for="i in 3" :key="i" class="period-card glass-card skeleton-card">
+        <div class="skeleton-status"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-dates">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="skeleton-count"></div>
+        <div class="skeleton-button"></div>
       </div>
 
       <div v-else-if="activePeriods.length === 0" class="empty-state glass-card">
@@ -92,4 +99,66 @@ onMounted(fetchPeriods)
 .btn-action { display: block; width: 100%; border-radius: var(--radius-full) !important; padding: var(--space-md) var(--space-lg); text-align: center; }
 
 .empty-state { padding: var(--space-3xl); text-align: center; color: var(--gray-500); grid-column: 1 / -1; }
+
+/* Skeleton Styles */
+.skeleton-card { position: relative; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-status,
+.skeleton-title,
+.skeleton-line,
+.skeleton-count,
+.skeleton-button {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-status {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 50px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 70%;
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-dates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-line {
+  height: 16px;
+  width: 85%;
+}
+
+.skeleton-line:last-child {
+  width: 75%;
+}
+
+.skeleton-count {
+  height: 14px;
+  width: 60%;
+  margin-bottom: var(--space-lg);
+}
+
+.skeleton-button {
+  height: 48px;
+  width: 100%;
+  border-radius: var(--radius-full);
+}
 </style>

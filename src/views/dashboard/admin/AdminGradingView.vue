@@ -19,9 +19,20 @@
     </div>
 
     <div class="periods-grid">
-      <div v-if="loading" v-for="i in 3" :key="i" class="period-card glass-card">
-        <SkeletonLoader type="title" />
-        <SkeletonLoader type="paragraph" />
+      <!-- Skeleton Loading State -->
+      <div v-if="loading" v-for="i in 3" :key="i" class="period-card glass-card skeleton-card">
+        <div class="skeleton-status"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-dates">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <div class="skeleton-count"></div>
+        <div class="skeleton-actions-row">
+          <div class="skeleton-btn"></div>
+          <div class="skeleton-btn"></div>
+        </div>
+        <div class="skeleton-btn-full"></div>
       </div>
 
       <div v-else-if="filteredPeriods.length === 0" class="empty-state glass-card">
@@ -263,4 +274,78 @@ onMounted(fetchPeriods)
 .modal h3 { color: var(--primary-dark); margin-bottom: var(--space-lg); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
 .modal-actions { display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl); }
+
+/* Skeleton Styles */
+.skeleton-card { position: relative; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-status,
+.skeleton-title,
+.skeleton-line,
+.skeleton-count,
+.skeleton-btn,
+.skeleton-btn-full {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-status {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 60px;
+  height: 22px;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 75%;
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-dates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.skeleton-line {
+  height: 16px;
+  width: 85%;
+}
+
+.skeleton-line:last-child {
+  width: 75%;
+}
+
+.skeleton-count {
+  height: 14px;
+  width: 50%;
+  margin-bottom: var(--space-lg);
+}
+
+.skeleton-actions-row {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.skeleton-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-btn-full {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-full);
+}
 </style>

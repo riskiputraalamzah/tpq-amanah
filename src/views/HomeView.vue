@@ -8,88 +8,82 @@
       <div class="absolute inset-0 islamic-pattern opacity-30"></div>
       <div class="absolute inset-0 bg-gradient-radial from-white/10 via-transparent to-transparent"></div>
       
-      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pt-32">
-        <div class="grid lg:grid-cols-2 gap-12 items-center">
-          <!-- Content -->
-          <div class="text-white text-center lg:text-left animate-slide-up">
-            <p class="text-xl md:text-2xl font-arabic text-accent-300 mb-4 text-shadow">
-              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-            </p>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-shadow-lg">
-              Selamat Datang di<br/>
-              <span class="text-accent-300">TPQ AMANAH</span>
-            </h1>
-            <p class="text-lg md:text-xl text-white/90 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Taman Pendidikan Al-Quran untuk membentuk generasi Qurani yang berakhlak mulia, cerdas, dan bertaqwa kepada Allah SWT
-            </p>
-            <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
-              <a href="#tentang" @click="scrollTo($event, '#tentang')" class="btn-primary px-8 py-4 text-lg">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Pelajari Lebih Lanjut
-              </a>
-              <router-link to="/dashboard" class="btn-secondary px-8 py-4 text-lg bg-white/90 border-white text-primary-700 hover:bg-white hover:text-black">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                </svg>
-                Login Dashboard
-              </router-link>
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-40 pb-56 min-h-screen flex flex-col items-center justify-center text-center">
+        
+        <!-- Decoration / Mandala Background (Centered behind text) -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0" style="-webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%); mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
+          <!-- Main Glowing Aura -->
+          <div class="absolute inset-0 bg-accent-400/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+
+          <div class="relative w-[350px] h-[350px] md:w-[600px] md:h-[600px] lg:w-[800px] lg:h-[800px] flex items-center justify-center opacity-100">
+            
+            <!-- Rub el Hizb (Islamic Star) SVG - Large Background (Wireframe) -->
+            <svg class="absolute w-full h-full text-white/10 animate-spin-veryslow" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="0.5">
+               <path d="M100 0 L122.5 77.5 L200 100 L122.5 122.5 L100 200 L77.5 122.5 L0 100 L77.5 77.5 Z" />
+               <rect x="29" y="29" width="142" height="142" transform="rotate(45 100 100)" />
+            </svg>
+
+            <!-- Concentric Rings (Mernik-Mernik) -->
+            <!-- Ring 1: Outer Dashed - Rotating -->
+            <div class="absolute inset-0 border-2 border-dashed border-white/20 rounded-full animate-spin-veryslow"></div>
+            
+            <!-- Ring 2: Dotted - Rotating Reverse -->
+            <div class="absolute inset-8 sm:inset-16 border-[3px] border-dotted border-white/30 rounded-full animate-spin-reverse-veryslow"></div>
+
+            <!-- Ring 3: Solid Thin with Ornaments -->
+            <div class="absolute inset-20 sm:inset-32 border border-white/20 rounded-full flex items-center justify-center animate-spin-veryslow" style="animation-duration: 40s;">
+              <div class="absolute w-3 h-3 bg-accent-300 rounded-full top-0 -translate-y-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
+              <div class="absolute w-3 h-3 bg-accent-300 rounded-full bottom-0 translate-y-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
+              <div class="absolute w-3 h-3 bg-accent-300 rounded-full left-0 -translate-x-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
+              <div class="absolute w-3 h-3 bg-accent-300 rounded-full right-0 translate-x-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
             </div>
-          </div>
 
-          <!-- Hero Image with Permanent "Floating Stack" Design -->
-          <div class="flex justify-center lg:justify-end animate-slide-up relative z-10" style="animation-delay: 200ms;">
-            <div class="relative w-full max-w-lg lg:max-w-xl xl:max-w-2xl perspective-1000">
-              
-              <!-- Back Layer (Blurred & Rotated) - Permanent State -->
-              <div class="absolute inset-0 bg-gradient-to-tr from-accent-400 to-primary-400 rounded-[3rem] opacity-40 blur-2xl transform rotate-6 scale-95 animate-pulse-slow"></div>
-              
-              <!-- Middle Layer (White Outline) - Permanent State -->
-              <div class="absolute inset-0 border-2 border-white/30 rounded-[2.5rem] transform -rotate-3 scale-105"></div>
-
-              <!-- Main Image Container - Permanent State -->
-              <div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl transform -translate-y-2 animate-float">
-                <!-- Permanent Glossy Overlay -->
-                <div class="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent z-20 pointer-events-none"></div>
-
-                <img 
-                  src="/hero-section.png" 
-                  alt="Suasana Pembelajaran TPQ AMANAH" 
-                  class="w-full h-auto object-cover transform scale-100"
-                  loading="eager"
-                />
-
-                <!-- Modern Minimalist Badge (Top Right) - Enhanced -->
-                <div class="absolute top-6 right-6 bg-white/95 backdrop-blur-xl px-6 py-3 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-white/60 flex items-center gap-3 z-30 transform hover:scale-105 transition-transform duration-300">
-                  <div class="relative flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                  </div>
-                  <span class="text-sm font-bold text-gray-800 tracking-wide">Generasi Qurani</span>
-                </div>
-                
-                <!-- Bottom Gradient Text overlay - Permanent -->
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-8 pt-32 z-20">
-                  <div class="transform translate-y-0">
-                    <p class="text-white text-base md:text-lg font-medium leading-tight">
-                      Membangun Karakter <br/>
-                      <span class="text-accent-300 font-bold">Anak Sholeh & Sholehah</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Decorative Floating Elements -->
-              <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-yellow-400/20 rounded-full blur-xl animate-bounce-slow" style="animation-delay: 1s;"></div>
-
+            <!-- Inner Geometric Shape (Rotate 45deg) - Outline Only -->
+            <div class="absolute w-48 h-48 sm:w-72 sm:h-72 border-2 border-white/5 rotate-45 animate-float">
+               <div class="absolute inset-2 border border-white/10"></div>
             </div>
+            
+            <!-- Decorative Particles -->
+            <div class="absolute top-10 right-20 w-3 h-3 bg-accent-300 rounded-full blur-[2px] animate-bounce-slow"></div>
+            <div class="absolute bottom-20 left-20 w-4 h-4 border-2 border-accent-300 rounded-full animate-bounce-slow" style="animation-delay: 1.5s;"></div>
+
           </div>
         </div>
+
+        <!-- Content (Foreground) -->
+        <div class="relative z-10 max-w-4xl mx-auto animate-slide-up">
+          <p class="text-xl md:text-3xl font-arabic text-accent-300 mb-6 text-shadow-lg tracking-wider">
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </p>
+          <h1 class="font-bold mb-8 text-white leading-none">
+            <span class="block text-2xl md:text-4xl lg:text-5xl font-medium mb-4 opacity-90">Selamat Datang di</span>
+            <span class="block text-5xl md:text-7xl lg:text-8xl font-bold text-accent-300 drop-shadow-xl tracking-tight">
+              TPQ AMANAH
+            </span>
+          </h1>
+          <p class="text-lg md:text-2xl text-white/95 mb-10 max-w-2xl mx-auto leading-relaxed font-light drop-shadow-md">
+            Taman Pendidikan Al-Quran untuk membentuk generasi Qurani yang berakhlak mulia, cerdas, dan bertaqwa kepada Allah SWT
+          </p>
+          <div class="flex flex-wrap gap-5 justify-center items-center">
+            <a href="#tentang" @click="scrollTo($event, '#tentang')" class="btn-primary px-8 py-4 text-lg shadow-xl shadow-green-900/30 hover:shadow-green-900/50 hover:-translate-y-1 transition-all rounded-full">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Pelajari Lebih Lanjut
+            </a>
+            <router-link to="/dashboard" class="btn-secondary px-8 py-4 text-lg bg-white/20 backdrop-blur-md border-white/50 text-white hover:bg-white hover:text-primary-700 shadow-xl hover:shadow-white/30 hover:-translate-y-1 transition-all rounded-full">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+              </svg>
+              Login Dashboard
+            </router-link>
+          </div>
+        </div>
+
       </div>
 
       <!-- Wave -->
-      <div class="absolute bottom-0 left-0 right-0 leading-[0]">
+      <div class="absolute bottom-0 left-0 right-0 leading-[0] z-20">
         <svg viewBox="0 0 1440 120" class="block w-full h-20 md:h-32 fill-primary-50" preserveAspectRatio="none">
           <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,42.7C672,32,768,32,864,42.7C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"/>
         </svg>
@@ -402,3 +396,45 @@ onUnmounted(() => {
   mapObserver?.disconnect()
 })
 </script>
+
+<style scoped>
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-veryslow {
+  animation: spin 20s linear infinite;
+}
+
+.animate-spin-reverse-veryslow {
+  animation: spin 25s linear infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(-10%); }
+  50% { transform: translateY(10%); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+</style>

@@ -32,7 +32,21 @@
     <!-- Users List - Responsive Cards -->
     <div class="users-list glass-card">
       <div v-if="loading" class="loading-state">
-        <SkeletonLoader v-for="i in 5" :key="i" type="text" height="70px" />
+        <!-- Skeleton Loading State -->
+        <div v-for="i in 5" :key="i" class="user-card skeleton-card">
+          <div class="skeleton-main">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-info">
+              <div class="skeleton-name"></div>
+              <div class="skeleton-email"></div>
+            </div>
+            <div class="skeleton-badge"></div>
+          </div>
+          <div class="skeleton-actions">
+            <div class="skeleton-btn"></div>
+            <div class="skeleton-btn"></div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="filteredUsers.length === 0" class="empty-state">
@@ -432,5 +446,87 @@ onMounted(() => {
   gap: var(--space-md);
   justify-content: flex-end;
   margin-top: var(--space-xl);
+}
+
+/* Skeleton Styles */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar,
+.skeleton-name,
+.skeleton-email,
+.skeleton-badge,
+.skeleton-btn {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+}
+
+@media (min-width: 768px) {
+  .skeleton-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.skeleton-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex: 1;
+}
+
+.skeleton-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.skeleton-name {
+  height: 16px;
+  width: 140px;
+}
+
+.skeleton-email {
+  height: 12px;
+  width: 180px;
+}
+
+.skeleton-badge {
+  width: 60px;
+  height: 22px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.skeleton-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: var(--radius-md);
 }
 </style>

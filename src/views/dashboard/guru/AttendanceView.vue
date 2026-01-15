@@ -5,6 +5,22 @@
       <p>Catat kehadiran mengajar (Senin - Jumat)</p>
     </header>
 
+    <!-- Holiday Banner -->
+    <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
+      <div class="holiday-alert-icon">🎉</div>
+      <div class="holiday-alert-content">
+        <span class="holiday-alert-label">Hari Ini Libur Nasional</span>
+        <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+      </div>
+    </div>
+    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
+      <div class="holiday-alert-icon">📅</div>
+      <div class="holiday-alert-content">
+        <span class="holiday-alert-label">Besok Libur Nasional</span>
+        <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+      </div>
+    </div>
+
     <!-- Today's Card - Prominent Design -->
     <div class="today-card glass-card">
       <div class="today-date-display">
@@ -24,6 +40,13 @@
         <div v-else-if="isWeekend" class="weekend-notice">
           <span class="weekend-icon">🏖️</span>
           <p>Hari ini adalah akhir pekan.<br/>Absensi hanya untuk hari Senin - Jumat.</p>
+        </div>
+
+        <div v-else-if="todayHoliday.isHoliday" class="holiday-notice">
+          <span class="holiday-notice-icon">🎉</span>
+          <h3>Hari Ini Libur Nasional</h3>
+          <p class="holiday-notice-name">{{ todayHoliday.holidayName }}</p>
+          <p class="holiday-notice-text">Tidak ada absensi untuk hari libur nasional.<br/>Selamat beristirahat! 🙏</p>
         </div>
 
         <div v-else-if="todayAttendance" class="attendance-done">
@@ -125,7 +148,10 @@
         </div>
 
         <div v-if="loading" class="loading-calendar">
-          <SkeletonLoader type="text" width="100%" height="250px" />
+          <div class="skeleton-calendar-grid">
+            <div v-for="i in 7" :key="'header-'+i" class="skeleton-day-header"></div>
+            <div v-for="i in 35" :key="'cell-'+i" class="skeleton-calendar-cell"></div>
+          </div>
         </div>
 
         <template v-else>
@@ -144,11 +170,13 @@
               class="calendar-cell"
               :class="getCalendarCellClass(date)"
               @click="showCalendarDetail(date)"
+              :title="getHolidayForDate(date)?.name || ''"
             >
               <span class="cell-date">{{ date }}</span>
               <span class="cell-status" v-if="getAttendanceForDate(date)">
                 {{ getAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
               </span>
+              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
             </div>
           </div>
 
@@ -157,6 +185,7 @@
             <div class="legend-item"><span class="legend-dot hadir"></span> Hadir</div>
             <div class="legend-item"><span class="legend-dot tidak"></span> Tidak Hadir</div>
             <div class="legend-item"><span class="legend-dot empty"></span> Tidak Ada Data</div>
+            <div class="legend-item"><span class="legend-dot libur"></span> Hari Libur</div>
           </div>
         </template>
       </div>
@@ -168,6 +197,16 @@
           <h4>{{ formatCalendarDate(selectedCalendarDate) }}</h4>
           <button class="close-btn" @click="selectedCalendarDate = null">×</button>
         </div>
+        
+        <!-- Holiday Banner in Popup -->
+        <div v-if="getHolidayForDate(selectedCalendarDate)" class="holiday-banner">
+          <span class="holiday-icon">🎉</span>
+          <div class="holiday-info">
+            <span class="holiday-label">Hari Libur Nasional</span>
+            <span class="holiday-name">{{ getHolidayForDate(selectedCalendarDate).name }}</span>
+          </div>
+        </div>
+        
         <div class="popup-content" v-if="selectedCalendarAttendance">
           <div class="popup-status" :class="selectedCalendarAttendance.status">
             {{ selectedCalendarAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
@@ -232,6 +271,7 @@ import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
+import { fetchHolidays, isTodayHoliday, isTomorrowHoliday, getHolidaysForMonth } from '@/services/holidayService'
 
 const { success, error: showError } = useToast()
 
@@ -264,6 +304,14 @@ const calendarYear = ref(today.getFullYear())
 const calendarMonthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const calendarDayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 const selectedCalendarDate = ref(null)
+
+// Holiday state
+const holidays = ref([])
+const monthHolidays = ref([])
+
+// Computed for holidays
+const todayHoliday = computed(() => isTodayHoliday(holidays.value))
+const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value))
 
 const isCurrentCalendarMonth = computed(() => {
   return calendarMonth.value === today.getMonth() && calendarYear.value === today.getFullYear()
@@ -367,9 +415,29 @@ const getAttendanceForDate = (date) => {
 }
 
 const getCalendarCellClass = (date) => {
+  const classes = []
   const attendance = getAttendanceForDate(date)
-  if (!attendance) return 'no-data'
-  return attendance.status === 'hadir' ? 'hadir' : 'tidak'
+  
+  if (!attendance) {
+    classes.push('no-data')
+  } else {
+    classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
+  }
+  
+  // Check if this date is a holiday
+  if (getHolidayForDate(date)) {
+    classes.push('libur')
+  }
+  
+  return classes.join(' ')
+}
+
+const getHolidayForDate = (date) => {
+  return monthHolidays.value.find(h => h.date === date)
+}
+
+const updateMonthHolidays = () => {
+  monthHolidays.value = getHolidaysForMonth(calendarMonth.value, calendarYear.value, holidays.value)
 }
 
 const formatCalendarDate = (date) => {
@@ -392,6 +460,7 @@ const prevMonth = () => {
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
   fetchAttendance()
+  updateMonthHolidays()
 }
 
 const nextMonth = () => {
@@ -405,6 +474,7 @@ const nextMonth = () => {
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
   fetchAttendance()
+  updateMonthHolidays()
 }
 
 const fetchAttendance = async () => {
@@ -418,7 +488,11 @@ const fetchAttendance = async () => {
     })
     attendanceHistory.value = data
 
-    const todayStr = today.toISOString().split('T')[0]
+    // Check for today's attendance using local date comparison
+    const todayYear = today.getFullYear()
+    const todayMonth = today.getMonth()
+    const todayDate = today.getDate()
+    
     todayAttendance.value = data.find(a => {
       if (!a.date) return false
       // Handle Firestore Timestamp format
@@ -430,7 +504,11 @@ const fetchAttendance = async () => {
       } else {
         d = new Date(a.date)
       }
-      return !isNaN(d.getTime()) && d.toISOString().split('T')[0] === todayStr
+      // Compare using local date components
+      return !isNaN(d.getTime()) && 
+             d.getFullYear() === todayYear && 
+             d.getMonth() === todayMonth && 
+             d.getDate() === todayDate
     }) || null
   } catch (e) {
     console.log('Fetch error')
@@ -505,7 +583,14 @@ const submitUpdate = async () => {
   }
 }
 
-onMounted(fetchAttendance)
+onMounted(async () => {
+  // Fetch holidays first
+  holidays.value = await fetchHolidays()
+  updateMonthHolidays()
+  
+  // Fetch attendance
+  await fetchAttendance()
+})
 </script>
 
 <style scoped>
@@ -604,6 +689,51 @@ onMounted(fetchAttendance)
   font-size: 3rem;
   display: block;
   margin-bottom: var(--space-md);
+}
+
+/* Holiday Notice in Today Card */
+.holiday-notice {
+  text-align: center;
+  padding: var(--space-xl);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
+  border-radius: var(--radius-xl);
+  border: 2px solid rgba(255, 152, 0, 0.3);
+}
+
+.holiday-notice-icon {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: var(--space-md);
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.holiday-notice h3 {
+  color: #e65100;
+  margin-bottom: var(--space-sm);
+  font-size: 1.25rem;
+}
+
+.holiday-notice-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e65100;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(255, 152, 0, 0.15);
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.holiday-notice-text {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .attendance-done {
@@ -976,6 +1106,36 @@ onMounted(fetchAttendance)
   padding: var(--space-sm);
 }
 
+/* Skeleton Calendar Styles */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-xs);
+}
+
+.skeleton-day-header,
+.skeleton-calendar-cell {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-day-header {
+  height: 20px;
+  margin-bottom: var(--space-xs);
+  opacity: 0.7;
+}
+
+.skeleton-calendar-cell {
+  aspect-ratio: 1;
+}
+
 .calendar-cell {
   aspect-ratio: 1;
   display: flex;
@@ -1054,6 +1214,152 @@ onMounted(fetchAttendance)
 .legend-dot.hadir { background: rgba(76, 175, 80, 0.3); border: 2px solid #4caf50; }
 .legend-dot.tidak { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
 .legend-dot.empty { background: var(--gray-100); border: 1px dashed var(--gray-300); }
+.legend-dot.libur { background: rgba(255, 193, 7, 0.4); border: 2px solid #ffc107; }
+
+/* Holiday Styles */
+.calendar-cell.libur {
+  background: rgba(255, 193, 7, 0.25) !important;
+  border: 2px solid #ffc107 !important;
+  position: relative;
+}
+
+.calendar-cell.libur.no-data {
+  border-style: solid !important;
+}
+
+.cell-holiday-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  font-size: 0.4rem;
+  line-height: 1;
+}
+
+/* Holiday Alert Banner */
+.holiday-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-lg);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.today-holiday {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.25));
+  border: 2px solid rgba(255, 152, 0, 0.4);
+}
+
+.tomorrow-holiday {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(30, 136, 229, 0.2));
+  border: 2px solid rgba(33, 150, 243, 0.3);
+}
+
+.holiday-alert-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.holiday-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.holiday-alert-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.today-holiday .holiday-alert-label {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-label {
+  color: #1565c0;
+}
+
+.holiday-alert-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.today-holiday .holiday-alert-name {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-name {
+  color: #1565c0;
+}
+
+/* Holiday Banner in Popup */
+.holiday-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.2));
+  border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.holiday-icon {
+  font-size: 1.5rem;
+}
+
+.holiday-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.holiday-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #e65100;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.holiday-name {
+  font-size: 0.9rem;
+  color: #e65100;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .holiday-alert {
+    padding: var(--space-md);
+  }
+  
+  .holiday-alert-icon {
+    font-size: 1.5rem;
+  }
+  
+  .holiday-alert-label {
+    font-size: 0.7rem;
+  }
+  
+  .holiday-alert-name {
+    font-size: 0.95rem;
+  }
+  
+  .cell-holiday-dot {
+    font-size: 0.35rem;
+  }
+}
 
 /* Calendar Popup */
 .calendar-popup-overlay {

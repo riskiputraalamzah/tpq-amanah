@@ -25,9 +25,28 @@
     </div>
 
     <div class="students-list">
-      <div v-if="loading" v-for="i in 3" :key="i" class="student-card glass-card">
-        <SkeletonLoader type="title" />
-        <SkeletonLoader type="paragraph" />
+      <!-- Skeleton Loading State -->
+      <div v-if="loading" v-for="i in 3" :key="i" class="student-card glass-card skeleton-student-card">
+        <div class="skeleton-student-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-info">
+            <div class="skeleton-name"></div>
+            <div class="skeleton-meta"></div>
+          </div>
+          <div class="skeleton-summary">
+            <div class="skeleton-summary-item"></div>
+            <div class="skeleton-summary-item"></div>
+            <div class="skeleton-summary-item"></div>
+          </div>
+        </div>
+        <div class="skeleton-criteria">
+          <div class="skeleton-criteria-item"></div>
+          <div class="skeleton-criteria-item"></div>
+        </div>
+        <div class="skeleton-actions">
+          <div class="skeleton-btn"></div>
+          <div class="skeleton-btn danger"></div>
+        </div>
       </div>
 
       <div v-else-if="groupedGrades.length === 0" class="empty-state glass-card">
@@ -634,4 +653,92 @@ onMounted(() => {
 .alert-content strong { display: block; margin-bottom: var(--space-xs); color: var(--primary-dark); }
 .alert-content ul { margin: 0; padding-left: var(--space-lg); color: var(--gray-600); }
 .alert-content li { margin-bottom: 2px; }
+
+/* Skeleton Styles for Student Cards */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar,
+.skeleton-name,
+.skeleton-meta,
+.skeleton-summary-item,
+.skeleton-criteria-item,
+.skeleton-btn {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-student-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.skeleton-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-info {
+  flex: 1;
+  min-width: 150px;
+}
+
+.skeleton-name {
+  height: 20px;
+  width: 140px;
+  margin-bottom: var(--space-xs);
+}
+
+.skeleton-meta {
+  height: 14px;
+  width: 100px;
+}
+
+.skeleton-summary {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.skeleton-summary-item {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-criteria {
+  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.skeleton-criteria-item {
+  height: 40px;
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.skeleton-btn {
+  height: 36px;
+  width: 130px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-btn.danger {
+  width: 110px;
+}
 </style>

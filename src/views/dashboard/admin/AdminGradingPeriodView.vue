@@ -25,9 +25,16 @@
 
     <!-- Guru Accordion Cards -->
     <div class="guru-accordion">
-      <div v-if="loading" v-for="i in 3" :key="i" class="guru-card glass-card">
-        <SkeletonLoader type="title" />
-        <SkeletonLoader type="paragraph" />
+      <!-- Skeleton Loading State -->
+      <div v-if="loading" v-for="i in 3" :key="i" class="guru-card glass-card skeleton-guru-card">
+        <div class="skeleton-guru-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-guru-info">
+            <div class="skeleton-name"></div>
+            <div class="skeleton-meta"></div>
+          </div>
+          <div class="skeleton-toggle"></div>
+        </div>
       </div>
 
       <div v-else-if="guruList.length === 0" class="empty-state glass-card">
@@ -233,4 +240,54 @@ onMounted(fetchData)
 .criteria-chip strong { color: var(--primary); }
 
 .empty-state { padding: var(--space-3xl); text-align: center; color: var(--gray-500); }
+
+/* Skeleton Styles for Guru Cards */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar,
+.skeleton-name,
+.skeleton-meta,
+.skeleton-toggle {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-guru-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+}
+
+.skeleton-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-guru-info {
+  flex: 1;
+}
+
+.skeleton-name {
+  height: 20px;
+  width: 150px;
+  margin-bottom: var(--space-xs);
+}
+
+.skeleton-meta {
+  height: 14px;
+  width: 100px;
+}
+
+.skeleton-toggle {
+  width: 20px;
+  height: 20px;
+}
 </style>

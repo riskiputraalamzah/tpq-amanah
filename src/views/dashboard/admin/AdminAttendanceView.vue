@@ -13,6 +13,22 @@
       </div>
     </header>
 
+    <!-- Holiday Banner -->
+    <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
+      <div class="holiday-alert-icon">🎉</div>
+      <div class="holiday-alert-content">
+        <span class="holiday-alert-label">Hari Ini Libur Nasional</span>
+        <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+      </div>
+    </div>
+    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
+      <div class="holiday-alert-icon">📅</div>
+      <div class="holiday-alert-content">
+        <span class="holiday-alert-label">Besok Libur Nasional</span>
+        <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+      </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="summary-row">
       <div class="summary-card glass-card">
@@ -45,7 +61,21 @@
       </div>
 
       <div v-if="loading" class="loading-state">
-        <SkeletonLoader v-for="i in 5" :key="i" type="text" height="60px" class="skeleton-item" />
+        <!-- Skeleton Loading State -->
+        <div v-for="i in 5" :key="i" class="teacher-row skeleton-row">
+          <div class="teacher-info">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-details">
+              <div class="skeleton-name"></div>
+              <div class="skeleton-position"></div>
+            </div>
+          </div>
+          <div class="skeleton-stats">
+            <div class="skeleton-stat"></div>
+            <div class="skeleton-stat"></div>
+            <div class="skeleton-stat wide"></div>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="teachers.length === 0" class="empty-state">
@@ -130,6 +160,7 @@ import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
+import { fetchHolidays, isTodayHoliday, isTomorrowHoliday } from '@/services/holidayService'
 
 const router = useRouter()
 const { success, error: showError, warning } = useToast()
@@ -141,6 +172,11 @@ const loading = ref(true)
 const teachers = ref([])
 const attendanceData = ref([])
 const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
+const holidays = ref([])
+
+// Computed for holidays
+const todayHoliday = computed(() => isTodayHoliday(holidays.value))
+const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value))
 
 const teachersWithStats = computed(() => {
   return teachers.value.map(t => {
@@ -301,7 +337,12 @@ const saveAttendance = async () => {
   }
 }
 
-onMounted(fetchData)
+onMounted(async () => {
+  // Fetch holidays
+  holidays.value = await fetchHolidays()
+  // Fetch data
+  await fetchData()
+})
 </script>
 
 <style scoped>
@@ -536,6 +577,95 @@ onMounted(fetchData)
 .status-btn.active.hadir { background: rgba(76, 175, 80, 0.15); color: #388e3c; border: 2px solid #4caf50; }
 .status-btn.active.tidak { background: rgba(244, 67, 54, 0.15); color: #c62828; border: 2px solid #f44336; }
 
+/* Holiday Alert Banner */
+.holiday-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-lg);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.today-holiday {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.25));
+  border: 2px solid rgba(255, 152, 0, 0.4);
+}
+
+.tomorrow-holiday {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(30, 136, 229, 0.2));
+  border: 2px solid rgba(33, 150, 243, 0.3);
+}
+
+.holiday-alert-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.holiday-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.holiday-alert-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.today-holiday .holiday-alert-label {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-label {
+  color: #1565c0;
+}
+
+.holiday-alert-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.today-holiday .holiday-alert-name {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-name {
+  color: #1565c0;
+}
+
+@media (max-width: 640px) {
+  .holiday-alert {
+    padding: var(--space-md);
+  }
+  
+  .holiday-alert-icon {
+    font-size: 1.5rem;
+  }
+  
+  .holiday-alert-label {
+    font-size: 0.7rem;
+  }
+  
+  .holiday-alert-name {
+    font-size: 0.95rem;
+  }
+}
+
 /* Detail Modal Styles */
 .detail-modal { max-width: 500px; padding: 0; overflow: hidden; }
 .detail-header { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--space-xl); background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
@@ -569,4 +699,61 @@ onMounted(fetchData)
 .history-dayname { font-size: 0.8rem; color: var(--gray-500); }
 .history-notes { margin: 0; font-size: 0.875rem; color: var(--gray-600); font-style: italic; background: var(--gray-50); padding: 4px 8px; border-radius: 4px; display: inline-block; }
 .empty-history { text-align: center; color: var(--gray-400); padding: var(--space-xl); }
+
+/* Skeleton Styles for Teacher Rows */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar,
+.skeleton-name,
+.skeleton-position,
+.skeleton-stat {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-row {
+  pointer-events: none;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-details {
+  flex: 1;
+}
+
+.skeleton-name {
+  height: 18px;
+  width: 140px;
+  margin-bottom: var(--space-xs);
+}
+
+.skeleton-position {
+  height: 14px;
+  width: 80px;
+}
+
+.skeleton-stats {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.skeleton-stat {
+  width: 50px;
+  height: 40px;
+  border-radius: var(--radius-md);
+}
+
+.skeleton-stat.wide {
+  width: 90px;
+}
 </style>

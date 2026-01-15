@@ -8,10 +8,16 @@
     </header>
 
     <div class="teachers-grid">
-      <div v-if="loading" v-for="i in 4" :key="i" class="teacher-card glass-card">
-        <SkeletonLoader type="avatar" size="80px" />
-        <SkeletonLoader type="title" width="70%" />
-        <SkeletonLoader type="text" width="50%" />
+      <div v-if="loading" v-for="i in 4" :key="i" class="teacher-card glass-card skeleton-card">
+        <div class="skeleton-avatar-lg"></div>
+        <div class="skeleton-title"></div>
+        <div class="skeleton-text"></div>
+        <div class="skeleton-text-sm"></div>
+        <div class="skeleton-text-xs"></div>
+        <div class="skeleton-actions">
+          <div class="skeleton-btn"></div>
+          <div class="skeleton-btn"></div>
+        </div>
       </div>
 
       <div v-else-if="teachers.length === 0" class="empty-state glass-card">
@@ -315,5 +321,72 @@ onMounted(() => {
   gap: var(--space-md);
   justify-content: flex-end;
   margin-top: var(--space-xl);
+}
+
+/* Skeleton Styles */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-avatar-lg,
+.skeleton-title,
+.skeleton-text,
+.skeleton-text-sm,
+.skeleton-text-xs,
+.skeleton-btn {
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  margin-inline: auto;
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.skeleton-avatar-lg {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 60%;
+  margin-bottom: var(--space-xs);
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 40%;
+}
+
+.skeleton-text-sm {
+  height: 14px;
+  width: 80%;
+  margin-top: var(--space-sm);
+}
+
+.skeleton-text-xs {
+  height: 12px;
+  width: 50%;
+  margin-top: var(--space-xs);
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.skeleton-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: var(--radius-md);
 }
 </style>
