@@ -1142,4 +1142,78 @@ onMounted(fetchAttendance)
   color: var(--gray-400);
   font-style: italic;
 }
+
+@media (max-width: 640px) {
+  /* Calendar Responsive Fixes */
+  .calendar-section {
+    padding: var(--space-sm);
+  }
+
+  .calendar-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .calendar-header h3 {
+    font-size: 0.9rem;
+  }
+  
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .calendar-grid {
+    gap: 2px;
+  }
+
+  .day-header {
+    font-size: 0.65rem;
+    padding: 2px 0;
+  }
+
+  .calendar-cell {
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+  }
+
+  .cell-date {
+    font-size: 0.75rem;
+  }
+
+  .cell-status {
+    font-size: 0.5rem;
+    margin-top: 1px;
+  }
+
+  .calendar-legend {
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  
+  .legend-item {
+    font-size: 0.7rem;
+  }
+
+  .attendance-view {
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 400px) {
+  .calendar-section {
+    padding: 4px;
+  }
+  
+  .calendar-grid {
+    gap: 1px;
+  }
+  
+  .cell-date {
+    font-size: 0.7rem;
+  }
+  
+  .cell-status {
+    font-size: 8px;
+  }
+}
 </style>

@@ -717,23 +717,98 @@ onMounted(async () => {
   .teacher-header {
     flex-direction: column;
     align-items: flex-start;
+    padding: var(--space-md);
   }
   
   .teacher-stats {
     width: 100%;
     justify-content: space-between;
+    gap: var(--space-sm);
   }
   
   .stat-box {
     flex: 1;
     min-width: 0;
+    padding: var(--space-sm);
+  }
+
+  .stat-box .stat-value {
+    font-size: 0.9rem;
   }
   
   .calendar-legend {
     flex-wrap: wrap;
-    gap: var(--space-md);
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+  
+  .legend-item {
+    font-size: 0.7rem;
+  }
+
+  /* Calendar Responsive Fixes */
+  .calendar-section {
+    padding: var(--space-sm); 
+  }
+
+  .calendar-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .calendar-header h2 {
+    font-size: 0.9rem;
+  }
+  
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .calendar-grid {
+    gap: 2px;
+  }
+
+  .day-header {
+    font-size: 0.65rem;
+    padding: 2px 0;
+  }
+
+  .calendar-cell {
+    border-radius: var(--radius-sm);
+  }
+
+  .cell-date {
+    font-size: 0.75rem;
+  }
+
+  .cell-status {
+    font-size: 0.5rem;
+    margin-top: 1px;
+  }
+
+  .teacher-attendance-detail {
+    padding-top: 10px;
   }
 }
+
+@media (max-width: 400px) {
+  .calendar-section {
+    padding: 4px;
+  }
+  
+  .calendar-grid {
+    gap: 1px;
+  }
+  
+  .cell-date {
+    font-size: 0.7rem;
+  }
+  
+  .cell-status {
+    font-size: 8px;
+  }
+}
+
 
 /* Edit Mode Styles */
 .btn-edit, .btn-add {

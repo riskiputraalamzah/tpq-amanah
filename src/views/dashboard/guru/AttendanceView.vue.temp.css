@@ -1,0 +1,44 @@
+@media (max-width: 640px) {
+  /* Calendar Responsive Fixes */
+  .calendar-section {
+    padding: var(--space-md);
+  }
+
+  .calendar-header h3 {
+    font-size: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .day-header {
+    font-size: 0.7rem;
+    padding: 2px;
+  }
+
+  .calendar-cell {
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+  }
+
+  .cell-date {
+    font-size: 0.8rem;
+  }
+
+  .cell-status {
+    font-size: 0.6rem;
+    display: none; /* Hide text status on very small screens */
+  }
+
+  .calendar-cell.hadir .cell-status,
+  .calendar-cell.tidak .cell-status {
+    display: block; /* Show status only if it exists */
+    font-size: 10px;
+    margin-top: 0;
+  }
+
+  .calendar-legend {
+    gap: var(--space-md);
+  }
+}
