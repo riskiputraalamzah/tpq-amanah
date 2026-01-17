@@ -134,82 +134,13 @@
 
 html {
   scroll-behavior: smooth;
-  /* Improve scrolling on iOS */
-  -webkit-overflow-scrolling: touch;
-  /* Prevent overscroll bounce */
-  overscroll-behavior: none;
-  /* Optimize text rendering */
-  text-rendering: optimizeSpeed;
 }
 
 body {
   font-family: 'Poppins', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
   color: #1a1a1a;
-  /* Smooth scrolling for mobile */
-  -webkit-overflow-scrolling: touch;
-  /* Prevent pull-to-refresh on mobile */
-  overscroll-behavior-y: contain;
-  /* GPU acceleration for smoother animations */
-  transform: translateZ(0);
-  /* Optimize paint performance */
-  contain: layout style;
-}
-
-/* Performance: Optimize all scrollable containers */
-[class*="scroll"],
-.dashboard-content,
-.sidebar-nav,
-.modal,
-.teacher-list,
-.history-list,
-main,
-section {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-/* GPU acceleration for frequently animated elements */
-.glass-card,
-.btn,
-.btn-primary,
-.btn-secondary,
-.sidebar-link,
-.nav-link,
-.teacher-row,
-.summary-card {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Touch-friendly tap targets */
-@media (pointer: coarse) {
-
-  button,
-  a,
-  [role="button"],
-  input,
-  select,
-  textarea {
-    min-height: 44px;
-    min-width: 44px;
-  }
 }
 
 a {
@@ -695,7 +626,7 @@ img {
 
 /* ==================== COMPONENTS ==================== */
 
-/* Glass Card - Optimized for Performance */
+/* Glass Card */
 .glass-card {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(24px);
@@ -703,25 +634,12 @@ img {
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 1.5rem;
   box-shadow: 0 8px 32px rgba(27, 94, 32, 0.12);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  /* GPU acceleration */
-  will-change: transform;
-  transform: translateZ(0);
-  /* Contain for paint optimization */
-  contain: layout style paint;
+  transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-  transform: translateY(-8px) translateZ(0);
+  transform: translateY(-8px);
   box-shadow: 0 20px 60px rgba(27, 94, 32, 0.2);
-}
-
-/* Reduce blur on mobile for better scroll performance */
-@media (max-width: 768px) {
-  .glass-card {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
 }
 
 .glass-card-solid {
@@ -731,8 +649,6 @@ img {
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 1.5rem;
   box-shadow: 0 16px 48px rgba(27, 94, 32, 0.15);
-  will-change: transform;
-  transform: translateZ(0);
 }
 
 /* Buttons */

@@ -323,10 +323,6 @@ const handleLogout = async () => {
   flex: 1;
   padding: var(--space-md);
   overflow-y: auto;
-  /* Smooth scrolling */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
 }
 
 .sidebar-section {
@@ -478,10 +474,6 @@ const handleLogout = async () => {
   flex: 1;
   padding: var(--space-xl);
   min-height: 100vh;
-  /* Smooth scrolling for mobile */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
 }
 
 @media (min-width: 1024px) {
@@ -496,8 +488,6 @@ const handleLogout = async () => {
 .dashboard-content {
   max-width: 1400px;
   margin: 0 auto;
-  /* GPU acceleration for smoother scroll */
-  transform: translateZ(0);
 }
 
 /* Transitions */
