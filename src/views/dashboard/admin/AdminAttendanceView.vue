@@ -34,21 +34,24 @@
       <div class="summary-card glass-card">
         <div class="summary-icon">👥</div>
         <div class="summary-content">
-          <span class="summary-value">{{ teachers.length }}</span>
+          <span v-if="loading" class="summary-value-skeleton"></span>
+          <span v-else class="summary-value">{{ teachers.length }}</span>
           <span class="summary-label">Total Guru</span>
         </div>
       </div>
       <div class="summary-card glass-card">
         <div class="summary-icon">✅</div>
         <div class="summary-content">
-          <span class="summary-value">{{ totalAttendance }}</span>
+          <span v-if="loading" class="summary-value-skeleton"></span>
+          <span v-else class="summary-value">{{ totalAttendance }}</span>
           <span class="summary-label">Total Kehadiran</span>
         </div>
       </div>
       <div class="summary-card glass-card highlight">
         <div class="summary-icon">💰</div>
         <div class="summary-content">
-          <span class="summary-value">Rp {{ formatCurrency(totalSalary) }}</span>
+          <span v-if="loading" class="summary-value-skeleton wide"></span>
+          <span v-else class="summary-value">Rp {{ formatCurrency(totalSalary) }}</span>
           <span class="summary-label">Total Gaji Bulan Ini</span>
         </div>
       </div>
@@ -755,5 +758,21 @@ onMounted(async () => {
 
 .skeleton-stat.wide {
   width: 90px;
+}
+
+/* Skeleton for Summary Card Values */
+.summary-value-skeleton {
+  display: inline-block;
+  height: 32px;
+  width: 50px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+  vertical-align: middle;
+}
+
+.summary-value-skeleton.wide {
+  width: 120px;
 }
 </style>

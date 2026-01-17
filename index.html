@@ -43,7 +43,91 @@
     <meta name="msapplication-TileColor" content="#166534" />
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Initial Loading Screen - Will be replaced when Vue app mounts -->
+      <div id="initial-loader" style="
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #388E3C 100%);
+        z-index: 9999;
+      ">
+        <!-- Islamic Decorative Pattern -->
+        <div style="
+          position: absolute;
+          inset: 0;
+          background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+          opacity: 0.3;
+        "></div>
+        
+        <!-- Logo Container -->
+        <div style="
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1.5rem;
+          animation: fadeInUp 0.8s ease-out;
+        ">
+          <!-- Logo Image -->
+          <img src="/logo.png" alt="TPQ Amanah Logo" style="
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+          ">
+          
+          <!-- Title -->
+          <div style="text-align: center;">
+            <h1 style="
+              font-family: 'Poppins', system-ui, sans-serif;
+              font-size: 2.5rem;
+              font-weight: 700;
+              color: #FFD54F;
+              margin: 0;
+              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+              letter-spacing: 2px;
+            ">TPQ AMANAH</h1>
+            <p style="
+              font-family: 'Poppins', system-ui, sans-serif;
+              font-size: 0.9rem;
+              color: rgba(255, 255, 255, 0.9);
+              margin: 0.5rem 0 0 0;
+              letter-spacing: 1px;
+            ">Taman Pendidikan Al-Quran</p>
+          </div>
+          
+          <!-- Loading Spinner -->
+          <div style="
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #FFD54F;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+        </div>
+      </div>
+      
+      <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+          50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); }
+        }
+        @keyframes fadeInUp {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
