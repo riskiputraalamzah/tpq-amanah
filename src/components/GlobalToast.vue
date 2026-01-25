@@ -78,6 +78,15 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
 .toast-container.success { background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95)); }
 .toast-container.error { background: linear-gradient(135deg, rgba(244, 67, 54, 0.95), rgba(211, 47, 47, 0.95)); }
 .toast-container.warning { background: linear-gradient(135deg, rgba(255, 152, 0, 0.95), rgba(245, 124, 0, 0.95)); }
+
+@media (max-width: 480px) {
+  .toast-container {
+    min-width: auto;
+    width: calc(100% - 20px);
+    right: 10px;
+    left: 10px;
+  }
+}
 .toast-container.info { background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(25, 118, 210, 0.95)); }
 
 .toast-content {

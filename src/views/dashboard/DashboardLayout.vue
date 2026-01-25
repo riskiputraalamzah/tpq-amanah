@@ -494,6 +494,15 @@ const handleLogout = async () => {
   flex: 1;
   padding: var(--space-xl);
   min-height: 100vh;
+  width: 100%; /* Ensure proper sizing in flex container */
+  overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: var(--space-md);
+  }
+ 
 }
 
 @media (min-width: 1024px) {

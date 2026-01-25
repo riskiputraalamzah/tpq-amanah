@@ -548,6 +548,12 @@ onMounted(async () => {
     min-width: 0;
     justify-content: center;
   }
+   .attendance-table, .loading-state {
+      padding: var(--space-md) !important;
+  }
+  .teacher-stats,.skeleton-stats{
+    gap: var(--space-md) !important;
+  }
 }
 
 /* Summary Cards */
