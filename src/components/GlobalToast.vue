@@ -60,9 +60,9 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
 /* Toast Container */
 .toast-container {
   position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 9999;
+  top: 10px;
+  right: 10px;
+  z-index: 99999;
   min-width: 320px;
   max-width: 420px;
   border-radius: 16px;
@@ -72,8 +72,8 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
   margin-bottom: 12px;
 }
 
-.toast-container:nth-child(2) { top: calc(24px + 90px); }
-.toast-container:nth-child(3) { top: calc(24px + 180px); }
+/* .toast-container:nth-child(2) { top: calc(20px + 90px); }
+.toast-container:nth-child(3) { top: calc(20px + 180px); } */
 
 .toast-container.success { background: linear-gradient(135deg, rgba(76, 175, 80, 0.95), rgba(56, 142, 60, 0.95)); }
 .toast-container.error { background: linear-gradient(135deg, rgba(244, 67, 54, 0.95), rgba(211, 47, 47, 0.95)); }

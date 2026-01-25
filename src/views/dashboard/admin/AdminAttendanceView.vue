@@ -9,7 +9,11 @@
         <select v-model="selectedMonth" class="form-input form-select" @change="fetchData">
           <option v-for="m in availableMonths" :key="m.value" :value="m.value">{{ m.label }}</option>
         </select>
-        <button class="btn btn-primary" @click="openAddModal">+ Tambah Absensi</button>
+        <button class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
+          <span v-if="exporting">⏳ Mengunduh...</span>
+          <span v-else>📄 Export PDF</span>
+        </button>
+        <button v-if="isAdmin" class="btn btn-primary" @click="openAddModal">+ Tambah Absensi</button>
       </div>
     </header>
 
@@ -164,9 +168,15 @@ import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
 import { fetchHolidays, isTodayHoliday, isTomorrowHoliday } from '@/services/holidayService'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const { success, error: showError, warning } = useToast()
+const authStore = useAuthStore()
+
+const isAdmin = computed(() => authStore.isAdmin)
 
 const today = new Date()
 const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -193,6 +203,7 @@ const teachersWithStats = computed(() => {
 // Modal state
 const showModal = ref(false)
 const saving = ref(false)
+const exporting = ref(false)
 const form = ref({ date: '', guruId: '', guruName: '', status: 'hadir', notes: '' })
 
 const availableMonths = computed(() => {
@@ -293,10 +304,11 @@ const fetchData = async () => {
     const { data: guruData } = await api.get('/users?role=guru')
     teachers.value = guruData
 
-    const { data: attData } = await api.get('/attendance/all', { params: { month, year } })
+    const { data: attData } = await api.get('/attendance', { params: { month, year } })
     attendanceData.value = attData
   } catch (e) {
     console.error('Fetch error:', e)
+    showError('Gagal memuat data. Periksa izin akses.')
   } finally {
     loading.value = false
   }
@@ -314,6 +326,102 @@ const closeModal = () => {
 const onGuruChange = () => {
   const t = teachers.value.find(t => t.id === form.value.guruId)
   form.value.guruName = t?.displayName || ''
+}
+
+// Export to PDF function
+const exportToPDF = () => {
+  if (teachersWithStats.value.length === 0) {
+    warning('Tidak ada data untuk di-export')
+    return
+  }
+  
+  exporting.value = true
+  
+  try {
+    const doc = new jsPDF()
+    const [year, monthNum] = selectedMonth.value.split('-').map(Number)
+    const monthName = monthNames[monthNum - 1]
+    
+    // Header
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('LAPORAN ABSENSI GURU', 105, 20, { align: 'center' })
+    
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'normal')
+    doc.text('TPQ AMANAH', 105, 28, { align: 'center' })
+    
+    doc.setFontSize(11)
+    doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: 'center' })
+    
+    // Line separator
+    doc.setDrawColor(0, 100, 0)
+    doc.setLineWidth(0.5)
+    doc.line(14, 42, 196, 42)
+    
+    // Table data
+    const tableData = teachersWithStats.value.map((teacher, index) => [
+      index + 1,
+      teacher.displayName,
+      teacher.hadirCount,
+      teacher.tidakHadirCount,
+      `Rp ${formatCurrency(teacher.hadirCount * 10000)}`
+    ])
+    
+    // Add table
+    autoTable(doc, {
+      startY: 48,
+      head: [['No', 'Nama Guru', 'Hadir', 'Izin/Tidak Hadir', 'Gaji']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [34, 139, 34],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        1: { halign: 'center', cellWidth: 60 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'center', cellWidth: 35 },
+        4: { halign: 'center', cellWidth: 45 }
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 4
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      }
+    })
+    
+    // Summary footer
+    const finalY = (doc.lastAutoTable?.finalY || 100) + 10
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total Kehadiran: ${totalAttendance.value}`, 14, finalY)
+    doc.text(`Total Gaji: Rp ${formatCurrency(totalSalary.value)}`, 14, finalY + 7)
+    
+    // Generated date
+    const now = new Date()
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'italic')
+    doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 18)
+    
+    // Generate filename
+    const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`
+    
+    // Save/download PDF
+    doc.save(filename)
+    
+    success(`Berhasil mengunduh ${filename}`)
+  } catch (e) {
+    console.error('Export error:', e)
+    showError('Gagal mengexport PDF')
+  } finally {
+    exporting.value = false
+  }
 }
 
 const saveAttendance = async () => {
@@ -349,8 +457,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.admin-attendance-view { padding-top: 60px; }
-@media (min-width: 1024px) { .admin-attendance-view { padding-top: 0; } }
+.admin-attendance-view { 
+  width: 100%;
+}
 
 .page-header {
   display: flex;
@@ -385,6 +494,39 @@ onMounted(async () => {
   min-width: 160px;
 }
 
+.header-actions .btn{
+    padding: var(--space-sm) var(--space-lg) !important;
+    text-wrap: nowrap;
+}
+
+/* Export Button */
+.btn-export {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  white-space: nowrap;
+}
+
+.btn-export:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1976D2, #1565C0);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.btn-export:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 @media (max-width: 640px) {
   .page-header {
     flex-direction: column;
@@ -393,13 +535,18 @@ onMounted(async () => {
   .header-actions {
     margin-top: var(--space-sm);
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: var(--space-sm);
   }
-  .header-actions select,
-  .header-actions .btn {
+  .header-actions select {
+    grid-column: 1 / -1;
     width: 100%;
-    min-width: 0; /* Prevent overflow */
+  }
+  .header-actions .btn,
+  .header-actions .btn-export {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
   }
 }
 
@@ -776,3 +923,34 @@ onMounted(async () => {
   width: 120px;
 }
 </style>
+
+/* Mobile Layout Optimizations */
+@media (max-width: 640px) {
+  .attendance-table {
+    padding: var(--space-md);
+  }
+
+  .teacher-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+
+  .teacher-info {
+    width: 100%;
+  }
+
+  .teacher-stats {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--gray-100);
+  }
+
+  .stat-item {
+    flex: 1;
+    align-items: center;
+    text-align: center;
+  }
+}

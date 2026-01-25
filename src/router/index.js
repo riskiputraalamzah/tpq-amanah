@@ -121,10 +121,19 @@ router.beforeEach(async (to, from, next) => {
         next({ name: 'Dashboard' })
     } else if (to.meta.role) {
         const requiredRoles = Array.isArray(to.meta.role) ? to.meta.role : [to.meta.role]
-        if (!requiredRoles.includes(authStore.user?.role)) {
-            next({ name: 'DashboardHome' })
-        } else {
+        const userRole = authStore.user?.role
+        const userPermissions = authStore.user?.permissions?.features || []
+
+        // Check if user has required role
+        if (requiredRoles.includes(userRole)) {
             next()
+        }
+        // Special case: guru with admin-attendance-view permission can access admin-attendance
+        else if (userRole === 'guru' && to.name === 'AdminAttendance' && userPermissions.includes('admin-attendance-view')) {
+            next()
+        }
+        else {
+            next({ name: 'DashboardHome' })
         }
     } else {
         next()

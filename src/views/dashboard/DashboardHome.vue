@@ -231,6 +231,50 @@
         </template>
       </div>
     </section>
+
+    <!-- Permissions-based Actions for Guru -->
+    <section v-if="isGuru && hasCustomPermissions" class="permissions-actions">
+      <h2>{{ user.permissions?.menuGroupName || 'Akses Khusus' }}</h2>
+      <div class="action-grid">
+        <!-- Rekap Absensi -->
+        <router-link 
+          v-if="hasPermission('admin-attendance-view')" 
+          to="/dashboard/admin-attendance" 
+          class="action-card glass-card permission-card"
+        >
+          <div class="action-icon permission-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M8 16v-2"/>
+              <path d="M16 16v-3"/>
+            </svg>
+          </div>
+          <span>Rekap Absensi</span>
+        </router-link>
+
+        <!-- Export PDF -->
+        <button 
+          v-if="hasPermission('export-pdf')" 
+          class="action-card glass-card permission-card"
+          @click="handleExportPDF"
+          :disabled="exporting"
+        >
+          <div class="action-icon permission-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <span>{{ exporting ? 'Mengunduh...' : 'Export PDF' }}</span>
+        </button>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -239,6 +283,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+import { useToast } from '@/composables/useToast'
+
+const { success, error: showError } = useToast()
 
 const authStore = useAuthStore()
 
@@ -247,7 +296,22 @@ const isAdmin = computed(() => authStore.isAdmin)
 const isGuru = computed(() => authStore.isGuru)
 const isSantri = computed(() => authStore.isSantri)
 
+// Permissions helpers
+const hasCustomPermissions = computed(() => {
+  return isGuru.value && user.value?.permissions?.features?.length > 0
+})
+
+const hasPermission = (permissionId) => {
+  return user.value?.permissions?.features?.includes(permissionId) || false
+}
+
 const loading = ref(true)
+const exporting = ref(false)
+const exportData = ref({ attendance: [], teachers: [] }) // Cache for synchronous export
+const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+
+const formatCurrency = (num) => num.toLocaleString('id-ID')
+
 const stats = ref({
   totalUsers: 0,
   totalGuru: 0,
@@ -277,6 +341,25 @@ const fetchStats = async () => {
 
       const { data: periods } = await api.get('/grading/periods')
       stats.value.activePeriods = periods.filter(p => p.status === 'active').length
+
+      // Pre-fetch export data if user has permission (to allow sync download)
+      if (hasPermission('export-pdf')) {
+        const today = new Date()
+        const year = today.getFullYear()
+        
+        try {
+          // Parallel fetch for export data
+          const [attResponse, teachersResponse] = await Promise.all([
+            api.get('/attendance', { params: { month: today.getMonth() + 1, year } }),
+            api.get('/users', { params: { role: 'guru' } })
+          ])
+          
+          exportData.value.attendance = attResponse.data
+          exportData.value.teachers = teachersResponse.data
+        } catch (err) {
+          console.error('Failed to pre-fetch export data:', err)
+        }
+      }
     }
   } catch (error) {
     console.log('Stats fetch error (API may not be running):', error)
@@ -285,9 +368,118 @@ const fetchStats = async () => {
   }
 }
 
+// Prepared export data (Computed for performance/consistency)
+const exportStats = computed(() => {
+  if (exportData.value.teachers.length === 0) return []
+  
+  const attendanceData = exportData.value.attendance
+  return exportData.value.teachers.map(t => {
+    const teacherAttendance = attendanceData.filter(a => a.guruId === t.id)
+    const hadirCount = teacherAttendance.filter(a => a.status === 'hadir').length
+    const tidakHadirCount = teacherAttendance.filter(a => a.status !== 'hadir').length
+    return { ...t, hadirCount, tidakHadirCount }
+  })
+})
+
+// Export PDF - directly download (Synchronous for consistency)
+const handleExportPDF = () => {
+  if (exportStats.value.length === 0) {
+    showError('Data belum siap atau kosong. Silakan refresh.')
+    return
+  }
+
+  exporting.value = true
+  try {
+    const today = new Date()
+    const monthName = monthNames[today.getMonth()]
+    const year = today.getFullYear()
+    
+    // Create PDF
+    const doc = new jsPDF()
+    
+    // Header (Match AdminAttendanceView style exactly)
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('LAPORAN ABSENSI GURU', 105, 20, { align: 'center' })
+    
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'normal')
+    doc.text('TPQ AMANAH', 105, 28, { align: 'center' })
+    
+    doc.setFontSize(11)
+    doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: 'center' })
+    
+    doc.setDrawColor(0, 100, 0)
+    doc.setLineWidth(0.5)
+    doc.line(14, 42, 196, 42)
+    
+    const tableData = exportStats.value.map((teacher, index) => [
+      index + 1,
+      teacher.displayName,
+      teacher.hadirCount,
+      teacher.tidakHadirCount,
+      `Rp ${formatCurrency(teacher.hadirCount * 10000)}`
+    ])
+    
+    autoTable(doc, {
+      startY: 48,
+      head: [['No', 'Nama Guru', 'Hadir', 'Izin/Tidak Hadir', 'Gaji']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [34, 139, 34],
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        1: { halign: 'center', cellWidth: 60 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'center', cellWidth: 35 },
+        4: { halign: 'center', cellWidth: 45 }
+      },
+      styles: { fontSize: 10, cellPadding: 4 },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    })
+    
+    const totalHadir = exportStats.value.reduce((sum, t) => sum + t.hadirCount, 0)
+    const totalGaji = totalHadir * 10000
+    const finalY = (doc.lastAutoTable?.finalY || 100) + 10
+    
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total Kehadiran: ${totalHadir}`, 14, finalY)
+    doc.text(`Total Gaji: Rp ${formatCurrency(totalGaji)}`, 14, finalY + 7)
+    
+    const now = new Date()
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'italic')
+    doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 18)
+    
+    const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`
+    doc.save(filename)
+    
+    success(`Berhasil mengunduh ${filename}`)
+  } catch (error) {
+    console.error('Export PDF error:', error)
+    showError('Gagal mengexport PDF')
+  } finally {
+    exporting.value = false
+  }
+}
+
 onMounted(() => {
   fetchStats()
 })
+
+// React to permission changes (e.g. after login/rehydration)
+import { watch } from 'vue'
+watch(() => user.value?.permissions, async (newVal) => {
+  if (newVal) {
+    await fetchStats()
+  }
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -459,5 +651,40 @@ onMounted(() => {
 .action-card span {
   font-weight: 500;
   font-size: 0.875rem;
+}
+
+/* Permissions Actions */
+.permissions-actions {
+  margin-top: var(--space-2xl);
+}
+
+.permissions-actions h2 {
+  font-size: 1.25rem;
+  color: var(--primary-dark);
+  margin-bottom: var(--space-lg);
+}
+
+.permission-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.permission-card:hover {
+  border-color: var(--primary);
+}
+
+.permission-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.permission-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button.action-card {
+  border: none;
+  width: 100%;
 }
 </style>

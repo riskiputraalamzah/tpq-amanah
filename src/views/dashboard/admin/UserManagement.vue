@@ -66,6 +66,11 @@
           </div>
           <div class="user-actions">
             <button 
+              v-if="user.role === 'guru'"
+              class="btn btn-sm btn-info"
+              @click="openPermissionsModal(user)"
+            >⚙️ Permissions</button>
+            <button 
               class="btn btn-sm btn-secondary"
               @click="openRoleModal(user)"
               :disabled="user.id === currentUser?.uid"
@@ -119,6 +124,56 @@
         </div>
       </div>
     </div>
+
+    <!-- Permissions Modal -->
+    <div v-if="showPermissionsModal" class="modal-overlay" @click.self="closePermissionsModal">
+      <div class="modal glass-card animate-fadeInUp permissions-modal">
+        <h3>⚙️ Atur Permissions</h3>
+        <p>Mengatur akses khusus untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+        
+        <div class="form-group">
+          <label class="form-label">Nama Grup Menu:</label>
+          <input 
+            v-model="permissionsForm.menuGroupName" 
+            type="text" 
+            class="form-input" 
+            placeholder="Contoh: Operator"
+          />
+          <span class="form-hint">Nama menu yang akan muncul di sidebar guru</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Fitur yang Bisa Diakses:</label>
+          <div class="features-list">
+            <label v-for="feature in availableFeatures" :key="feature.id" class="feature-checkbox">
+              <input 
+                type="checkbox" 
+                :value="feature.id"
+                v-model="permissionsForm.features"
+              />
+              <div class="feature-info">
+                <span class="feature-label">{{ feature.label }}</span>
+                <span class="feature-desc">{{ feature.description }}</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="current-permissions" v-if="selectedUser?.permissions?.features?.length">
+          <label class="form-label">Permissions Saat Ini:</label>
+          <div class="current-list">
+            <span class="permission-tag" v-for="f in selectedUser.permissions.features" :key="f">{{ getFeatureLabel(f) }}</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" @click="closePermissionsModal">Batal</button>
+          <button class="btn btn-primary" @click="savePermissions" :disabled="savingPermissions">
+            {{ savingPermissions ? 'Menyimpan...' : 'Simpan Permissions' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,7 +182,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import { useToast } from '@/composables/useToast'
 
+const { success, error: showError } = useToast()
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.firebaseUser)
 
@@ -138,10 +195,24 @@ const searchQuery = ref('')
 
 const showRoleModal = ref(false)
 const showDeleteModal = ref(false)
+const showPermissionsModal = ref(false)
 const selectedUser = ref(null)
 const newRole = ref('')
 const updating = ref(false)
 const deleting = ref(false)
+const savingPermissions = ref(false)
+
+// Permissions form
+const permissionsForm = ref({
+  menuGroupName: '',
+  features: []
+})
+
+// Available features for permissions
+const availableFeatures = ref([
+  { id: 'admin-attendance-view', label: 'Rekap Absensi', description: 'Lihat rekap absensi semua guru' },
+  { id: 'export-pdf', label: 'Export PDF', description: 'Export laporan absensi ke PDF' }
+])
 
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
@@ -197,7 +268,7 @@ const updateRole = async () => {
     closeRoleModal()
   } catch (error) {
     console.error('Failed to update role:', error)
-    alert('Gagal mengubah role')
+    showError('Gagal mengubah role')
   } finally {
     updating.value = false
   }
@@ -221,10 +292,56 @@ const deleteUser = async () => {
     closeDeleteModal()
   } catch (error) {
     console.error('Failed to delete user:', error)
-    alert('Gagal menghapus user')
+    showError('Gagal menghapus user')
   } finally {
     deleting.value = false
   }
+}
+
+// Permissions functions
+const openPermissionsModal = (user) => {
+  selectedUser.value = user
+  permissionsForm.value = {
+    menuGroupName: user.permissions?.menuGroupName || '',
+    features: user.permissions?.features || []
+  }
+  showPermissionsModal.value = true
+}
+
+const closePermissionsModal = () => {
+  showPermissionsModal.value = false
+  selectedUser.value = null
+  permissionsForm.value = { menuGroupName: '', features: [] }
+}
+
+const savePermissions = async () => {
+  savingPermissions.value = true
+  try {
+    await api.patch(`/users/${selectedUser.value.id}/permissions`, {
+      menuGroupName: permissionsForm.value.menuGroupName,
+      features: permissionsForm.value.features
+    })
+    // Update local user data
+    const userIndex = users.value.findIndex(u => u.id === selectedUser.value.id)
+    if (userIndex > -1) {
+      users.value[userIndex].permissions = {
+        menuGroupName: permissionsForm.value.menuGroupName,
+        features: [...permissionsForm.value.features]
+      }
+    }
+    closePermissionsModal()
+    success('Permissions berhasil disimpan!')
+  } catch (error) {
+    console.error('Failed to save permissions:', error)
+    showError('Gagal menyimpan permissions')
+  } finally {
+    savingPermissions.value = false
+  }
+}
+
+const getFeatureLabel = (featureId) => {
+  const feature = availableFeatures.value.find(f => f.id === featureId)
+  return feature?.label || featureId
 }
 
 onMounted(() => {
@@ -398,6 +515,9 @@ onMounted(() => {
 .btn-danger { background: var(--error); color: var(--white); }
 .btn-danger:hover { background: #d32f2f; }
 
+.btn-info { background: #2196F3; color: var(--white); }
+.btn-info:hover { background: #1976D2; }
+
 .empty-state {
   text-align: center;
   color: var(--gray-500);
@@ -528,5 +648,84 @@ onMounted(() => {
   width: 80px;
   height: 32px;
   border-radius: var(--radius-md);
+}
+
+/* Permissions Modal Styles */
+.permissions-modal {
+  max-width: 500px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: var(--space-xs);
+}
+
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.feature-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.feature-checkbox:hover {
+  background: var(--gray-100);
+}
+
+.feature-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--primary);
+}
+
+.feature-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feature-label {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.feature-desc {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.current-permissions {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--gray-200);
+}
+
+.current-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.permission-tag {
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(76, 175, 80, 0.15);
+  color: #388e3c;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 </style>
