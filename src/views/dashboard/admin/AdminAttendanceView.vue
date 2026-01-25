@@ -820,6 +820,10 @@ onMounted(async () => {
   .holiday-alert-name {
     font-size: 0.95rem;
   }
+  .teacher-stats{
+    justify-content: space-between;
+    width: 100%;
+  }
 }
 
 /* Detail Modal Styles */
@@ -930,33 +934,3 @@ onMounted(async () => {
 }
 </style>
 
-/* Mobile Layout Optimizations */
-@media (max-width: 640px) {
-  .attendance-table {
-    padding: var(--space-md);
-  }
-
-  .teacher-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-md);
-    padding: var(--space-md);
-  }
-
-  .teacher-info {
-    width: 100%;
-  }
-
-  .teacher-stats {
-    width: 100%;
-    justify-content: space-between;
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--gray-100);
-  }
-
-  .stat-item {
-    flex: 1;
-    align-items: center;
-    text-align: center;
-  }
-}
