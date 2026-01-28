@@ -47,12 +47,7 @@ const routes = [
                 component: () => import('../views/dashboard/admin/AdminAttendanceView.vue'),
                 meta: { role: 'admin' }
             },
-            {
-                path: 'admin-attendance/:guruId',
-                name: 'TeacherAttendanceDetail',
-                component: () => import('../views/dashboard/admin/TeacherAttendanceDetail.vue'),
-                meta: { role: 'admin' }
-            },
+            // Note: TeacherAttendanceDetail route removed - all info now on main page
             {
                 path: 'admin-grading',
                 name: 'AdminGrading',
