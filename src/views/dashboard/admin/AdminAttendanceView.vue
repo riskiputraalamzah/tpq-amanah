@@ -990,15 +990,25 @@ onUnmounted(() => {
   gap: var(--space-md);
   align-items: center;
   flex-wrap: nowrap;
+  flex: 1;
 }
 
 .header-actions select {
   min-width: 160px;
+  flex: 2;
+}
+.header-actions > :not(:first-child) {
+
+  flex: 1;
 }
 
 /* Dropdown Styles */
 .dropdown-wrapper {
   position: relative;
+
+}
+.dropdown-wrapper button{
+  width: 100%;
 }
 
 .dropdown-trigger {
@@ -1516,6 +1526,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-top:3px;
 }
 
 .popup-teacher-item .checkin-time::before {
@@ -1531,6 +1542,7 @@ onUnmounted(() => {
   background: rgba(33, 150, 243, 0.1);
   border-radius: var(--radius-md);
   display: inline-block;
+  
 }
 
 .popup-single-teacher {
@@ -1747,14 +1759,18 @@ onUnmounted(() => {
   gap: 3px;
 }
 .popup-teacher-item .checkin-time{
-  font-size: .6rem;
-  margin-top: 3px;
+  font-size: .5rem;
+
+  gap: 1px;
+}
+.popup-teacher-item .checkin-time::before {
+ 
+  font-size: 0.5rem;
 }
   
   .header-actions {
     margin-top: var(--space-sm);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+ 
     gap: var(--space-sm);
   }
   
