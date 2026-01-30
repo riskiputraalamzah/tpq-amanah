@@ -207,6 +207,12 @@
             <button class="close-btn" @click="selectedDate = null">×</button>
           </div>
 
+          <!-- Check-in Time - Below Date Header (for single teacher view) -->
+          <div v-if="selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)" class="popup-checkin-time-header">
+            <span class="checkin-icon">🕐</span>
+            <span>{{ getTeacherCheckinTime(selectedDate) }}</span>
+          </div>
+
           <!-- Holiday Info -->
            <div v-if="getHolidayForDate(selectedDate)" class="popup-holiday">
             <span class="holiday-icon">🎉</span>
@@ -280,9 +286,6 @@
                <!-- Single Teacher Detail -->
                <div class="popup-single-teacher">
                   <template v-if="getTeacherAttendanceForDate(selectedDate)">
-                    <p v-if="getTeacherCheckinTime(selectedDate)" class="popup-checkin-time">
-                      🕐 Jam Hadir: {{ getTeacherCheckinTime(selectedDate) }}
-                    </p>
                     <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
                       {{ getTeacherAttendanceForDate(selectedDate).status === 'hadir' ? '✅ HADIR' : '❌ TIDAK HADIR' }}
                     </div>
@@ -595,10 +598,17 @@ const getPresentTeachersForDate = (date) => {
   return teachers.value.filter(t => presentTeacherIds.includes(t.id))
 }
 
-// Get present teachers with check-in time for popup display
+// Get present teachers with check-in time for popup display (sorted by time descending - newest first)
 const getPresentTeachersWithTime = (date) => {
   const attendanceForDate = getAttendanceForDate(date)
   const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
+  
+  // Sort by createdAt descending (newest first)
+  presentAttendance.sort((a, b) => {
+    const timeA = parseDate(a.createdAt)?.getTime() || 0
+    const timeB = parseDate(b.createdAt)?.getTime() || 0
+    return timeB - timeA // Descending order
+  })
   
   return presentAttendance.map(a => {
     const teacher = teachers.value.find(t => t.id === a.guruId)
@@ -1544,6 +1554,24 @@ onUnmounted(() => {
   display: inline-block;
   
 }
+
+/* Check-in Time Header - Below Date */
+.popup-checkin-time-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.08));
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+  font-size: 0.85rem;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.popup-checkin-time-header .checkin-icon {
+  font-size: 0.9rem;
+}
+
 
 .popup-single-teacher {
   text-align: center;

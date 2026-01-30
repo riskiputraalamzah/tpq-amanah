@@ -201,6 +201,12 @@
           <button class="close-btn" @click="selectedCalendarDate = null">×</button>
         </div>
         
+        <!-- Check-in Time - Below Date Header -->
+        <div v-if="getCheckinTimeForPopup()" class="popup-checkin-time-header">
+          <span class="checkin-icon">🕐</span>
+          <span>{{ getCheckinTimeForPopup() }}</span>
+        </div>
+        
         <!-- Holiday Banner in Popup -->
         <div v-if="getHolidayForDate(selectedCalendarDate)" class="holiday-banner">
           <span class="holiday-icon">🎉</span>
@@ -214,9 +220,6 @@
           <div class="popup-status" :class="selectedCalendarAttendance.status">
             {{ selectedCalendarAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
           </div>
-          <p v-if="getCheckinTimeForPopup()" class="popup-checkin-time">
-            🕐 Jam Hadir: {{ getCheckinTimeForPopup() }}
-          </p>
           <p v-if="selectedCalendarAttendance.notes" class="popup-notes">
             <strong>Catatan:</strong> {{ selectedCalendarAttendance.notes }}
           </p>
@@ -552,7 +555,8 @@ const submitAttendance = async () => {
       id: data.id, 
       status, 
       notes: notes.value, 
-      date: today 
+      date: today,
+      createdAt: new Date() // Add current timestamp for immediate display
     }
     attendanceHistory.value.unshift(todayAttendance.value)
     success('Absensi berhasil disimpan')
@@ -1493,6 +1497,23 @@ onMounted(async () => {
   background: rgba(33, 150, 243, 0.1);
   border-radius: var(--radius-sm);
   display: inline-block;
+}
+
+/* Check-in Time Header - Below Date */
+.popup-checkin-time-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.08));
+  border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+  font-size: 0.85rem;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.popup-checkin-time-header .checkin-icon {
+  font-size: 0.9rem;
 }
 
 @media (max-width: 640px) {
