@@ -231,15 +231,18 @@
             <template v-else>
             <!-- SECTION 1: HADIR -->
             <div class="popup-section">
-              <h5>✅ Hadir ({{ getPresentTeachersForDate(selectedDate).length }})</h5>
+              <h5>✅ Hadir ({{ getPresentTeachersWithTime(selectedDate).length }})</h5>
               <div class="teacher-list-popup">
-                <div v-for="t in getPresentTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item">
+                <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
                   <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
                     {{ getInitials(t.displayName) }}
                   </div>
-                  <span>{{ t.displayName }}</span>
+                  <div class="teacher-info">
+                    <span class="teacher-name">{{ t.displayName }}</span>
+                    <span v-if="t.checkinTime" class="checkin-time">{{ t.checkinTime }}</span>
+                  </div>
                 </div>
-                 <div v-if="getPresentTeachersForDate(selectedDate).length === 0" class="text-muted">Tidak ada data hadir</div>
+                 <div v-if="getPresentTeachersWithTime(selectedDate).length === 0" class="text-muted">Tidak ada data hadir</div>
               </div>
             </div>
 
@@ -277,6 +280,9 @@
                <!-- Single Teacher Detail -->
                <div class="popup-single-teacher">
                   <template v-if="getTeacherAttendanceForDate(selectedDate)">
+                    <p v-if="getTeacherCheckinTime(selectedDate)" class="popup-checkin-time">
+                      🕐 Jam Hadir: {{ getTeacherCheckinTime(selectedDate) }}
+                    </p>
                     <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
                       {{ getTeacherAttendanceForDate(selectedDate).status === 'hadir' ? '✅ HADIR' : '❌ TIDAK HADIR' }}
                     </div>
@@ -587,6 +593,36 @@ const getPresentTeachersForDate = (date) => {
     .map(a => a.guruId)
   
   return teachers.value.filter(t => presentTeacherIds.includes(t.id))
+}
+
+// Get present teachers with check-in time for popup display
+const getPresentTeachersWithTime = (date) => {
+  const attendanceForDate = getAttendanceForDate(date)
+  const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
+  
+  return presentAttendance.map(a => {
+    const teacher = teachers.value.find(t => t.id === a.guruId)
+    return {
+      id: a.guruId,
+      displayName: teacher?.displayName || a.guruName || 'Unknown',
+      checkinTime: formatCheckinTime(a.createdAt)
+    }
+  })
+}
+
+// Format check-in time from createdAt timestamp
+const formatCheckinTime = (timestamp) => {
+  if (!timestamp) return null
+  const d = parseDate(timestamp)
+  if (!d || isNaN(d.getTime())) return null
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+}
+
+// Get check-in time for single teacher view
+const getTeacherCheckinTime = (date) => {
+  const attendance = getTeacherAttendanceForDate(date)
+  if (!attendance || attendance.status !== 'hadir') return null
+  return formatCheckinTime(attendance.createdAt)
 }
 
 const getAbsentTeachersForDate = (date) => {
@@ -1453,12 +1489,52 @@ onUnmounted(() => {
 
 .popup-teacher-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-sm);
   font-size: 0.85rem;
-  padding: 4px;
+  padding: 6px 8px;
   background: var(--gray-50);
   border-radius: var(--radius-md);
+  line-height: 1;
+}
+
+.popup-teacher-item .teacher-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.popup-teacher-item .teacher-name {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.popup-teacher-item .checkin-time {
+  font-size: 0.7rem;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.popup-teacher-item .checkin-time::before {
+  content: '🕐';
+  font-size: 0.65rem;
+}
+
+.popup-checkin-time {
+  font-size: 0.9rem;
+  color: var(--gray-600);
+  margin: 0 0 var(--space-md) 0;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: var(--radius-md);
+  display: inline-block;
+}
+
+.popup-single-teacher {
+  text-align: center;
 }
 
 .status-badge.large {
@@ -1665,6 +1741,15 @@ onUnmounted(() => {
     align-items: stretch;
     margin-bottom: var(--space-md);
   }
+  
+.popup-teacher-item{
+  font-size: .7rem;
+  gap: 3px;
+}
+.popup-teacher-item .checkin-time{
+  font-size: .6rem;
+  margin-top: 3px;
+}
   
   .header-actions {
     margin-top: var(--space-sm);

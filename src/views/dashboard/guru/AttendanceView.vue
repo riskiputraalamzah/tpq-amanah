@@ -211,6 +211,9 @@
           <div class="popup-status" :class="selectedCalendarAttendance.status">
             {{ selectedCalendarAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
           </div>
+          <p v-if="getCheckinTimeForPopup()" class="popup-checkin-time">
+            🕐 Jam Hadir: {{ getCheckinTimeForPopup() }}
+          </p>
           <p v-if="selectedCalendarAttendance.notes" class="popup-notes">
             <strong>Catatan:</strong> {{ selectedCalendarAttendance.notes }}
           </p>
@@ -443,6 +446,21 @@ const updateMonthHolidays = () => {
 const formatCalendarDate = (date) => {
   const d = new Date(calendarYear.value, calendarMonth.value, date)
   return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// Format check-in time from createdAt timestamp
+const formatCheckinTime = (timestamp) => {
+  if (!timestamp) return null
+  const d = parseDate(timestamp)
+  if (!d || isNaN(d.getTime())) return null
+  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+}
+
+// Get check-in time for popup display
+const getCheckinTimeForPopup = () => {
+  if (!selectedCalendarAttendance.value) return null
+  if (selectedCalendarAttendance.value.status !== 'hadir') return null
+  return formatCheckinTime(selectedCalendarAttendance.value.createdAt)
 }
 
 const showCalendarDetail = (date) => {
@@ -1447,6 +1465,16 @@ onMounted(async () => {
 .popup-notes.empty {
   color: var(--gray-400);
   font-style: italic;
+}
+
+.popup-checkin-time {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin: var(--space-sm) 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: var(--radius-sm);
+  display: inline-block;
 }
 
 @media (max-width: 640px) {
