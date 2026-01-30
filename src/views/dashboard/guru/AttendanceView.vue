@@ -1525,7 +1525,7 @@ onMounted(async () => {
   }
   
   .legend-item {
-    font-size: 0.7rem;
+    font-size: 0.5rem;
   }
 
   .attendance-view {

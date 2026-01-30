@@ -1957,4 +1957,13 @@ onUnmounted(() => {
     padding: 2px;
   }
 }
+
+@media (max-width: 640px) {
+  .legend-item{
+    font-size: .5rem;
+  }
+  .calendar-legend{
+    gap: var(--space-sm);
+  }
+}
 </style>
