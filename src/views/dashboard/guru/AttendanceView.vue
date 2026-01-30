@@ -109,17 +109,20 @@
       <div class="recap-cards">
         <div class="recap-card glass-card">
           <div class="recap-icon hadir">✓</div>
-          <div class="recap-value">{{ monthlyStats.hadir }}</div>
+          <div v-if="loading" class="recap-value-skeleton"></div>
+          <div v-else class="recap-value">{{ monthlyStats.hadir }}</div>
           <div class="recap-label">Hari Hadir</div>
         </div>
         <div class="recap-card glass-card">
           <div class="recap-icon tidak">✗</div>
-          <div class="recap-value">{{ monthlyStats.tidakHadir }}</div>
+          <div v-if="loading" class="recap-value-skeleton"></div>
+          <div v-else class="recap-value">{{ monthlyStats.tidakHadir }}</div>
           <div class="recap-label">Tidak Hadir</div>
         </div>
         <div class="recap-card glass-card salary">
           <div class="recap-icon gaji">💰</div>
-          <div class="recap-value">Rp {{ formatCurrency(monthlyStats.hadir * 10000) }}</div>
+          <div v-if="loading" class="recap-value-skeleton wide"></div>
+          <div v-else class="recap-value">Rp {{ formatCurrency(monthlyStats.hadir * 10000) }}</div>
           <div class="recap-label">Estimasi Gaji</div>
         </div>
       </div>
@@ -921,6 +924,21 @@ onMounted(async () => {
   font-size: 0.875rem;
   color: var(--gray-500);
   margin-top: var(--space-xs);
+}
+
+/* Skeleton Loading for Recap Values */
+.recap-value-skeleton {
+  height: 1.75rem;
+  width: 60px;
+  margin: 0 auto;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+.recap-value-skeleton.wide {
+  width: 120px;
 }
 
 /* History Section */
