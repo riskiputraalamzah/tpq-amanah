@@ -26,13 +26,18 @@
             v-for="link in navLinks" 
             :key="link.href"
             :href="link.href" 
-            @click="scrollToSection($event, link.href)"
-            class="nav-link"
+            :target="link.external ? '_blank' : undefined"
+            :rel="link.external ? 'noopener noreferrer' : undefined"
+            @click="link.external ? null : scrollToSection($event, link.href)"
+            class="nav-link flex items-center gap-1.5"
             :class="[
               isScrolled ? 'text-gray-700 hover:text-primary-500' : 'text-white/90 hover:text-accent-300',
               activeSection === link.section ? (isScrolled ? 'active' : '') : ''
             ]"
           >
+            <svg v-if="link.external" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
             {{ link.label }}
           </a>
           
@@ -86,10 +91,15 @@
             v-for="link in navLinks" 
             :key="link.href"
             :href="link.href" 
-            @click="scrollToSection($event, link.href)"
-            class="block px-4 py-3 rounded-xl font-medium transition-colors"
+            :target="link.external ? '_blank' : undefined"
+            :rel="link.external ? 'noopener noreferrer' : undefined"
+            @click="link.external ? (isMobileMenuOpen = false) : scrollToSection($event, link.href)"
+            class="flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors"
             :class="activeSection === link.section ? 'bg-primary-100 text-primary-700' : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'"
           >
+            <svg v-if="link.external" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
             {{ link.label }}
           </a>
           <div class="pt-4 border-t border-gray-100">
@@ -133,7 +143,8 @@ const navLinks = [
   { href: '#beranda', label: 'Beranda', section: 'beranda' },
   { href: '#tentang', label: 'Tentang Kami', section: 'tentang' },
   { href: '#pengajar', label: 'Pengajar', section: 'pengajar' },
-  { href: '#kontak', label: 'Kontak', section: 'kontak' }
+  { href: '#kontak', label: 'Kontak', section: 'kontak' },
+  { href: 'https://at-tartil.riskiputraalamzah.my.id/', label: 'At-Tartil', external: true }
 ]
 
 let observer = null
