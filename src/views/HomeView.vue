@@ -1,91 +1,166 @@
 <template>
   <div class="min-h-screen">
     <NavbarComponent />
-    
+
     <!-- Hero Section -->
     <section id="beranda" class="relative min-h-screen flex items-center bg-gradient-primary overflow-hidden">
       <!-- Background Effects -->
-      <div class="absolute inset-0 islamic-pattern opacity-30"></div>
-      <div class="absolute inset-0 bg-gradient-radial from-white/10 via-transparent to-transparent"></div>
-      
-      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-40 pb-56 min-h-screen flex flex-col items-center justify-center text-center">
-        
-        <!-- Decoration / Mandala Background (Centered behind text) -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0" style="-webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%); mask-image: linear-gradient(to bottom, black 70%, transparent 100%);">
-          <!-- Main Glowing Aura -->
-          <div class="absolute inset-0 bg-accent-400/20 rounded-full blur-[120px] animate-pulse-slow"></div>
+      <div class="absolute inset-0 islamic-pattern opacity-5"></div>
+      <div class="absolute inset-0 bg-gradient-radial from-accent-400/10 via-transparent to-transparent"></div>
 
-          <div class="relative w-[350px] h-[350px] md:w-[600px] md:h-[600px] lg:w-[800px] lg:h-[800px] flex items-center justify-center opacity-100">
-            
-            <!-- Rub el Hizb (Islamic Star) SVG - Large Background (Wireframe) -->
-            <svg class="absolute w-full h-full text-white/10 animate-spin-veryslow" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="0.5">
-               <path d="M100 0 L122.5 77.5 L200 100 L122.5 122.5 L100 200 L77.5 122.5 L0 100 L77.5 77.5 Z" />
-               <rect x="29" y="29" width="142" height="142" transform="rotate(45 100 100)" />
-            </svg>
+      <!-- Floating Decorative Elements -->
+      <div class="absolute top-20 left-10 w-24 h-24 bg-accent-400/10 rounded-full blur-2xl animate-pulse-slow"></div>
+      <div class="absolute bottom-40 left-1/4 w-16 h-16 bg-white/10 rounded-full blur-xl animate-float"></div>
+      <div class="absolute top-1/3 right-10 w-20 h-20 bg-accent-300/15 rounded-full blur-2xl animate-bounce-slow"></div>
+      <div class="absolute bottom-1/4 right-1/3 w-12 h-12 bg-white/5 rounded-full blur-lg animate-float"></div>
 
-            <!-- Concentric Rings (Mernik-Mernik) -->
-            <!-- Ring 1: Outer Dashed - Rotating -->
-            <div class="absolute inset-0 border-2 border-dashed border-white/20 rounded-full animate-spin-veryslow"></div>
-            
-            <!-- Ring 2: Dotted - Rotating Reverse -->
-            <div class="absolute inset-8 sm:inset-16 border-[3px] border-dotted border-white/30 rounded-full animate-spin-reverse-veryslow"></div>
+      <!-- Geometric Decorative Lines -->
+      <div class="absolute top-1/2 left-0 w-32 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent">
+      </div>
+      <div
+        class="absolute top-1/3 right-0 w-40 h-px bg-gradient-to-l from-transparent via-accent-400/30 to-transparent">
+      </div>
 
-            <!-- Ring 3: Solid Thin with Ornaments -->
-            <div class="absolute inset-20 sm:inset-32 border border-white/20 rounded-full flex items-center justify-center animate-spin-veryslow" style="animation-duration: 40s;">
-              <div class="absolute w-3 h-3 bg-accent-300 rounded-full top-0 -translate-y-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
-              <div class="absolute w-3 h-3 bg-accent-300 rounded-full bottom-0 translate-y-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
-              <div class="absolute w-3 h-3 bg-accent-300 rounded-full left-0 -translate-x-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
-              <div class="absolute w-3 h-3 bg-accent-300 rounded-full right-0 translate-x-1/2 shadow-[0_0_15px_rgba(253,224,71,0.8)]"></div>
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
+
+        <!-- Split Layout Grid -->
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[65vh]">
+
+          <!-- Left Side: Content -->
+          <div class="text-center  ">
+
+            <!-- Bismillah - Top Tagline -->
+            <p
+              class="text-xl md:text-2xl lg:text-3xl font-arabic text-accent-300/90 mb-6 animate-slide-up tracking-wider drop-shadow-lg">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+            </p>
+
+            <!-- Badge/Chip -->
+            <div
+              class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white/90 text-sm font-medium mb-6 animate-slide-up">
+              <span class="w-2 h-2 bg-accent-400 rounded-full animate-pulse"></span>
+              Taman Pendidikan Al-Quran
             </div>
 
-            <!-- Inner Geometric Shape (Rotate 45deg) - Outline Only -->
-            <div class="absolute w-48 h-48 sm:w-72 sm:h-72 border-2 border-white/5 rotate-45 animate-float">
-               <div class="absolute inset-2 border border-white/10"></div>
+            <!-- Main Headline -->
+            <h1 class="font-jakarta font-bold mb-6 text-white leading-tight animate-slide-up">
+              <span class="block text-lg sm:text-xl md:text-2xl font-medium mb-2 text-white/80">Selamat Datang di</span>
+              <span class="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+                <span class="text-white">TPQ </span>
+                <span class="text-accent-300 drop-shadow-[0_0_30px_rgba(250,204,21,0.4)]">AMANAH</span>
+              </span>
+            </h1>
+
+            <!-- Description -->
+            <p
+              class="text-base sm:text-lg md:text-xl text-white/85 mb-6 leading-relaxed font-inter max-w-xl mx-auto lg:mx-0 animate-slide-up">
+              Membentuk generasi Qurani yang <span class="text-accent-300 font-semibold">berakhlak mulia</span>,
+              <span class="text-accent-300 font-semibold">cerdas</span>, dan
+              <span class="text-accent-300 font-semibold">bertaqwa</span> kepada Allah SWT
+            </p>
+
+            <!-- Location -->
+            <div
+              class="flex items-center justify-center  gap-2 text-white/70 text-sm md:text-base mb-8 animate-slide-up">
+              <div class="p-1.5 bg-white/10 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <span class="font-inter">Sawotratap, Gedangan, Sidoarjo</span>
             </div>
-            
-            <!-- Decorative Particles -->
-            <div class="absolute top-10 right-20 w-3 h-3 bg-accent-300 rounded-full blur-[2px] animate-bounce-slow"></div>
-            <div class="absolute bottom-20 left-20 w-4 h-4 border-2 border-accent-300 rounded-full animate-bounce-slow" style="animation-delay: 1.5s;"></div>
 
+            <!-- CTA Buttons -->
+            <div class="flex flex-row gap-3 md:gap-4 justify-center items-center animate-slide-up">
+              <a href="#kontak" @click="scrollTo($event, '#kontak')"
+                class="group relative px-4 py-3 md:px-8 md:py-4 text-sm md:text-lg font-bold text-primary-900 bg-accent-400 rounded-xl md:rounded-2xl shadow-lg shadow-accent-500/25 hover:shadow-accent-500/40 hover:-translate-y-1 hover:bg-accent-300 transition-all duration-300 flex items-center gap-2 md:gap-3 overflow-hidden">
+                <!-- Shine Effect -->
+                <div
+                  class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+                </div>
+                <svg class="w-4 h-4 md:w-5 md:h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="relative z-10">Daftar Sekarang</span>
+              </a>
+              <a href="#program" @click="scrollTo($event, '#program')"
+                class="px-4 py-3 md:px-8 md:py-4 text-sm md:text-lg font-semibold bg-white/5 backdrop-blur-md border-2 border-white/30 text-white rounded-xl md:rounded-2xl hover:bg-white/15 hover:border-white/50 shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 md:gap-3">
+                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Lihat Program
+              </a>
+            </div>
           </div>
-        </div>
 
-        <!-- Content (Foreground) -->
-        <div class="relative z-10 max-w-4xl mx-auto animate-slide-up">
-          <p class="text-xl md:text-3xl font-arabic text-accent-300 mb-6 text-shadow-lg tracking-wider">
-            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-          </p>
-          <h1 class="font-bold mb-8 text-white leading-none">
-            <span class="block text-2xl md:text-4xl lg:text-5xl font-medium mb-4 opacity-90">Selamat Datang di</span>
-            <span class="block text-5xl md:text-7xl lg:text-8xl font-bold text-accent-300 drop-shadow-xl tracking-tight">
-              TPQ AMANAH
-            </span>
-          </h1>
-          <p class="text-lg md:text-2xl text-white/95 mb-10 max-w-2xl mx-auto leading-relaxed font-light drop-shadow-md">
-            Taman Pendidikan Al-Quran untuk membentuk generasi Qurani yang berakhlak mulia, cerdas, dan bertaqwa kepada Allah SWT
-          </p>
-          <div class="flex flex-wrap gap-5 justify-center items-center">
-            <a href="#tentang" @click="scrollTo($event, '#tentang')" class="btn-primary px-8 py-4 text-lg shadow-xl shadow-green-900/30 hover:shadow-green-900/50 hover:-translate-y-1 transition-all rounded-full">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              Pelajari Lebih Lanjut
-            </a>
-            <router-link to="/dashboard" class="btn-secondary px-8 py-4 text-lg bg-white/20 backdrop-blur-md border-white/50 text-white hover:bg-white hover:text-primary-700 shadow-xl hover:shadow-white/30 hover:-translate-y-1 transition-all rounded-full">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-              </svg>
-              Login Dashboard
-            </router-link>
+          <!-- Right Side: Illustration -->
+          <div class="order-1 lg:order-2 flex items-center justify-center">
+            <div class="relative w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg">
+
+              <!-- Decorative Floating Stars/Sparkles -->
+              <div class="absolute -top-6 -left-4 w-4 h-4 text-accent-300 animate-pulse">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+                </svg>
+              </div>
+              <div class="absolute top-1/4 -right-6 w-3 h-3 text-white/60 animate-bounce-slow">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+                </svg>
+              </div>
+              <div class="absolute bottom-1/3 -left-8 w-2 h-2 text-accent-400/80 animate-float">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+                </svg>
+              </div>
+              <div class="absolute -top-2 right-1/4 w-2 h-2 text-white/40 animate-pulse-slow">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+                </svg>
+              </div>
+
+              <!-- Decorative Circles -->
+              <div
+                class="absolute -top-4 right-0 w-8 h-8 border-2 border-accent-400/30 rounded-full animate-spin-veryslow">
+              </div>
+              <div class="absolute bottom-1/4 -right-4 w-6 h-6 border border-white/20 rounded-full animate-float"></div>
+              <div class="absolute top-1/2 -left-6 w-4 h-4 bg-accent-400/20 rounded-full blur-sm animate-pulse"></div>
+
+              <!-- Decorative Dots -->
+              <div class="absolute top-8 -right-2 w-2 h-2 bg-accent-300 rounded-full animate-bounce-slow"></div>
+              <div class="absolute bottom-1/2 -left-3 w-1.5 h-1.5 bg-white/50 rounded-full animate-pulse"></div>
+
+              <!-- Decorative Glow Behind -->
+              <div class="absolute inset-0 -m-4 lg:-m-8">
+                <div
+                  class="absolute inset-0 bg-gradient-to-b from-accent-400/25 via-accent-400/15 to-transparent rounded-full blur-3xl animate-pulse-slow">
+                </div>
+              </div>
+
+              <!-- Ground Shadow -->
+              <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-4/5 h-8 bg-black/20 blur-2xl rounded-full">
+              </div>
+
+              <!-- Illustration -->
+              <img src="/hero-blended-1.png" alt="Anak-anak belajar mengaji bersama ustadzah"
+                class="relative z-10 w-full h-auto drop-shadow-2xl animate-float" />
+            </div>
           </div>
+
         </div>
 
       </div>
 
-      <!-- Wave -->
+      <!-- Wave Transition -->
       <div class="absolute bottom-0 left-0 right-0 leading-[0] z-20">
-        <svg viewBox="0 0 1440 120" class="block w-full h-20 md:h-32 fill-primary-50" preserveAspectRatio="none">
-          <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,42.7C672,32,768,32,864,42.7C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"/>
+        <svg viewBox="0 0 1440 120" class="block w-full h-16 md:h-24 lg:h-32 fill-primary-50"
+          preserveAspectRatio="none">
+          <path
+            d="M0,64L60,58.7C120,53,240,43,360,48C480,53,600,75,720,80C840,85,960,75,1080,64C1200,53,1320,43,1380,37.3L1440,32L1440,120L1380,120C1320,120,1200,120,1080,120C960,120,840,120,720,120C600,120,480,120,360,120C240,120,120,120,60,120L0,120Z" />
         </svg>
       </div>
     </section>
@@ -94,60 +169,109 @@
     <section id="tentang" class="py-20 lg:py-28 bg-gradient-to-b from-primary-50 to-white -mt-1">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="section-title">Tentang Kami</h2>
-          <p class="text-gray-500 mt-6 max-w-2xl mx-auto">Mengenal lebih dekat TPQ AMANAH Sawotratap</p>
+          <h2 class="section-title font-jakarta">Tentang Kami</h2>
+          <p class="text-gray-500 mt-6 max-w-2xl mx-auto font-inter">Mengenal lebih dekat TPQ AMANAH Sawotratap</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          <!-- Sejarah -->
-          <div class="glass-card p-8">
-            <h3 class="text-xl font-bold text-primary-700 mb-4">Sejarah TPQ AMANAH</h3>
-            <p class="text-gray-600 leading-relaxed mb-4">
-              {{ aboutContent.history || 'TPQ AMANAH didirikan dengan tekad untuk mencetak generasi Qurani yang mampu membaca, memahami, dan mengamalkan Al-Quran dalam kehidupan sehari-hari.' }}
-            </p>
-            <p class="text-gray-600 leading-relaxed">
-              Berlokasi di Sawotratap, Gedangan, Sidoarjo, kami telah melayani masyarakat dalam pendidikan Al-Quran dengan penuh dedikasi dan keikhlasan.
-            </p>
+          <!-- Sejarah - Vertical Timeline -->
+          <div class="backdrop-blur-xl bg-white/40 border border-white/60 rounded-2xl p-8 shadow-xl">
+            <div class="flex items-center gap-3 mb-6">
+              <div
+                class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-2xl font-bold text-primary-700 font-jakarta">Sejarah TPQ AMANAH</h3>
+            </div>
+
+            <!-- Timeline Items -->
+            <div class="relative pl-8 border-l-2 border-primary-300">
+              <div class="mb-8 relative timeline-items">
+                <div
+                  class="absolute -left-[2.15rem] top-0 w-5 h-5 rounded-full bg-primary-500 border-4 border-white shadow-md">
+                </div>
+                <p class="text-gray-700 leading-loose font-inter">
+                  {{ aboutContent.history || defaultAbout }}
+                </p>
+              </div>
+              <div class="relative timeline-items">
+                <div
+                  class="absolute -left-[2.15rem] top-0 w-5 h-5 rounded-full bg-accent-400 border-4 border-white shadow-md">
+                </div>
+                <p class="text-gray-700 leading-loose font-inter">
+                  Berlokasi di Sawotratap, Gedangan, Sidoarjo, kami telah melayani masyarakat dalam pendidikan Al-Quran
+                  dengan penuh dedikasi dan keikhlasan.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <!-- Info Cards -->
+          <!-- Info Cards - Glassmorphism -->
           <div class="space-y-4">
-            <div class="glass-card p-6 flex gap-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-              </div>
-              <div>
-                <h4 class="font-semibold text-primary-700 mb-1">Visi</h4>
-                <p class="text-gray-600 text-sm">{{ aboutContent.vision || 'Menjadi lembaga pendidikan Al-Quran terdepan yang menghasilkan generasi Qurani berakhlak mulia' }}</p>
-              </div>
-            </div>
-
-            <div class="glass-card p-6 flex gap-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent-500/30">
-                <svg class="w-7 h-7 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                </svg>
-              </div>
-              <div>
-                <h4 class="font-semibold text-primary-700 mb-1">Misi</h4>
-                <ul class="text-gray-600 text-sm space-y-1">
-                  <li v-for="(item, idx) in missionList" :key="idx">• {{ item }}</li>
-                </ul>
+            <!-- Visi -->
+            <div
+              class="backdrop-blur-xl bg-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div class="flex gap-5 items-start">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-primary-700 mb-2 font-jakarta">Visi</h4>
+                  <p class="text-gray-700 text-sm leading-loose font-inter">{{ aboutContent.vision }}</p>
+                </div>
               </div>
             </div>
 
-            <div class="glass-card p-6 flex gap-5">
-              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+            <!-- Misi -->
+            <div
+              class="backdrop-blur-xl bg-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div class="flex gap-5 items-start">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent-500/30">
+                  <svg class="w-7 h-7 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-primary-700 mb-2 font-jakarta">Misi</h4>
+                  <ul class="text-gray-700 text-sm space-y-2 font-inter">
+                    <li v-for="(item, idx) in missionList" :key="idx" class="flex items-start gap-2 leading-loose">
+                      <span class="text-accent-500 font-bold mt-0.5">•</span>
+                      <span class="flex-1">{{ item }}</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
-              <div>
-                <h4 class="font-semibold text-primary-700 mb-1">Lokasi</h4>
-                <p class="text-gray-600 text-sm">JL. Kertanegara Nomor 20, Sawotratap, Gedangan, Sidoarjo</p>
+            </div>
+
+            <!-- Lokasi -->
+            <div
+              class="backdrop-blur-xl bg-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div class="flex gap-5 items-start">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
+                  <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-primary-700 mb-2 font-jakarta">Lokasi</h4>
+                  <p class="text-gray-700 text-sm leading-loose font-inter">JL. Kertanegara Nomor 20, Sawotratap,
+                    Gedangan, Sidoarjo</p>
+                </div>
               </div>
             </div>
           </div>
@@ -156,83 +280,213 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="py-16 bg-gradient-primary">
+    <section ref="statsRef" class="py-20 bg-gradient-primary relative overflow-hidden">
+      <!-- Decorative Elements -->
+      <div class="absolute inset-0 islamic-pattern opacity-5"></div>
+
+      <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Floating Stats Bar -->
+        <div
+          class="backdrop-blur-xl bg-white/95 border border-white rounded-3xl p-8 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:shadow-[0_25px_70px_rgba(0,0,0,0.2)] transition-shadow duration-500">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div v-for="stat in stats" :key="stat.label" class="text-center group">
+              <div class="relative">
+                <!-- Counter Number -->
+                <div
+                  class="text-5xl md:text-6xl font-extrabold bg-gradient-to-br from-primary-600 to-primary-800 bg-clip-text text-transparent mb-3 font-jakarta transition-transform group-hover:scale-110 duration-300"
+                  :data-target="stat.rawValue" ref="statsNumbers">
+                  {{ stat.displayValue }}
+                </div>
+                <!-- Accent Line -->
+                <div
+                  class="w-16 h-1 bg-gradient-to-r from-accent-400 to-accent-500 mx-auto mb-3 rounded-full group-hover:w-24 transition-all duration-300">
+                </div>
+                <!-- Label -->
+                <div class="text-gray-600 text-sm md:text-base font-medium font-inter">{{ stat.label }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Program Unggulan Section (NEW) -->
+    <section id="program" class="py-20 lg:py-28 bg-gradient-to-b from-white to-primary-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <div v-for="stat in stats" :key="stat.label" class="glass-card bg-white/90 p-6 text-center">
-            <div class="text-4xl font-bold text-primary-600 mb-1">{{ stat.value }}</div>
-            <div class="text-gray-500 text-sm">{{ stat.label }}</div>
+        <div class="text-center mb-16">
+          <h2 class="section-title font-jakarta">Program Unggulan</h2>
+          <p class="text-gray-500 mt-6 max-w-2xl mx-auto font-inter">Kurikulum komprehensif untuk membentuk generasi
+            Qurani</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Card 1: Tahsin & Tajwid -->
+          <div
+            class="group backdrop-blur-xl bg-gradient-to-br from-emerald-50/80 to-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+            <div
+              class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-primary-800 mb-3 text-center font-jakarta">Tahsin & Tajwid</h3>
+            <p class="text-gray-600 text-sm text-center leading-relaxed font-inter">Memperbaiki bacaan Al-Quran dengan
+              kaidah tajwid yang benar</p>
+          </div>
+
+          <!-- Card 2: Tahfidzul Quran -->
+          <div
+            class="group backdrop-blur-xl bg-gradient-to-br from-amber-50/80 to-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+            <div
+              class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-500 flex items-center justify-center shadow-lg shadow-accent-500/30 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-9 h-9 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-primary-800 mb-3 text-center font-jakarta">Tahfidzul Quran</h3>
+            <p class="text-gray-600 text-sm text-center leading-relaxed font-inter">Program menghafal Al-Quran dengan
+              metode yang mudah dan menyenangkan</p>
+          </div>
+
+          <!-- Card 3: Adab & Akhlak -->
+          <div
+            class="group backdrop-blur-xl bg-gradient-to-br from-rose-50/80 to-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+            <div
+              class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/30 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-primary-800 mb-3 text-center font-jakarta">Adab & Akhlak</h3>
+            <p class="text-gray-600 text-sm text-center leading-relaxed font-inter">Pembinaan karakter dan akhlak mulia
+              sesuai tuntunan Rasulullah SAW</p>
+          </div>
+
+          <!-- Card 4: Kajian Islam Dasar -->
+          <div
+            class="group backdrop-blur-xl bg-gradient-to-br from-blue-50/80 to-white/40 border border-white/60 rounded-2xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+            <div
+              class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-primary-800 mb-3 text-center font-jakarta">Kajian Islam Dasar</h3>
+            <p class="text-gray-600 text-sm text-center leading-relaxed font-inter">Pemahaman Islam yang komprehensif
+              meliputi aqidah, ibadah, dan muamalah</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Teachers Section -->
-    <section id="pengajar" class="py-20 lg:py-28 bg-gradient-to-b from-white to-primary-50">
+    <section id="pengajar" class="py-20 lg:py-28 bg-gradient-to-b from-primary-50 to-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="section-title">Para Pengajar</h2>
-          <p class="text-gray-500 mt-6 max-w-2xl mx-auto">Guru-guru kami yang berdedikasi tinggi dalam mengajarkan Al-Quran</p>
+          <h2 class="section-title font-jakarta">Para Pengajar</h2>
+          <p class="text-gray-500 mt-6 max-w-2xl mx-auto font-inter">Guru-guru kami yang berdedikasi tinggi dalam
+            mengajarkan Al-Quran</p>
         </div>
 
-        <div class="flex flex-wrap justify-center gap-6">
-          <div v-for="teacher in teachers" :key="teacher.id" class="glass-card p-6 text-center group w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]">
-            <div class="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden ring-4 ring-primary-100 group-hover:ring-primary-300 transition-all duration-300">
-              <img 
-                v-if="teacher.photoURL" 
-                :src="teacher.photoURL" 
-                :alt="teacher.name"
-                class="w-full h-full object-cover"
-              />
-              <div v-else class="w-full h-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-2xl font-bold">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div v-for="teacher in teachers" :key="teacher.id"
+            class="group backdrop-blur-xl bg-white/60 border border-white rounded-2xl p-6 text-center shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+            <div
+              class="w-32 h-32 mx-auto mb-5 rounded-full overflow-hidden ring-4 ring-primary-200 group-hover:ring-accent-400 transition-all duration-300 shadow-lg">
+              <img v-if="teacher.photoURL" :src="teacher.photoURL" :alt="teacher.name"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              <div v-else
+                class="w-full h-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white text-3xl font-bold">
                 {{ getInitials(teacher.name) }}
               </div>
             </div>
-            <h4 class="font-semibold text-primary-800">{{ teacher.name }}</h4>
-            <p class="text-accent-600 text-sm font-medium mb-2">{{ teacher.position }}</p>
-            <p class="text-gray-500 text-sm">{{ teacher.bio }}</p>
+            <h4 class="text-xl font-bold text-primary-800 mb-2 font-jakarta">{{ teacher.name }}</h4>
+            <p class="text-accent-600 text-sm font-semibold mb-3 font-inter">{{ teacher.position }}</p>
+            <p class="text-gray-600 text-sm leading-relaxed font-inter">{{ teacher.bio }}</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="kontak" class="py-20 lg:py-28 bg-gradient-to-b from-primary-50 to-primary-100">
+    <section id="kontak" class="py-20 lg:py-28 bg-gradient-to-b from-white to-primary-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="section-title">Hubungi Kami</h2>
-          <p class="text-gray-500 mt-6 max-w-2xl mx-auto">Jangan ragu untuk menghubungi kami untuk informasi lebih lanjut</p>
+          <h2 class="section-title font-jakarta">Hubungi Kami</h2>
+          <p class="text-gray-500 mt-6 max-w-2xl mx-auto font-inter">Jangan ragu untuk menghubungi kami untuk informasi
+            lebih lanjut</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-8">
-          <div class="glass-card p-8 space-y-6">
-            <div v-for="contact in contacts" :key="contact.title" class="flex gap-5">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/20">
-                <component :is="contact.icon" class="w-6 h-6 text-white" />
+          <!-- Contact Info & WhatsApp Form -->
+          <div class="space-y-6">
+            <!-- Contact Info Cards -->
+            <div class="backdrop-blur-xl bg-white/60 border border-white rounded-2xl p-8 shadow-lg">
+              <h3 class="text-xl font-bold text-primary-700 mb-6 font-jakarta">Informasi Kontak</h3>
+              <div class="space-y-5">
+                <div v-for="contact in contacts" :key="contact.title" class="flex gap-4 items-start">
+                  <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/20">
+                    <component :is="contact.icon" class="w-6 h-6 text-white" />
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="font-semibold text-primary-700 mb-1 font-inter">{{ contact.title }}</h4>
+                    <p class="text-gray-600 text-sm leading-relaxed font-inter">{{ contact.value }}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 class="font-semibold text-primary-700">{{ contact.title }}</h4>
-                <p class="text-gray-600 text-sm">{{ contact.value }}</p>
-              </div>
+            </div>
+
+            <!-- WhatsApp Form -->
+            <div
+              class="backdrop-blur-xl bg-gradient-to-br from-green-50/80 to-white/60 border border-white rounded-2xl p-8 shadow-lg">
+              <h3 class="text-xl font-bold text-primary-700 mb-2 font-jakarta">Kirim Pesan via WhatsApp</h3>
+              <p class="text-sm text-gray-600 mb-6 font-inter">Isi form di bawah untuk menghubungi kami langsung</p>
+              <form @submit.prevent="sendWhatsApp" class="space-y-4">
+                <div>
+                  <label for="nama" class="block text-sm font-semibold text-gray-700 mb-2 font-inter">Nama Anda</label>
+                  <input type="text" id="nama" v-model="whatsappForm.nama" required placeholder="Masukkan nama Anda"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all duration-200 font-inter" />
+                </div>
+                <div>
+                  <label for="pesan" class="block text-sm font-semibold text-gray-700 mb-2 font-inter">Pesan</label>
+                  <textarea id="pesan" v-model="whatsappForm.pesan" required rows="4"
+                    placeholder="Tuliskan pesan Anda di sini..."
+                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all duration-200 resize-none font-inter"></textarea>
+                </div>
+                <button type="submit"
+                  class="w-full px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl shadow-lg shadow-green-500/30 hover:shadow-green-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                  </svg>
+                  Kirim via WhatsApp
+                </button>
+              </form>
             </div>
           </div>
 
-          <div ref="mapRef" class="glass-card p-4 overflow-hidden">
+          <!-- Google Maps - Larger Card -->
+          <div ref="mapRef"
+            class="backdrop-blur-xl bg-white/60 border border-white rounded-2xl p-4 shadow-lg lg:row-span-2">
             <!-- Lazy load Google Maps iframe for better performance -->
-            <iframe
-              v-if="isMapVisible"
-              :src="mapSrc"
-              class="w-full h-80 rounded-xl"
-              style="border:0;"
-              allowfullscreen
-              loading="lazy"
-            ></iframe>
+            <iframe v-if="isMapVisible" :src="mapSrc" class="w-full h-full min-h-[500px] rounded-xl" style="border:0;"
+              allowfullscreen loading="lazy"></iframe>
             <!-- Placeholder while map is loading -->
-            <div v-else class="w-full h-80 rounded-xl bg-gray-100 flex items-center justify-center">
+            <div v-else class="w-full h-full min-h-[500px] rounded-xl bg-gray-100 flex items-center justify-center">
               <div class="text-center text-gray-400">
                 <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <p>Memuat peta...</p>
               </div>
@@ -253,19 +507,21 @@ import FooterComponent from '@/components/FooterComponent.vue'
 import api from '@/services/api'
 
 // Google Maps URL
-const mapSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.5!2d112.7!3d-7.38!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMjMnMDAuMCJTIDExMsKwNDInMDAuMCJF!5e0!3m2!1sid!2sid!4v1700000000000'
+const mapSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d699.4818002710372!2d112.73616627742456!3d-7.368846491983087!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7e4957994e827%3A0x930e5eb7e09fb557!2sJl.%20Kertanegara%20No.20%2C%20Dusun%20Tratap%2C%20Sawotratap%2C%20Kec.%20Gedangan%2C%20Kabupaten%20Sidoarjo%2C%20Jawa%20Timur%2061256%2C%20Indonesia!5e0!3m2!1sid!2sus!4v1770188895319!5m2!1sid!2sus"'
 
 // Lazy loading for Google Maps
 const mapRef = ref(null)
 const isMapVisible = ref(false)
 let mapObserver = null
 
+const defaultAbout = 'TPQ AMANAH didirikan dengan tekad untuk mencetak generasi Qurani yang mampu membaca, memahami, dan mengamalkan Al-Quran dalam kehidupan sehari-hari'
+
 const logoUrl = new URL('@/assets/logo.png', import.meta.url).href
 
 const teachers = ref([])
 const aboutContent = ref({
   history: '',
-  vision: '',
+  vision: 'Menjadi lembaga pendidikan Al-Quran terdepan yang menghasilkan generasi Qurani berakhlak mulia',
   mission: ''
 })
 
@@ -281,12 +537,17 @@ const missionList = computed(() => {
   ]
 })
 
-const stats = [
-  { value: '50+', label: 'Santri Aktif' },
-  { value: '6+', label: 'Guru Berpengalaman' },
-  { value: '10+', label: 'Tahun Pengalaman' },
-  { value: '100+', label: 'Alumni' }
-]
+// Stats Section with Counter Animation
+const statsRef = ref(null)
+const statsNumbers = ref([])
+const hasAnimated = ref(false)
+
+const stats = ref([
+  { rawValue: 80, displayValue: '0+', label: 'Santri Aktif' },
+  { rawValue: 6, displayValue: '0+', label: 'Guru Berpengalaman' },
+  { rawValue: 10, displayValue: '0+', label: 'Tahun Pengalaman' },
+  { rawValue: 100, displayValue: '0+', label: 'Alumni' }
+])
 
 // Contact info with inline SVG icons
 const LocationIcon = h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -308,10 +569,30 @@ const ClockIcon = h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0
 
 const contacts = [
   { title: 'Alamat', value: 'JL. Kertanegara No. 20, Sawotratap, Gedangan, Sidoarjo', icon: LocationIcon },
-  { title: 'Telepon', value: '+62 812 3456 7890', icon: PhoneIcon },
+  { title: 'Telepon', value: '+62822 3336 1877', icon: PhoneIcon },
   { title: 'Email', value: 'tpqamanah@gmail.com', icon: MailIcon },
   { title: 'Jam Mengaji', value: 'Sesi 1: 15:30-17:00 | Sesi 2: 18:00-19:30 WIB', icon: ClockIcon }
 ]
+
+// WhatsApp Form
+const whatsappForm = ref({
+  nama: '',
+  pesan: ''
+})
+
+const sendWhatsApp = () => {
+  const phoneNumber = '6287733361877' // WhatsApp number (remove + and spaces)
+  const message = `Halo, nama saya ${whatsappForm.value.nama}. ${whatsappForm.value.pesan}`
+  const encodedMessage = encodeURIComponent(message)
+  const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+
+  // Open WhatsApp in new tab
+  window.open(whatsappURL, '_blank')
+
+  // Reset form
+  whatsappForm.value.nama = ''
+  whatsappForm.value.pesan = ''
+}
 
 const getInitials = (name) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -328,36 +609,50 @@ const scrollTo = (event, selector) => {
 }
 
 const fetchTeachers = async () => {
-  try {
-    // Try to fetch from guru users endpoint first
-    const { data } = await api.get('/content/guru/list')
-    if (data?.length > 0) {
-      teachers.value = data
-      return
-    }
-  } catch (e) {
-    console.log('Guru endpoint failed, trying teachers collection...')
-  }
-  
-  try {
-    // Fallback to teachers collection
-    const { data } = await api.get('/content/teachers/list')
-    if (data?.length > 0) {
-      teachers.value = data
-      return
-    }
-  } catch (e) {
-    console.log('Teachers endpoint failed, using fallback data...')
-  }
-  
-  // Final fallback with static data
+  // Use local photos from /public/guru folder
   teachers.value = [
-    { id: 1, name: 'Ustadz Riski', position: 'Kepala TPQ', bio: 'Berpengalaman mengajar Al-Quran', photoURL: 'https://ui-avatars.com/api/?name=Riski&background=1B5E20&color=fff&size=200' },
-    { id: 2, name: 'Ustadzah Aini', position: 'Guru Iqro', bio: 'Spesialis santri pemula', photoURL: 'https://ui-avatars.com/api/?name=Aini&background=2E7D32&color=fff&size=200' },
-    { id: 3, name: 'Ustadzah Ella', position: 'Guru Tajwid', bio: 'Ahli ilmu tajwid', photoURL: 'https://ui-avatars.com/api/?name=Ella&background=388E3C&color=fff&size=200' },
-    { id: 4, name: 'Ustadzah Annifa', position: 'Guru Hafalan', bio: 'Pembimbing tahfidz', photoURL: 'https://ui-avatars.com/api/?name=Annifa&background=43A047&color=fff&size=200' },
-    { id: 5, name: 'Ustadz Ahmad', position: 'Guru Tahsin', bio: 'Ahli perbaikan bacaan', photoURL: 'https://ui-avatars.com/api/?name=Ahmad&background=4CAF50&color=fff&size=200' },
-    { id: 6, name: 'Ustadzah Fatimah', position: 'Guru Adab', bio: 'Pembina akhlak santri', photoURL: 'https://ui-avatars.com/api/?name=Fatimah&background=66BB6A&color=fff&size=200' }
+    {
+      id: 1,
+      name: 'Ustadz Riski',
+      position: 'Kepala TPQ',
+      bio: 'Berpengalaman mengajar Al-Quran lebih dari 10 tahun',
+      photoURL: '/guru/riski.jpeg'
+    },
+    {
+      id: 2,
+      name: 'Ustadzah Aini',
+      position: 'Guru Iqro',
+      bio: 'Spesialis santri pemula dengan metode fun learning',
+      photoURL: '/guru/aini.jpeg'
+    },
+    {
+      id: 3,
+      name: 'Ustadzah Ella',
+      position: 'Guru Tajwid',
+      bio: 'Ahli ilmu tajwid dan tahsin Al-Quran',
+      photoURL: '/guru/ella.jpeg'
+    },
+    {
+      id: 4,
+      name: 'Ustadzah Annifa',
+      position: 'Guru Hafalan',
+      bio: 'Pembimbing Tahfidz Al-Quran',
+      photoURL: '/guru/annifa.jpeg'
+    },
+    {
+      id: 5,
+      name: 'Ustadzah Febi',
+      position: 'Guru Al-Quran',
+      bio: 'Mengajarkan Al-Quran dengan penuh kasih sayang',
+      photoURL: '/guru/febi.jpeg'
+    },
+    {
+      id: 6,
+      name: 'Ustadz Nurul',
+      position: 'Guru Adab',
+      bio: 'Pembina akhlak dan adab santri',
+      photoURL: '/guru/nurul.jpeg'
+    }
   ]
 }
 
@@ -375,7 +670,7 @@ const fetchContent = async () => {
 onMounted(() => {
   fetchTeachers()
   fetchContent()
-  
+
   // Setup IntersectionObserver for lazy loading Google Maps
   if (mapRef.value) {
     mapObserver = new IntersectionObserver((entries) => {
@@ -386,10 +681,46 @@ onMounted(() => {
         }
       })
     }, { rootMargin: '200px' })
-    
+
     mapObserver.observe(mapRef.value)
   }
+
+  // Setup IntersectionObserver for Stats Counter Animation
+  if (statsRef.value) {
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !hasAnimated.value) {
+          hasAnimated.value = true
+          animateCounters()
+          statsObserver.disconnect()
+        }
+      })
+    }, { threshold: 0.3 })
+
+    statsObserver.observe(statsRef.value)
+  }
 })
+
+// Counter Animation Function
+const animateCounters = () => {
+  stats.value.forEach((stat, index) => {
+    let current = 0
+    const target = stat.rawValue
+    const duration = 2000 // 2 seconds
+    const increment = target / (duration / 16) // 60fps
+
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= target) {
+        current = target
+        stats.value[index].displayValue = `${target}+`
+        clearInterval(timer)
+      } else {
+        stats.value[index].displayValue = `${Math.floor(current)}+`
+      }
+    }, 16)
+  })
+}
 
 // Cleanup observer on unmount
 onUnmounted(() => {
@@ -399,8 +730,13 @@ onUnmounted(() => {
 
 <style scoped>
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-spin-veryslow {
@@ -412,8 +748,15 @@ onUnmounted(() => {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 .animate-float {
@@ -425,8 +768,15 @@ onUnmounted(() => {
 }
 
 @keyframes bounce-slow {
-  0%, 100% { transform: translateY(-10%); }
-  50% { transform: translateY(10%); }
+
+  0%,
+  100% {
+    transform: translateY(-10%);
+  }
+
+  50% {
+    transform: translateY(10%);
+  }
 }
 
 .animate-bounce-slow {
@@ -434,7 +784,18 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .5;
+  }
+}
+
+#tentang .timeline-items {
+  transform: translateX(-8px);
 }
 </style>

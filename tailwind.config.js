@@ -18,6 +18,7 @@ export default {
                     700: '#388E3C',
                     800: '#0D3D13',
                     900: '#0A2E0F',
+                    950: '#064E3B', // Dark Emerald for footer
                     DEFAULT: '#1B5E20',
                 },
                 accent: {
@@ -30,15 +31,22 @@ export default {
                     600: '#FFB300',
                     DEFAULT: '#FFD54F',
                 },
+                success: {
+                    DEFAULT: '#10B981', // Emerald Light
+                },
             },
             fontFamily: {
-                sans: ['Poppins', 'system-ui', 'sans-serif'],
+                sans: ['Plus Jakarta Sans', 'Inter', 'Poppins', 'system-ui', 'sans-serif'],
+                jakarta: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                inter: ['Inter', 'system-ui', 'sans-serif'],
+                poppins: ['Poppins', 'system-ui', 'sans-serif'],
                 arabic: ['Amiri', 'serif'],
             },
             animation: {
                 'float': 'float 3s ease-in-out infinite',
                 'slide-up': 'slideUp 0.5s ease-out',
                 'slide-down': 'slideDown 0.3s ease-out',
+                'count-up': 'countUp 2s ease-out forwards',
             },
             keyframes: {
                 float: {
@@ -52,6 +60,10 @@ export default {
                 slideDown: {
                     '0%': { opacity: '0', transform: 'translateY(-10px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                countUp: {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
                 },
             },
         },
