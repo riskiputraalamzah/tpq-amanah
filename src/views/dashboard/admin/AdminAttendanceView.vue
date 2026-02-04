@@ -9,13 +9,14 @@
         <select v-model="selectedMonth" class="form-input form-select" @change="fetchData">
           <option v-for="m in availableMonths" :key="m.value" :value="m.value">{{ m.label }}</option>
         </select>
-        
+
         <!-- Dropdown Actions for Admin -->
         <div v-if="isAdmin" class="dropdown-wrapper" ref="dropdownRef">
           <button class="btn btn-primary dropdown-trigger" @click="toggleDropdown">
             <span>⚡ Aksi</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" :class="{ rotated: dropdownOpen }">
-              <path d="M6 9l6 6 6-6"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              :class="{ rotated: dropdownOpen }">
+              <path d="M6 9l6 6 6-6" />
             </svg>
           </button>
           <transition name="dropdown">
@@ -30,7 +31,7 @@
             </div>
           </transition>
         </div>
-        
+
         <!-- Simple Export Button for Guru -->
         <button v-else class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
           <span v-if="exporting">⏳ Mengunduh...</span>
@@ -99,11 +100,7 @@
       <div class="calendar-container">
         <!-- Teacher Legend (Compact) -->
         <div class="teacher-legend" v-if="selectedTeacherId === 'all' && !loading">
-          <div 
-            v-for="teacher in teachers" 
-            :key="teacher.id" 
-            class="legend-teacher"
-          >
+          <div v-for="teacher in teachers" :key="teacher.id" class="legend-teacher">
             <span class="legend-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
               {{ getInitials(teacher.displayName) }}
             </span>
@@ -129,13 +126,13 @@
           <div class="calendar-header">
             <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 18l-6-6 6-6"/>
+                <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
             <button class="nav-btn" @click="nextMonth" :disabled="isCurrentMonth">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 18l6-6-6-6"/>
+                <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
           </div>
@@ -143,49 +140,35 @@
           <div class="calendar-grid">
             <!-- Day Headers -->
             <div class="day-header" v-for="day in dayNames" :key="day">{{ day }}</div>
-            
+
             <!-- Empty cells for alignment -->
-            <div 
-              v-for="n in firstDayOfMonth" 
-              :key="'empty-' + n" 
-              class="calendar-cell empty"
-            ></div>
-            
+            <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
+
             <!-- Date Cells -->
-            <div 
-              v-for="date in daysInMonth" 
-              :key="date"
-              class="calendar-cell"
-              :class="getCellClass(date)"
-              :title="getHolidayForDate(date)?.name || ''"
-              @click="showDateDetail(date)"
-            >
+            <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCellClass(date)"
+              :title="getHolidayForDate(date)?.name || ''" @click="showDateDetail(date)">
               <span class="cell-date">{{ date }}</span>
-              
+
               <!-- Teacher Avatars for ALL mode (Compact) -->
               <div v-if="selectedTeacherId === 'all'" class="cell-avatars">
-                  <!-- COMPACT VIEW AVATARS -->
-                  <div 
-                    v-for="teacher in getVisibleTeachers(date)" 
-                    :key="teacher.id" 
-                    class="mini-avatar"
-                    :style="{ backgroundColor: getTeacherColor(teacher.displayName) }"
-                    :title="teacher.displayName"
-                  >
-                    {{ getInitials(teacher.displayName) }}
-                  </div>
-                  <div v-if="getHiddenCount(date) > 0" class="more-indicator">
-                    +{{ getHiddenCount(date) }}
-                  </div>
+                <!-- COMPACT VIEW AVATARS -->
+                <div v-for="teacher in getVisibleTeachers(date)" :key="teacher.id" class="mini-avatar"
+                  :style="{ backgroundColor: getTeacherColor(teacher.displayName) }" :title="teacher.displayName">
+                  {{ getInitials(teacher.displayName) }}
+                </div>
+                <div v-if="getHiddenCount(date) > 0" class="more-indicator">
+                  +{{ getHiddenCount(date) }}
+                </div>
               </div>
-              
+
               <!-- Single Teacher Status -->
               <div v-else class="cell-status-single">
-                <span v-if="getTeacherAttendanceForDate(date)" class="status-icon" :class="getTeacherAttendanceForDate(date).status === 'hadir' ? 'hadir' : 'tidak'">
+                <span v-if="getTeacherAttendanceForDate(date)" class="status-icon"
+                  :class="getTeacherAttendanceForDate(date).status === 'hadir' ? 'hadir' : 'tidak'">
                   {{ getTeacherAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
                 </span>
               </div>
-              
+
               <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
             </div>
           </div>
@@ -208,106 +191,114 @@
           </div>
 
           <!-- Check-in Time - Below Date Header (for single teacher view) -->
-          <div v-if="selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)" class="popup-checkin-time-header">
+          <div v-if="selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)"
+            class="popup-checkin-time-header">
             <span class="checkin-icon">🕐</span>
             <span>{{ getTeacherCheckinTime(selectedDate) }}</span>
           </div>
 
           <!-- Holiday Info -->
-           <div v-if="getHolidayForDate(selectedDate)" class="popup-holiday">
+          <div v-if="getHolidayForDate(selectedDate)" class="popup-holiday">
             <span class="holiday-icon">🎉</span>
             <div>
               <div class="holiday-label">Libur Nasional</div>
               <div class="holiday-name">{{ getHolidayForDate(selectedDate).name }}</div>
             </div>
-           </div>
+          </div>
 
           <div class="popup-content">
             <template v-if="selectedTeacherId === 'all'">
-            <!-- Holiday/Weekend Logic -->
-            <div v-if="getHolidayForDate(selectedDate) || isWeekend(selectedDate)" class="popup-section" style="text-align: center; padding: 20px 0;">
-              <div style="font-size: 3rem; margin-bottom: 10px;">🏝️</div>
-              <h5 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 8px;">Tidak Ada KBM</h5>
-              <p class="text-muted">
-                {{ getHolidayForDate(selectedDate) ? 'Hari Libur Nasional' : 'Akhir Pekan (Weekend)' }}
-              </p>
-            </div>
-
-            <!-- Normal Days Logic -->
-            <template v-else>
-            <!-- SECTION 1: HADIR -->
-            <div class="popup-section">
-              <h5>✅ Hadir ({{ getPresentTeachersWithTime(selectedDate).length }})</h5>
-              <div class="teacher-list-popup">
-                <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
-                  <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
-                    {{ getInitials(t.displayName) }}
-                  </div>
-                  <div class="teacher-info">
-                    <span class="teacher-name">{{ t.displayName }}</span>
-                    <span v-if="t.checkinTime" class="checkin-time">{{ t.checkinTime }}</span>
-                  </div>
-                </div>
-                 <div v-if="getPresentTeachersWithTime(selectedDate).length === 0" class="text-muted">Tidak ada data hadir</div>
+              <!-- Holiday/Weekend Logic -->
+              <div v-if="getHolidayForDate(selectedDate) || isWeekend(selectedDate)" class="popup-section"
+                style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🏝️</div>
+                <h5 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 8px;">Tidak Ada KBM</h5>
+                <p class="text-muted">
+                  {{ getHolidayForDate(selectedDate) ? 'Hari Libur Nasional' : 'Akhir Pekan (Weekend)' }}
+                </p>
               </div>
-            </div>
 
-            <!-- SECTION 2: TIDAK HADIR (Recorded as Izin/Sakit/Alpa) -->
-            <div class="popup-section">
-              <h5>❌ Tidak Hadir ({{ getRecordedAbsentTeachersForDate(selectedDate).length }})</h5>
-              <div class="teacher-list-popup">
-                 <div v-for="t in getRecordedAbsentTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item">
-                  <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
-                    {{ getInitials(t.displayName) }}
+              <!-- Normal Days Logic -->
+              <template v-else>
+                <!-- SECTION 1: HADIR -->
+                <div class="popup-section">
+                  <h5>✅ Hadir ({{ getPresentTeachersWithTime(selectedDate).length }})</h5>
+                  <div class="teacher-list-popup">
+                    <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
+                      <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
+                        {{ getInitials(t.displayName) }}
+                      </div>
+                      <div class="teacher-info">
+                        <span class="teacher-name">{{ t.displayName }}</span>
+                        <span v-if="t.checkinTime" class="checkin-time">{{ t.checkinTime }}</span>
+                      </div>
+                    </div>
+                    <div v-if="getPresentTeachersWithTime(selectedDate).length === 0" class="text-muted">Tidak ada data
+                      hadir</div>
                   </div>
-                  <span>{{ t.displayName }}</span>
                 </div>
-                <div v-if="getRecordedAbsentTeachersForDate(selectedDate).length === 0" class="text-muted">Nihil</div>
-              </div>
-            </div>
 
-            <!-- SECTION 3: BELUM ABSEN (No Record) -->
-            <div class="popup-section">
-               <h5>⏳ Belum Absen ({{ getUnrecordedTeachersForDate(selectedDate).length }})</h5>
-               <div class="teacher-list-popup">
-                 <div v-for="t in getUnrecordedTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item" style="opacity: 0.6">
-                  <div class="mini-avatar" style="background-color: var(--gray-400)">
-                    {{ getInitials(t.displayName) }}
+                <!-- SECTION 2: TIDAK HADIR (Recorded as Izin/Sakit/Alpa) -->
+                <div class="popup-section">
+                  <h5>❌ Tidak Hadir ({{ getRecordedAbsentTeachersForDate(selectedDate).length }})</h5>
+                  <div class="teacher-list-popup">
+                    <div v-for="t in getRecordedAbsentTeachersForDate(selectedDate)" :key="t.id"
+                      class="popup-teacher-item">
+                      <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
+                        {{ getInitials(t.displayName) }}
+                      </div>
+                      <span>{{ t.displayName }}</span>
+                    </div>
+                    <div v-if="getRecordedAbsentTeachersForDate(selectedDate).length === 0" class="text-muted">Nihil
+                    </div>
                   </div>
-                  <span>{{ t.displayName }}</span>
                 </div>
-                 <div v-if="getUnrecordedTeachersForDate(selectedDate).length === 0" class="text-muted">Semua sudah absen</div>
-               </div>
-            </div>
-            </template>
+
+                <!-- SECTION 3: BELUM ABSEN (No Record) -->
+                <div class="popup-section">
+                  <h5>⏳ Belum Absen ({{ getUnrecordedTeachersForDate(selectedDate).length }})</h5>
+                  <div class="teacher-list-popup">
+                    <div v-for="t in getUnrecordedTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item"
+                      style="opacity: 0.6">
+                      <div class="mini-avatar" style="background-color: var(--gray-400)">
+                        {{ getInitials(t.displayName) }}
+                      </div>
+                      <span>{{ t.displayName }}</span>
+                    </div>
+                    <div v-if="getUnrecordedTeachersForDate(selectedDate).length === 0" class="text-muted">Semua sudah
+                      absen</div>
+                  </div>
+                </div>
+              </template>
             </template>
 
             <template v-else>
-               <!-- Single Teacher Detail -->
-               <div class="popup-single-teacher">
-                  <template v-if="getTeacherAttendanceForDate(selectedDate)">
-                    <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
-                      {{ getTeacherAttendanceForDate(selectedDate).status === 'hadir' ? '✅ HADIR' : '❌ TIDAK HADIR' }}
-                    </div>
-                    <p class="popup-notes">
-                      <strong>Catatan:</strong> {{ getTeacherAttendanceForDate(selectedDate).notes || '-' }}
-                    </p>
-                    
-                    <div v-if="isAdmin" class="mt-2">
-                      <button class="btn btn-sm btn-outline-secondary" @click="openAddModal(selectedDate, selectedTeacherId, getTeacherAttendanceForDate(selectedDate))">
-                        ✏️ Ubah Status
-                      </button>
-                    </div>
-                  </template>
-                   <p v-else class="text-muted">Tidak ada data absensi untuk tanggal ini.</p>
-                   
-                   <div v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin" class="mt-3">
-                      <button class="btn btn-sm btn-outline-primary" @click="openAddModal(selectedDate, selectedTeacherId)">
-                        + Input Absensi
-                      </button>
-                   </div>
+              <!-- Single Teacher Detail -->
+              <div class="popup-single-teacher">
+                <template v-if="getTeacherAttendanceForDate(selectedDate)">
+                  <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
+                    {{ getTeacherAttendanceForDate(selectedDate).status === 'hadir' ? '✅ HADIR' : '❌ TIDAK HADIR' }}
+                  </div>
+                  <p class="popup-notes">
+                    <strong>Catatan:</strong> {{ getTeacherAttendanceForDate(selectedDate).notes || '-' }}
+                  </p>
+
+                  <div v-if="isAdmin" class="mt-2">
+                    <button class="btn btn-sm btn-outline-secondary"
+                      @click="openAddModal(selectedDate, selectedTeacherId, getTeacherAttendanceForDate(selectedDate))">
+                      ✏️ Ubah Status
+                    </button>
+                  </div>
+                </template>
+                <p v-else class="text-muted">Tidak ada data absensi untuk tanggal ini.</p>
+
+                <div v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin" class="mt-3">
+                  <button class="btn btn-sm btn-outline-primary" @click="openAddModal(selectedDate, selectedTeacherId)">
+                    + Input Absensi
+                  </button>
                 </div>
-             </template>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -317,12 +308,8 @@
     <div class="teachers-stats glass-card" v-if="!loading">
       <h3>📊 Statistik Per Guru</h3>
       <div class="stats-grid">
-        <div 
-          v-for="teacher in teachersWithStats" 
-          :key="teacher.id" 
-          class="stat-card"
-          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }"
-        >
+        <div v-for="teacher in teachersWithStats" :key="teacher.id" class="stat-card"
+          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }">
           <div class="stat-card-header">
             <span class="stat-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
               {{ getInitials(teacher.displayName) }}
@@ -354,25 +341,25 @@
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal glass-card">
         <h3>Tambah Data Absensi</h3>
-        
+
         <!-- Summary for Quick Add (Hidden Inputs) -->
         <div v-if="form.isQuickAdd" class="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
-           <p class="text-sm text-green-800" style="margin: 0; font-weight: 500;">
-             📝 Mencatat absensi untuk:
-           </p>
-           <p class="text-base text-green-700 font-bold" style="margin: 4px 0;">
-             {{ teachers.find(t => t.id === form.guruId)?.displayName }}
-           </p>
-           <p class="text-xs text-green-600" style="margin: 0;">
-             Tanggal: {{ new Date(form.date).toLocaleDateString('id-ID', { dateStyle: 'full' }) }}
-           </p>
+          <p class="text-sm text-green-800" style="margin: 0; font-weight: 500;">
+            📝 Mencatat absensi untuk:
+          </p>
+          <p class="text-base text-green-700 font-bold" style="margin: 4px 0;">
+            {{teachers.find(t => t.id === form.guruId)?.displayName}}
+          </p>
+          <p class="text-xs text-green-600" style="margin: 0;">
+            Tanggal: {{ new Date(form.date).toLocaleDateString('id-ID', { dateStyle: 'full' }) }}
+          </p>
         </div>
 
         <div v-if="!form.isQuickAdd" class="form-group">
           <label class="form-label">Tanggal</label>
           <input v-model="form.date" type="date" class="form-input" />
         </div>
-        
+
         <div v-if="!form.isQuickAdd" class="form-group">
           <label class="form-label">Guru</label>
           <select v-model="form.guruId" class="form-input form-select" @change="onGuruChange">
@@ -384,16 +371,11 @@
         <div class="form-group">
           <label class="form-label">Status</label>
           <div class="status-buttons">
-            <button 
-              class="status-btn" 
-              :class="{ active: form.status === 'hadir', hadir: form.status === 'hadir' }" 
-              @click="form.status = 'hadir'"
-            >✅ Hadir</button>
-            <button 
-              class="status-btn" 
-              :class="{ active: form.status === 'tidak_hadir', tidak: form.status === 'tidak_hadir' }" 
-              @click="form.status = 'tidak_hadir'"
-            >❌ Tidak Hadir</button>
+            <button class="status-btn" :class="{ active: form.status === 'hadir', hadir: form.status === 'hadir' }"
+              @click="form.status = 'hadir'">✅ Hadir</button>
+            <button class="status-btn"
+              :class="{ active: form.status === 'tidak_hadir', tidak: form.status === 'tidak_hadir' }"
+              @click="form.status = 'tidak_hadir'">❌ Tidak Hadir</button>
           </div>
         </div>
         <div class="form-group">
@@ -472,11 +454,11 @@ const availableMonths = computed(() => {
   const months = []
   const startYear = 2026
   const startMonth = 0
-  
+
   for (let year = startYear; year <= today.getFullYear(); year++) {
     const monthStart = (year === startYear) ? startMonth : 0
     const monthEnd = (year === today.getFullYear()) ? today.getMonth() : 11
-    
+
     for (let month = monthStart; month <= monthEnd; month++) {
       months.push({
         value: `${year}-${String(month + 1).padStart(2, '0')}`,
@@ -484,7 +466,7 @@ const availableMonths = computed(() => {
       })
     }
   }
-  
+
   return months.reverse()
 })
 
@@ -594,7 +576,7 @@ const getPresentTeachersForDate = (date) => {
   const presentTeacherIds = attendanceForDate
     .filter(a => a.status === 'hadir')
     .map(a => a.guruId)
-  
+
   return teachers.value.filter(t => presentTeacherIds.includes(t.id))
 }
 
@@ -602,14 +584,14 @@ const getPresentTeachersForDate = (date) => {
 const getPresentTeachersWithTime = (date) => {
   const attendanceForDate = getAttendanceForDate(date)
   const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
-  
+
   // Sort by createdAt descending (newest first)
   presentAttendance.sort((a, b) => {
     const timeA = parseDate(a.createdAt)?.getTime() || 0
     const timeB = parseDate(b.createdAt)?.getTime() || 0
     return timeB - timeA // Descending order
   })
-  
+
   return presentAttendance.map(a => {
     const teacher = teachers.value.find(t => t.id === a.guruId)
     return {
@@ -643,7 +625,7 @@ const getAbsentTeachersForDate = (date) => {
 
 const getTeacherAttendanceForDate = (date) => {
   if (selectedTeacherId.value === 'all') return null
-  
+
   return attendanceData.value.find(a => {
     const d = parseDate(a.date)
     return d && d.getDate() === date && d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value && a.guruId === selectedTeacherId.value
@@ -652,7 +634,7 @@ const getTeacherAttendanceForDate = (date) => {
 
 const getCellClass = (date) => {
   const classes = []
-  
+
   if (selectedTeacherId.value === 'all') {
     const presentTeachers = getPresentTeachersForDate(date)
     if (presentTeachers.length > 0) {
@@ -668,11 +650,11 @@ const getCellClass = (date) => {
       classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
     }
   }
-  
+
   if (getHolidayForDate(date)) {
     classes.push('libur')
   }
-  
+
   return classes.join(' ')
 }
 
@@ -692,11 +674,25 @@ onUnmounted(() => {
 })
 
 const getVisibleTeachers = (date) => {
-  const teachers = getPresentTeachersForDate(date)
+  const attendanceForDate = getAttendanceForDate(date)
+  const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
+
+  // Sort by createdAt descending (newest first) - same as popup
+  presentAttendance.sort((a, b) => {
+    const timeA = parseDate(a.createdAt)?.getTime() || 0
+    const timeB = parseDate(b.createdAt)?.getTime() || 0
+    return timeB - timeA // Descending order
+  })
+
+  // Map to teacher objects
+  const sortedTeachers = presentAttendance.map(a => {
+    return teachers.value.find(t => t.id === a.guruId)
+  }).filter(Boolean) // Remove null/undefined
+
   if (isMobile.value) {
-    return teachers.slice(0, 4)
+    return sortedTeachers.slice(0, 4)
   }
-  return teachers
+  return sortedTeachers
 }
 
 const getHiddenCount = (date) => {
@@ -777,18 +773,18 @@ const fetchData = async () => {
   loading.value = true
   try {
     const [year, month] = selectedMonth.value.split('-').map(Number)
-    
+
     // Update calendar state
     currentMonth.value = month - 1
     currentYear.value = year
-    
+
     const { data: guruData } = await api.get('/users?role=guru')
-    teachers.value = guruData.sort((a,b) => a.displayName.localeCompare(b.displayName))
+    teachers.value = guruData.sort((a, b) => a.displayName.localeCompare(b.displayName))
     assignTeacherColors(teachers.value)
 
     const { data: attData } = await api.get('/attendance', { params: { month, year } })
     attendanceData.value = attData
-    
+
     updateMonthHolidays()
   } catch (e) {
     console.error('Fetch error:', e)
@@ -800,7 +796,7 @@ const fetchData = async () => {
 
 const openAddModal = (day = null, guruId = '', existingData = null) => {
   let dateStr = new Date().toLocaleDateString('sv-SE') // Default today
-  
+
   if (day) {
     const d = new Date(currentYear.value, currentMonth.value, day)
     dateStr = d.toLocaleDateString('sv-SE')
@@ -808,10 +804,10 @@ const openAddModal = (day = null, guruId = '', existingData = null) => {
 
   const isQuickAdd = !!(day && guruId)
 
-  form.value = { 
-    date: dateStr, 
-    guruId: guruId || '', 
-    status: existingData ? existingData.status : 'hadir', 
+  form.value = {
+    date: dateStr,
+    guruId: guruId || '',
+    status: existingData ? existingData.status : 'hadir',
     notes: existingData ? existingData.notes : '',
     isQuickAdd
   }
@@ -830,36 +826,36 @@ const onGuruChange = () => {
 // Export to PDF
 const exportToPDF = () => {
   dropdownOpen.value = false
-  
+
   if (teachersWithStats.value.length === 0) {
     warning('Tidak ada data untuk di-export')
     return
   }
-  
+
   exporting.value = true
-  
+
   try {
     const doc = new jsPDF()
     const [year, monthNum] = selectedMonth.value.split('-').map(Number)
     const monthName = monthNames[monthNum - 1]
-    
+
     // Header
     doc.setFontSize(18)
     doc.setFont('helvetica', 'bold')
     doc.text('LAPORAN ABSENSI GURU', 105, 20, { align: 'center' })
-    
+
     doc.setFontSize(14)
     doc.setFont('helvetica', 'normal')
     doc.text('TPQ AMANAH', 105, 28, { align: 'center' })
-    
+
     doc.setFontSize(11)
     doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: 'center' })
-    
+
     // Line separator
     doc.setDrawColor(0, 100, 0)
     doc.setLineWidth(0.5)
     doc.line(14, 42, 196, 42)
-    
+
     // Table data
     const tableData = teachersWithStats.value.map((teacher, index) => [
       index + 1,
@@ -868,7 +864,7 @@ const exportToPDF = () => {
       teacher.tidakHadirCount,
       `Rp ${formatCurrency(teacher.hadirCount * 10000)}`
     ])
-    
+
     // Add table
     autoTable(doc, {
       startY: 48,
@@ -896,26 +892,26 @@ const exportToPDF = () => {
         fillColor: [245, 245, 245]
       }
     })
-    
+
     // Summary footer
     const finalY = (doc.lastAutoTable?.finalY || 100) + 10
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.text(`Total Kehadiran: ${totalAttendance.value}`, 14, finalY)
     doc.text(`Total Gaji: Rp ${formatCurrency(totalSalary.value)}`, 14, finalY + 7)
-    
+
     // Generated date
     const now = new Date()
     doc.setFontSize(9)
     doc.setFont('helvetica', 'italic')
     doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 18)
-    
+
     // Generate filename
     const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`
-    
+
     // Save/download PDF
     doc.save(filename)
-    
+
     success(`Berhasil mengunduh ${filename}`)
   } catch (e) {
     console.error('Export error:', e)
@@ -931,16 +927,16 @@ const saveAttendance = async () => {
   saving.value = true
   try {
     const teacher = teachers.value.find(t => t.id === form.value.guruId)
-    const payload = { 
+    const payload = {
       guruId: form.value.guruId,
       guruName: teacher ? teacher.displayName : '',
       date: form.value.date,
       status: form.value.status,
       notes: form.value.notes
     }
-    
+
     await api.post('/attendance/admin', payload)
-    
+
     success('Data absensi berhasil disimpan')
     closeModal()
     fetchData() // Refresh grid
@@ -954,11 +950,11 @@ const saveAttendance = async () => {
 
 onMounted(async () => {
   document.addEventListener('click', closeDropdownOnClickOutside)
-  
+
   // Fetch holidays
   holidays.value = await fetchHolidays()
   updateMonthHolidays()
-  
+
   // Fetch data
   await fetchData()
 })
@@ -969,7 +965,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.admin-attendance-view { 
+.admin-attendance-view {
   width: 100%;
 }
 
@@ -1007,7 +1003,8 @@ onUnmounted(() => {
   min-width: 160px;
   flex: 2;
 }
-.header-actions > :not(:first-child) {
+
+.header-actions> :not(:first-child) {
 
   flex: 1;
 }
@@ -1017,7 +1014,8 @@ onUnmounted(() => {
   position: relative;
 
 }
-.dropdown-wrapper button{
+
+.dropdown-wrapper button {
   width: 100%;
 }
 
@@ -1161,7 +1159,8 @@ onUnmounted(() => {
 
 .calendar-container {
   padding: var(--space-xl);
-  background: rgba(255, 255, 255, 0.95); /* Guru style white background */
+  background: rgba(255, 255, 255, 0.95);
+  /* Guru style white background */
   border-radius: var(--radius-xl);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
@@ -1186,7 +1185,7 @@ onUnmounted(() => {
   background: white;
   border-radius: var(--radius-full);
   border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .legend-avatar {
@@ -1250,8 +1249,10 @@ onUnmounted(() => {
 /* Calendar Grid - Compact & Safe */
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr)); /* Force columns to not expand */
-  gap:5px; /* Tighter gap */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* Force columns to not expand */
+  gap: 5px;
+  /* Tighter gap */
   margin-top: var(--space-md);
   width: 100%;
 }
@@ -1265,7 +1266,8 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.calendar-popup .mini-avatar{
+
+.calendar-popup .mini-avatar {
   margin: 0 !important;
 }
 
@@ -1285,7 +1287,8 @@ onUnmounted(() => {
   width: 100%;
   min-width: 0;
   min-height: 0;
-  box-sizing: border-box; /* Crucial for borders */
+  box-sizing: border-box;
+  /* Crucial for borders */
   overflow: hidden;
 }
 
@@ -1366,11 +1369,11 @@ onUnmounted(() => {
 }
 
 .cell-status-single {
- 
+
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
 }
 
 .status-icon {
@@ -1378,8 +1381,13 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
-.status-icon.hadir { color: #4caf50; }
-.status-icon.tidak { color: #f44336; }
+.status-icon.hadir {
+  color: #4caf50;
+}
+
+.status-icon.tidak {
+  color: #f44336;
+}
 
 .cell-holiday-dot {
   position: absolute;
@@ -1414,16 +1422,31 @@ onUnmounted(() => {
   border-radius: 3px;
 }
 
-.legend-dot.hadir { background: rgba(76, 175, 80, 0.3); border: 2px solid #4caf50; }
-.legend-dot.tidak { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
-.legend-dot.empty { background: var(--gray-100); border: 1px dashed var(--gray-300); }
-.legend-dot.libur { background: rgba(255, 193, 7, 0.3); border: 2px solid #ffc107; }
+.legend-dot.hadir {
+  background: rgba(76, 175, 80, 0.3);
+  border: 2px solid #4caf50;
+}
+
+.legend-dot.tidak {
+  background: rgba(244, 67, 54, 0.3);
+  border: 2px solid #f44336;
+}
+
+.legend-dot.empty {
+  background: var(--gray-100);
+  border: 1px dashed var(--gray-300);
+}
+
+.legend-dot.libur {
+  background: rgba(255, 193, 7, 0.3);
+  border: 2px solid #ffc107;
+}
 
 /* Calendar Popup */
 .calendar-popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 100;
   backdrop-filter: blur(2px);
 }
@@ -1442,7 +1465,7 @@ onUnmounted(() => {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .popup-header {
@@ -1480,9 +1503,21 @@ onUnmounted(() => {
   border-bottom: 1px solid rgba(255, 193, 7, 0.2);
 }
 
-.popup-holiday .holiday-icon { font-size: 1.2rem; }
-.popup-holiday .holiday-label { font-size: 0.7rem; color: #e65100; font-weight: 700; text-transform: uppercase; }
-.popup-holiday .holiday-name { font-weight: 600; color: #e65100; }
+.popup-holiday .holiday-icon {
+  font-size: 1.2rem;
+}
+
+.popup-holiday .holiday-label {
+  font-size: 0.7rem;
+  color: #e65100;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.popup-holiday .holiday-name {
+  font-weight: 600;
+  color: #e65100;
+}
 
 .popup-content {
   padding: var(--space-lg);
@@ -1536,7 +1571,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top:3px;
+  margin-top: 3px;
 }
 
 .popup-teacher-item .checkin-time::before {
@@ -1552,7 +1587,7 @@ onUnmounted(() => {
   background: rgba(33, 150, 243, 0.1);
   border-radius: var(--radius-md);
   display: inline-block;
-  
+
 }
 
 /* Check-in Time Header - Below Date */
@@ -1586,8 +1621,15 @@ onUnmounted(() => {
   margin-bottom: var(--space-md);
 }
 
-.status-badge.hadir { background: rgba(76, 175, 80, 0.15); color: #2e7d32; }
-.status-badge.tidak { background: rgba(244, 67, 54, 0.15); color: #c62828; }
+.status-badge.hadir {
+  background: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+}
+
+.status-badge.tidak {
+  background: rgba(244, 67, 54, 0.15);
+  color: #c62828;
+}
 
 .text-muted {
   color: var(--gray-500);
@@ -1618,7 +1660,7 @@ onUnmounted(() => {
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   border-left: 4px solid var(--teacher-color, var(--primary));
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .stat-card-header {
@@ -1674,9 +1716,18 @@ onUnmounted(() => {
   text-transform: uppercase;
 }
 
-.stat-item.hadir .stat-value { color: #4caf50; }
-.stat-item.tidak .stat-value { color: #f44336; }
-.stat-item.gaji .stat-value { color: #ff9800; font-size: 0.85rem; }
+.stat-item.hadir .stat-value {
+  color: #4caf50;
+}
+
+.stat-item.tidak .stat-value {
+  color: #f44336;
+}
+
+.stat-item.gaji .stat-value {
+  color: #ff9800;
+  font-size: 0.85rem;
+}
 
 /* Holiday Alert Banner */
 .holiday-alert {
@@ -1690,8 +1741,15 @@ onUnmounted(() => {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .today-holiday {
@@ -1704,75 +1762,173 @@ onUnmounted(() => {
   border: 2px solid rgba(33, 150, 243, 0.3);
 }
 
-.holiday-alert-icon { font-size: 2rem; flex-shrink: 0; }
-.holiday-alert-content { display: flex; flex-direction: column; gap: 2px; }
-.holiday-alert-label { font-size: 0.8rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
-.today-holiday .holiday-alert-label { color: #e65100; }
-.tomorrow-holiday .holiday-alert-label { color: #1565c0; }
-.holiday-alert-name { font-size: 1.1rem; font-weight: 600; }
-.today-holiday .holiday-alert-name { color: #e65100; }
-.tomorrow-holiday .holiday-alert-name { color: #1565c0; }
+.holiday-alert-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.holiday-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.holiday-alert-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.today-holiday .holiday-alert-label {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-label {
+  color: #1565c0;
+}
+
+.holiday-alert-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.today-holiday .holiday-alert-name {
+  color: #e65100;
+}
+
+.tomorrow-holiday .holiday-alert-name {
+  color: #1565c0;
+}
 
 /* Modal */
-.modal-overlay { 
-  position: fixed; 
-  inset: 0; 
-  background: rgba(0,0,0,0.5); 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  z-index: 9999; 
-  padding: var(--space-lg); 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-lg);
 }
 
-.modal { 
-  width: 100%; 
-  max-width: 450px; 
-  padding: var(--space-xl); 
-  background: var(--white); 
-  border-radius: var(--radius-xl); 
+.modal {
+  width: 100%;
+  max-width: 450px;
+  padding: var(--space-xl);
+  background: var(--white);
+  border-radius: var(--radius-xl);
 }
 
-.modal h3 { color: var(--primary-dark); margin-bottom: var(--space-lg); }
-.modal-actions { display: flex; gap: var(--space-md); justify-content: flex-end; margin-top: var(--space-xl); }
+.modal h3 {
+  color: var(--primary-dark);
+  margin-bottom: var(--space-lg);
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+  margin-top: var(--space-xl);
+}
 
 /* Status Buttons */
-.status-buttons { display: flex; gap: var(--space-md); }
-.status-btn { 
-  flex: 1; 
-  padding: var(--space-md); 
-  border-radius: var(--radius-lg); 
-  font-weight: 600; 
-  background: var(--gray-100); 
-  color: var(--gray-600); 
+.status-buttons {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.status-btn {
+  flex: 1;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  background: var(--gray-100);
+  color: var(--gray-600);
   transition: all 0.2s;
   border: 2px solid transparent;
   cursor: pointer;
 }
-.status-btn.active.hadir { background: rgba(76, 175, 80, 0.15); color: #388e3c; border: 2px solid #4caf50; }
-.status-btn.active.tidak { background: rgba(244, 67, 54, 0.15); color: #c62828; border: 2px solid #f44336; }
+
+.status-btn.active.hadir {
+  background: rgba(76, 175, 80, 0.15);
+  color: #388e3c;
+  border: 2px solid #4caf50;
+}
+
+.status-btn.active.tidak {
+  background: rgba(244, 67, 54, 0.15);
+  color: #c62828;
+  border: 2px solid #f44336;
+}
 
 /* Skeleton Styles */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
-.skeleton-nav-btn, .skeleton-month, .skeleton-cell, .summary-value-skeleton {
+.skeleton-nav-btn,
+.skeleton-month,
+.skeleton-cell,
+.summary-value-skeleton {
   background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
 
-.calendar-loading { padding: var(--space-lg); }
-.skeleton-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); }
-.skeleton-nav-btn { width: 40px; height: 40px; border-radius: var(--radius-full); }
-.skeleton-month { width: 150px; height: 28px; }
-.skeleton-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-.skeleton-cell { aspect-ratio: 1; border-radius: var(--radius-lg); min-height: 60px; }
-.summary-value-skeleton { display: inline-block; height: 32px; width: 50px; border-radius: var(--radius-md); vertical-align: middle; }
-.summary-value-skeleton.wide { width: 120px; }
+.calendar-loading {
+  padding: var(--space-lg);
+}
+
+.skeleton-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.skeleton-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-month {
+  width: 150px;
+  height: 28px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.skeleton-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  min-height: 60px;
+}
+
+.summary-value-skeleton {
+  display: inline-block;
+  height: 32px;
+  width: 50px;
+  border-radius: var(--radius-md);
+  vertical-align: middle;
+}
+
+.summary-value-skeleton.wide {
+  width: 120px;
+}
 
 /* Mobile & Tablet Responsive (Compact View) */
 @media (max-width: 1024px) {
@@ -1781,66 +1937,70 @@ onUnmounted(() => {
     align-items: stretch;
     margin-bottom: var(--space-md);
   }
-  
-.popup-teacher-item{
-  font-size: .7rem;
-  gap: 3px;
-}
-.popup-teacher-item .checkin-time{
-  font-size: .5rem;
 
-  gap: 1px;
-}
-.popup-teacher-item .checkin-time::before {
- 
-  font-size: 0.5rem;
-}
-  
+  .popup-teacher-item {
+    font-size: .7rem;
+    gap: 3px;
+  }
+
+  .popup-teacher-item .checkin-time {
+    font-size: .6rem;
+
+    gap: 1px;
+  }
+
+  .popup-teacher-item .checkin-time::before {
+
+    font-size: 0.5rem;
+  }
+
   .header-actions {
     margin-top: var(--space-sm);
- 
+
     gap: var(--space-sm);
   }
-  
+
   .header-actions select {
     grid-column: 1 / -1;
     width: 100%;
   }
-  
+
   .dropdown-wrapper,
   .btn-export {
     width: 100%;
   }
-  
+
   .dropdown-trigger {
     width: 100%;
     justify-content: center;
   }
-  
+
   .dropdown-menu {
     left: 0;
     right: 0;
   }
-  
+
   .summary-row {
     grid-template-columns: 1fr;
     gap: var(--space-md);
   }
-  
+
   .filter-section {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-xs);
   }
-  
+
   .select-wrapper {
     max-width: none;
     width: 100%;
   }
-  
+
   .calendar-container {
-    padding: 6px; /* Reduced for mobile */
-    overflow: visible; /* Allow content to show, grid should fit */
+    padding: 6px;
+    /* Reduced for mobile */
+    overflow: visible;
+    /* Allow content to show, grid should fit */
   }
 
   .teacher-legend {
@@ -1857,7 +2017,7 @@ onUnmounted(() => {
     padding: 2px 4px;
     min-width: 0;
   }
-  
+
   .legend-name {
     display: block;
     font-size: 0.65rem;
@@ -1865,49 +2025,54 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .calendar-header {
     margin-bottom: var(--space-md);
   }
-  
+
   .calendar-header h3 {
     font-size: 1rem;
   }
-  
+
   .nav-btn {
     width: 32px;
     height: 32px;
   }
-  
+
   .calendar-grid {
     gap: 1px;
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr)); /* Force strict width */
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    /* Force strict width */
   }
-  
+
   .day-header {
     font-size: 0.65rem;
     padding: 2px 0;
   }
-  
+
   .calendar-cell {
-    box-sizing: border-box; /* Ensure borders don't add width */
+    box-sizing: border-box;
+    /* Ensure borders don't add width */
     padding: 0px;
     border-radius: var(--radius-sm);
-    min-height: 0; 
-    min-width: 0; /* CRITICAL for grid shrinking */
-    width: 100%; /* Ensure fits in grid track */
-    aspect-ratio: 1; /* Force square shape */
+    min-height: 0;
+    min-width: 0;
+    /* CRITICAL for grid shrinking */
+    width: 100%;
+    /* Ensure fits in grid track */
+    aspect-ratio: 1;
+    /* Force square shape */
   }
-  
+
   .cell-date {
     font-size: 0.6rem;
     margin-top: 2px;
     margin-bottom: 0;
     line-height: 1.2;
   }
-  
+
   .cell-avatars {
     gap: 1px;
     padding: 0 1px;
@@ -1915,36 +2080,47 @@ onUnmounted(() => {
   }
 
   .mini-avatar {
-    width: 10px; /* Smaller avatars */
+    width: 10px;
+    /* Smaller avatars */
     height: 10px;
     font-size: 0.3rem;
   }
-  
+
   .more-indicator {
     font-size: 0.45rem;
     margin-top: 0;
   }
-  
+
   /* Status icon for single view */
   .status-icon {
     font-size: 0.9rem;
   }
-  
+
   .holiday-alert {
     padding: var(--space-sm);
     gap: var(--space-sm);
-    flex-wrap: wrap; 
+    flex-wrap: wrap;
   }
-  
-  .holiday-alert-icon { font-size: 1.2rem; }
-  .holiday-alert-label { font-size: 0.65rem; width: 100%; }
-  .holiday-alert-name { font-size: 0.85rem; width: 100%; }
-  
+
+  .holiday-alert-icon {
+    font-size: 1.2rem;
+  }
+
+  .holiday-alert-label {
+    font-size: 0.65rem;
+    width: 100%;
+  }
+
+  .holiday-alert-name {
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: var(--space-md);
   }
-  
+
   .stat-card {
     padding: var(--space-md);
   }
@@ -1953,22 +2129,22 @@ onUnmounted(() => {
   .skeleton-grid {
     gap: 1px;
   }
-  
+
   .skeleton-cell {
     min-height: 0;
     border-radius: var(--radius-sm);
     aspect-ratio: 1;
   }
-  
+
   .skeleton-calendar-header {
     margin-bottom: var(--space-md);
   }
-  
+
   .skeleton-nav-btn {
     width: 32px;
     height: 32px;
   }
-  
+
   .skeleton-month {
     width: 100px;
     height: 24px;
@@ -1979,19 +2155,31 @@ onUnmounted(() => {
 @media (min-width: 1025px) {
   .cell-avatars {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columns on desktop for density */
-    gap: 1px;
+    grid-template-columns: repeat(3, 1fr);
+    /* 3 columns on desktop for density */
+    gap: 4px;
     align-content: start;
     padding: 2px;
   }
 }
 
 @media (max-width: 640px) {
-  .legend-item{
+  .legend-item {
     font-size: .5rem;
   }
-  .calendar-legend{
+
+  .calendar-legend {
     gap: var(--space-sm);
+  }
+
+  .teachers-stats {
+    padding: var(--space-md) !important;
+  }
+}
+
+@media (max-width : 400px) {
+  .header-actions select {
+    flex: 1 !important;
   }
 }
 </style>
