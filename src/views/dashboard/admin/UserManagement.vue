@@ -59,14 +59,29 @@
             </div>
             <span class="role-badge" :class="user.role">{{ getRoleLabel(user.role) }}</span>
           </div>
-          <div class="user-actions">
-            <button class="btn btn-sm btn-warning" @click="openCredentialsModal(user)">🔑 Credentials</button>
-            <button v-if="user.role === 'guru'" class="btn btn-sm btn-info" @click="openPermissionsModal(user)">⚙️
-              Permissions</button>
-            <button class="btn btn-sm btn-secondary" @click="openRoleModal(user)"
-              :disabled="user.id === currentUser?.uid">Ubah Role</button>
-            <button class="btn btn-sm btn-danger" @click="confirmDelete(user)"
-              :disabled="user.id === currentUser?.uid">Hapus</button>
+          <div class="user-actions action-dropdown-wrapper">
+            <button class="btn btn-icon dropdown-trigger" @click.stop="toggleDropdown(user.id)"
+              :class="{ active: activeDropdownId === user.id }">
+              ⚙️ <span class="btn-text">Aksi</span>
+            </button>
+
+            <transition name="dropdown-fade">
+              <div v-if="activeDropdownId === user.id" class="action-dropdown-menu glass-card">
+                <button class="action-item" @click="openCredentialsModal(user)">
+                  <span class="action-icon">🔑</span> Credentials
+                </button>
+                <button v-if="user.role === 'guru'" class="action-item" @click="openPermissionsModal(user)">
+                  <span class="action-icon">⚙️</span> Permissions
+                </button>
+                <button class="action-item" @click="openRoleModal(user)" :disabled="user.id === currentUser?.uid">
+                  <span class="action-icon">👤</span> Ubah Role
+                </button>
+                <button class="action-item text-danger" @click="confirmDelete(user)"
+                  :disabled="user.id === currentUser?.uid">
+                  <span class="action-icon">🗑️</span> Hapus
+                </button>
+              </div>
+            </transition>
           </div>
         </div>
       </div>
@@ -197,7 +212,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
@@ -243,6 +258,37 @@ const availableFeatures = ref([
   { id: 'admin-attendance-view', label: 'Rekap Absensi', description: 'Lihat rekap absensi semua guru' },
   { id: 'export-pdf', label: 'Export PDF', description: 'Export laporan absensi ke PDF' }
 ])
+
+// Dropdown state
+const activeDropdownId = ref(null)
+
+const toggleDropdown = (userId) => {
+  if (activeDropdownId.value === userId) {
+    activeDropdownId.value = null
+  } else {
+    activeDropdownId.value = userId
+  }
+}
+
+const closeDropdown = () => {
+  activeDropdownId.value = null
+}
+
+const closeDropdownOnClickOutside = (e) => {
+  // Logic: if click target is NOT inside .action-dropdown-wrapper, close dropdown
+  if (activeDropdownId.value && !e.target.closest('.action-dropdown-wrapper')) {
+    activeDropdownId.value = null
+  }
+}
+
+onMounted(() => {
+  fetchUsers()
+  window.addEventListener('click', closeDropdownOnClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeDropdownOnClickOutside)
+})
 
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
@@ -515,8 +561,17 @@ onMounted(() => {
   flex-direction: column;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background: var(--gray-50);
+  background: var(--white);
   border-radius: var(--radius-lg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--gray-100);
+  transition: box-shadow 0.2s;
+}
+
+.user-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  border-color: var(--primary-200);
+  border-color: var(--primary-200);
 }
 
 @media (min-width: 768px) {
@@ -524,6 +579,65 @@ onMounted(() => {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+  }
+}
+
+@media (max-width: 767px) {
+  .user-card {
+    position: relative;
+    padding: var(--space-xl) var(--space-md) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .btn-text {
+    display: none;
+  }
+
+  .user-main {
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .role-badge {
+    margin-top: 4px;
+  }
+
+  /* Floating gear icon in top-right */
+  .action-dropdown-wrapper {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    margin-left: 0 !important;
+    z-index: 10 !important;
+  }
+
+  .dropdown-trigger {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--white);
+    border-color: var(--gray-200);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .dropdown-trigger:hover {
+    background: var(--gray-50);
   }
 }
 
@@ -604,19 +718,101 @@ onMounted(() => {
   color: #1976d2;
 }
 
-.user-actions {
-  display: flex;
-  gap: var(--space-sm);
-  flex-shrink: 0;
+/* Action Dropdown Styles */
+.action-dropdown-wrapper {
+  position: relative;
+  margin-left: auto;
 }
 
-@media (max-width: 767px) {
-  .user-actions {
-    width: 100%;
-  }
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  color: var(--gray-700);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
 
-  .user-actions .btn {
-    flex: 1;
+.dropdown-trigger:hover,
+.dropdown-trigger.active {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-md);
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 200px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--gray-700);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.action-item:hover {
+  background: var(--gray-50);
+  color: var(--primary);
+}
+
+.action-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-item.text-danger {
+  color: var(--error);
+}
+
+.action-item.text-danger:hover {
+  background: #fee2e2;
+}
+
+/* Animations */
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+}
+
+@media (max-width: 640px) {
+  .dropdown-trigger {
+    width: 100%;
   }
 }
 
