@@ -895,16 +895,47 @@ const exportToPDF = () => {
 
     // Summary footer
     const finalY = (doc.lastAutoTable?.finalY || 100) + 10
+
+    // Calculate totals for PDF
+    const totalHadirPDF = teachersWithStats.value.reduce((sum, t) => sum + t.hadirCount, 0)
+    const totalGajiPDF = totalHadirPDF * 10000
+
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
-    doc.text(`Total Kehadiran: ${totalAttendance.value}`, 14, finalY)
-    doc.text(`Total Gaji: Rp ${formatCurrency(totalSalary.value)}`, 14, finalY + 7)
+    doc.text(`Total Kehadiran: ${totalHadirPDF}`, 14, finalY)
+    doc.text(`Total Gaji: Rp ${formatCurrency(totalGajiPDF)}`, 14, finalY + 6)
+
+    // Calculate Active Days (Hari Efektif)
+    let activeDaysCount = 0
+    const daysCount = new Date(year, monthNum, 0).getDate() // Get days in exported month
+
+    for (let day = 1; day <= daysCount; day++) {
+      const dateObj = new Date(year, monthNum - 1, day)
+      const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6 // Sun or Sat
+
+      // Check holiday (using existing helper if synced, or search in monthHolidays)
+      // Note: monthHolidays is computed based on current view. Assuming export matches view.
+      const isHolidayDay = monthHolidays.value.some(h => h.date === day)
+
+      if (!isWeekendDay && !isHolidayDay) {
+        activeDaysCount++
+      }
+    }
+
+    const maxSalary = activeDaysCount * 10000
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(10)
+    doc.text(`Total Hari Efektif: ${activeDaysCount} Hari`, 14, finalY + 14)
+    doc.text(`Potensi Gaji (Full): Rp ${formatCurrency(maxSalary)}`, 14, finalY + 19)
+
+
 
     // Generated date
     const now = new Date()
     doc.setFontSize(9)
     doc.setFont('helvetica', 'italic')
-    doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 18)
+    doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 28)
 
     // Generate filename
     const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`

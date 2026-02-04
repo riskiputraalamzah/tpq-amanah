@@ -12,10 +12,10 @@
         <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon admin">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -26,10 +26,10 @@
         <div v-else class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon admin">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -42,8 +42,8 @@
         <div v-if="loading" class="stat-card glass-card animate-fadeInUp delay-100">
           <div class="stat-card-icon guru">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -54,8 +54,8 @@
         <div v-else class="stat-card glass-card animate-fadeInUp delay-100">
           <div class="stat-card-icon guru">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -93,15 +93,15 @@
       </template>
 
       <!-- Kehadiran Bulan Ini - Hidden for Admin (not functioning yet, only show for Guru) -->
-        <template v-if="isGuru">
+      <template v-if="isGuru">
         <!-- Loading Skeleton for Kehadiran -->
         <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon attendance">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -112,10 +112,10 @@
         <div v-else class="stat-card glass-card animate-fadeInUp">
           <div class="stat-card-icon attendance">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -123,18 +123,19 @@
             <span class="stat-card-label">Kehadiran Bulan Ini</span>
           </div>
         </div>
-        </template>
+      </template>
 
       <!-- Guru and Admin shared Cards -->
       <template v-if="isGuru || isAdmin">
         <!-- Loading Skeleton for Periode Penilaian -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
+        <div v-if="loading" class="stat-card glass-card animate-fadeInUp"
+          :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
           <div class="stat-card-icon grading">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -142,13 +143,14 @@
             <span class="stat-card-label">Periode Penilaian Aktif</span>
           </div>
         </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp" :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
+        <div v-else class="stat-card glass-card animate-fadeInUp"
+          :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
           <div class="stat-card-icon grading">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
           <div class="stat-card-info">
@@ -162,13 +164,15 @@
       <template v-if="isSantri">
         <div class="under-construction glass-card animate-fadeInUp">
           <div class="under-construction-icon">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
+            <svg class="mx-auto" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 6v6l4 2" />
             </svg>
           </div>
           <h2>Fitur Dalam Pengembangan</h2>
-          <p>Dashboard untuk Santri sedang dalam tahap pengembangan. Silakan hubungi guru atau admin untuk informasi lebih lanjut.</p>
+          <p>Dashboard untuk Santri sedang dalam tahap pengembangan. Silakan hubungi guru atau admin untuk informasi
+            lebih lanjut.</p>
         </div>
       </template>
     </div>
@@ -180,8 +184,8 @@
         <router-link to="/dashboard/attendance" class="action-card glass-card" v-if="isGuru">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </div>
           <span>Isi Absensi</span>
@@ -189,8 +193,8 @@
         <router-link to="/dashboard/admin-attendance" class="action-card glass-card" v-if="isAdmin">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </div>
           <span>Rekap Absensi</span>
@@ -199,8 +203,8 @@
         <router-link to="/dashboard/grading" class="action-card glass-card">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </div>
           <span>Buat Penilaian</span>
@@ -210,10 +214,10 @@
           <router-link to="/dashboard/users" class="action-card glass-card">
             <div class="action-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
               </svg>
             </div>
             <span>Tambah User</span>
@@ -222,8 +226,8 @@
           <router-link to="/dashboard/content" class="action-card glass-card">
             <div class="action-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </div>
             <span>Edit Konten</span>
@@ -237,38 +241,31 @@
       <h2>{{ user.permissions?.menuGroupName || 'Akses Khusus' }}</h2>
       <div class="action-grid">
         <!-- Rekap Absensi -->
-        <router-link 
-          v-if="hasPermission('admin-attendance-view')" 
-          to="/dashboard/admin-attendance" 
-          class="action-card glass-card permission-card"
-        >
+        <router-link v-if="hasPermission('admin-attendance-view')" to="/dashboard/admin-attendance"
+          class="action-card glass-card permission-card">
           <div class="action-icon permission-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-              <path d="M12 16v-4"/>
-              <path d="M8 16v-2"/>
-              <path d="M16 16v-3"/>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <path d="M12 16v-4" />
+              <path d="M8 16v-2" />
+              <path d="M16 16v-3" />
             </svg>
           </div>
           <span>Rekap Absensi</span>
         </router-link>
 
         <!-- Export PDF -->
-        <button 
-          v-if="hasPermission('export-pdf')" 
-          class="action-card glass-card permission-card"
-          @click="handleExportPDF"
-          :disabled="exporting"
-        >
+        <button v-if="hasPermission('export-pdf')" class="action-card glass-card permission-card"
+          @click="handleExportPDF" :disabled="exporting">
           <div class="action-icon permission-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="12" y1="18" x2="12" y2="12"/>
-              <line x1="9" y1="15" x2="15" y2="15"/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
             </svg>
           </div>
           <span>{{ exporting ? 'Mengunduh...' : 'Export PDF' }}</span>
@@ -346,14 +343,14 @@ const fetchStats = async () => {
       if (hasPermission('export-pdf')) {
         const today = new Date()
         const year = today.getFullYear()
-        
+
         try {
           // Parallel fetch for export data
           const [attResponse, teachersResponse] = await Promise.all([
             api.get('/attendance', { params: { month: today.getMonth() + 1, year } }),
             api.get('/users', { params: { role: 'guru' } })
           ])
-          
+
           exportData.value.attendance = attResponse.data
           exportData.value.teachers = teachersResponse.data
         } catch (err) {
@@ -371,7 +368,7 @@ const fetchStats = async () => {
 // Prepared export data (Computed for performance/consistency)
 const exportStats = computed(() => {
   if (exportData.value.teachers.length === 0) return []
-  
+
   const attendanceData = exportData.value.attendance
   return exportData.value.teachers.map(t => {
     const teacherAttendance = attendanceData.filter(a => a.guruId === t.id)
@@ -393,26 +390,26 @@ const handleExportPDF = () => {
     const today = new Date()
     const monthName = monthNames[today.getMonth()]
     const year = today.getFullYear()
-    
+
     // Create PDF
     const doc = new jsPDF()
-    
+
     // Header (Match AdminAttendanceView style exactly)
     doc.setFontSize(18)
     doc.setFont('helvetica', 'bold')
     doc.text('LAPORAN ABSENSI GURU', 105, 20, { align: 'center' })
-    
+
     doc.setFontSize(14)
     doc.setFont('helvetica', 'normal')
     doc.text('TPQ AMANAH', 105, 28, { align: 'center' })
-    
+
     doc.setFontSize(11)
     doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: 'center' })
-    
+
     doc.setDrawColor(0, 100, 0)
     doc.setLineWidth(0.5)
     doc.line(14, 42, 196, 42)
-    
+
     const tableData = exportStats.value.map((teacher, index) => [
       index + 1,
       teacher.displayName,
@@ -420,7 +417,7 @@ const handleExportPDF = () => {
       teacher.tidakHadirCount,
       `Rp ${formatCurrency(teacher.hadirCount * 10000)}`
     ])
-    
+
     autoTable(doc, {
       startY: 48,
       head: [['No', 'Nama Guru', 'Hadir', 'Izin/Tidak Hadir', 'Gaji']],
@@ -442,24 +439,24 @@ const handleExportPDF = () => {
       styles: { fontSize: 10, cellPadding: 4 },
       alternateRowStyles: { fillColor: [245, 245, 245] }
     })
-    
+
     const totalHadir = exportStats.value.reduce((sum, t) => sum + t.hadirCount, 0)
     const totalGaji = totalHadir * 10000
     const finalY = (doc.lastAutoTable?.finalY || 100) + 10
-    
+
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.text(`Total Kehadiran: ${totalHadir}`, 14, finalY)
     doc.text(`Total Gaji: Rp ${formatCurrency(totalGaji)}`, 14, finalY + 7)
-    
+
     const now = new Date()
     doc.setFontSize(9)
     doc.setFont('helvetica', 'italic')
     doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 18)
-    
+
     const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`
     doc.save(filename)
-    
+
     success(`Berhasil mengunduh ${filename}`)
   } catch (error) {
     console.error('Export PDF error:', error)
@@ -544,11 +541,25 @@ watch(() => user.value?.permissions, async (newVal) => {
   color: var(--white);
 }
 
-.stat-card-icon.admin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.stat-card-icon.guru { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-.stat-card-icon.santri { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-.stat-card-icon.attendance { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-.stat-card-icon.grading { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.stat-card-icon.admin {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card-icon.guru {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card-icon.santri {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card-icon.attendance {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-card-icon.grading {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
 
 .stat-card-info {
   display: flex;

@@ -685,10 +685,31 @@ img {
   transition: all 0.3s ease;
 }
 
+
 .btn-secondary:hover {
   background: var(--primary-500);
   color: white;
   transform: translateY(-3px);
+}
+
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-weight: 700;
+  color: var(--primary-800);
+  background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-accent:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #FFD54F 0%, #FFE082 100%);
+  box-shadow: 0 12px 35px rgba(255, 193, 7, 0.4);
 }
 
 /* Input */

@@ -20,12 +20,7 @@
       </div>
       <div class="filter-group">
         <label>Cari:</label>
-        <input 
-          v-model="searchQuery" 
-          type="text" 
-          class="form-input" 
-          placeholder="Cari nama atau email..."
-        />
+        <input v-model="searchQuery" type="text" class="form-input" placeholder="Cari nama atau email..." />
       </div>
     </div>
 
@@ -60,26 +55,18 @@
             <div v-else class="user-avatar-placeholder">{{ getInitials(user.displayName) }}</div>
             <div class="user-info">
               <h4>{{ user.displayName }}</h4>
-              <p class="user-email">{{ user.email || '-' }}</p>
+              <p class="user-email">{{ user.username || '-' }}</p>
             </div>
             <span class="role-badge" :class="user.role">{{ getRoleLabel(user.role) }}</span>
           </div>
           <div class="user-actions">
-            <button 
-              v-if="user.role === 'guru'"
-              class="btn btn-sm btn-info"
-              @click="openPermissionsModal(user)"
-            >⚙️ Permissions</button>
-            <button 
-              class="btn btn-sm btn-secondary"
-              @click="openRoleModal(user)"
-              :disabled="user.id === currentUser?.uid"
-            >Ubah Role</button>
-            <button 
-              class="btn btn-sm btn-danger"
-              @click="confirmDelete(user)"
-              :disabled="user.id === currentUser?.uid"
-            >Hapus</button>
+            <button class="btn btn-sm btn-warning" @click="openCredentialsModal(user)">🔑 Credentials</button>
+            <button v-if="user.role === 'guru'" class="btn btn-sm btn-info" @click="openPermissionsModal(user)">⚙️
+              Permissions</button>
+            <button class="btn btn-sm btn-secondary" @click="openRoleModal(user)"
+              :disabled="user.id === currentUser?.uid">Ubah Role</button>
+            <button class="btn btn-sm btn-danger" @click="confirmDelete(user)"
+              :disabled="user.id === currentUser?.uid">Hapus</button>
           </div>
         </div>
       </div>
@@ -90,7 +77,7 @@
       <div class="modal glass-card animate-fadeInUp">
         <h3>Ubah Role</h3>
         <p>Mengubah role untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
-        
+
         <div class="form-group">
           <label class="form-label">Role Baru:</label>
           <select v-model="newRole" class="form-input form-select">
@@ -130,15 +117,11 @@
       <div class="modal glass-card animate-fadeInUp permissions-modal">
         <h3>⚙️ Atur Permissions</h3>
         <p>Mengatur akses khusus untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
-        
+
         <div class="form-group">
           <label class="form-label">Nama Grup Menu:</label>
-          <input 
-            v-model="permissionsForm.menuGroupName" 
-            type="text" 
-            class="form-input" 
-            placeholder="Contoh: Operator"
-          />
+          <input v-model="permissionsForm.menuGroupName" type="text" class="form-input"
+            placeholder="Contoh: Operator" />
           <span class="form-hint">Nama menu yang akan muncul di sidebar guru</span>
         </div>
 
@@ -146,11 +129,7 @@
           <label class="form-label">Fitur yang Bisa Diakses:</label>
           <div class="features-list">
             <label v-for="feature in availableFeatures" :key="feature.id" class="feature-checkbox">
-              <input 
-                type="checkbox" 
-                :value="feature.id"
-                v-model="permissionsForm.features"
-              />
+              <input type="checkbox" :value="feature.id" v-model="permissionsForm.features" />
               <div class="feature-info">
                 <span class="feature-label">{{ feature.label }}</span>
                 <span class="feature-desc">{{ feature.description }}</span>
@@ -162,7 +141,8 @@
         <div class="current-permissions" v-if="selectedUser?.permissions?.features?.length">
           <label class="form-label">Permissions Saat Ini:</label>
           <div class="current-list">
-            <span class="permission-tag" v-for="f in selectedUser.permissions.features" :key="f">{{ getFeatureLabel(f) }}</span>
+            <span class="permission-tag" v-for="f in selectedUser.permissions.features" :key="f">{{ getFeatureLabel(f)
+            }}</span>
           </div>
         </div>
 
@@ -170,6 +150,45 @@
           <button class="btn btn-secondary" @click="closePermissionsModal">Batal</button>
           <button class="btn btn-primary" @click="savePermissions" :disabled="savingPermissions">
             {{ savingPermissions ? 'Menyimpan...' : 'Simpan Permissions' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Credentials Modal -->
+    <div v-if="showCredentialsModal" class="modal-overlay" @click.self="closeCredentialsModal">
+      <div class="modal glass-card animate-fadeInUp credentials-modal">
+        <h3>🔑 Edit Credentials</h3>
+        <p>Mengubah credentials untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+
+        <div class="form-group">
+          <label class="form-label">Display Name:</label>
+          <input v-model="credentialsForm.displayName" type="text" class="form-input" placeholder="Nama lengkap" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Username:</label>
+          <input v-model="credentialsForm.username" type="text" class="form-input" placeholder="Username" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password Baru: <span class="optional">(kosongkan jika tidak diubah)</span></label>
+          <input v-model="credentialsForm.password" type="password" class="form-input"
+            placeholder="Minimal 6 karakter" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Konfirmasi Password:</label>
+          <input v-model="credentialsForm.confirmPassword" type="password" class="form-input"
+            placeholder="Ulangi password baru" />
+        </div>
+
+        <p v-if="credentialsError" class="error-text">{{ credentialsError }}</p>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" @click="closeCredentialsModal">Batal</button>
+          <button class="btn btn-primary" @click="saveCredentials" :disabled="savingCredentials">
+            {{ savingCredentials ? 'Menyimpan...' : 'Simpan Credentials' }}
           </button>
         </div>
       </div>
@@ -202,6 +221,17 @@ const updating = ref(false)
 const deleting = ref(false)
 const savingPermissions = ref(false)
 
+// Credentials modal state
+const showCredentialsModal = ref(false)
+const savingCredentials = ref(false)
+const credentialsError = ref('')
+const credentialsForm = ref({
+  displayName: '',
+  username: '',
+  password: '',
+  confirmPassword: ''
+})
+
 // Permissions form
 const permissionsForm = ref({
   menuGroupName: '',
@@ -217,9 +247,9 @@ const availableFeatures = ref([
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
     const matchRole = !filterRole.value || user.role === filterRole.value
-    const matchSearch = !searchQuery.value || 
+    const matchSearch = !searchQuery.value ||
       user.displayName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchQuery.value.toLowerCase())
+      user.username?.toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchRole && matchSearch
   })
 })
@@ -336,6 +366,72 @@ const savePermissions = async () => {
     showError('Gagal menyimpan permissions')
   } finally {
     savingPermissions.value = false
+  }
+}
+
+// Credentials functions
+const openCredentialsModal = (user) => {
+  selectedUser.value = user
+  credentialsForm.value = {
+    displayName: user.displayName || '',
+    username: user.username || '',
+    password: '',
+    confirmPassword: ''
+  }
+  credentialsError.value = ''
+  showCredentialsModal.value = true
+}
+
+const closeCredentialsModal = () => {
+  showCredentialsModal.value = false
+  selectedUser.value = null
+  credentialsForm.value = { displayName: '', username: '', password: '', confirmPassword: '' }
+  credentialsError.value = ''
+}
+
+const saveCredentials = async () => {
+  credentialsError.value = ''
+
+  // Validation
+  if (!credentialsForm.value.displayName && !credentialsForm.value.username && !credentialsForm.value.password) {
+    credentialsError.value = 'Minimal isi satu field untuk diubah'
+    return
+  }
+
+  if (credentialsForm.value.password) {
+    if (credentialsForm.value.password.length < 6) {
+      credentialsError.value = 'Password minimal 6 karakter'
+      return
+    }
+    if (credentialsForm.value.password !== credentialsForm.value.confirmPassword) {
+      credentialsError.value = 'Password dan konfirmasi tidak cocok'
+      return
+    }
+  }
+
+  savingCredentials.value = true
+  try {
+    const payload = {}
+    if (credentialsForm.value.displayName) payload.displayName = credentialsForm.value.displayName
+    if (credentialsForm.value.username) payload.username = credentialsForm.value.username
+    if (credentialsForm.value.password) payload.password = credentialsForm.value.password
+
+    await api.patch(`/users/${selectedUser.value.id}/credentials`, payload)
+
+    // Update local user data
+    const userIndex = users.value.findIndex(u => u.id === selectedUser.value.id)
+    if (userIndex > -1) {
+      if (payload.displayName) users.value[userIndex].displayName = payload.displayName
+      if (payload.username) users.value[userIndex].username = payload.username
+    }
+
+    closeCredentialsModal()
+    success('Credentials berhasil diperbarui!')
+  } catch (error) {
+    console.error('Failed to save credentials:', error)
+    credentialsError.value = error.response?.data?.error || 'Gagal menyimpan credentials'
+  } finally {
+    savingCredentials.value = false
   }
 }
 
@@ -493,9 +589,20 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.role-badge.admin { background: rgba(103, 58, 183, 0.15); color: #673ab7; }
-.role-badge.guru { background: rgba(76, 175, 80, 0.15); color: #388e3c; }
-.role-badge.santri { background: rgba(33, 150, 243, 0.15); color: #1976d2; }
+.role-badge.admin {
+  background: rgba(103, 58, 183, 0.15);
+  color: #673ab7;
+}
+
+.role-badge.guru {
+  background: rgba(76, 175, 80, 0.15);
+  color: #388e3c;
+}
+
+.role-badge.santri {
+  background: rgba(33, 150, 243, 0.15);
+  color: #1976d2;
+}
 
 .user-actions {
   display: flex;
@@ -507,16 +614,29 @@ onMounted(() => {
   .user-actions {
     width: 100%;
   }
+
   .user-actions .btn {
     flex: 1;
   }
 }
 
-.btn-danger { background: var(--error); color: var(--white); }
-.btn-danger:hover { background: #d32f2f; }
+.btn-danger {
+  background: var(--error);
+  color: var(--white);
+}
 
-.btn-info { background: #2196F3; color: var(--white); }
-.btn-info:hover { background: #1976D2; }
+.btn-danger:hover {
+  background: #d32f2f;
+}
+
+.btn-info {
+  background: #2196F3;
+  color: var(--white);
+}
+
+.btn-info:hover {
+  background: #1976D2;
+}
 
 .empty-state {
   text-align: center;
@@ -570,8 +690,13 @@ onMounted(() => {
 
 /* Skeleton Styles */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-avatar,
@@ -727,5 +852,34 @@ onMounted(() => {
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+/* Credentials Modal Styles */
+.credentials-modal {
+  max-width: 450px;
+}
+
+.btn-warning {
+  background: #ff9800;
+  color: var(--white);
+}
+
+.btn-warning:hover {
+  background: #f57c00;
+}
+
+.error-text {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.optional {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--gray-500);
 }
 </style>
