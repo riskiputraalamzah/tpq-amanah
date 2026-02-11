@@ -6,22 +6,42 @@
         <p>Monitor kehadiran semua pengajar TPQ AMANAH</p>
       </div>
       <div class="header-actions">
-        <select v-model="selectedMonth" class="form-input form-select" @change="fetchData">
-          <option v-for="m in availableMonths" :key="m.value" :value="m.value">{{ m.label }}</option>
+        <select
+          v-model="selectedMonth"
+          class="form-input form-select"
+          @change="fetchData"
+        >
+          <option v-for="m in availableMonths" :key="m.value" :value="m.value">
+            {{ m.label }}
+          </option>
         </select>
 
         <!-- Dropdown Actions for Admin -->
         <div v-if="isAdmin" class="dropdown-wrapper" ref="dropdownRef">
-          <button class="btn btn-primary dropdown-trigger" @click="toggleDropdown">
+          <button
+            class="btn btn-primary dropdown-trigger"
+            @click="toggleDropdown"
+          >
             <span>⚡ Aksi</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              :class="{ rotated: dropdownOpen }">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              :class="{ rotated: dropdownOpen }"
+            >
               <path d="M6 9l6 6 6-6" />
             </svg>
           </button>
           <transition name="dropdown">
             <div v-if="dropdownOpen" class="dropdown-menu">
-              <button class="dropdown-item" @click="exportToPDF" :disabled="loading || exporting">
+              <button
+                class="dropdown-item"
+                @click="exportToPDF"
+                :disabled="loading || exporting"
+              >
                 <span v-if="exporting">⏳ Mengunduh...</span>
                 <span v-else>📄 Export PDF</span>
               </button>
@@ -33,7 +53,12 @@
         </div>
 
         <!-- Simple Export Button for Guru -->
-        <button v-else class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
+        <button
+          v-else
+          class="btn btn-export"
+          @click="exportToPDF"
+          :disabled="loading || exporting"
+        >
           <span v-if="exporting">⏳ Mengunduh...</span>
           <span v-else>📄 Export PDF</span>
         </button>
@@ -48,11 +73,16 @@
         <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
       </div>
     </div>
-    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
+    <div
+      v-else-if="tomorrowHoliday.isHoliday"
+      class="holiday-alert tomorrow-holiday"
+    >
       <div class="holiday-alert-icon">📅</div>
       <div class="holiday-alert-content">
         <span class="holiday-alert-label">Besok Libur Nasional</span>
-        <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+        <span class="holiday-alert-name">{{
+          tomorrowHoliday.holidayName
+        }}</span>
       </div>
     </div>
 
@@ -78,7 +108,9 @@
         <div class="summary-icon">💰</div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton wide"></span>
-          <span v-else class="summary-value">Rp {{ formatCurrency(totalSalary) }}</span>
+          <span v-else class="summary-value"
+            >Rp {{ formatCurrency(totalSalary) }}</span
+          >
           <span class="summary-label">Total Gaji Bulan Ini</span>
         </div>
       </div>
@@ -90,18 +122,33 @@
       <div class="filter-section">
         <label>Filter Guru:</label>
         <div class="select-wrapper">
-          <select v-model="selectedTeacherId" class="form-input form-select filter-select">
+          <select
+            v-model="selectedTeacherId"
+            class="form-input form-select filter-select"
+          >
             <option value="all">Semua Guru</option>
-            <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.displayName }}</option>
+            <option v-for="t in teachers" :key="t.id" :value="t.id">
+              {{ t.displayName }}
+            </option>
           </select>
         </div>
       </div>
 
       <div class="calendar-container">
         <!-- Teacher Legend (Compact) -->
-        <div class="teacher-legend" v-if="selectedTeacherId === 'all' && !loading">
-          <div v-for="teacher in teachers" :key="teacher.id" class="legend-teacher">
-            <span class="legend-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
+        <div
+          class="teacher-legend"
+          v-if="selectedTeacherId === 'all' && !loading"
+        >
+          <div
+            v-for="teacher in teachers"
+            :key="teacher.id"
+            class="legend-teacher"
+          >
+            <span
+              class="legend-avatar"
+              :style="{ background: getTeacherColor(teacher.displayName) }"
+            >
               {{ getInitials(teacher.displayName) }}
             </span>
             <span class="legend-name">{{ teacher.displayName }}</span>
@@ -125,13 +172,31 @@
           <!-- Month Navigation -->
           <div class="calendar-header">
             <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
-            <button class="nav-btn" @click="nextMonth" :disabled="isCurrentMonth">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button
+              class="nav-btn"
+              @click="nextMonth"
+              :disabled="isCurrentMonth"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
@@ -139,21 +204,40 @@
 
           <div class="calendar-grid">
             <!-- Day Headers -->
-            <div class="day-header" v-for="day in dayNames" :key="day">{{ day }}</div>
+            <div class="day-header" v-for="day in dayNames" :key="day">
+              {{ day }}
+            </div>
 
             <!-- Empty cells for alignment -->
-            <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
+            <div
+              v-for="n in firstDayOfMonth"
+              :key="'empty-' + n"
+              class="calendar-cell empty"
+            ></div>
 
             <!-- Date Cells -->
-            <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCellClass(date)"
-              :title="getHolidayForDate(date)?.name || ''" @click="showDateDetail(date)">
+            <div
+              v-for="date in daysInMonth"
+              :key="date"
+              class="calendar-cell"
+              :class="getCellClass(date)"
+              :title="getHolidayForDate(date)?.name || ''"
+              @click="showDateDetail(date)"
+            >
               <span class="cell-date">{{ date }}</span>
 
               <!-- Teacher Avatars for ALL mode (Compact) -->
               <div v-if="selectedTeacherId === 'all'" class="cell-avatars">
                 <!-- COMPACT VIEW AVATARS -->
-                <div v-for="teacher in getVisibleTeachers(date)" :key="teacher.id" class="mini-avatar"
-                  :style="{ backgroundColor: getTeacherColor(teacher.displayName) }" :title="teacher.displayName">
+                <div
+                  v-for="teacher in getVisibleTeachers(date)"
+                  :key="teacher.id"
+                  class="mini-avatar"
+                  :style="{
+                    backgroundColor: getTeacherColor(teacher.displayName),
+                  }"
+                  :title="teacher.displayName"
+                >
                   {{ getInitials(teacher.displayName) }}
                 </div>
                 <div v-if="getHiddenCount(date) > 0" class="more-indicator">
@@ -163,27 +247,52 @@
 
               <!-- Single Teacher Status -->
               <div v-else class="cell-status-single">
-                <span v-if="getTeacherAttendanceForDate(date)" class="status-icon"
-                  :class="getTeacherAttendanceForDate(date).status === 'hadir' ? 'hadir' : 'tidak'">
-                  {{ getTeacherAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
+                <span
+                  v-if="getTeacherAttendanceForDate(date)"
+                  class="status-icon"
+                  :class="
+                    getTeacherAttendanceForDate(date).status === 'hadir'
+                      ? 'hadir'
+                      : 'tidak'
+                  "
+                >
+                  {{
+                    getTeacherAttendanceForDate(date).status === "hadir"
+                      ? "✓"
+                      : "✗"
+                  }}
                 </span>
               </div>
 
-              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
+              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)"
+                >🎉</span
+              >
             </div>
           </div>
 
           <!-- Legend -->
           <div class="calendar-legend">
-            <div class="legend-item"><span class="legend-dot hadir"></span> Hadir</div>
-            <div class="legend-item"><span class="legend-dot tidak"></span> Tidak Hadir</div>
-            <div class="legend-item"><span class="legend-dot empty"></span> Tidak Ada Data</div>
-            <div class="legend-item"><span class="legend-dot libur"></span> Hari Libur</div>
+            <div class="legend-item">
+              <span class="legend-dot hadir"></span> Hadir
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot tidak"></span> Tidak Hadir
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot empty"></span> Tidak Ada Data
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot libur"></span> Hari Libur
+            </div>
           </div>
         </template>
 
         <!-- Date Detail Popup -->
-        <div v-if="selectedDate" class="calendar-popup-overlay" @click="selectedDate = null"></div>
+        <div
+          v-if="selectedDate"
+          class="calendar-popup-overlay"
+          @click="selectedDate = null"
+        ></div>
         <div v-if="selectedDate" class="calendar-popup glass-card">
           <div class="popup-header">
             <h4>{{ formatFullDate(selectedDate) }}</h4>
@@ -191,8 +300,12 @@
           </div>
 
           <!-- Check-in Time - Below Date Header (for single teacher view) -->
-          <div v-if="selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)"
-            class="popup-checkin-time-header">
+          <div
+            v-if="
+              selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)
+            "
+            class="popup-checkin-time-header"
+          >
             <span class="checkin-icon">🕐</span>
             <span>{{ getTeacherCheckinTime(selectedDate) }}</span>
           </div>
@@ -202,19 +315,38 @@
             <span class="holiday-icon">🎉</span>
             <div>
               <div class="holiday-label">Libur Nasional</div>
-              <div class="holiday-name">{{ getHolidayForDate(selectedDate).name }}</div>
+              <div class="holiday-name">
+                {{ getHolidayForDate(selectedDate).name }}
+              </div>
             </div>
           </div>
 
           <div class="popup-content">
             <template v-if="selectedTeacherId === 'all'">
               <!-- Holiday/Weekend Logic -->
-              <div v-if="getHolidayForDate(selectedDate) || isWeekend(selectedDate)" class="popup-section"
-                style="text-align: center; padding: 20px 0;">
-                <div style="font-size: 3rem; margin-bottom: 10px;">🏝️</div>
-                <h5 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 8px;">Tidak Ada KBM</h5>
+              <div
+                v-if="
+                  getHolidayForDate(selectedDate) || isWeekend(selectedDate)
+                "
+                class="popup-section"
+                style="text-align: center; padding: 20px 0"
+              >
+                <div style="font-size: 3rem; margin-bottom: 10px">🏝️</div>
+                <h5
+                  style="
+                    font-size: 1.1rem;
+                    color: var(--primary-dark);
+                    margin-bottom: 8px;
+                  "
+                >
+                  Tidak Ada KBM
+                </h5>
                 <p class="text-muted">
-                  {{ getHolidayForDate(selectedDate) ? 'Hari Libur Nasional' : 'Akhir Pekan (Weekend)' }}
+                  {{
+                    getHolidayForDate(selectedDate)
+                      ? "Hari Libur Nasional"
+                      : "Akhir Pekan (Weekend)"
+                  }}
                 </p>
               </div>
 
@@ -222,51 +354,110 @@
               <template v-else>
                 <!-- SECTION 1: HADIR -->
                 <div class="popup-section">
-                  <h5>✅ Hadir ({{ getPresentTeachersWithTime(selectedDate).length }})</h5>
+                  <h5>
+                    ✅ Hadir ({{
+                      getPresentTeachersWithTime(selectedDate).length
+                    }})
+                  </h5>
                   <div class="teacher-list-popup">
-                    <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
-                      <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
+                    <div
+                      v-for="t in getPresentTeachersWithTime(selectedDate)"
+                      :key="t.id"
+                      class="popup-teacher-item"
+                    >
+                      <div
+                        class="mini-avatar"
+                        :style="{
+                          backgroundColor: getTeacherColor(t.displayName),
+                        }"
+                      >
                         {{ getInitials(t.displayName) }}
                       </div>
                       <div class="teacher-info">
                         <span class="teacher-name">{{ t.displayName }}</span>
-                        <span v-if="t.checkinTime" class="checkin-time">{{ t.checkinTime }}</span>
+                        <span v-if="t.checkinTime" class="checkin-time">{{
+                          t.checkinTime
+                        }}</span>
                       </div>
                     </div>
-                    <div v-if="getPresentTeachersWithTime(selectedDate).length === 0" class="text-muted">Tidak ada data
-                      hadir</div>
+                    <div
+                      v-if="
+                        getPresentTeachersWithTime(selectedDate).length === 0
+                      "
+                      class="text-muted"
+                    >
+                      Tidak ada data hadir
+                    </div>
                   </div>
                 </div>
 
                 <!-- SECTION 2: TIDAK HADIR (Recorded as Izin/Sakit/Alpa) -->
                 <div class="popup-section">
-                  <h5>❌ Tidak Hadir ({{ getRecordedAbsentTeachersForDate(selectedDate).length }})</h5>
+                  <h5>
+                    ❌ Tidak Hadir ({{
+                      getRecordedAbsentTeachersForDate(selectedDate).length
+                    }})
+                  </h5>
                   <div class="teacher-list-popup">
-                    <div v-for="t in getRecordedAbsentTeachersForDate(selectedDate)" :key="t.id"
-                      class="popup-teacher-item">
-                      <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
+                    <div
+                      v-for="t in getRecordedAbsentTeachersForDate(
+                        selectedDate,
+                      )"
+                      :key="t.id"
+                      class="popup-teacher-item"
+                    >
+                      <div
+                        class="mini-avatar"
+                        :style="{
+                          backgroundColor: getTeacherColor(t.displayName),
+                        }"
+                      >
                         {{ getInitials(t.displayName) }}
                       </div>
                       <span>{{ t.displayName }}</span>
                     </div>
-                    <div v-if="getRecordedAbsentTeachersForDate(selectedDate).length === 0" class="text-muted">Nihil
+                    <div
+                      v-if="
+                        getRecordedAbsentTeachersForDate(selectedDate)
+                          .length === 0
+                      "
+                      class="text-muted"
+                    >
+                      Nihil
                     </div>
                   </div>
                 </div>
 
                 <!-- SECTION 3: BELUM ABSEN (No Record) -->
                 <div class="popup-section">
-                  <h5>⏳ Belum Absen ({{ getUnrecordedTeachersForDate(selectedDate).length }})</h5>
+                  <h5>
+                    ⏳ Belum Absen ({{
+                      getUnrecordedTeachersForDate(selectedDate).length
+                    }})
+                  </h5>
                   <div class="teacher-list-popup">
-                    <div v-for="t in getUnrecordedTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item"
-                      style="opacity: 0.6">
-                      <div class="mini-avatar" style="background-color: var(--gray-400)">
+                    <div
+                      v-for="t in getUnrecordedTeachersForDate(selectedDate)"
+                      :key="t.id"
+                      class="popup-teacher-item"
+                      style="opacity: 0.6"
+                    >
+                      <div
+                        class="mini-avatar"
+                        style="background-color: var(--gray-400)"
+                      >
                         {{ getInitials(t.displayName) }}
                       </div>
                       <span>{{ t.displayName }}</span>
                     </div>
-                    <div v-if="getUnrecordedTeachersForDate(selectedDate).length === 0" class="text-muted">Semua sudah
-                      absen</div>
+                    <div
+                      v-if="
+                        getUnrecordedTeachersForDate(selectedDate).length === 0
+                      "
+                      class="text-muted"
+                    >
+                      Semua sudah absen
+                    </div>
                   </div>
                 </div>
               </template>
@@ -276,24 +467,49 @@
               <!-- Single Teacher Detail -->
               <div class="popup-single-teacher">
                 <template v-if="getTeacherAttendanceForDate(selectedDate)">
-                  <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
-                    {{ getTeacherAttendanceForDate(selectedDate).status === 'hadir' ? '✅ HADIR' : '❌ TIDAK HADIR' }}
+                  <div
+                    class="status-badge large"
+                    :class="getTeacherAttendanceForDate(selectedDate).status"
+                  >
+                    {{
+                      getTeacherAttendanceForDate(selectedDate).status ===
+                      "hadir"
+                        ? "✅ HADIR"
+                        : "❌ TIDAK HADIR"
+                    }}
                   </div>
                   <p class="popup-notes">
-                    <strong>Catatan:</strong> {{ getTeacherAttendanceForDate(selectedDate).notes || '-' }}
+                    <strong>Catatan:</strong>
+                    {{ getTeacherAttendanceForDate(selectedDate).notes || "-" }}
                   </p>
 
                   <div v-if="isAdmin" class="mt-2">
-                    <button class="btn btn-sm btn-outline-secondary"
-                      @click="openAddModal(selectedDate, selectedTeacherId, getTeacherAttendanceForDate(selectedDate))">
+                    <button
+                      class="btn btn-sm btn-outline-secondary"
+                      @click="
+                        openAddModal(
+                          selectedDate,
+                          selectedTeacherId,
+                          getTeacherAttendanceForDate(selectedDate),
+                        )
+                      "
+                    >
                       ✏️ Ubah Status
                     </button>
                   </div>
                 </template>
-                <p v-else class="text-muted">Tidak ada data absensi untuk tanggal ini.</p>
+                <p v-else class="text-muted">
+                  Tidak ada data absensi untuk tanggal ini.
+                </p>
 
-                <div v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin" class="mt-3">
-                  <button class="btn btn-sm btn-outline-primary" @click="openAddModal(selectedDate, selectedTeacherId)">
+                <div
+                  v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin"
+                  class="mt-3"
+                >
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    @click="openAddModal(selectedDate, selectedTeacherId)"
+                  >
                     + Input Absensi
                   </button>
                 </div>
@@ -308,15 +524,22 @@
     <div class="teachers-stats glass-card" v-if="!loading">
       <h3>📊 Statistik Per Guru</h3>
       <div class="stats-grid">
-        <div v-for="teacher in teachersWithStats" :key="teacher.id" class="stat-card"
-          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }">
+        <div
+          v-for="teacher in teachersWithStats"
+          :key="teacher.id"
+          class="stat-card"
+          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }"
+        >
           <div class="stat-card-header">
-            <span class="stat-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
+            <span
+              class="stat-avatar"
+              :style="{ background: getTeacherColor(teacher.displayName) }"
+            >
               {{ getInitials(teacher.displayName) }}
             </span>
             <div class="stat-info">
               <h4>{{ teacher.displayName }}</h4>
-              <p>{{ teacher.position || 'Pengajar' }}</p>
+              <p>{{ teacher.position || "Pengajar" }}</p>
             </div>
           </div>
           <div class="stat-card-body">
@@ -329,7 +552,9 @@
               <span class="stat-label">Tidak Hadir</span>
             </div>
             <div class="stat-item gaji">
-              <span class="stat-value">Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</span>
+              <span class="stat-value"
+                >Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</span
+              >
               <span class="stat-label">Gaji</span>
             </div>
           </div>
@@ -343,15 +568,23 @@
         <h3>Tambah Data Absensi</h3>
 
         <!-- Summary for Quick Add (Hidden Inputs) -->
-        <div v-if="form.isQuickAdd" class="mb-4 p-3 bg-green-50 rounded-lg border border-green-100">
-          <p class="text-sm text-green-800" style="margin: 0; font-weight: 500;">
+        <div
+          v-if="form.isQuickAdd"
+          class="p-3 mb-4 border border-green-100 rounded-lg bg-green-50"
+        >
+          <p class="text-sm text-green-800" style="margin: 0; font-weight: 500">
             📝 Mencatat absensi untuk:
           </p>
-          <p class="text-base text-green-700 font-bold" style="margin: 4px 0;">
-            {{teachers.find(t => t.id === form.guruId)?.displayName}}
+          <p class="text-base font-bold text-green-700" style="margin: 4px 0">
+            {{ teachers.find((t) => t.id === form.guruId)?.displayName }}
           </p>
-          <p class="text-xs text-green-600" style="margin: 0;">
-            Tanggal: {{ new Date(form.date).toLocaleDateString('id-ID', { dateStyle: 'full' }) }}
+          <p class="text-xs text-green-600" style="margin: 0">
+            Tanggal:
+            {{
+              new Date(form.date).toLocaleDateString("id-ID", {
+                dateStyle: "full",
+              })
+            }}
           </p>
         </div>
 
@@ -362,30 +595,60 @@
 
         <div v-if="!form.isQuickAdd" class="form-group">
           <label class="form-label">Guru</label>
-          <select v-model="form.guruId" class="form-input form-select" @change="onGuruChange">
+          <select
+            v-model="form.guruId"
+            class="form-input form-select"
+            @change="onGuruChange"
+          >
             <option value="">-- Pilih Guru --</option>
-            <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.displayName }}</option>
+            <option v-for="t in teachers" :key="t.id" :value="t.id">
+              {{ t.displayName }}
+            </option>
           </select>
         </div>
 
         <div class="form-group">
           <label class="form-label">Status</label>
           <div class="status-buttons">
-            <button class="status-btn" :class="{ active: form.status === 'hadir', hadir: form.status === 'hadir' }"
-              @click="form.status = 'hadir'">✅ Hadir</button>
-            <button class="status-btn"
-              :class="{ active: form.status === 'tidak_hadir', tidak: form.status === 'tidak_hadir' }"
-              @click="form.status = 'tidak_hadir'">❌ Tidak Hadir</button>
+            <button
+              class="status-btn"
+              :class="{
+                active: form.status === 'hadir',
+                hadir: form.status === 'hadir',
+              }"
+              @click="form.status = 'hadir'"
+            >
+              ✅ Hadir
+            </button>
+            <button
+              class="status-btn"
+              :class="{
+                active: form.status === 'tidak_hadir',
+                tidak: form.status === 'tidak_hadir',
+              }"
+              @click="form.status = 'tidak_hadir'"
+            >
+              ❌ Tidak Hadir
+            </button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Keterangan (opsional)</label>
-          <input v-model="form.notes" type="text" class="form-input" placeholder="Contoh: Izin sakit" />
+          <input
+            v-model="form.notes"
+            type="text"
+            class="form-input"
+            placeholder="Contoh: Izin sakit"
+          />
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="closeModal">Batal</button>
-          <button class="btn btn-primary" @click="saveAttendance" :disabled="saving">
-            {{ saving ? 'Menyimpan...' : 'Simpan' }}
+          <button
+            class="btn btn-primary"
+            @click="saveAttendance"
+            :disabled="saving"
+          >
+            {{ saving ? "Menyimpan..." : "Simpan" }}
           </button>
         </div>
       </div>
@@ -394,467 +657,537 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import api from '@/services/api'
-import { useToast } from '@/composables/useToast'
-import { fetchHolidays, isTodayHoliday, isTomorrowHoliday, getHolidaysForMonth } from '@/services/holidayService'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { useAuthStore } from '@/stores/auth'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import api from "@/services/api";
+import { useToast } from "@/composables/useToast";
+import {
+  fetchHolidays,
+  isTodayHoliday,
+  isTomorrowHoliday,
+  getHolidaysForMonth,
+} from "@/services/holidayService";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useAuthStore } from "@/stores/auth";
 
-const { success, error: showError, warning } = useToast()
-const authStore = useAuthStore()
+const { success, error: showError, warning } = useToast();
+const authStore = useAuthStore();
 
-const isAdmin = computed(() => authStore.isAdmin)
+const isAdmin = computed(() => authStore.isAdmin);
 
-const today = new Date()
-const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+const today = new Date();
+const monthNames = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
 // State
-const loading = ref(true)
-const teachers = ref([])
-const attendanceData = ref([])
-const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
-const holidays = ref([])
-const monthHolidays = ref([])
+const loading = ref(true);
+const teachers = ref([]);
+const attendanceData = ref([]);
+const selectedMonth = ref(
+  `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`,
+);
+const holidays = ref([]);
+const monthHolidays = ref([]);
 
 // Calendar state
-const currentMonth = ref(today.getMonth())
-const currentYear = ref(today.getFullYear())
-const selectedDate = ref(null)
+const currentMonth = ref(today.getMonth());
+const currentYear = ref(today.getFullYear());
+const selectedDate = ref(null);
 
 // Dropdown state
-const dropdownOpen = ref(false)
-const dropdownRef = ref(null)
+const dropdownOpen = ref(false);
+const dropdownRef = ref(null);
 
 // Filter state
-const selectedTeacherId = ref('all')
+const selectedTeacherId = ref("all");
 
 // Computed for holidays
-const todayHoliday = computed(() => isTodayHoliday(holidays.value))
-const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value))
+const todayHoliday = computed(() => isTodayHoliday(holidays.value));
+const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value));
 
 const teachersWithStats = computed(() => {
-  return teachers.value.map(t => {
-    const records = attendanceData.value.filter(a => a.guruId === t.id)
-    const hadirCount = records.filter(a => a.status === 'hadir').length
-    const tidakHadirCount = records.filter(a => a.status !== 'hadir').length
-    return { ...t, hadirCount, tidakHadirCount }
-  })
-})
+  return teachers.value.map((t) => {
+    const records = attendanceData.value.filter((a) => a.guruId === t.id);
+    const hadirCount = records.filter((a) => a.status === "hadir").length;
+    const tidakHadirCount = records.filter((a) => a.status !== "hadir").length;
+    return { ...t, hadirCount, tidakHadirCount };
+  });
+});
 
 // Modal state
-const showModal = ref(false)
-const saving = ref(false)
-const exporting = ref(false)
-const form = ref({ date: '', guruId: '', guruName: '', status: 'hadir', notes: '' })
+const showModal = ref(false);
+const saving = ref(false);
+const exporting = ref(false);
+const form = ref({
+  date: "",
+  guruId: "",
+  guruName: "",
+  status: "hadir",
+  notes: "",
+});
 
 const availableMonths = computed(() => {
-  const months = []
-  const startYear = 2026
-  const startMonth = 0
+  const months = [];
+  const startYear = 2026;
+  const startMonth = 0;
 
   for (let year = startYear; year <= today.getFullYear(); year++) {
-    const monthStart = (year === startYear) ? startMonth : 0
-    const monthEnd = (year === today.getFullYear()) ? today.getMonth() : 11
+    const monthStart = year === startYear ? startMonth : 0;
+    const monthEnd = year === today.getFullYear() ? today.getMonth() : 11;
 
     for (let month = monthStart; month <= monthEnd; month++) {
       months.push({
-        value: `${year}-${String(month + 1).padStart(2, '0')}`,
-        label: `${monthNames[month]} ${year}`
-      })
+        value: `${year}-${String(month + 1).padStart(2, "0")}`,
+        label: `${monthNames[month]} ${year}`,
+      });
     }
   }
 
-  return months.reverse()
-})
+  return months.reverse();
+});
 
 const totalAttendance = computed(() => {
-  return teachersWithStats.value.reduce((sum, t) => sum + t.hadirCount, 0)
-})
+  return teachersWithStats.value.reduce((sum, t) => sum + t.hadirCount, 0);
+});
 
 const totalSalary = computed(() => {
-  return totalAttendance.value * 10000
-})
+  return totalAttendance.value * 10000;
+});
 
 // Calendar computed
 const isCurrentMonth = computed(() => {
-  return currentMonth.value === today.getMonth() && currentYear.value === today.getFullYear()
-})
+  return (
+    currentMonth.value === today.getMonth() &&
+    currentYear.value === today.getFullYear()
+  );
+});
 
 const isFirstMonth = computed(() => {
-  return currentMonth.value === 0 && currentYear.value === 2026
-})
+  return currentMonth.value === 0 && currentYear.value === 2026;
+});
 
 const daysInMonth = computed(() => {
-  return new Date(currentYear.value, currentMonth.value + 1, 0).getDate()
-})
+  return new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
+});
 
 const firstDayOfMonth = computed(() => {
-  return new Date(currentYear.value, currentMonth.value, 1).getDay()
-})
+  return new Date(currentYear.value, currentMonth.value, 1).getDay();
+});
 
 // Helper functions
-const formatCurrency = (num) => num.toLocaleString('id-ID')
+const formatCurrency = (num) => num.toLocaleString("id-ID");
 
 const parseDate = (val) => {
-  if (!val) return null
-  if (val.toDate && typeof val.toDate === 'function') {
-    return val.toDate()
+  if (!val) return null;
+  if (val.toDate && typeof val.toDate === "function") {
+    return val.toDate();
   }
   if (val._seconds !== undefined) {
-    return new Date(val._seconds * 1000)
+    return new Date(val._seconds * 1000);
   }
   if (val.seconds !== undefined) {
-    return new Date(val.seconds * 1000)
+    return new Date(val.seconds * 1000);
   }
-  return new Date(val)
-}
+  return new Date(val);
+};
 
 const getInitials = (name) => {
-  if (!name) return '?'
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+};
 // Color Logic
-const teacherColorMap = ref({})
+const teacherColorMap = ref({});
 
 // Predefined vibrant colors (Mejikuhibiniu + extras) - Mixed for contrast
 const palette = [
-  '#D32F2F', // Red
-  '#1976D2', // Blue
-  '#388E3C', // Green
-  '#F57C00', // Orange
-  '#7B1FA2', // Purple
-  '#0097A7', // Cyan
-  '#C2185B', // Pink
-  '#AFB42B', // Lime
-  '#5D4037', // Brown
-  '#0288D1', // Light Blue
-  '#E64A19', // Deep Orange
-  '#512DA8', // Deep Purple
-  '#00796B', // Teal
-  '#FFA000', // Amber
-  '#303F9F', // Indigo
-  '#689F38', // Light Green
-  '#455A64', // Blue Grey
-  '#616161', // Grey
-  '#000000', // Black
-]
+  "#D32F2F", // Red
+  "#1976D2", // Blue
+  "#388E3C", // Green
+  "#F57C00", // Orange
+  "#7B1FA2", // Purple
+  "#0097A7", // Cyan
+  "#C2185B", // Pink
+  "#AFB42B", // Lime
+  "#5D4037", // Brown
+  "#0288D1", // Light Blue
+  "#E64A19", // Deep Orange
+  "#512DA8", // Deep Purple
+  "#00796B", // Teal
+  "#FFA000", // Amber
+  "#303F9F", // Indigo
+  "#689F38", // Light Green
+  "#455A64", // Blue Grey
+  "#616161", // Grey
+  "#000000", // Black
+];
 
 const assignTeacherColors = (teacherList) => {
-  const map = {}
+  const map = {};
   teacherList.forEach((t, index) => {
-    map[t.displayName] = palette[index % palette.length]
-  })
-  teacherColorMap.value = map
-}
+    map[t.displayName] = palette[index % palette.length];
+  });
+  teacherColorMap.value = map;
+};
 
 const getTeacherColor = (name) => {
-  if (!name) return '#888888'
-  return teacherColorMap.value[name] || palette[0]
-}
+  if (!name) return "#888888";
+  return teacherColorMap.value[name] || palette[0];
+};
 
 // Calendar functions
 const getHolidayForDate = (date) => {
-  return monthHolidays.value.find(h => h.date === date)
-}
+  return monthHolidays.value.find((h) => h.date === date);
+};
 
 const updateMonthHolidays = () => {
-  monthHolidays.value = getHolidaysForMonth(currentMonth.value, currentYear.value, holidays.value)
-}
+  monthHolidays.value = getHolidaysForMonth(
+    currentMonth.value,
+    currentYear.value,
+    holidays.value,
+  );
+};
 
 const getAttendanceForDate = (date) => {
-  return attendanceData.value.filter(a => {
-    const d = parseDate(a.date)
-    return d && d.getDate() === date && d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
-  })
-}
+  return attendanceData.value.filter((a) => {
+    const d = parseDate(a.date);
+    return (
+      d &&
+      d.getDate() === date &&
+      d.getMonth() === currentMonth.value &&
+      d.getFullYear() === currentYear.value
+    );
+  });
+};
 
 const getPresentTeachersForDate = (date) => {
-  const attendanceForDate = getAttendanceForDate(date)
+  const attendanceForDate = getAttendanceForDate(date);
   const presentTeacherIds = attendanceForDate
-    .filter(a => a.status === 'hadir')
-    .map(a => a.guruId)
+    .filter((a) => a.status === "hadir")
+    .map((a) => a.guruId);
 
-  return teachers.value.filter(t => presentTeacherIds.includes(t.id))
-}
+  return teachers.value.filter((t) => presentTeacherIds.includes(t.id));
+};
 
 // Get present teachers with check-in time for popup display (sorted by time descending - newest first)
 const getPresentTeachersWithTime = (date) => {
-  const attendanceForDate = getAttendanceForDate(date)
-  const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
+  const attendanceForDate = getAttendanceForDate(date);
+  const presentAttendance = attendanceForDate.filter(
+    (a) => a.status === "hadir",
+  );
 
   // Sort by createdAt descending (newest first)
   presentAttendance.sort((a, b) => {
-    const timeA = parseDate(a.createdAt)?.getTime() || 0
-    const timeB = parseDate(b.createdAt)?.getTime() || 0
-    return timeB - timeA // Descending order
-  })
+    const timeA = parseDate(a.createdAt)?.getTime() || 0;
+    const timeB = parseDate(b.createdAt)?.getTime() || 0;
+    return timeB - timeA; // Descending order
+  });
 
-  return presentAttendance.map(a => {
-    const teacher = teachers.value.find(t => t.id === a.guruId)
+  return presentAttendance.map((a) => {
+    const teacher = teachers.value.find((t) => t.id === a.guruId);
     return {
       id: a.guruId,
-      displayName: teacher?.displayName || a.guruName || 'Unknown',
-      checkinTime: formatCheckinTime(a.createdAt)
-    }
-  })
-}
+      displayName: teacher?.displayName || a.guruName || "Unknown",
+      checkinTime: formatCheckinTime(a.createdAt),
+    };
+  });
+};
 
 // Format check-in time from createdAt timestamp
 const formatCheckinTime = (timestamp) => {
-  if (!timestamp) return null
-  const d = parseDate(timestamp)
-  if (!d || isNaN(d.getTime())) return null
-  return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
-}
+  if (!timestamp) return null;
+  const d = parseDate(timestamp);
+  if (!d || isNaN(d.getTime())) return null;
+  return d.toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+};
 
 // Get check-in time for single teacher view
 const getTeacherCheckinTime = (date) => {
-  const attendance = getTeacherAttendanceForDate(date)
-  if (!attendance || attendance.status !== 'hadir') return null
-  return formatCheckinTime(attendance.createdAt)
-}
+  const attendance = getTeacherAttendanceForDate(date);
+  if (!attendance || attendance.status !== "hadir") return null;
+  return formatCheckinTime(attendance.createdAt);
+};
 
 const getAbsentTeachersForDate = (date) => {
-  const present = getPresentTeachersForDate(date)
-  const presentIds = present.map(t => t.id)
-  return teachers.value.filter(t => !presentIds.includes(t.id))
-}
+  const present = getPresentTeachersForDate(date);
+  const presentIds = present.map((t) => t.id);
+  return teachers.value.filter((t) => !presentIds.includes(t.id));
+};
 
 const getTeacherAttendanceForDate = (date) => {
-  if (selectedTeacherId.value === 'all') return null
+  if (selectedTeacherId.value === "all") return null;
 
-  return attendanceData.value.find(a => {
-    const d = parseDate(a.date)
-    return d && d.getDate() === date && d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value && a.guruId === selectedTeacherId.value
-  })
-}
+  return attendanceData.value.find((a) => {
+    const d = parseDate(a.date);
+    return (
+      d &&
+      d.getDate() === date &&
+      d.getMonth() === currentMonth.value &&
+      d.getFullYear() === currentYear.value &&
+      a.guruId === selectedTeacherId.value
+    );
+  });
+};
 
 const getCellClass = (date) => {
-  const classes = []
+  const classes = [];
 
-  if (selectedTeacherId.value === 'all') {
-    const presentTeachers = getPresentTeachersForDate(date)
+  if (selectedTeacherId.value === "all") {
+    const presentTeachers = getPresentTeachersForDate(date);
     if (presentTeachers.length > 0) {
-      classes.push('has-attendance')
+      classes.push("has-attendance");
     } else {
-      classes.push('no-data')
+      classes.push("no-data");
     }
   } else {
-    const attendance = getTeacherAttendanceForDate(date)
+    const attendance = getTeacherAttendanceForDate(date);
     if (!attendance) {
-      classes.push('no-data')
+      classes.push("no-data");
     } else {
-      classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
+      classes.push(attendance.status === "hadir" ? "hadir" : "tidak");
     }
   }
 
   if (getHolidayForDate(date)) {
-    classes.push('libur')
+    classes.push("libur");
   }
 
-  return classes.join(' ')
-}
+  return classes.join(" ");
+};
 
 // Logic for Avatars
-const isMobile = ref(false)
+const isMobile = ref(false);
 const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 1024
-}
+  isMobile.value = window.innerWidth <= 1024;
+};
 
 onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
+  checkMobile();
+  window.addEventListener("resize", checkMobile);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
+  window.removeEventListener("resize", checkMobile);
+});
 
 const getVisibleTeachers = (date) => {
-  const attendanceForDate = getAttendanceForDate(date)
-  const presentAttendance = attendanceForDate.filter(a => a.status === 'hadir')
+  const attendanceForDate = getAttendanceForDate(date);
+  const presentAttendance = attendanceForDate.filter(
+    (a) => a.status === "hadir",
+  );
 
   // Sort by createdAt descending (newest first) - same as popup
   presentAttendance.sort((a, b) => {
-    const timeA = parseDate(a.createdAt)?.getTime() || 0
-    const timeB = parseDate(b.createdAt)?.getTime() || 0
-    return timeB - timeA // Descending order
-  })
+    const timeA = parseDate(a.createdAt)?.getTime() || 0;
+    const timeB = parseDate(b.createdAt)?.getTime() || 0;
+    return timeB - timeA; // Descending order
+  });
 
   // Map to teacher objects
-  const sortedTeachers = presentAttendance.map(a => {
-    return teachers.value.find(t => t.id === a.guruId)
-  }).filter(Boolean) // Remove null/undefined
+  const sortedTeachers = presentAttendance
+    .map((a) => {
+      return teachers.value.find((t) => t.id === a.guruId);
+    })
+    .filter(Boolean); // Remove null/undefined
 
   if (isMobile.value) {
-    return sortedTeachers.slice(0, 4)
+    return sortedTeachers.slice(0, 4);
   }
-  return sortedTeachers
-}
+  return sortedTeachers;
+};
 
 const getHiddenCount = (date) => {
-  if (!isMobile.value) return 0
-  const total = getPresentTeachersForDate(date).length
-  return Math.max(0, total - 4)
-}
+  if (!isMobile.value) return 0;
+  const total = getPresentTeachersForDate(date).length;
+  return Math.max(0, total - 4);
+};
 
 // Logic for Popup Sections
 const getUnrecordedTeachersForDate = (date) => {
-  const recordsForDate = getAttendanceForDate(date)
-  const recordedIds = recordsForDate.map(a => a.guruId)
-  return teachers.value.filter(t => !recordedIds.includes(t.id))
-}
+  const recordsForDate = getAttendanceForDate(date);
+  const recordedIds = recordsForDate.map((a) => a.guruId);
+  return teachers.value.filter((t) => !recordedIds.includes(t.id));
+};
 
 const getRecordedAbsentTeachersForDate = (date) => {
-  const records = getAttendanceForDate(date).filter(a => a.status !== 'hadir')
-  const ids = records.map(a => a.guruId)
-  return teachers.value.filter(t => ids.includes(t.id))
-}
+  const records = getAttendanceForDate(date).filter(
+    (a) => a.status !== "hadir",
+  );
+  const ids = records.map((a) => a.guruId);
+  return teachers.value.filter((t) => ids.includes(t.id));
+};
 
 const isWeekend = (date) => {
-  const d = new Date(currentYear.value, currentMonth.value, date)
-  const day = d.getDay()
-  return day === 0 || day === 6 // 0 is Sunday, 6 is Saturday
-}
+  const d = new Date(currentYear.value, currentMonth.value, date);
+  const day = d.getDay();
+  return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+};
 
 const formatFullDate = (date) => {
-  const d = new Date(currentYear.value, currentMonth.value, date)
-  return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-}
+  const d = new Date(currentYear.value, currentMonth.value, date);
+  return d.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
 
 const showDateDetail = (date) => {
-  selectedDate.value = date
-}
+  selectedDate.value = date;
+};
 
 const prevMonth = () => {
-  if (isFirstMonth.value) return
+  if (isFirstMonth.value) return;
   if (currentMonth.value === 0) {
-    currentMonth.value = 11
-    currentYear.value--
+    currentMonth.value = 11;
+    currentYear.value--;
   } else {
-    currentMonth.value--
+    currentMonth.value--;
   }
   // Update selectedMonth to sync with calendar
-  selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
-  fetchData()
-  updateMonthHolidays()
-}
+  selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
+  fetchData();
+  updateMonthHolidays();
+};
 
 const nextMonth = () => {
-  if (isCurrentMonth.value) return
+  if (isCurrentMonth.value) return;
   if (currentMonth.value === 11) {
-    currentMonth.value = 0
-    currentYear.value++
+    currentMonth.value = 0;
+    currentYear.value++;
   } else {
-    currentMonth.value++
+    currentMonth.value++;
   }
   // Update selectedMonth to sync with calendar
-  selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
-  fetchData()
-  updateMonthHolidays()
-}
+  selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
+  fetchData();
+  updateMonthHolidays();
+};
 
 // Dropdown functions
 const toggleDropdown = () => {
-  dropdownOpen.value = !dropdownOpen.value
-}
+  dropdownOpen.value = !dropdownOpen.value;
+};
 
 const closeDropdownOnClickOutside = (e) => {
   if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
-    dropdownOpen.value = false
+    dropdownOpen.value = false;
   }
-}
+};
 
 // Data fetching
 const fetchData = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const [year, month] = selectedMonth.value.split('-').map(Number)
+    const [year, month] = selectedMonth.value.split("-").map(Number);
 
     // Update calendar state
-    currentMonth.value = month - 1
-    currentYear.value = year
+    currentMonth.value = month - 1;
+    currentYear.value = year;
 
-    const { data: guruData } = await api.get('/users?role=guru')
-    teachers.value = guruData.sort((a, b) => a.displayName.localeCompare(b.displayName))
-    assignTeacherColors(teachers.value)
+    const { data: guruData } = await api.get("/users?role=guru");
+    teachers.value = guruData.sort((a, b) =>
+      a.displayName.localeCompare(b.displayName),
+    );
+    assignTeacherColors(teachers.value);
 
-    const { data: attData } = await api.get('/attendance', { params: { month, year } })
-    attendanceData.value = attData
+    const { data: attData } = await api.get("/attendance", {
+      params: { month, year },
+    });
+    attendanceData.value = attData;
 
-    updateMonthHolidays()
+    updateMonthHolidays();
   } catch (e) {
-    console.error('Fetch error:', e)
-    showError('Gagal memuat data. Periksa izin akses.')
+    console.error("Fetch error:", e);
+    showError("Gagal memuat data. Periksa izin akses.");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-const openAddModal = (day = null, guruId = '', existingData = null) => {
-  let dateStr = new Date().toLocaleDateString('sv-SE') // Default today
+const openAddModal = (day = null, guruId = "", existingData = null) => {
+  let dateStr = new Date().toLocaleDateString("sv-SE"); // Default today
 
   if (day) {
-    const d = new Date(currentYear.value, currentMonth.value, day)
-    dateStr = d.toLocaleDateString('sv-SE')
+    const d = new Date(currentYear.value, currentMonth.value, day);
+    dateStr = d.toLocaleDateString("sv-SE");
   }
 
-  const isQuickAdd = !!(day && guruId)
+  const isQuickAdd = !!(day && guruId);
 
   form.value = {
     date: dateStr,
-    guruId: guruId || '',
-    status: existingData ? existingData.status : 'hadir',
-    notes: existingData ? existingData.notes : '',
-    isQuickAdd
-  }
-  showModal.value = true
-}
+    guruId: guruId || "",
+    status: existingData ? existingData.status : "hadir",
+    notes: existingData ? existingData.notes : "",
+    isQuickAdd,
+  };
+  showModal.value = true;
+};
 
 const closeModal = () => {
-  showModal.value = false
-}
+  showModal.value = false;
+};
 
 const onGuruChange = () => {
-  const t = teachers.value.find(t => t.id === form.value.guruId)
-  form.value.guruName = t?.displayName || ''
-}
+  const t = teachers.value.find((t) => t.id === form.value.guruId);
+  form.value.guruName = t?.displayName || "";
+};
 
 // Export to PDF
 const exportToPDF = () => {
-  dropdownOpen.value = false
+  dropdownOpen.value = false;
 
   if (teachersWithStats.value.length === 0) {
-    warning('Tidak ada data untuk di-export')
-    return
+    warning("Tidak ada data untuk di-export");
+    return;
   }
 
-  exporting.value = true
+  exporting.value = true;
 
   try {
-    const doc = new jsPDF()
-    const [year, monthNum] = selectedMonth.value.split('-').map(Number)
-    const monthName = monthNames[monthNum - 1]
+    const doc = new jsPDF();
+    const [year, monthNum] = selectedMonth.value.split("-").map(Number);
+    const monthName = monthNames[monthNum - 1];
 
     // Header
-    doc.setFontSize(18)
-    doc.setFont('helvetica', 'bold')
-    doc.text('LAPORAN ABSENSI GURU', 105, 20, { align: 'center' })
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("LAPORAN ABSENSI GURU", 105, 20, { align: "center" });
 
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'normal')
-    doc.text('TPQ AMANAH', 105, 28, { align: 'center' })
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text("TPQ AMANAH", 105, 28, { align: "center" });
 
-    doc.setFontSize(11)
-    doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: 'center' })
+    doc.setFontSize(11);
+    doc.text(`Periode: ${monthName} ${year}`, 105, 36, { align: "center" });
 
     // Line separator
-    doc.setDrawColor(0, 100, 0)
-    doc.setLineWidth(0.5)
-    doc.line(14, 42, 196, 42)
+    doc.setDrawColor(0, 100, 0);
+    doc.setLineWidth(0.5);
+    doc.line(14, 42, 196, 42);
 
     // Table data
     const tableData = teachersWithStats.value.map((teacher, index) => [
@@ -862,137 +1195,152 @@ const exportToPDF = () => {
       teacher.displayName,
       teacher.hadirCount,
       teacher.tidakHadirCount,
-      `Rp ${formatCurrency(teacher.hadirCount * 10000)}`
-    ])
+      `Rp ${formatCurrency(teacher.hadirCount * 10000)}`,
+    ]);
 
     // Add table
     autoTable(doc, {
       startY: 48,
-      head: [['No', 'Nama Guru', 'Hadir', 'Izin/Tidak Hadir', 'Gaji']],
+      head: [["No", "Nama Guru", "Hadir", "Izin/Tidak Hadir", "Gaji"]],
       body: tableData,
-      theme: 'striped',
+      theme: "striped",
       headStyles: {
         fillColor: [34, 139, 34],
         textColor: 255,
-        fontStyle: 'bold',
-        halign: 'center'
+        fontStyle: "bold",
+        halign: "center",
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },
-        1: { halign: 'center', cellWidth: 60 },
-        2: { halign: 'center', cellWidth: 25 },
-        3: { halign: 'center', cellWidth: 35 },
-        4: { halign: 'center', cellWidth: 45 }
+        0: { halign: "center", cellWidth: 15 },
+        1: { halign: "center", cellWidth: 60 },
+        2: { halign: "center", cellWidth: 25 },
+        3: { halign: "center", cellWidth: 35 },
+        4: { halign: "center", cellWidth: 45 },
       },
       styles: {
         fontSize: 10,
-        cellPadding: 4
+        cellPadding: 4,
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245]
-      }
-    })
+        fillColor: [245, 245, 245],
+      },
+    });
 
     // Summary footer
-    const finalY = (doc.lastAutoTable?.finalY || 100) + 10
+    const finalY = (doc.lastAutoTable?.finalY || 100) + 10;
 
     // Calculate totals for PDF
-    const totalHadirPDF = teachersWithStats.value.reduce((sum, t) => sum + t.hadirCount, 0)
-    const totalGajiPDF = totalHadirPDF * 10000
+    const totalHadirPDF = teachersWithStats.value.reduce(
+      (sum, t) => sum + t.hadirCount,
+      0,
+    );
+    const totalGajiPDF = totalHadirPDF * 10000;
 
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`Total Kehadiran: ${totalHadirPDF}`, 14, finalY)
-    doc.text(`Total Gaji: Rp ${formatCurrency(totalGajiPDF)}`, 14, finalY + 6)
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Total Kehadiran: ${totalHadirPDF}`, 14, finalY);
+    doc.text(`Total Gaji: Rp ${formatCurrency(totalGajiPDF)}`, 14, finalY + 6);
 
     // Calculate Active Days (Hari Efektif)
-    let activeDaysCount = 0
-    const daysCount = new Date(year, monthNum, 0).getDate() // Get days in exported month
+    let activeDaysCount = 0;
+    const daysCount = new Date(year, monthNum, 0).getDate(); // Get days in exported month
 
     for (let day = 1; day <= daysCount; day++) {
-      const dateObj = new Date(year, monthNum - 1, day)
-      const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6 // Sun or Sat
+      const dateObj = new Date(year, monthNum - 1, day);
+      const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6; // Sun or Sat
 
       // Check holiday (using existing helper if synced, or search in monthHolidays)
       // Note: monthHolidays is computed based on current view. Assuming export matches view.
-      const isHolidayDay = monthHolidays.value.some(h => h.date === day)
+      const isHolidayDay = monthHolidays.value.some((h) => h.date === day);
 
       if (!isWeekendDay && !isHolidayDay) {
-        activeDaysCount++
+        activeDaysCount++;
       }
     }
 
-    const maxSalary = activeDaysCount * 10000
+    const maxSalary = activeDaysCount * 10000;
 
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(10)
-    doc.text(`Total Hari Efektif: ${activeDaysCount} Hari`, 14, finalY + 14)
-    doc.text(`Potensi Gaji (Full): Rp ${formatCurrency(maxSalary)}`, 14, finalY + 19)
-
-
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Total Hari Efektif: ${activeDaysCount} Hari`, 14, finalY + 14);
+    doc.text(
+      `Potensi Gaji (Full): Rp ${formatCurrency(maxSalary)}`,
+      14,
+      finalY + 19,
+    );
 
     // Generated date
-    const now = new Date()
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'italic')
-    doc.text(`Dicetak pada: ${now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, finalY + 28)
+    const now = new Date();
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      `Dicetak pada: ${now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+      14,
+      finalY + 28,
+    );
 
     // Generate filename
-    const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`
+    const filename = `${year}_${monthName.toLowerCase()}_report_absen.pdf`;
 
     // Save/download PDF
-    doc.save(filename)
+    doc.save(filename);
 
-    success(`Berhasil mengunduh ${filename}`)
+    success(`Berhasil mengunduh ${filename}`);
   } catch (e) {
-    console.error('Export error:', e)
-    showError('Gagal mengexport PDF')
+    console.error("Export error:", e);
+    showError("Gagal mengexport PDF");
   } finally {
-    exporting.value = false
+    exporting.value = false;
   }
-}
+};
 
 const saveAttendance = async () => {
-  if (!form.value.date) { warning('Tanggal wajib diisi'); return }
-  if (!form.value.guruId) { warning('Pilih guru terlebih dahulu'); return }
-  saving.value = true
+  if (!form.value.date) {
+    warning("Tanggal wajib diisi");
+    return;
+  }
+  if (!form.value.guruId) {
+    warning("Pilih guru terlebih dahulu");
+    return;
+  }
+  saving.value = true;
   try {
-    const teacher = teachers.value.find(t => t.id === form.value.guruId)
+    const teacher = teachers.value.find((t) => t.id === form.value.guruId);
     const payload = {
       guruId: form.value.guruId,
-      guruName: teacher ? teacher.displayName : '',
+      guruName: teacher ? teacher.displayName : "",
       date: form.value.date,
       status: form.value.status,
-      notes: form.value.notes
-    }
+      notes: form.value.notes,
+    };
 
-    await api.post('/attendance/admin', payload)
+    await api.post("/attendance/admin", payload);
 
-    success('Data absensi berhasil disimpan')
-    closeModal()
-    fetchData() // Refresh grid
+    success("Data absensi berhasil disimpan");
+    closeModal();
+    fetchData(); // Refresh grid
   } catch (e) {
-    console.error('Save error:', e)
-    showError(e.response?.data?.error || 'Gagal menyimpan data')
+    console.error("Save error:", e);
+    showError(e.response?.data?.error || "Gagal menyimpan data");
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 
 onMounted(async () => {
-  document.addEventListener('click', closeDropdownOnClickOutside)
+  document.addEventListener("click", closeDropdownOnClickOutside);
 
   // Fetch holidays
-  holidays.value = await fetchHolidays()
-  updateMonthHolidays()
+  holidays.value = await fetchHolidays();
+  updateMonthHolidays();
 
   // Fetch data
-  await fetchData()
-})
+  await fetchData();
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeDropdownOnClickOutside)
-})
+  document.removeEventListener("click", closeDropdownOnClickOutside);
+});
 </script>
 
 <style scoped>
@@ -1035,15 +1383,13 @@ onUnmounted(() => {
   flex: 2;
 }
 
-.header-actions> :not(:first-child) {
-
+.header-actions > :not(:first-child) {
   flex: 1;
 }
 
 /* Dropdown Styles */
 .dropdown-wrapper {
   position: relative;
-
 }
 
 .dropdown-wrapper button {
@@ -1100,7 +1446,7 @@ onUnmounted(() => {
 
 /* Export Button for Guru */
 .btn-export {
-  background: linear-gradient(135deg, #2196F3, #1976D2);
+  background: linear-gradient(135deg, #2196f3, #1976d2);
   color: white;
   padding: var(--space-sm) var(--space-lg);
   border-radius: var(--radius-full);
@@ -1115,7 +1461,7 @@ onUnmounted(() => {
 }
 
 .btn-export:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1976D2, #1565C0);
+  background: linear-gradient(135deg, #1976d2, #1565c0);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
@@ -1142,7 +1488,11 @@ onUnmounted(() => {
 }
 
 .summary-card.highlight {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.15));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.1),
+    rgba(255, 193, 7, 0.15)
+  );
   border: 2px solid rgba(255, 193, 7, 0.3);
 }
 
@@ -1193,7 +1543,9 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.95);
   /* Guru style white background */
   border-radius: var(--radius-xl);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Teacher Legend */
@@ -1400,11 +1752,9 @@ onUnmounted(() => {
 }
 
 .cell-status-single {
-
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .status-icon {
@@ -1606,7 +1956,7 @@ onUnmounted(() => {
 }
 
 .popup-teacher-item .checkin-time::before {
-  content: '🕐';
+  content: "🕐";
   font-size: 0.65rem;
 }
 
@@ -1618,7 +1968,6 @@ onUnmounted(() => {
   background: rgba(33, 150, 243, 0.1);
   border-radius: var(--radius-md);
   display: inline-block;
-
 }
 
 /* Check-in Time Header - Below Date */
@@ -1627,7 +1976,11 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.1),
+    rgba(46, 125, 50, 0.08)
+  );
   border-bottom: 1px solid rgba(76, 175, 80, 0.2);
   font-size: 0.85rem;
   color: #2e7d32;
@@ -1637,7 +1990,6 @@ onUnmounted(() => {
 .popup-checkin-time-header .checkin-icon {
   font-size: 0.9rem;
 }
-
 
 .popup-single-teacher {
   text-align: center;
@@ -1784,12 +2136,20 @@ onUnmounted(() => {
 }
 
 .today-holiday {
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2), rgba(255, 152, 0, 0.25));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.2),
+    rgba(255, 152, 0, 0.25)
+  );
   border: 2px solid rgba(255, 152, 0, 0.4);
 }
 
 .tomorrow-holiday {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(30, 136, 229, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(33, 150, 243, 0.15),
+    rgba(30, 136, 229, 0.2)
+  );
   border: 2px solid rgba(33, 150, 243, 0.3);
 }
 
@@ -1970,18 +2330,17 @@ onUnmounted(() => {
   }
 
   .popup-teacher-item {
-    font-size: .7rem;
+    font-size: 0.7rem;
     gap: 3px;
   }
 
   .popup-teacher-item .checkin-time {
-    font-size: .6rem;
+    font-size: 0.6rem;
 
     gap: 1px;
   }
 
   .popup-teacher-item .checkin-time::before {
-
     font-size: 0.5rem;
   }
 
@@ -2196,7 +2555,7 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .legend-item {
-    font-size: .5rem;
+    font-size: 0.5rem;
   }
 
   .calendar-legend {
@@ -2208,7 +2567,7 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width : 400px) {
+@media (max-width: 430px) {
   .header-actions select {
     flex: 1 !important;
   }
