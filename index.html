@@ -3,32 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <!-- Preconnect to Google Fonts for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    
+
     <!-- Google Fonts: Plus Jakarta Sans, Inter, Amiri, Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&family=Poppins:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Primary Meta Tags -->
     <title>TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo</title>
-    <meta name="title" content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo" />
-    <meta name="description" content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran." />
-    <meta name="keywords" content="TPQ, Taman Pendidikan Al-Quran, TPQ Amanah, Sidoarjo, Gedangan, Sawotratap, Belajar Mengaji, Al-Quran" />
+    <meta
+      name="google-site-verification"
+      content="iKmVV3FXnUaVkrbd-kxAHzS4ABmkL7Qr2zv12VpWik8"
+    />
+
+    <meta
+      name="title"
+      content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo"
+    />
+    <meta
+      name="description"
+      content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran."
+    />
+    <meta
+      name="keywords"
+      content="TPQ, Taman Pendidikan Al-Quran, TPQ Amanah, Sidoarjo, Gedangan, Sawotratap, Belajar Mengaji, Al-Quran"
+    />
     <meta name="author" content="TPQ Amanah" />
     <meta name="robots" content="index, follow" />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tpq-amanah.vercel.app/" />
-    <meta property="og:title" content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo" />
-    <meta property="og:description" content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran." />
-    <meta property="og:image" content="https://tpq-amanah.vercel.app/og-image.png" />
+    <meta
+      property="og:title"
+      content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo"
+    />
+    <meta
+      property="og:description"
+      content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran."
+    />
+    <meta
+      property="og:image"
+      content="https://tpq-amanah.vercel.app/og-image.png"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="id_ID" />
@@ -37,9 +63,18 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://tpq-amanah.vercel.app/" />
-    <meta name="twitter:title" content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo" />
-    <meta name="twitter:description" content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran." />
-    <meta name="twitter:image" content="https://tpq-amanah.vercel.app/og-image.png" />
+    <meta
+      name="twitter:title"
+      content="TPQ Amanah | Taman Pendidikan Al-Quran Sidoarjo"
+    />
+    <meta
+      name="twitter:description"
+      content="TPQ Amanah - Taman Pendidikan Al-Quran di Sawotratap, Gedangan, Sidoarjo. Membentuk generasi Qurani yang berakhlak mulia dan cinta Al-Quran."
+    />
+    <meta
+      name="twitter:image"
+      content="https://tpq-amanah.vercel.app/og-image.png"
+    />
 
     <!-- Theme Color -->
     <meta name="theme-color" content="#166534" />
@@ -48,86 +83,129 @@
   <body>
     <div id="app">
       <!-- Initial Loading Screen - Will be replaced when Vue app mounts -->
-      <div id="initial-loader" style="
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #388E3C 100%);
-        z-index: 9999;
-      ">
-        <!-- Islamic Decorative Pattern -->
-        <div style="
-          position: absolute;
+      <div
+        id="initial-loader"
+        style="
+          position: fixed;
           inset: 0;
-          background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
-          opacity: 0.3;
-        "></div>
-        
-        <!-- Logo Container -->
-        <div style="
-          position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1.5rem;
-          animation: fadeInUp 0.8s ease-out;
-        ">
+          justify-content: center;
+          background: linear-gradient(
+            135deg,
+            #1b5e20 0%,
+            #2e7d32 50%,
+            #388e3c 100%
+          );
+          z-index: 9999;
+        "
+      >
+        <!-- Islamic Decorative Pattern -->
+        <div
+          style="
+            position: absolute;
+            inset: 0;
+            background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;);
+            opacity: 0.3;
+          "
+        ></div>
+
+        <!-- Logo Container -->
+        <div
+          style="
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease-out;
+          "
+        >
           <!-- Logo Image -->
-          <img src="/logo.png" alt="TPQ Amanah Logo" style="
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            animation: pulse 2s ease-in-out infinite;
-          ">
-          
+          <img
+            src="/logo.png"
+            alt="TPQ Amanah Logo"
+            style="
+              width: 100px;
+              height: 100px;
+              border-radius: 50%;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+              animation: pulse 2s ease-in-out infinite;
+            "
+          />
+
           <!-- Title -->
-          <div style="text-align: center;">
-            <h1 style="
-              font-family: 'Poppins', system-ui, sans-serif;
-              font-size: 2.5rem;
-              font-weight: 700;
-              color: #FFD54F;
-              margin: 0;
-              text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-              letter-spacing: 2px;
-            ">TPQ AMANAH</h1>
-            <p style="
-              font-family: 'Poppins', system-ui, sans-serif;
-              font-size: 0.9rem;
-              color: rgba(255, 255, 255, 0.9);
-              margin: 0.5rem 0 0 0;
-              letter-spacing: 1px;
-            ">Taman Pendidikan Al-Quran</p>
+          <div style="text-align: center">
+            <h1
+              style="
+                font-family: &quot;Poppins&quot;, system-ui, sans-serif;
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: #ffd54f;
+                margin: 0;
+                text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                letter-spacing: 2px;
+              "
+            >
+              TPQ AMANAH
+            </h1>
+            <p
+              style="
+                font-family: &quot;Poppins&quot;, system-ui, sans-serif;
+                font-size: 0.9rem;
+                color: rgba(255, 255, 255, 0.9);
+                margin: 0.5rem 0 0 0;
+                letter-spacing: 1px;
+              "
+            >
+              Taman Pendidikan Al-Quran
+            </p>
           </div>
-          
+
           <!-- Loading Spinner -->
-          <div style="
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            border-top: 3px solid #FFD54F;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          "></div>
+          <div
+            style="
+              width: 40px;
+              height: 40px;
+              border: 3px solid rgba(255, 255, 255, 0.2);
+              border-top: 3px solid #ffd54f;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            "
+          ></div>
         </div>
       </div>
-      
+
       <style>
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
         @keyframes pulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
-          50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); }
+          0%,
+          100% {
+            transform: scale(1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+          }
         }
         @keyframes fadeInUp {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       </style>
     </div>
