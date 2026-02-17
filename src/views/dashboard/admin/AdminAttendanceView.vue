@@ -6,11 +6,7 @@
         <p>Monitor kehadiran semua pengajar TPQ AMANAH</p>
       </div>
       <div class="header-actions">
-        <select
-          v-model="selectedMonth"
-          class="form-input form-select"
-          @change="fetchData"
-        >
+        <select v-model="selectedMonth" class="form-input form-select" @change="fetchData">
           <option v-for="m in availableMonths" :key="m.value" :value="m.value">
             {{ m.label }}
           </option>
@@ -18,47 +14,31 @@
 
         <!-- Dropdown Actions for Admin -->
         <div v-if="isAdmin" class="dropdown-wrapper" ref="dropdownRef">
-          <button
-            class="btn btn-primary dropdown-trigger"
-            @click="toggleDropdown"
-          >
+          <button class="btn btn-primary dropdown-trigger" @click="toggleDropdown">
             <span>⚡ Aksi</span>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              :class="{ rotated: dropdownOpen }"
-            >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              :class="{ rotated: dropdownOpen }">
               <path d="M6 9l6 6 6-6" />
             </svg>
           </button>
           <transition name="dropdown">
             <div v-if="dropdownOpen" class="dropdown-menu">
-              <button
-                class="dropdown-item"
-                @click="exportToPDF"
-                :disabled="loading || exporting"
-              >
+              <button class="dropdown-item" @click="exportToPDF" :disabled="loading || exporting">
                 <span v-if="exporting">⏳ Mengunduh...</span>
                 <span v-else>📄 Export PDF</span>
               </button>
               <button class="dropdown-item" @click="openAddModal">
                 ➕ Tambah Absensi
               </button>
+              <button class="dropdown-item" @click="openHolidayModal">
+                📅 Kelola Hari Libur
+              </button>
             </div>
           </transition>
         </div>
 
         <!-- Simple Export Button for Guru -->
-        <button
-          v-else
-          class="btn btn-export"
-          @click="exportToPDF"
-          :disabled="loading || exporting"
-        >
+        <button v-else class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
           <span v-if="exporting">⏳ Mengunduh...</span>
           <span v-else>📄 Export PDF</span>
         </button>
@@ -73,10 +53,7 @@
         <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
       </div>
     </div>
-    <div
-      v-else-if="tomorrowHoliday.isHoliday"
-      class="holiday-alert tomorrow-holiday"
-    >
+    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
       <div class="holiday-alert-icon">📅</div>
       <div class="holiday-alert-content">
         <span class="holiday-alert-label">Besok Libur Nasional</span>
@@ -97,6 +74,14 @@
         </div>
       </div>
       <div class="summary-card glass-card">
+        <div class="summary-icon">📅</div>
+        <div class="summary-content">
+          <span v-if="loading" class="summary-value-skeleton"></span>
+          <span v-else class="summary-value">{{ activeDays }} Hari</span>
+          <span class="summary-label">Hari Efektif</span>
+        </div>
+      </div>
+      <div class="summary-card glass-card">
         <div class="summary-icon">✅</div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton"></span>
@@ -108,9 +93,7 @@
         <div class="summary-icon">💰</div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton wide"></span>
-          <span v-else class="summary-value"
-            >Rp {{ formatCurrency(totalSalary) }}</span
-          >
+          <span v-else class="summary-value">Rp {{ formatCurrency(totalSalary) }}</span>
           <span class="summary-label">Total Gaji Bulan Ini</span>
         </div>
       </div>
@@ -122,10 +105,7 @@
       <div class="filter-section">
         <label>Filter Guru:</label>
         <div class="select-wrapper">
-          <select
-            v-model="selectedTeacherId"
-            class="form-input form-select filter-select"
-          >
+          <select v-model="selectedTeacherId" class="form-input form-select filter-select">
             <option value="all">Semua Guru</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">
               {{ t.displayName }}
@@ -136,19 +116,9 @@
 
       <div class="calendar-container">
         <!-- Teacher Legend (Compact) -->
-        <div
-          class="teacher-legend"
-          v-if="selectedTeacherId === 'all' && !loading"
-        >
-          <div
-            v-for="teacher in teachers"
-            :key="teacher.id"
-            class="legend-teacher"
-          >
-            <span
-              class="legend-avatar"
-              :style="{ background: getTeacherColor(teacher.displayName) }"
-            >
+        <div class="teacher-legend" v-if="selectedTeacherId === 'all' && !loading">
+          <div v-for="teacher in teachers" :key="teacher.id" class="legend-teacher">
+            <span class="legend-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
               {{ getInitials(teacher.displayName) }}
             </span>
             <span class="legend-name">{{ teacher.displayName }}</span>
@@ -172,31 +142,13 @@
           <!-- Month Navigation -->
           <div class="calendar-header">
             <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
-            <button
-              class="nav-btn"
-              @click="nextMonth"
-              :disabled="isCurrentMonth"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+            <button class="nav-btn" @click="nextMonth" :disabled="isCurrentMonth">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
@@ -209,35 +161,19 @@
             </div>
 
             <!-- Empty cells for alignment -->
-            <div
-              v-for="n in firstDayOfMonth"
-              :key="'empty-' + n"
-              class="calendar-cell empty"
-            ></div>
+            <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
 
             <!-- Date Cells -->
-            <div
-              v-for="date in daysInMonth"
-              :key="date"
-              class="calendar-cell"
-              :class="getCellClass(date)"
-              :title="getHolidayForDate(date)?.name || ''"
-              @click="showDateDetail(date)"
-            >
+            <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCellClass(date)"
+              :title="getHolidayForDate(date)?.name || ''" @click="showDateDetail(date)">
               <span class="cell-date">{{ date }}</span>
 
               <!-- Teacher Avatars for ALL mode (Compact) -->
               <div v-if="selectedTeacherId === 'all'" class="cell-avatars">
                 <!-- COMPACT VIEW AVATARS -->
-                <div
-                  v-for="teacher in getVisibleTeachers(date)"
-                  :key="teacher.id"
-                  class="mini-avatar"
-                  :style="{
-                    backgroundColor: getTeacherColor(teacher.displayName),
-                  }"
-                  :title="teacher.displayName"
-                >
+                <div v-for="teacher in getVisibleTeachers(date)" :key="teacher.id" class="mini-avatar" :style="{
+                  backgroundColor: getTeacherColor(teacher.displayName),
+                }" :title="teacher.displayName">
                   {{ getInitials(teacher.displayName) }}
                 </div>
                 <div v-if="getHiddenCount(date) > 0" class="more-indicator">
@@ -247,15 +183,10 @@
 
               <!-- Single Teacher Status -->
               <div v-else class="cell-status-single">
-                <span
-                  v-if="getTeacherAttendanceForDate(date)"
-                  class="status-icon"
-                  :class="
-                    getTeacherAttendanceForDate(date).status === 'hadir'
-                      ? 'hadir'
-                      : 'tidak'
-                  "
-                >
+                <span v-if="getTeacherAttendanceForDate(date)" class="status-icon" :class="getTeacherAttendanceForDate(date).status === 'hadir'
+                  ? 'hadir'
+                  : 'tidak'
+                  ">
                   {{
                     getTeacherAttendanceForDate(date).status === "hadir"
                       ? "✓"
@@ -264,9 +195,7 @@
                 </span>
               </div>
 
-              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)"
-                >🎉</span
-              >
+              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
             </div>
           </div>
 
@@ -288,11 +217,7 @@
         </template>
 
         <!-- Date Detail Popup -->
-        <div
-          v-if="selectedDate"
-          class="calendar-popup-overlay"
-          @click="selectedDate = null"
-        ></div>
+        <div v-if="selectedDate" class="calendar-popup-overlay" @click="selectedDate = null"></div>
         <div v-if="selectedDate" class="calendar-popup glass-card">
           <div class="popup-header">
             <h4>{{ formatFullDate(selectedDate) }}</h4>
@@ -300,12 +225,9 @@
           </div>
 
           <!-- Check-in Time - Below Date Header (for single teacher view) -->
-          <div
-            v-if="
-              selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)
-            "
-            class="popup-checkin-time-header"
-          >
+          <div v-if="
+            selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)
+          " class="popup-checkin-time-header">
             <span class="checkin-icon">🕐</span>
             <span>{{ getTeacherCheckinTime(selectedDate) }}</span>
           </div>
@@ -314,7 +236,8 @@
           <div v-if="getHolidayForDate(selectedDate)" class="popup-holiday">
             <span class="holiday-icon">🎉</span>
             <div>
-              <div class="holiday-label">Libur Nasional</div>
+              <div class="holiday-label">
+                {{ getHolidayForDate(selectedDate).isCustom ? 'Hari Libur (Custom)' : 'Libur Nasional' }}</div>
               <div class="holiday-name">
                 {{ getHolidayForDate(selectedDate).name }}
               </div>
@@ -324,28 +247,22 @@
           <div class="popup-content">
             <template v-if="selectedTeacherId === 'all'">
               <!-- Holiday/Weekend Logic -->
-              <div
-                v-if="
-                  getHolidayForDate(selectedDate) || isWeekend(selectedDate)
-                "
-                class="popup-section"
-                style="text-align: center; padding: 20px 0"
-              >
+              <div v-if="
+                getHolidayForDate(selectedDate) || isWeekend(selectedDate)
+              " class="popup-section" style="text-align: center; padding: 20px 0">
                 <div style="font-size: 3rem; margin-bottom: 10px">🏝️</div>
-                <h5
-                  style="
+                <h5 style="
                     font-size: 1.1rem;
                     color: var(--primary-dark);
                     margin-bottom: 8px;
-                  "
-                >
+                  ">
                   Tidak Ada KBM
                 </h5>
                 <p class="text-muted">
                   {{
                     getHolidayForDate(selectedDate)
-                      ? "Hari Libur Nasional"
-                      : "Akhir Pekan (Weekend)"
+                      ? (getHolidayForDate(selectedDate).isCustom ? 'Hari Libur' : 'Hari Libur Nasional')
+                      : 'Akhir Pekan (Weekend)'
                   }}
                 </p>
               </div>
@@ -360,17 +277,10 @@
                     }})
                   </h5>
                   <div class="teacher-list-popup">
-                    <div
-                      v-for="t in getPresentTeachersWithTime(selectedDate)"
-                      :key="t.id"
-                      class="popup-teacher-item"
-                    >
-                      <div
-                        class="mini-avatar"
-                        :style="{
-                          backgroundColor: getTeacherColor(t.displayName),
-                        }"
-                      >
+                    <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
+                      <div class="mini-avatar" :style="{
+                        backgroundColor: getTeacherColor(t.displayName),
+                      }">
                         {{ getInitials(t.displayName) }}
                       </div>
                       <div class="teacher-info">
@@ -380,12 +290,9 @@
                         }}</span>
                       </div>
                     </div>
-                    <div
-                      v-if="
-                        getPresentTeachersWithTime(selectedDate).length === 0
-                      "
-                      class="text-muted"
-                    >
+                    <div v-if="
+                      getPresentTeachersWithTime(selectedDate).length === 0
+                    " class="text-muted">
                       Tidak ada data hadir
                     </div>
                   </div>
@@ -399,30 +306,20 @@
                     }})
                   </h5>
                   <div class="teacher-list-popup">
-                    <div
-                      v-for="t in getRecordedAbsentTeachersForDate(
-                        selectedDate,
-                      )"
-                      :key="t.id"
-                      class="popup-teacher-item"
-                    >
-                      <div
-                        class="mini-avatar"
-                        :style="{
-                          backgroundColor: getTeacherColor(t.displayName),
-                        }"
-                      >
+                    <div v-for="t in getRecordedAbsentTeachersForDate(
+                      selectedDate,
+                    )" :key="t.id" class="popup-teacher-item">
+                      <div class="mini-avatar" :style="{
+                        backgroundColor: getTeacherColor(t.displayName),
+                      }">
                         {{ getInitials(t.displayName) }}
                       </div>
                       <span>{{ t.displayName }}</span>
                     </div>
-                    <div
-                      v-if="
-                        getRecordedAbsentTeachersForDate(selectedDate)
-                          .length === 0
-                      "
-                      class="text-muted"
-                    >
+                    <div v-if="
+                      getRecordedAbsentTeachersForDate(selectedDate)
+                        .length === 0
+                    " class="text-muted">
                       Nihil
                     </div>
                   </div>
@@ -436,26 +333,16 @@
                     }})
                   </h5>
                   <div class="teacher-list-popup">
-                    <div
-                      v-for="t in getUnrecordedTeachersForDate(selectedDate)"
-                      :key="t.id"
-                      class="popup-teacher-item"
-                      style="opacity: 0.6"
-                    >
-                      <div
-                        class="mini-avatar"
-                        style="background-color: var(--gray-400)"
-                      >
+                    <div v-for="t in getUnrecordedTeachersForDate(selectedDate)" :key="t.id" class="popup-teacher-item"
+                      style="opacity: 0.6">
+                      <div class="mini-avatar" style="background-color: var(--gray-400)">
                         {{ getInitials(t.displayName) }}
                       </div>
                       <span>{{ t.displayName }}</span>
                     </div>
-                    <div
-                      v-if="
-                        getUnrecordedTeachersForDate(selectedDate).length === 0
-                      "
-                      class="text-muted"
-                    >
+                    <div v-if="
+                      getUnrecordedTeachersForDate(selectedDate).length === 0
+                    " class="text-muted">
                       Semua sudah absen
                     </div>
                   </div>
@@ -467,13 +354,10 @@
               <!-- Single Teacher Detail -->
               <div class="popup-single-teacher">
                 <template v-if="getTeacherAttendanceForDate(selectedDate)">
-                  <div
-                    class="status-badge large"
-                    :class="getTeacherAttendanceForDate(selectedDate).status"
-                  >
+                  <div class="status-badge large" :class="getTeacherAttendanceForDate(selectedDate).status">
                     {{
                       getTeacherAttendanceForDate(selectedDate).status ===
-                      "hadir"
+                        "hadir"
                         ? "✅ HADIR"
                         : "❌ TIDAK HADIR"
                     }}
@@ -483,17 +367,14 @@
                     {{ getTeacherAttendanceForDate(selectedDate).notes || "-" }}
                   </p>
 
-                  <div v-if="isAdmin" class="mt-2">
-                    <button
-                      class="btn btn-sm btn-outline-secondary"
-                      @click="
-                        openAddModal(
-                          selectedDate,
-                          selectedTeacherId,
-                          getTeacherAttendanceForDate(selectedDate),
-                        )
-                      "
-                    >
+                  <div v-if="isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)" class="mt-2">
+                    <button class="btn btn-sm btn-outline-secondary" @click="
+                      openAddModal(
+                        selectedDate,
+                        selectedTeacherId,
+                        getTeacherAttendanceForDate(selectedDate),
+                      )
+                      ">
                       ✏️ Ubah Status
                     </button>
                   </div>
@@ -503,13 +384,9 @@
                 </p>
 
                 <div
-                  v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin"
-                  class="mt-3"
-                >
-                  <button
-                    class="btn btn-sm btn-outline-primary"
-                    @click="openAddModal(selectedDate, selectedTeacherId)"
-                  >
+                  v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
+                  class="mt-3">
+                  <button class="btn btn-sm btn-outline-primary" @click="openAddModal(selectedDate, selectedTeacherId)">
                     + Input Absensi
                   </button>
                 </div>
@@ -524,17 +401,10 @@
     <div class="teachers-stats glass-card" v-if="!loading">
       <h3>📊 Statistik Per Guru</h3>
       <div class="stats-grid">
-        <div
-          v-for="teacher in teachersWithStats"
-          :key="teacher.id"
-          class="stat-card"
-          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }"
-        >
+        <div v-for="teacher in teachersWithStats" :key="teacher.id" class="stat-card"
+          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }">
           <div class="stat-card-header">
-            <span
-              class="stat-avatar"
-              :style="{ background: getTeacherColor(teacher.displayName) }"
-            >
+            <span class="stat-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
               {{ getInitials(teacher.displayName) }}
             </span>
             <div class="stat-info">
@@ -552,9 +422,7 @@
               <span class="stat-label">Tidak Hadir</span>
             </div>
             <div class="stat-item gaji">
-              <span class="stat-value"
-                >Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</span
-              >
+              <span class="stat-value">Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</span>
               <span class="stat-label">Gaji</span>
             </div>
           </div>
@@ -568,15 +436,12 @@
         <h3>Tambah Data Absensi</h3>
 
         <!-- Summary for Quick Add (Hidden Inputs) -->
-        <div
-          v-if="form.isQuickAdd"
-          class="p-3 mb-4 border border-green-100 rounded-lg bg-green-50"
-        >
+        <div v-if="form.isQuickAdd" class="p-3 mb-4 border border-green-100 rounded-lg bg-green-50">
           <p class="text-sm text-green-800" style="margin: 0; font-weight: 500">
             📝 Mencatat absensi untuk:
           </p>
           <p class="text-base font-bold text-green-700" style="margin: 4px 0">
-            {{ teachers.find((t) => t.id === form.guruId)?.displayName }}
+            {{teachers.find((t) => t.id === form.guruId)?.displayName}}
           </p>
           <p class="text-xs text-green-600" style="margin: 0">
             Tanggal:
@@ -595,11 +460,7 @@
 
         <div v-if="!form.isQuickAdd" class="form-group">
           <label class="form-label">Guru</label>
-          <select
-            v-model="form.guruId"
-            class="form-input form-select"
-            @change="onGuruChange"
-          >
+          <select v-model="form.guruId" class="form-input form-select" @change="onGuruChange">
             <option value="">-- Pilih Guru --</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">
               {{ t.displayName }}
@@ -610,46 +471,79 @@
         <div class="form-group">
           <label class="form-label">Status</label>
           <div class="status-buttons">
-            <button
-              class="status-btn"
-              :class="{
-                active: form.status === 'hadir',
-                hadir: form.status === 'hadir',
-              }"
-              @click="form.status = 'hadir'"
-            >
+            <button class="status-btn" :class="{
+              active: form.status === 'hadir',
+              hadir: form.status === 'hadir',
+            }" @click="form.status = 'hadir'">
               ✅ Hadir
             </button>
-            <button
-              class="status-btn"
-              :class="{
-                active: form.status === 'tidak_hadir',
-                tidak: form.status === 'tidak_hadir',
-              }"
-              @click="form.status = 'tidak_hadir'"
-            >
+            <button class="status-btn" :class="{
+              active: form.status === 'tidak_hadir',
+              tidak: form.status === 'tidak_hadir',
+            }" @click="form.status = 'tidak_hadir'">
               ❌ Tidak Hadir
             </button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Keterangan (opsional)</label>
-          <input
-            v-model="form.notes"
-            type="text"
-            class="form-input"
-            placeholder="Contoh: Izin sakit"
-          />
+          <input v-model="form.notes" type="text" class="form-input" placeholder="Contoh: Izin sakit" />
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="closeModal">Batal</button>
-          <button
-            class="btn btn-primary"
-            @click="saveAttendance"
-            :disabled="saving"
-          >
+          <button class="btn btn-primary" @click="saveAttendance" :disabled="saving">
             {{ saving ? "Menyimpan..." : "Simpan" }}
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Holiday Management Modal -->
+    <div v-if="showHolidayModal" class="modal-overlay" @click.self="closeHolidayModal">
+      <div class="modal glass-card holiday-modal">
+        <div class="holiday-modal-header">
+          <h3>📅 Kelola Hari Libur</h3>
+          <button class="close-btn" @click="closeHolidayModal">×</button>
+        </div>
+
+        <!-- Add Holiday Form -->
+        <div class="holiday-form">
+          <h4>Tambah Hari Libur</h4>
+          <div class="form-group">
+            <label class="form-label">Tanggal Mulai</label>
+            <input v-model="holidayForm.startDate" type="date" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Selesai (opsional, untuk range)</label>
+            <input v-model="holidayForm.endDate" type="date" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Keterangan Libur</label>
+            <input v-model="holidayForm.name" type="text" class="form-input"
+              placeholder="Contoh: Libur Semester Genap, Cuti Bersama Idul Fitri" />
+          </div>
+          <button class="btn btn-primary" @click="saveHoliday" :disabled="savingHoliday" style="width: 100%">
+            {{ savingHoliday ? 'Menyimpan...' : '➕ Tambah Hari Libur' }}
+          </button>
+        </div>
+
+        <!-- Existing Custom Holidays List -->
+        <div class="holiday-list">
+          <h4>Hari Libur Bulan Ini ({{ monthNames[currentMonth] }} {{ currentYear }})</h4>
+          <div v-if="customHolidaysForMonth.length === 0" class="text-muted" style="text-align: center; padding: 16px">
+            Belum ada hari libur custom untuk bulan ini
+          </div>
+          <div v-else class="holiday-items">
+            <div v-for="h in customHolidaysForMonth" :key="h.id" class="holiday-item">
+              <div class="holiday-item-info">
+                <span class="holiday-item-date">{{ formatHolidayDate(h.date) }}</span>
+                <span class="holiday-item-name">{{ h.name }}</span>
+              </div>
+              <button class="btn-delete-holiday" @click="deleteHoliday(h.id)" title="Hapus hari libur">
+                🗑️
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -701,6 +595,16 @@ const selectedMonth = ref(
 );
 const holidays = ref([]);
 const monthHolidays = ref([]);
+
+// Custom holidays state
+const customHolidays = ref([]);
+const showHolidayModal = ref(false);
+const savingHoliday = ref(false);
+const holidayForm = ref({
+  startDate: "",
+  endDate: "",
+  name: "",
+});
 
 // Calendar state
 const currentMonth = ref(today.getMonth());
@@ -765,6 +669,30 @@ const totalAttendance = computed(() => {
 
 const totalSalary = computed(() => {
   return totalAttendance.value * 10000;
+});
+
+// Computed: active working days (excluding weekends, national holidays, custom holidays)
+const activeDays = computed(() => {
+  const daysCount = new Date(currentYear.value, currentMonth.value + 1, 0).getDate();
+  let count = 0;
+  for (let day = 1; day <= daysCount; day++) {
+    const dateObj = new Date(currentYear.value, currentMonth.value, day);
+    const dayOfWeek = dateObj.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Weekend
+    if (monthHolidays.value.some(h => h.date === day)) continue; // National or custom holiday
+    count++;
+  }
+  return count;
+});
+
+// Computed: custom holidays filtered for current month
+const customHolidaysForMonth = computed(() => {
+  const m = currentMonth.value + 1;
+  const y = currentYear.value;
+  return customHolidays.value.filter(h => {
+    const [hy, hm] = h.date.split('-').map(Number);
+    return hy === y && hm === m;
+  });
 });
 
 // Calendar computed
@@ -858,11 +786,25 @@ const getHolidayForDate = (date) => {
 };
 
 const updateMonthHolidays = () => {
-  monthHolidays.value = getHolidaysForMonth(
+  // Merge national holidays with custom holidays
+  const national = getHolidaysForMonth(
     currentMonth.value,
     currentYear.value,
     holidays.value,
   );
+  const custom = customHolidaysForMonth.value.map(h => ({
+    date: parseInt(h.date.split('-')[2]),
+    name: h.name,
+    isCustom: true,
+  }));
+  // Merge, avoiding duplicates by date
+  const merged = [...national];
+  for (const ch of custom) {
+    if (!merged.some(m => m.date === ch.date)) {
+      merged.push(ch);
+    }
+  }
+  monthHolidays.value = merged;
 };
 
 const getAttendanceForDate = (date) => {
@@ -1068,8 +1010,8 @@ const prevMonth = () => {
   }
   // Update selectedMonth to sync with calendar
   selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
+  fetchCustomHolidays();
   fetchData();
-  updateMonthHolidays();
 };
 
 const nextMonth = () => {
@@ -1082,8 +1024,8 @@ const nextMonth = () => {
   }
   // Update selectedMonth to sync with calendar
   selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
+  fetchCustomHolidays();
   fetchData();
-  updateMonthHolidays();
 };
 
 // Dropdown functions
@@ -1243,14 +1185,11 @@ const exportToPDF = () => {
 
     // Calculate Active Days (Hari Efektif)
     let activeDaysCount = 0;
-    const daysCount = new Date(year, monthNum, 0).getDate(); // Get days in exported month
+    const daysCount = new Date(year, monthNum, 0).getDate();
 
     for (let day = 1; day <= daysCount; day++) {
       const dateObj = new Date(year, monthNum - 1, day);
-      const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6; // Sun or Sat
-
-      // Check holiday (using existing helper if synced, or search in monthHolidays)
-      // Note: monthHolidays is computed based on current view. Assuming export matches view.
+      const isWeekendDay = dateObj.getDay() === 0 || dateObj.getDay() === 6;
       const isHolidayDay = monthHolidays.value.some((h) => h.date === day);
 
       if (!isWeekendDay && !isHolidayDay) {
@@ -1264,10 +1203,59 @@ const exportToPDF = () => {
     doc.setFontSize(10);
     doc.text(`Total Hari Efektif: ${activeDaysCount} Hari`, 14, finalY + 14);
     doc.text(
-      `Potensi Gaji (Full): Rp ${formatCurrency(maxSalary)}`,
+      `Potensi Gaji Maksimal (per Guru): Rp ${formatCurrency(maxSalary)}`,
       14,
       finalY + 19,
     );
+
+    // Custom holidays section in PDF (grouped by date range)
+    const customHolidaysInMonth = customHolidaysForMonth.value;
+    let yOffset = finalY + 28;
+    if (customHolidaysInMonth.length > 0) {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Hari Libur Tambahan:`, 14, yOffset);
+      yOffset += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+
+      // Group consecutive holidays with the same name into ranges
+      const sorted = [...customHolidaysInMonth].sort((a, b) => a.date.localeCompare(b.date));
+      const groups = [];
+      let currentGroup = null;
+
+      for (const h of sorted) {
+        const hDate = new Date(h.date + 'T00:00:00');
+        if (currentGroup && currentGroup.name === h.name) {
+          // Check if consecutive (difference of 1 day from last date in group)
+          const lastDate = currentGroup.endDate;
+          const diffDays = Math.round((hDate - lastDate) / (1000 * 60 * 60 * 24));
+          if (diffDays <= 1) {
+            currentGroup.endDate = hDate;
+            currentGroup.count++;
+            continue;
+          }
+        }
+        // Start a new group
+        currentGroup = { name: h.name, startDate: hDate, endDate: hDate, count: 1 };
+        groups.push(currentGroup);
+      }
+
+      for (const g of groups) {
+        const formatOpts = { day: 'numeric', month: 'long', year: 'numeric' };
+        if (g.count === 1) {
+          const dayName = g.startDate.toLocaleDateString('id-ID', { weekday: 'long' });
+          const dateStr = g.startDate.toLocaleDateString('id-ID', formatOpts);
+          doc.text(`  - ${dayName}, ${dateStr}: ${g.name}`, 14, yOffset);
+        } else {
+          const startStr = g.startDate.toLocaleDateString('id-ID', formatOpts);
+          const endStr = g.endDate.toLocaleDateString('id-ID', formatOpts);
+          doc.text(`  - ${startStr} s/d ${endStr}: ${g.name} (${g.count} hari)`, 14, yOffset);
+        }
+        yOffset += 4.5;
+      }
+      yOffset += 3;
+    }
 
     // Generated date
     const now = new Date();
@@ -1276,7 +1264,7 @@ const exportToPDF = () => {
     doc.text(
       `Dicetak pada: ${now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
       14,
-      finalY + 28,
+      yOffset,
     );
 
     // Generate filename
@@ -1327,14 +1315,111 @@ const saveAttendance = async () => {
   }
 };
 
+// Custom holiday CRUD functions
+const fetchCustomHolidays = async () => {
+  try {
+    const { data } = await api.get('/holidays', {
+      params: { month: currentMonth.value + 1, year: currentYear.value }
+    });
+    customHolidays.value = data;
+    updateMonthHolidays();
+  } catch (e) {
+    console.error('Fetch custom holidays error:', e);
+  }
+};
+
+const openHolidayModal = () => {
+  dropdownOpen.value = false;
+  holidayForm.value = { startDate: '', endDate: '', name: '' };
+  showHolidayModal.value = true;
+};
+
+const closeHolidayModal = () => {
+  showHolidayModal.value = false;
+};
+
+const formatHolidayDate = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const saveHoliday = async () => {
+  if (!holidayForm.value.name?.trim()) {
+    warning('Keterangan libur wajib diisi');
+    return;
+  }
+  if (!holidayForm.value.startDate) {
+    warning('Tanggal mulai wajib diisi');
+    return;
+  }
+
+  savingHoliday.value = true;
+  try {
+    // Generate date array from start to end
+    const dates = [];
+    const start = new Date(holidayForm.value.startDate + 'T00:00:00');
+    const end = holidayForm.value.endDate
+      ? new Date(holidayForm.value.endDate + 'T00:00:00')
+      : start;
+
+    if (end < start) {
+      warning('Tanggal selesai harus setelah tanggal mulai');
+      savingHoliday.value = false;
+      return;
+    }
+
+    const current = new Date(start);
+    while (current <= end) {
+      const yyyy = current.getFullYear();
+      const mm = String(current.getMonth() + 1).padStart(2, '0');
+      const dd = String(current.getDate()).padStart(2, '0');
+      dates.push(`${yyyy}-${mm}-${dd}`);
+      current.setDate(current.getDate() + 1);
+    }
+
+    await api.post('/holidays', {
+      dates,
+      name: holidayForm.value.name.trim(),
+    });
+
+    success(`Berhasil menambahkan ${dates.length} hari libur`);
+    holidayForm.value = { startDate: '', endDate: '', name: '' };
+    await fetchCustomHolidays();
+  } catch (e) {
+    console.error('Save holiday error:', e);
+    showError(e.response?.data?.error || 'Gagal menambahkan hari libur');
+  } finally {
+    savingHoliday.value = false;
+  }
+};
+
+const deleteHoliday = async (id) => {
+  if (!confirm('Yakin ingin menghapus hari libur ini?')) return;
+  try {
+    await api.delete(`/holidays/${id}`);
+    success('Hari libur berhasil dihapus');
+    await fetchCustomHolidays();
+  } catch (e) {
+    console.error('Delete holiday error:', e);
+    showError('Gagal menghapus hari libur');
+  }
+};
+
 onMounted(async () => {
   document.addEventListener("click", closeDropdownOnClickOutside);
 
-  // Fetch holidays
+  // Fetch national holidays
   holidays.value = await fetchHolidays();
-  updateMonthHolidays();
 
-  // Fetch data
+  // Fetch custom holidays then merge
+  await fetchCustomHolidays();
+
+  // Fetch attendance data
   await fetchData();
 });
 
@@ -1383,7 +1468,7 @@ onUnmounted(() => {
   flex: 2;
 }
 
-.header-actions > :not(:first-child) {
+.header-actions> :not(:first-child) {
   flex: 1;
 }
 
@@ -1474,7 +1559,7 @@ onUnmounted(() => {
 /* Summary Cards */
 .summary-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
 }
@@ -1488,11 +1573,9 @@ onUnmounted(() => {
 }
 
 .summary-card.highlight {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 215, 0, 0.1),
-    rgba(255, 193, 7, 0.15)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 215, 0, 0.1),
+      rgba(255, 193, 7, 0.15));
   border: 2px solid rgba(255, 193, 7, 0.3);
 }
 
@@ -1976,11 +2059,9 @@ onUnmounted(() => {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-lg);
-  background: linear-gradient(
-    135deg,
-    rgba(76, 175, 80, 0.1),
-    rgba(46, 125, 50, 0.08)
-  );
+  background: linear-gradient(135deg,
+      rgba(76, 175, 80, 0.1),
+      rgba(46, 125, 50, 0.08));
   border-bottom: 1px solid rgba(76, 175, 80, 0.2);
   font-size: 0.85rem;
   color: #2e7d32;
@@ -2136,20 +2217,16 @@ onUnmounted(() => {
 }
 
 .today-holiday {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 193, 7, 0.2),
-    rgba(255, 152, 0, 0.25)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 193, 7, 0.2),
+      rgba(255, 152, 0, 0.25));
   border: 2px solid rgba(255, 152, 0, 0.4);
 }
 
 .tomorrow-holiday {
-  background: linear-gradient(
-    135deg,
-    rgba(33, 150, 243, 0.15),
-    rgba(30, 136, 229, 0.2)
-  );
+  background: linear-gradient(135deg,
+      rgba(33, 150, 243, 0.15),
+      rgba(30, 136, 229, 0.2));
   border: 2px solid rgba(33, 150, 243, 0.3);
 }
 
@@ -2570,6 +2647,439 @@ onUnmounted(() => {
 @media (max-width: 430px) {
   .header-actions select {
     flex: 1 !important;
+  }
+}
+
+/* Holiday Management Modal */
+.holiday-modal {
+  max-width: 560px;
+  width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.holiday-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.holiday-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary-dark);
+}
+
+.holiday-modal-header .close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gray-100);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.holiday-modal-header .close-btn:hover {
+  background: var(--gray-200);
+}
+
+.holiday-form {
+  background: rgba(34, 139, 34, 0.05);
+  border: 1px solid rgba(34, 139, 34, 0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.holiday-form h4 {
+  margin: 0 0 var(--space-md) 0;
+  font-size: 1rem;
+  color: var(--primary-dark);
+}
+
+.holiday-list {
+  margin-top: var(--space-md);
+}
+
+.holiday-list h4 {
+  margin: 0 0 var(--space-md) 0;
+  font-size: 1rem;
+  color: var(--gray-700);
+}
+
+.holiday-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.holiday-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 193, 7, 0.08);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+
+.holiday-item:hover {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+.holiday-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.holiday-item-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.holiday-item-name {
+  font-size: 0.8rem;
+  color: var(--gray-600);
+}
+
+.btn-delete-holiday {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+  opacity: 0.6;
+}
+
+.btn-delete-holiday:hover {
+  background: rgba(211, 47, 47, 0.1);
+  opacity: 1;
+}
+
+/* ===== RESPONSIVE MOBILE STYLES ===== */
+@media (max-width: 768px) {
+  .admin-attendance-view {
+    padding-top: 56px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .page-header p {
+    font-size: 0.8rem;
+  }
+
+  /* Header actions: month select + action button side by side */
+  .header-actions {
+    width: 100%;
+    gap: var(--space-sm);
+  }
+
+  .header-actions select {
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+
+  /* Summary cards: 2x2 grid, compact */
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .summary-card {
+    padding: var(--space-md);
+    gap: var(--space-sm);
+    flex-direction: column;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .summary-icon {
+    font-size: 1.8rem;
+  }
+
+  .summary-value {
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  .summary-label {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
+  /* Holiday alert compact */
+  .holiday-alert {
+    padding: var(--space-md) var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  .holiday-alert-icon {
+    font-size: 1.5rem;
+  }
+
+  .holiday-alert-name {
+    font-size: 0.95rem;
+  }
+
+  .holiday-alert-label {
+    font-size: 0.7rem;
+  }
+
+  /* Calendar section */
+  .calendar-container {
+    padding: var(--space-md);
+  }
+
+  .calendar-header h3 {
+    font-size: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
+  .day-header {
+    font-size: 0.65rem;
+    padding: 2px 0;
+  }
+
+  .cell-date {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+  }
+
+  .cell-avatars {
+    padding: 0 2px;
+    gap: 1px;
+  }
+
+  .mini-avatar {
+    width: 14px;
+    height: 14px;
+    font-size: 0.4rem;
+  }
+
+  .more-indicator {
+    font-size: 0.5rem;
+  }
+
+  .status-icon {
+    font-size: 0.9rem;
+  }
+
+  .cell-holiday-dot {
+    font-size: 0.45rem;
+    top: 1px;
+    right: 1px;
+  }
+
+  /* Calendar Legend */
+  .calendar-legend {
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .legend-item {
+    font-size: 0.7rem;
+    gap: 3px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* Teacher Legend */
+  .teacher-legend {
+    gap: 4px;
+    padding: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+
+  .legend-teacher {
+    padding: 2px 6px;
+    font-size: 0.7rem;
+  }
+
+  .legend-avatar {
+    width: 16px;
+    height: 16px;
+    font-size: 0.45rem;
+  }
+
+  .legend-name {
+    font-size: 0.65rem;
+  }
+
+  /* Filter section */
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .select-wrapper {
+    max-width: 100%;
+  }
+
+  /* Popup */
+  .calendar-popup {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+  }
+
+  .popup-header h4 {
+    font-size: 0.9rem;
+  }
+
+  .teacher-list-popup {
+    grid-template-columns: 1fr;
+    padding: 0 var(--space-sm);
+  }
+
+  .popup-teacher-item {
+    font-size: 0.8rem;
+    padding: 4px 6px;
+  }
+
+  /* Stats Grid */
+  .teachers-stats {
+    padding: var(--space-md);
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .stat-card {
+    padding: var(--space-md);
+  }
+
+  .stat-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .stat-info h4 {
+    font-size: 0.85rem;
+  }
+
+  .stat-card-body {
+    gap: var(--space-md);
+  }
+
+  .stat-item .stat-value {
+    font-size: 0.9rem;
+  }
+
+  .stat-item .stat-label {
+    font-size: 0.6rem;
+  }
+
+  /* Modals */
+  .modal {
+    max-width: 100%;
+    padding: var(--space-lg);
+  }
+
+  .modal h3 {
+    font-size: 1.1rem;
+  }
+
+  .status-buttons {
+    flex-direction: column;
+  }
+
+  /* Holiday Modal */
+  .holiday-modal {
+    max-width: 100%;
+    padding: var(--space-lg);
+  }
+
+  .holiday-modal-header h3 {
+    font-size: 1rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+  .summary-card {
+    padding: var(--space-sm);
+  }
+
+  .summary-icon {
+    font-size: 1.5rem;
+  }
+
+  .summary-value {
+    font-size: 0.95rem;
+  }
+
+  .summary-label {
+    font-size: 0.65rem;
+  }
+
+  .calendar-grid {
+    gap: 2px;
+  }
+
+  .cell-date {
+    font-size: 0.6rem;
+  }
+
+  .mini-avatar {
+    width: 12px;
+    height: 12px;
+    font-size: 0.35rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .header-actions {
+    flex-direction: column;
+  }
+
+  .header-actions select {
+    width: 100%;
   }
 }
 </style>

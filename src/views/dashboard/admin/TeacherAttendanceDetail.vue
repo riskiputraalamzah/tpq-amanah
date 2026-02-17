@@ -3,7 +3,7 @@
     <!-- Back Button -->
     <button class="back-btn" @click="goBack">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
+        <path d="M19 12H5M12 19l-7-7 7-7" />
       </svg>
       Kembali ke Rekap
     </button>
@@ -25,7 +25,7 @@
           <div class="skeleton-stat-box wide"></div>
         </div>
       </div>
-      
+
       <!-- Calendar Skeleton -->
       <div class="calendar-section glass-card skeleton-calendar">
         <div class="skeleton-calendar-header">
@@ -72,13 +72,13 @@
         <div class="calendar-header">
           <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6"/>
+              <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
           <h2>{{ monthNames[currentMonth] }} {{ currentYear }}</h2>
           <button class="nav-btn" @click="nextMonth" :disabled="isCurrentMonth">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
+              <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
         </div>
@@ -87,23 +87,13 @@
         <div class="calendar-grid">
           <!-- Day Headers -->
           <div class="day-header" v-for="day in dayNames" :key="day">{{ day }}</div>
-          
+
           <!-- Empty cells for alignment -->
-          <div 
-            v-for="n in firstDayOfMonth" 
-            :key="'empty-' + n" 
-            class="calendar-cell empty"
-          ></div>
-          
+          <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
+
           <!-- Date Cells -->
-          <div 
-            v-for="date in daysInMonth" 
-            :key="date"
-            class="calendar-cell"
-            :class="getCellClass(date)"
-            @click="showDateDetail(date)"
-            :title="getHolidayForDate(date)?.name || ''"
-          >
+          <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCellClass(date)"
+            @click="showDateDetail(date)" :title="getHolidayForDate(date)?.name || ''">
             <span class="cell-date">{{ date }}</span>
             <span class="cell-status" v-if="getAttendanceForDate(date)">
               {{ getAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
@@ -127,49 +117,53 @@
           <h3>{{ formatFullDate(selectedDate) }}</h3>
           <button class="close-btn" @click="selectedDate = null">×</button>
         </div>
-        
+
         <!-- Holiday Banner -->
         <div v-if="getHolidayForDate(selectedDate)" class="holiday-banner">
           <span class="holiday-icon">🎉</span>
           <div class="holiday-info">
-            <span class="holiday-label">Hari Libur Nasional</span>
+            <span class="holiday-label">{{ getHolidayForDate(selectedDate).isCustom ? 'Hari Libur (Custom)' : 'Hari
+              Libur Nasional' }}</span>
             <span class="holiday-name">{{ getHolidayForDate(selectedDate).name }}</span>
           </div>
         </div>
-        
+
         <!-- View Mode -->
         <div class="popup-content" v-if="!isEditing">
-          <div v-if="selectedAttendance">
-            <div class="status-badge" :class="selectedAttendance.status">
-              {{ selectedAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
-            </div>
-            <p v-if="selectedAttendance.notes" class="notes">
-              <strong>Keterangan:</strong> {{ selectedAttendance.notes }}
+          <div v-if="getHolidayForDate(selectedDate) || isWeekendDate(selectedDate)" class="popup-no-kbm">
+            <div style="font-size: 2.5rem; margin-bottom: 8px">🏖️</div>
+            <p style="margin: 0; font-weight: 600; color: var(--primary-dark)">Tidak Ada KBM</p>
+            <p class="text-muted" style="margin: 4px 0 0">
+              {{ getHolidayForDate(selectedDate) ? getHolidayForDate(selectedDate).name : 'Akhir Pekan (Weekend)' }}
             </p>
-            <p v-else class="notes empty">Tidak ada keterangan</p>
-            <button class="btn btn-secondary btn-edit" @click="startEdit">✏️ Edit</button>
           </div>
-          <div v-else>
-            <p class="notes empty">Tidak ada data absensi untuk tanggal ini</p>
-            <button class="btn btn-primary btn-add" @click="startAdd">+ Tambah Absensi</button>
-          </div>
+          <template v-else>
+            <div v-if="selectedAttendance">
+              <div class="status-badge" :class="selectedAttendance.status">
+                {{ selectedAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
+              </div>
+              <p v-if="selectedAttendance.notes" class="notes">
+                <strong>Keterangan:</strong> {{ selectedAttendance.notes }}
+              </p>
+              <p v-else class="notes empty">Tidak ada keterangan</p>
+              <button class="btn btn-secondary btn-edit" @click="startEdit">✏️ Edit</button>
+            </div>
+            <div v-else>
+              <p class="notes empty">Tidak ada data absensi untuk tanggal ini</p>
+              <button class="btn btn-primary btn-add" @click="startAdd">+ Tambah Absensi</button>
+            </div>
+          </template>
         </div>
-        
+
         <!-- Edit/Add Mode -->
         <div class="popup-content" v-else>
           <div class="form-group">
             <label class="form-label">Status Kehadiran</label>
             <div class="edit-status-buttons">
-              <button 
-                class="status-btn-small hadir" 
-                :class="{ active: editForm.status === 'hadir' }"
-                @click="editForm.status = 'hadir'"
-              >✓ Hadir</button>
-              <button 
-                class="status-btn-small tidak" 
-                :class="{ active: editForm.status === 'tidak_hadir' }"
-                @click="editForm.status = 'tidak_hadir'"
-              >✗ Tidak Hadir</button>
+              <button class="status-btn-small hadir" :class="{ active: editForm.status === 'hadir' }"
+                @click="editForm.status = 'hadir'">✓ Hadir</button>
+              <button class="status-btn-small tidak" :class="{ active: editForm.status === 'tidak_hadir' }"
+                @click="editForm.status = 'tidak_hadir'">✗ Tidak Hadir</button>
             </div>
           </div>
           <div class="form-group">
@@ -208,6 +202,7 @@ const attendanceData = ref([])
 const selectedDate = ref(null)
 const holidays = ref([])
 const monthHolidays = ref([])
+const customHolidays = ref([])
 
 // Edit mode state
 const isEditing = ref(false)
@@ -277,18 +272,18 @@ const getAttendanceForDate = (date) => {
 const getCellClass = (date) => {
   const classes = []
   const attendance = getAttendanceForDate(date)
-  
+
   if (!attendance) {
     classes.push('no-data')
   } else {
     classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
   }
-  
+
   // Check if this date is a holiday
   if (getHolidayForDate(date)) {
     classes.push('libur')
   }
-  
+
   return classes.join(' ')
 }
 
@@ -296,8 +291,46 @@ const getHolidayForDate = (date) => {
   return monthHolidays.value.find(h => h.date === date)
 }
 
+const isWeekendDate = (date) => {
+  const d = new Date(currentYear.value, currentMonth.value, date)
+  const day = d.getDay()
+  return day === 0 || day === 6
+}
+
 const updateMonthHolidays = () => {
-  monthHolidays.value = getHolidaysForMonth(currentMonth.value, currentYear.value, holidays.value)
+  const national = getHolidaysForMonth(currentMonth.value, currentYear.value, holidays.value)
+  // Merge with custom holidays for current month
+  const m = currentMonth.value + 1
+  const y = currentYear.value
+  const custom = customHolidays.value
+    .filter(h => {
+      const [hy, hm] = h.date.split('-').map(Number)
+      return hy === y && hm === m
+    })
+    .map(h => ({
+      date: parseInt(h.date.split('-')[2]),
+      name: h.name,
+      isCustom: true,
+    }))
+  const merged = [...national]
+  for (const ch of custom) {
+    if (!merged.some(m => m.date === ch.date)) {
+      merged.push(ch)
+    }
+  }
+  monthHolidays.value = merged
+}
+
+const fetchCustomHolidays = async () => {
+  try {
+    const { data } = await api.get('/holidays', {
+      params: { month: currentMonth.value + 1, year: currentYear.value }
+    })
+    customHolidays.value = data
+    updateMonthHolidays()
+  } catch (e) {
+    console.error('Fetch custom holidays error:', e)
+  }
 }
 
 const formatFullDate = (date) => {
@@ -330,10 +363,10 @@ const cancelEdit = () => {
 const saveEdit = async () => {
   if (!editForm.value.status) return
   saving.value = true
-  
+
   try {
     const dateObj = new Date(currentYear.value, currentMonth.value, selectedDate.value)
-    
+
     // Use admin endpoint which handles both create and update
     await api.post('/attendance/admin', {
       guruId: guruId.value,
@@ -342,9 +375,9 @@ const saveEdit = async () => {
       status: editForm.value.status,
       notes: editForm.value.notes
     })
-    
+
     success('Absensi berhasil disimpan')
-    
+
     // Refresh attendance data
     await fetchAttendance()
     isEditing.value = false
@@ -363,8 +396,8 @@ const prevMonth = () => {
   } else {
     currentMonth.value--
   }
+  fetchCustomHolidays()
   fetchAttendance()
-  updateMonthHolidays()
 }
 
 const nextMonth = () => {
@@ -375,8 +408,8 @@ const nextMonth = () => {
   } else {
     currentMonth.value++
   }
+  fetchCustomHolidays()
   fetchAttendance()
-  updateMonthHolidays()
 }
 
 const goBack = () => {
@@ -404,7 +437,7 @@ const fetchAttendance = async () => {
     // Filter for this teacher only
     const teacherRecords = data.filter(a => a.guruId === guruId.value)
     attendanceData.value = teacherRecords
-    
+
     // Fallback: if teacher wasn't fetched, try to get name from attendance data
     if (!teacher.value && teacherRecords.length > 0 && teacherRecords[0].guruName) {
       teacher.value = {
@@ -420,10 +453,11 @@ const fetchAttendance = async () => {
 
 onMounted(async () => {
   loading.value = true
-  // Fetch holidays first
+  // Fetch national holidays first
   holidays.value = await fetchHolidays()
-  updateMonthHolidays()
-  
+  // Fetch custom holidays then merge
+  await fetchCustomHolidays()
+
   await Promise.all([fetchTeacher(), fetchAttendance()])
   loading.value = false
 })
@@ -469,8 +503,13 @@ onMounted(async () => {
 
 /* Skeleton Animation */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-avatar-lg,
@@ -633,9 +672,18 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.stat-box.hadir .stat-value { color: #2e7d32; }
-.stat-box.tidak .stat-value { color: #c62828; }
-.stat-box.gaji .stat-value { color: #e65100; font-size: 1rem; }
+.stat-box.hadir .stat-value {
+  color: #2e7d32;
+}
+
+.stat-box.tidak .stat-value {
+  color: #c62828;
+}
+
+.stat-box.gaji .stat-value {
+  color: #e65100;
+  font-size: 1rem;
+}
 
 .stat-box .stat-label {
   font-size: 0.75rem;
@@ -800,8 +848,13 @@ onMounted(async () => {
   margin-top: 2px;
 }
 
-.calendar-cell.hadir .cell-status { color: #2e7d32; }
-.calendar-cell.tidak .cell-status { color: #c62828; }
+.calendar-cell.hadir .cell-status {
+  color: #2e7d32;
+}
+
+.calendar-cell.tidak .cell-status {
+  color: #c62828;
+}
 
 /* Legend */
 .calendar-legend {
@@ -827,10 +880,25 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
-.legend-dot.hadir { background: rgba(76, 175, 80, 0.3); border: 2px solid #4caf50; }
-.legend-dot.tidak { background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; }
-.legend-dot.empty { background: var(--gray-100); border: 1px dashed var(--gray-300); }
-.legend-dot.libur { background: rgba(255, 193, 7, 0.4); border: 2px solid #ffc107; }
+.legend-dot.hadir {
+  background: rgba(76, 175, 80, 0.3);
+  border: 2px solid #4caf50;
+}
+
+.legend-dot.tidak {
+  background: rgba(244, 67, 54, 0.3);
+  border: 2px solid #f44336;
+}
+
+.legend-dot.empty {
+  background: var(--gray-100);
+  border: 1px dashed var(--gray-300);
+}
+
+.legend-dot.libur {
+  background: rgba(255, 193, 7, 0.4);
+  border: 2px solid #ffc107;
+}
 
 /* Date Detail Popup */
 .popup-overlay {
@@ -925,13 +993,13 @@ onMounted(async () => {
     align-items: flex-start;
     padding: var(--space-md);
   }
-  
+
   .teacher-stats {
     width: 100%;
     justify-content: space-between;
     gap: var(--space-sm);
   }
-  
+
   .stat-box {
     flex: 1;
     min-width: 0;
@@ -941,20 +1009,20 @@ onMounted(async () => {
   .stat-box .stat-value {
     font-size: 0.9rem;
   }
-  
+
   .calendar-legend {
     flex-wrap: wrap;
     gap: var(--space-sm);
     margin-top: var(--space-md);
   }
-  
+
   .legend-item {
     font-size: 0.7rem;
   }
 
   /* Calendar Responsive Fixes */
   .calendar-section {
-    padding: var(--space-sm); 
+    padding: var(--space-sm);
   }
 
   .calendar-header {
@@ -964,7 +1032,7 @@ onMounted(async () => {
   .calendar-header h2 {
     font-size: 0.9rem;
   }
-  
+
   .nav-btn {
     width: 32px;
     height: 32px;
@@ -1001,15 +1069,15 @@ onMounted(async () => {
   .calendar-section {
     padding: 4px;
   }
-  
+
   .calendar-grid {
     gap: 1px;
   }
-  
+
   .cell-date {
     font-size: 0.7rem;
   }
-  
+
   .cell-status {
     font-size: 8px;
   }
@@ -1017,7 +1085,8 @@ onMounted(async () => {
 
 
 /* Edit Mode Styles */
-.btn-edit, .btn-add {
+.btn-edit,
+.btn-add {
   margin-top: var(--space-lg);
   width: 100%;
 }
