@@ -367,8 +367,9 @@
                     {{ getTeacherAttendanceForDate(selectedDate).notes || "-" }}
                   </p>
 
-                  <div v-if="isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)" class="mt-2">
-                    <button class="btn btn-sm btn-outline-secondary" @click="
+                  <div v-if="isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
+                    class="mt-2 text-center">
+                    <button class="btn-action-secondary mx-auto" @click="
                       openAddModal(
                         selectedDate,
                         selectedTeacherId,
@@ -385,8 +386,8 @@
 
                 <div
                   v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
-                  class="mt-3">
-                  <button class="btn btn-sm btn-outline-primary" @click="openAddModal(selectedDate, selectedTeacherId)">
+                  class="mt-3 text-center">
+                  <button class="btn-action-primary mx-auto" @click="openAddModal(selectedDate, selectedTeacherId)">
                     + Input Absensi
                   </button>
                 </div>
@@ -511,11 +512,13 @@
           <h4>Tambah Hari Libur</h4>
           <div class="form-group">
             <label class="form-label">Tanggal Mulai</label>
-            <input v-model="holidayForm.startDate" type="date" class="form-input" />
+            <input v-model="holidayForm.startDate" type="date" class="form-input" :min="holidayMinDate"
+              :max="holidayMaxDate" />
           </div>
           <div class="form-group">
             <label class="form-label">Tanggal Selesai (opsional, untuk range)</label>
-            <input v-model="holidayForm.endDate" type="date" class="form-input" />
+            <input v-model="holidayForm.endDate" type="date" class="form-input" :min="holidayMinDate"
+              :max="holidayMaxDate" />
           </div>
           <div class="form-group">
             <label class="form-label">Keterangan Libur</label>
@@ -1010,7 +1013,6 @@ const prevMonth = () => {
   }
   // Update selectedMonth to sync with calendar
   selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
-  fetchCustomHolidays();
   fetchData();
 };
 
@@ -1024,7 +1026,6 @@ const nextMonth = () => {
   }
   // Update selectedMonth to sync with calendar
   selectedMonth.value = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, "0")}`;
-  fetchCustomHolidays();
   fetchData();
 };
 
@@ -1049,6 +1050,9 @@ const fetchData = async () => {
     currentMonth.value = month - 1;
     currentYear.value = year;
 
+    // Fetch custom holidays for the selected month
+    await fetchCustomHolidays();
+
     const { data: guruData } = await api.get("/users?role=guru");
     teachers.value = guruData.sort((a, b) =>
       a.displayName.localeCompare(b.displayName),
@@ -1059,8 +1063,6 @@ const fetchData = async () => {
       params: { month, year },
     });
     attendanceData.value = attData;
-
-    updateMonthHolidays();
   } catch (e) {
     console.error("Fetch error:", e);
     showError("Gagal memuat data. Periksa izin akses.");
@@ -1338,6 +1340,20 @@ const closeHolidayModal = () => {
   showHolidayModal.value = false;
 };
 
+// Computed for holiday modal date limits
+const holidayMinDate = computed(() => {
+  const m = String(currentMonth.value + 1).padStart(2, '0');
+  const y = currentYear.value;
+  return `${y}-${m}-01`;
+});
+
+const holidayMaxDate = computed(() => {
+  const m = String(currentMonth.value + 1).padStart(2, '0');
+  const y = currentYear.value;
+  const lastDay = new Date(y, currentMonth.value + 1, 0).getDate();
+  return `${y}-${m}-${lastDay}`;
+});
+
 const formatHolidayDate = (dateStr) => {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('id-ID', {
@@ -1416,10 +1432,7 @@ onMounted(async () => {
   // Fetch national holidays
   holidays.value = await fetchHolidays();
 
-  // Fetch custom holidays then merge
-  await fetchCustomHolidays();
-
-  // Fetch attendance data
+  // Fetch attendance data (also fetches custom holidays internally)
   await fetchData();
 });
 
@@ -1586,7 +1599,6 @@ onUnmounted(() => {
 .summary-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .summary-value {
@@ -1743,7 +1755,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+
   padding: 0;
   border-radius: var(--radius-md);
   position: relative;
@@ -2548,10 +2560,9 @@ onUnmounted(() => {
   }
 
   .mini-avatar {
-    width: 10px;
-    /* Smaller avatars */
-    height: 10px;
-    font-size: 0.3rem;
+    width: 14px;
+    height: 14px;
+    font-size: 0.4rem;
   }
 
   .more-indicator {
@@ -2643,11 +2654,25 @@ onUnmounted(() => {
   .teachers-stats {
     padding: var(--space-md) !important;
   }
+
+  .mini-avatar {
+    width: 10px;
+    /* Smaller avatars */
+    height: 10px;
+    font-size: 0.3rem;
+  }
 }
 
 @media (max-width: 430px) {
   .header-actions select {
     flex: 1 !important;
+  }
+
+  .mini-avatar {
+    width: 8px !important;
+    /* Smaller avatars */
+    height: 8px !important;
+    font-size: 0.2rem !important;
   }
 }
 
@@ -2773,9 +2798,63 @@ onUnmounted(() => {
 }
 
 /* ===== RESPONSIVE MOBILE STYLES ===== */
+/* Custom Action Buttons */
+.btn-action-primary {
+  background: linear-gradient(135deg, #4caf50, #43a047);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(76, 175, 80, 0.3), 0 2px 4px -1px rgba(76, 175, 80, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #43a047, #388e3c);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(76, 175, 80, 0.4), 0 4px 6px -2px rgba(76, 175, 80, 0.2);
+}
+
+.btn-action-secondary {
+  background: white;
+  color: #4b5563;
+  padding: 8px 24px;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+.btn-action-secondary:hover {
+  border-color: #d1d5db;
+  color: #1f2937;
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 @media (max-width: 768px) {
   .admin-attendance-view {
     padding-top: 56px;
+  }
+
+  .summary-content {
+
+    align-items: center;
   }
 
   .page-header {
@@ -2886,9 +2965,9 @@ onUnmounted(() => {
   }
 
   .mini-avatar {
-    width: 14px;
-    height: 14px;
-    font-size: 0.4rem;
+    width: 12px;
+    height: 12px;
+    font-size: 0.35rem;
   }
 
   .more-indicator {
@@ -2969,7 +3048,7 @@ onUnmounted(() => {
   }
 
   .teacher-list-popup {
-    grid-template-columns: 1fr;
+
     padding: 0 var(--space-sm);
   }
 
@@ -3024,9 +3103,7 @@ onUnmounted(() => {
     font-size: 1.1rem;
   }
 
-  .status-buttons {
-    flex-direction: column;
-  }
+
 
   /* Holiday Modal */
   .holiday-modal {
@@ -3041,6 +3118,8 @@ onUnmounted(() => {
 
 /* Extra small screens */
 @media (max-width: 400px) {
+
+
   .summary-card {
     padding: var(--space-sm);
   }
@@ -3066,9 +3145,10 @@ onUnmounted(() => {
   }
 
   .mini-avatar {
-    width: 12px;
-    height: 12px;
-    font-size: 0.35rem;
+    width: 8px;
+    /* Smaller avatars */
+    height: 8px;
+    font-size: 0.2rem;
   }
 
   .page-header h1 {
