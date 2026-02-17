@@ -74,7 +74,7 @@
         </div>
       </div>
       <div class="summary-card glass-card">
-        <div class="summary-icon">📅</div>
+        <div class="summary-icon">🗓️</div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton"></span>
           <span v-else class="summary-value">{{ activeDays }} Hari</span>
@@ -1586,6 +1586,7 @@ onUnmounted(() => {
 .summary-content {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .summary-value {
