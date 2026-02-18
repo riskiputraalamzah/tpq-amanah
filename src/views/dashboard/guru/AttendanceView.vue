@@ -296,15 +296,17 @@ const selectedCalendarDate = ref(null)
 const holidays = ref([])
 const monthHolidays = ref([])
 const customHolidays = ref([])
+// Store current month custom holidays separately for "Today" check
+const currentMonthCustomHolidays = ref([])
 
 // Computed for holidays
 const todayHoliday = computed(() => {
   // Check national holidays first
   const national = isTodayHoliday(holidays.value)
   if (national.isHoliday) return national
-  // Check custom holidays for today
+  // Check custom holidays for today using the separately fetched list
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const customH = customHolidays.value.find(h => h.date === todayStr)
+  const customH = currentMonthCustomHolidays.value.find(h => h.date === todayStr)
   if (customH) {
     return { isHoliday: true, holidayName: customH.name, isCustom: true }
   }
@@ -471,6 +473,19 @@ const fetchCustomHolidays = async () => {
   }
 }
 
+// Fetch custom holidays specifically for the current real-time month
+// This ensures "Today" checks are always accurate even when viewing other months in calendar
+const fetchCurrentMonthCustomHolidays = async () => {
+  try {
+    const { data } = await api.get('/holidays', {
+      params: { month: today.getMonth() + 1, year: today.getFullYear() }
+    })
+    currentMonthCustomHolidays.value = data
+  } catch (e) {
+    console.error('Fetch current month custom holidays error:', e)
+  }
+}
+
 const formatCalendarDate = (date) => {
   const d = new Date(calendarYear.value, calendarMonth.value, date)
   return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
@@ -634,7 +649,10 @@ onMounted(async () => {
   // Fetch national holidays
   holidays.value = await fetchHolidays()
   // Fetch custom holidays then merge
-  await fetchCustomHolidays()
+  await Promise.all([
+    fetchCustomHolidays(),
+    fetchCurrentMonthCustomHolidays()
+  ])
 
   // Fetch attendance
   await fetchAttendance()
