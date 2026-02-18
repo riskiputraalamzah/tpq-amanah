@@ -386,6 +386,131 @@
       </div>
     </section>
 
+    <!-- E-Kitab At-Tartil Section -->
+    <section id="at-tartil" class="py-20 lg:py-28 bg-gradient-primary relative overflow-hidden">
+      <!-- Background Decorations -->
+      <div class="absolute inset-0 islamic-pattern opacity-5"></div>
+      <div class="absolute inset-0 bg-gradient-radial from-accent-400/8 via-transparent to-transparent"></div>
+      <div class="absolute top-10 right-10 w-32 h-32 bg-accent-400/10 rounded-full blur-3xl animate-pulse-slow"></div>
+      <div class="absolute bottom-20 left-10 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-float"></div>
+
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+          <!-- Left: 3D Book Display -->
+          <div class="flex justify-center order-2 lg:order-1 w-full">
+            <div class="relative w-full max-w-xl lg:max-w-none px-4 sm:px-8 lg:px-4">
+              <!-- Glow Behind Books -->
+              <div
+                class="absolute inset-0 -m-8 bg-gradient-to-b from-accent-400/20 via-accent-400/10 to-transparent rounded-full blur-3xl">
+              </div>
+
+              <!-- Book Grid -->
+              <div class="relative z-10 grid grid-cols-3 gap-5 sm:gap-6 lg:gap-8 w-full">
+                <div v-for="jilid in 6" :key="jilid" class="group cursor-pointer">
+                  <div class="at-tartil-book" :style="{ animationDelay: (jilid * 0.15) + 's' }">
+                    <div class="at-tartil-spine"></div>
+                    <div class="at-tartil-cover">
+                      <img :src="`https://at-tartil.riskiputraalamzah.my.id/img/tartil${jilid}/cover.webp`"
+                        :alt="`At-Tartil Jilid ${jilid}`" loading="lazy"
+                        class="w-full h-full object-cover rounded-r-md" />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Content -->
+          <div class="order-1 lg:order-2 text-center lg:text-left">
+            <!-- Badge -->
+            <div
+              class="inline-flex items-center gap-2 px-4 py-2 bg-accent-400/15 backdrop-blur-sm border border-accent-400/30 rounded-full text-accent-300 text-sm font-semibold mb-6">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0L14.59 8.41L23 11L14.59 13.59L12 22L9.41 13.59L1 11L9.41 8.41L12 0Z" />
+              </svg>
+              Inovasi Digital TPQ AMANAH
+            </div>
+
+            <!-- Heading -->
+            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 font-jakarta leading-tight">
+              E-Kitab<br />
+              <span class="text-accent-300 drop-shadow-[0_0_20px_rgba(255,213,79,0.3)]">At-Tartil</span>
+            </h2>
+
+            <!-- Description -->
+            <p class="text-base sm:text-lg text-white/80 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0 font-inter">
+              Kini belajar mengaji semakin mudah! TPQ AMANAH menghadirkan
+              <span class="text-accent-300 font-semibold">E-Kitab At-Tartil</span> dalam format digital
+              yang bisa diakses kapan saja dan di mana saja. Tampilan flipbook interaktif yang mirip dengan buku asli!
+            </p>
+
+            <!-- Features -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+              <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                <div class="w-10 h-10 rounded-lg bg-accent-400/20 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-white font-semibold text-sm">6 Jilid</p>
+                  <p class="text-white/60 text-xs">Lengkap</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                <div class="w-10 h-10 rounded-lg bg-accent-400/20 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-white font-semibold text-sm">Mobile</p>
+                  <p class="text-white/60 text-xs">Friendly</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
+                <div class="w-10 h-10 rounded-lg bg-accent-400/20 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-accent-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-white font-semibold text-sm">Gratis</p>
+                  <p class="text-white/60 text-xs">100% Free</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA Button -->
+            <a href="https://at-tartil.riskiputraalamzah.my.id/" target="_blank" rel="noopener noreferrer"
+              class="group relative inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-primary-900 bg-accent-400 rounded-2xl shadow-lg shadow-accent-500/25 hover:shadow-accent-500/40 hover:-translate-y-1 hover:bg-accent-300 transition-all duration-300 overflow-hidden">
+              <!-- Shine Effect -->
+              <div
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700">
+              </div>
+              <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span class="relative z-10">Buka E-Kitab At-Tartil</span>
+              <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
     <!-- Teachers Section -->
     <section id="pengajar" class="py-20 lg:py-28 bg-gradient-to-b from-primary-50 to-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -501,7 +626,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h, nextTick } from 'vue'
+import Lenis from 'lenis'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import api from '@/services/api'
@@ -667,7 +793,28 @@ const fetchContent = async () => {
   }
 }
 
+
+let lenis = null
+
 onMounted(() => {
+  // Initialize Lenis
+  lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    orientation: 'vertical',
+    gestureOrientation: 'vertical',
+    smoothWheel: true,
+    wheelMultiplier: 1,
+    touchMultiplier: 2,
+  })
+
+  function raf(time) {
+    lenis.raf(time)
+    requestAnimationFrame(raf)
+  }
+
+  requestAnimationFrame(raf)
+
   fetchTeachers()
   fetchContent()
 
@@ -724,9 +871,36 @@ const animateCounters = () => {
 
 // Cleanup observer on unmount
 onUnmounted(() => {
+  if (lenis) {
+    lenis.destroy()
+    lenis = null
+  }
   mapObserver?.disconnect()
 })
 </script>
+
+<style>
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+</style>
 
 <style scoped>
 @keyframes spin {
@@ -797,5 +971,64 @@ onUnmounted(() => {
 
 #tentang .timeline-items {
   transform: translateX(-8px);
+}
+
+/* At-Tartil 3D Book Styles */
+.at-tartil-book {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4.2;
+  perspective: 600px;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+  animation: bookFloat 4s ease-in-out infinite;
+}
+
+.at-tartil-book:hover {
+  transform: rotateY(-8deg) scale(1.05);
+}
+
+.at-tartil-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 100%;
+  background: linear-gradient(to right, #0d3d13, #1b5e20);
+  transform: rotateY(0deg) translateZ(0px);
+  border-radius: 4px 0 0 4px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.at-tartil-cover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0 6px 6px 0;
+  overflow: hidden;
+  box-shadow:
+    4px 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(27, 94, 32, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+.at-tartil-book:hover .at-tartil-cover {
+  box-shadow:
+    6px 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 202, 40, 0.2);
+}
+
+@keyframes bookFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) rotateY(-3deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotateY(-3deg);
+  }
 }
 </style>
