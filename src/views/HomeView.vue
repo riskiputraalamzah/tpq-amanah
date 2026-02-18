@@ -411,9 +411,14 @@
                   <div class="at-tartil-book" :style="{ animationDelay: (jilid * 0.15) + 's' }">
                     <div class="at-tartil-spine"></div>
                     <div class="at-tartil-cover">
+                      <!-- Skeleton Loader -->
+                      <div v-if="!bookImagesLoaded[jilid]" class="book-skeleton"></div>
+
                       <img :src="`https://at-tartil.riskiputraalamzah.my.id/img/tartil${jilid}/cover.webp`"
-                        :alt="`At-Tartil Jilid ${jilid}`" loading="lazy"
-                        class="w-full h-full object-cover rounded-r-md" />
+                        :alt="`At-Tartil Jilid ${jilid}`" loading="lazy" decoding="async"
+                        class="w-full h-full object-cover rounded-r-md transition-opacity duration-500"
+                        :class="{ 'opacity-0': !bookImagesLoaded[jilid], 'opacity-100': bookImagesLoaded[jilid] }"
+                        @load="handleImageLoad(jilid)" />
                     </div>
                   </div>
 
@@ -507,6 +512,115 @@
             </a>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <!-- Schedule Section (NEW) -->
+    <section id="jadwal"
+      class="py-20 lg:py-28 bg-gradient-to-br from-primary-50 via-white to-primary-50 relative overflow-hidden">
+      <!-- Decorative Background -->
+      <div class="absolute inset-0 islamic-pattern opacity-5"></div>
+      <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-200 to-transparent">
+      </div>
+
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="section-title font-jakarta">Jam Mengaji</h2>
+          <p class="text-gray-500 mt-6 max-w-2xl mx-auto font-inter">Pilih waktu belajar yang sesuai dengan kenyamanan
+            putra-putri Anda</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
+          <!-- Sesi Sore -->
+          <div class="group relative">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-orange-100 to-amber-50 rounded-3xl transform rotate-1 group-hover:rotate-2 transition-transform duration-300">
+            </div>
+            <div
+              class="relative backdrop-blur-xl bg-white/80 border border-orange-100 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center gap-4 mb-6">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-bold text-primary-800 font-jakarta">Sesi Sore</h3>
+                  <p class="text-orange-500 font-medium font-inter">Waktu Belajar Efektif</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex items-center gap-3 text-gray-700 bg-orange-50/50 p-3 rounded-xl">
+                  <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-bold text-lg font-jakarta">15:30 - 17:00 WIB</span>
+                </div>
+                <div class="flex items-center gap-3 text-gray-600 px-3">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="font-inter">Senin - Jumat</span>
+                </div>
+              </div>
+
+              <!-- Shine effect -->
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-white/40 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-700">
+              </div>
+            </div>
+          </div>
+
+          <!-- Sesi Malam -->
+          <div class="group relative">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-indigo-100 to-purple-50 rounded-3xl transform -rotate-1 group-hover:-rotate-2 transition-transform duration-300">
+            </div>
+            <div
+              class="relative backdrop-blur-xl bg-white/80 border border-indigo-100 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center gap-4 mb-6">
+                <div
+                  class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-500">
+                  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-bold text-primary-800 font-jakarta">Sesi Malam</h3>
+                  <p class="text-indigo-500 font-medium font-inter">Suasana Lebih Tenang</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex items-center gap-3 text-gray-700 bg-indigo-50/50 p-3 rounded-xl">
+                  <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-bold text-lg font-jakarta">18:00 - 19:30 WIB</span>
+                </div>
+                <div class="flex items-center gap-3 text-gray-600 px-3">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="font-inter">Senin - Jumat</span>
+                </div>
+              </div>
+
+              <!-- Shine effect -->
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-white/40 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-700">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -782,6 +896,12 @@ const fetchTeachers = async () => {
   ]
 }
 
+// Track book image loading
+const bookImagesLoaded = ref({})
+const handleImageLoad = (index) => {
+  bookImagesLoaded.value[index] = true
+}
+
 const fetchContent = async () => {
   try {
     const { data } = await api.get('/content/about')
@@ -981,7 +1101,8 @@ html.lenis body {
   perspective: 600px;
   transform-style: preserve-3d;
   transition: transform 0.4s ease;
-  animation: bookFloat 4s ease-in-out infinite;
+  will-change: transform;
+  /* OPTIMIZATION: Promotes to a new layer */
 }
 
 .at-tartil-book:hover {
@@ -1029,6 +1150,31 @@ html.lenis body {
 
   50% {
     transform: translateY(-8px) rotateY(-3deg);
+  }
+}
+
+/* Skeleton Loading Animation */
+.book-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite linear;
+  border-radius: 0 6px 6px 0;
+  z-index: 5;
+  /* Ensure it covers the spine area if needed */
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
   }
 }
 </style>
