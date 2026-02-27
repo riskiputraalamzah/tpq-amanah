@@ -226,14 +226,14 @@
 
           <!-- Check-in Time - Below Date Header (for single teacher view) -->
           <div v-if="
-            selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)
+            !loading && selectedTeacherId !== 'all' && getTeacherCheckinTime(selectedDate)
           " class="popup-checkin-time-header">
             <span class="checkin-icon">🕐</span>
             <span>{{ getTeacherCheckinTime(selectedDate) }}</span>
           </div>
 
           <!-- Holiday Info -->
-          <div v-if="getHolidayForDate(selectedDate)" class="popup-holiday">
+          <div v-if="!loading && getHolidayForDate(selectedDate)" class="popup-holiday">
             <span class="holiday-icon">🎉</span>
             <div>
               <div class="holiday-label">
@@ -244,7 +244,51 @@
             </div>
           </div>
 
-          <div class="popup-content">
+          <div v-if="loading" class="popup-content">
+            <div class="calendar-loading p-4" style="padding-top: 0;">
+              <!-- Skeleton single teacher / status badge -->
+              <div v-if="selectedTeacherId !== 'all'" class="skeleton-grid"
+                style="grid-template-columns: 1fr; gap: 16px; align-items: center; justify-content: center; display: flex; flex-direction: column;">
+                <div class="skeleton-cell"
+                  style="width: 140px; height: 36px; border-radius: 9999px; margin-bottom: 8px;"></div>
+                <div class="skeleton-cell" style="width: 80%; height: 16px; border-radius: 4px;"></div>
+                <div class="skeleton-cell" style="width: 160px; height: 38px; border-radius: 9999px; margin-top: 24px;">
+                </div>
+              </div>
+
+              <!-- Skeleton for all teachers (List view) -->
+              <template v-else>
+                <div class="skeleton-section" style="margin-bottom: 24px;">
+                  <div class="skeleton-cell"
+                    style="width: 120px; height: 18px; border-radius: 4px; margin-bottom: 12px;"></div>
+                  <div class="skeleton-grid" style="grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px;">
+                    <div v-for="i in 4" :key="i" class="skeleton-item"
+                      style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--gray-50); border-radius: 8px;">
+                      <div class="skeleton-cell" style="width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                        <div class="skeleton-cell" style="width: 70%; height: 12px; border-radius: 3px;"></div>
+                        <div class="skeleton-cell" style="width: 40%; height: 10px; border-radius: 3px;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="skeleton-section">
+                  <div class="skeleton-cell"
+                    style="width: 100px; height: 18px; border-radius: 4px; margin-bottom: 12px;"></div>
+                  <div class="skeleton-grid" style="grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px;">
+                    <div v-for="i in 2" :key="'absent-' + i" class="skeleton-item"
+                      style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--gray-50); border-radius: 8px;">
+                      <div class="skeleton-cell" style="width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;">
+                      </div>
+                      <div class="skeleton-cell" style="width: 80%; height: 12px; border-radius: 3px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+          <div v-else class="popup-content">
             <template v-if="selectedTeacherId === 'all'">
               <!-- Holiday/Weekend Logic -->
               <div v-if="
@@ -387,7 +431,8 @@
                 <div
                   v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
                   class="mt-3 text-center">
-                  <button class="btn-action-primary mx-auto" @click="openAddModal(selectedDate, selectedTeacherId)">
+                  <button class="btn-action-primary mx-auto" @click="openAddModal(selectedDate, selectedTeacherId)"
+                    :disabled="loading">
                     + Input Absensi
                   </button>
                 </div>
