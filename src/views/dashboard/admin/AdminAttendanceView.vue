@@ -825,6 +825,7 @@ const assignTeacherColors = (teacherList) => {
 
 const getTeacherColor = (name) => {
   if (!name) return "#888888";
+  if (name.toLowerCase().includes("riski")) return "#000000";
   return teacherColorMap.value[name] || palette[0];
 };
 
