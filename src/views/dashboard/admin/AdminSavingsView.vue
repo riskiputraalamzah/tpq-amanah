@@ -9,19 +9,23 @@
     <div class="stats-grid" v-if="!loading">
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">📚</div>
-        <div class="stat-info"><span class="stat-val">{{ allBooks.length }}</span><span class="stat-label">Total Buku</span></div>
+        <div class="stat-info"><span class="stat-val">{{ allBooks.length }}</span><span class="stat-label">Total
+            Buku</span></div>
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">✅</div>
-        <div class="stat-info"><span class="stat-val">{{ allBooks.filter(b=>b.status==='active').length }}</span><span class="stat-label">Buku Aktif</span></div>
+        <div class="stat-info"><span class="stat-val">{{allBooks.filter(b => b.status === 'active').length}}</span><span
+            class="stat-label">Buku Aktif</span></div>
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#f6d365,#fda085)">💰</div>
-        <div class="stat-info"><span class="stat-val">Rp {{ formatCurrency(grandTotal) }}</span><span class="stat-label">Grand Total</span></div>
+        <div class="stat-info"><span class="stat-val">Rp {{ formatCurrency(grandTotal) }}</span><span
+            class="stat-label">Grand Total</span></div>
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">📋</div>
-        <div class="stat-info"><span class="stat-val">{{ totalTransactions }}</span><span class="stat-label">Total Transaksi</span></div>
+        <div class="stat-info"><span class="stat-val">{{ totalTransactions }}</span><span class="stat-label">Total
+            Transaksi</span></div>
       </div>
     </div>
 
@@ -43,7 +47,7 @@
         </select>
       </div>
       <div class="filter-item">
-        <input v-model="searchQ" type="text" class="search-input" placeholder="Cari judul buku..."/>
+        <input v-model="searchQ" type="text" class="search-input" placeholder="Cari judul buku..." />
       </div>
     </div>
 
@@ -56,18 +60,14 @@
     <div v-else-if="filteredBooks.length === 0" class="empty-state glass-card">
       <div class="empty-icon">🏦</div>
       <h3>{{ allBooks.length === 0 ? 'Belum Ada Buku Catatan' : 'Tidak Ada Hasil' }}</h3>
-      <p>{{ allBooks.length === 0 ? 'Guru belum membuat buku catatan keuangan apapun' : 'Coba ubah filter pencarian' }}</p>
+      <p>{{ allBooks.length === 0 ? 'Guru belum membuat buku catatan keuangan apapun' : 'Coba ubah filter pencarian' }}
+      </p>
     </div>
 
     <!-- Books List -->
     <div v-else class="books-grid">
-      <div
-        v-for="book in filteredBooks"
-        :key="book.id"
-        class="book-card glass-card"
-        :class="{ closed: book.status === 'closed' }"
-        @click="router.push(`/dashboard/savings/${book.id}`)"
-      >
+      <div v-for="book in filteredBooks" :key="book.id" class="book-card glass-card"
+        :class="{ closed: book.status === 'closed' }" @click="router.push(`/dashboard/savings/${book.id}`)">
         <div class="book-top">
           <div class="book-left">
             <span class="book-icon">📒</span>
@@ -154,58 +154,287 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.admin-savings { padding-top: 0; }
-.page-header { margin-bottom: var(--space-xl); }
-.page-header h1 { font-size: 1.75rem; color: var(--primary-dark); }
-.page-header p { color: var(--gray-600); margin-top: 2px; }
+.admin-savings {
+  padding-top: 0;
+}
 
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl); }
-@media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 400px) { .stats-grid { grid-template-columns: 1fr; } }
-.stat-card { display: flex; align-items: center; gap: var(--space-md); padding: var(--space-lg); }
-.stat-icon { width: 48px; height: 48px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-val { font-weight: 700; color: var(--primary-dark); font-size: 1rem; }
-.stat-label { font-size: 0.72rem; color: var(--gray-500); margin-top: 2px; }
+.page-header {
+  margin-bottom: var(--space-xl);
+}
 
-.filter-bar { display: flex; align-items: center; gap: var(--space-lg); padding: var(--space-lg) var(--space-xl); margin-bottom: var(--space-xl); flex-wrap: wrap; }
-.filter-item { display: flex; align-items: center; gap: var(--space-sm); }
-.filter-label { font-size: 0.8rem; font-weight: 600; color: var(--gray-600); white-space: nowrap; }
-.filter-select { padding: var(--space-sm) var(--space-md); border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg); font-size: 0.8rem; outline: none; }
-.filter-select:focus { border-color: var(--primary); }
-.search-input { padding: var(--space-sm) var(--space-md); border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg); font-size: 0.8rem; outline: none; width: 180px; }
-.search-input:focus { border-color: var(--primary); }
+.page-header h1 {
+  font-size: 1.75rem;
+  color: var(--primary-dark);
+}
 
-.books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-lg); }
-@media (max-width: 480px) { .books-grid { grid-template-columns: 1fr; } }
+.page-header p {
+  color: var(--gray-600);
+  margin-top: 2px;
+}
 
-.book-skeleton { height: 180px; animation: pulse 1.5s ease infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
 
-.book-card { padding: var(--space-xl); cursor: pointer; transition: all 0.25s ease; }
-.book-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(27,94,32,0.18); }
-.book-card.closed { opacity: 0.7; }
-.book-card.closed:hover { transform: none; }
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
-.book-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); }
-.book-left { display: flex; align-items: center; gap: var(--space-md); }
-.book-icon { font-size: 1.8rem; }
-.book-title { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 2px; }
-.guru-tag { font-size: 0.72rem; color: var(--gray-500); }
-.book-badge { font-size: 0.65rem; font-weight: 600; padding: 3px 10px; border-radius: var(--radius-full); text-transform: uppercase; white-space: nowrap; }
-.book-badge.active { background: rgba(76,175,80,0.15); color: var(--success); }
-.book-badge.closed { background: rgba(158,158,158,0.15); color: var(--gray-500); }
+@media (max-width: 400px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-.book-desc { font-size: 0.78rem; color: var(--gray-400); margin-bottom: var(--space-md); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.book-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); background: var(--gray-50); border-radius: var(--radius-lg); padding: var(--space-md); margin-bottom: var(--space-md); }
-.bstat { display: flex; flex-direction: column; align-items: center; }
-.bstat-val { font-weight: 700; color: var(--primary-dark); font-size: 0.875rem; }
-.bstat-val.amount { font-size: 0.75rem; color: var(--success); }
-.bstat-label { font-size: 0.65rem; color: var(--gray-500); margin-top: 2px; }
-.book-date { font-size: 0.72rem; color: var(--gray-400); text-align: right; }
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
 
-.empty-state { text-align: center; padding: var(--space-3xl) var(--space-xl); }
-.empty-icon { font-size: 3.5rem; margin-bottom: var(--space-lg); }
-.empty-state h3 { color: var(--primary-dark); margin-bottom: var(--space-sm); }
-.empty-state p { color: var(--gray-500); font-size: 0.9rem; }
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-val {
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-size: 1rem;
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.filter-select:focus {
+  border-color: var(--primary);
+}
+
+.search-input {
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  outline: none;
+  width: 180px;
+}
+
+.search-input:focus {
+  border-color: var(--primary);
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+}
+
+@media (max-width: 480px) {
+  .books-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.book-skeleton {
+  height: 180px;
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1
+  }
+
+  50% {
+    opacity: .5
+  }
+}
+
+.book-card {
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(27, 94, 32, 0.18);
+}
+
+.book-card.closed {
+  opacity: 0.7;
+}
+
+.book-card.closed:hover {
+  transform: none;
+}
+
+.book-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+}
+
+.book-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.book-icon {
+  font-size: 1.8rem;
+}
+
+.book-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 2px;
+}
+
+.guru-tag {
+  font-size: 0.72rem;
+  color: var(--gray-500);
+}
+
+.book-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.book-badge.active {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+}
+
+.book-badge.closed {
+  background: rgba(158, 158, 158, 0.15);
+  color: var(--gray-500);
+}
+
+.book-desc {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  margin-bottom: var(--space-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.book-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.bstat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bstat-val {
+  font-weight: 700;
+  color: var(--primary-dark);
+  font-size: 0.875rem;
+}
+
+.bstat-val.amount {
+  font-size: 0.75rem;
+  color: var(--success);
+}
+
+.bstat-label {
+  font-size: 0.65rem;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.book-date {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  text-align: right;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+}
+
+.empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: var(--space-lg);
+}
+
+.empty-state h3 {
+  color: var(--primary-dark);
+  margin-bottom: var(--space-sm);
+}
+
+.empty-state p {
+  color: var(--gray-500);
+  font-size: 0.9rem;
+}
 </style>
