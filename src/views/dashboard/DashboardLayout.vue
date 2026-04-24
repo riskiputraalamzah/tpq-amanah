@@ -1,5 +1,7 @@
 <template>
   <div class="dashboard-layout" :class="{ 'guru-layout': isGuru }">
+    <!-- Announcement Banner (global, rendered via Teleport in component) -->
+    <AnnouncementBanner />
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
       <router-link to="/" class="sidebar-header">
@@ -72,6 +74,20 @@
             </svg>
             Kelola Penilaian
           </router-link>
+          <router-link to="/dashboard/admin-savings" class="sidebar-link" :class="{ active: isActive('/dashboard/admin-savings') || isActive('/dashboard/savings') }">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/>
+              <path d="M12 6v6l4 2"/>
+              <path d="M8 14h8"/>
+            </svg>
+            Tabungan
+          </router-link>
+          <router-link to="/dashboard/announcements" class="sidebar-link" :class="{ active: isActive('/dashboard/announcements') }">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Pengumuman
+          </router-link>
         </template>
 
 
@@ -96,6 +112,14 @@
               <line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
             Penilaian
+          </router-link>
+          <router-link to="/dashboard/savings" class="sidebar-link" :class="{ active: isActive('/dashboard/savings') }">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+              <path d="M8 14h8"/>
+            </svg>
+            Tabungan
           </router-link>
         </template>
       </nav>
@@ -216,15 +240,19 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAnnouncementStore } from '@/stores/announcements'
+import AnnouncementBanner from '@/components/AnnouncementBanner.vue'
 
 const logoUrl = new URL('@/assets/logo.png', import.meta.url).href
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+const announcementStore = useAnnouncementStore()
 
 const user = computed(() => authStore.user)
 const isAdmin = computed(() => authStore.isAdmin)
@@ -271,9 +299,16 @@ const closeSidebar = () => {
 }
 
 const handleLogout = async () => {
+  announcementStore.reset()
   await authStore.logout()
   router.push('/')
 }
+
+onMounted(() => {
+  if (authStore.isAuthenticated && !announcementStore.fetched) {
+    announcementStore.fetchActive()
+  }
+})
 </script>
 
 <style scoped>

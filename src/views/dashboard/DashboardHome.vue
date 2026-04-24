@@ -210,6 +210,18 @@
           <span>Buat Penilaian</span>
         </router-link>
 
+        <!-- Tabungan Guru -->
+        <router-link to="/dashboard/savings" class="action-card glass-card savings-action" v-if="isGuru">
+          <div class="action-icon savings-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+              <path d="M8 14h8"/>
+            </svg>
+          </div>
+          <span>Tabungan</span>
+        </router-link>
+
         <template v-if="isAdmin">
           <router-link to="/dashboard/users" class="action-card glass-card">
             <div class="action-icon">
@@ -231,6 +243,18 @@
               </svg>
             </div>
             <span>Edit Konten</span>
+          </router-link>
+
+          <!-- Tabungan Admin -->
+          <router-link to="/dashboard/admin-savings" class="action-card glass-card savings-action">
+            <div class="action-icon savings-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+                <path d="M8 14h8"/>
+              </svg>
+            </div>
+            <span>Tabungan</span>
           </router-link>
         </template>
       </div>
@@ -697,5 +721,15 @@ watch(() => user.value?.permissions, async (newVal) => {
 button.action-card {
   border: none;
   width: 100%;
+}
+
+.savings-icon {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%) !important;
+  color: white !important;
+}
+
+.savings-action:hover .savings-icon {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
 }
 </style>

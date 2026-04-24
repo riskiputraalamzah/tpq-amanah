@@ -78,6 +78,31 @@ const routes = [
                 name: 'GradingPeriod',
                 component: () => import('../views/dashboard/guru/GradingPeriodView.vue'),
                 meta: { role: 'guru' }
+            },
+            {
+                path: 'savings',
+                name: 'Savings',
+                component: () => import('../views/dashboard/guru/SavingsView.vue'),
+                meta: { role: 'guru' }
+            },
+            {
+                path: 'savings/:bookId',
+                name: 'SavingsDetail',
+                component: () => import('../views/dashboard/guru/SavingsDetailView.vue'),
+                meta: { role: ['guru', 'admin'] }
+            },
+            // Admin savings
+            {
+                path: 'admin-savings',
+                name: 'AdminSavings',
+                component: () => import('../views/dashboard/admin/AdminSavingsView.vue'),
+                meta: { role: 'admin' }
+            },
+            {
+                path: 'announcements',
+                name: 'AnnouncementManagement',
+                component: () => import('../views/dashboard/admin/AnnouncementManagement.vue'),
+                meta: { role: 'admin' }
             }
         ]
     },
