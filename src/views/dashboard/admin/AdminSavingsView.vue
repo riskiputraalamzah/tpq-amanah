@@ -1,8 +1,19 @@
-<template>
+﻿<template>
   <div class="admin-savings">
     <header class="page-header">
-      <h1>Rekap Notulen Keuangan</h1>
-      <p>Lihat semua buku catatan keuangan dari seluruh guru</p>
+      <div class="header-row">
+        <div>
+          <h1>Rekap Notulen Keuangan</h1>
+          <p>Lihat semua buku catatan keuangan dari seluruh guru</p>
+        </div>
+        <button class="btn-create" @click="showCreateModal = true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Buku Baru
+        </button>
+      </div>
     </header>
 
     <!-- Global Stats -->
@@ -14,8 +25,8 @@
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">✅</div>
-        <div class="stat-info"><span class="stat-val">{{allBooks.filter(b => b.status === 'active').length}}</span><span
-            class="stat-label">Buku Aktif</span></div>
+        <div class="stat-info"><span class="stat-val">{{allBooks.filter(b => b.status === 'active').length
+            }}</span><span class="stat-label">Buku Aktif</span></div>
       </div>
       <div class="stat-card glass-card">
         <div class="stat-icon" style="background:linear-gradient(135deg,#f6d365,#fda085)">💰</div>
@@ -76,7 +87,9 @@
               <span class="guru-tag">👤 {{ book.createdByName }}</span>
             </div>
           </div>
-          <span class="book-badge" :class="book.status">{{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}</span>
+          <span class="book-badge ms-auto mr-2" :class="book.status">{{ book.status === 'active' ? 'Aktif' : 'Ditutup'
+          }}</span>
+          <span v-if="book.isPublished" class="book-shared-pill">🌐 Bersama</span>
         </div>
         <p class="book-desc" v-if="book.description">{{ book.description }}</p>
         <div class="book-stats">
@@ -96,9 +109,37 @@
         <div class="book-date">{{ formatDate(book.createdAt) }}</div>
       </div>
     </div>
+
+    <!-- Create Book Modal -->
+    <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+      <div class="modal glass-card">
+        <div class="modal-header">
+          <h3>Buat Buku Baru</h3>
+          <button class="close-btn" @click="showCreateModal = false">&times;</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Judul Buku *</label>
+          <input v-model="createForm.title" type="text" class="form-input" placeholder="cth: Kas Guru April 2026"
+            maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi (Opsional)</label>
+          <textarea v-model="createForm.description" class="form-input" rows="3"
+            placeholder="Catatan tentang buku ini..."></textarea>
+        </div>
+        <div class="info-note">
+          🌐 Buku yang dibuat admin otomatis dipublish dan bisa dilihat oleh semua guru.
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showCreateModal = false">Batal</button>
+          <button class="btn-save" @click="createBook" :disabled="creating">
+            {{ creating ? 'Menyimpan...' : 'Buat Buku' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -106,10 +147,13 @@ import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
-const { error: showError } = useToast()
+const { success, error: showError } = useToast()
 
 const allBooks = ref([])
 const loading = ref(true)
+const showCreateModal = ref(false)
+const creating = ref(false)
+const createForm = ref({ title: '', description: '' })
 const filterGuru = ref('')
 const filterStatus = ref('')
 const searchQ = ref('')
@@ -139,6 +183,23 @@ const formatDate = (d) => {
   if (!d) return '-'
   const dt = d?.seconds ? new Date(d.seconds * 1000) : new Date(d)
   return isNaN(dt) ? '-' : dt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const createBook = async () => {
+  if (!createForm.value.title.trim()) { showError('Judul buku wajib diisi'); return }
+  creating.value = true
+  try {
+    await api.post('/savings/books', { ...createForm.value, isPublished: true })
+    success('Buku berhasil dibuat dan dipublish ke semua guru')
+    showCreateModal.value = false
+    createForm.value = { title: '', description: '' }
+    const { data } = await api.get('/savings/books')
+    allBooks.value = data
+  } catch (e) {
+    showError(e.response?.data?.error || 'Gagal membuat buku')
+  } finally {
+    creating.value = false
+  }
 }
 
 onMounted(async () => {
@@ -171,6 +232,36 @@ onMounted(async () => {
   color: var(--gray-600);
   margin-top: 2px;
 }
+
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.btn-create {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(27, 94, 32, 0.4);
+}
+
+
 
 .stats-grid {
   display: grid;
@@ -436,5 +527,121 @@ onMounted(async () => {
 .empty-state p {
   color: var(--gray-500);
   font-size: 0.9rem;
+}
+
+.book-shared-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(33, 150, 243, 0.12);
+  color: #1565C0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 460px;
+  padding: 28px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  color: var(--primary-dark);
+}
+
+.close-btn {
+  font-size: 1.4rem;
+  color: var(--gray-400);
+  padding: 0 4px;
+}
+
+.close-btn:hover {
+  color: var(--gray-700);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+}
+
+.info-note {
+  padding: 10px 14px;
+  background: rgba(33, 150, 243, 0.08);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid #1565C0;
+  font-size: 0.8rem;
+  color: #1565C0;
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  padding: 9px 20px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200);
+  color: var(--gray-600);
+  font-size: 0.875rem;
+}
+
+.btn-save {
+  padding: 9px 20px;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
 }
 </style>

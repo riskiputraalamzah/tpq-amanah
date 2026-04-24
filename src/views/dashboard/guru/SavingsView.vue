@@ -102,10 +102,18 @@
         :class="{ 'closed': book.status === 'closed' }" @click="goToDetail(book.id)">
         <div class="book-card-header">
           <div class="book-icon">📒</div>
-          <span class="book-status" :class="book.status">
-            {{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}
-          </span>
+          <div class="book-badges">
+            <span class="book-status" :class="book.status">
+              {{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}
+            </span>
+            <span v-if="book.isPublished" class="book-shared-badge">🌐 Bersama</span>
+            <span v-else-if="book.createdBy === authStore.user?.id" class="book-private-badge">🔒 Pribadi</span>
+          </div>
         </div>
+        <p v-if="book.createdBy !== authStore.user?.id" class="book-owner">
+          📌 Oleh {{ book.createdByName }}
+        </p>
+
         <h3 class="book-title">{{ book.title }}</h3>
         <p class="book-desc" v-if="book.description">{{ book.description }}</p>
         <div class="book-stats">
@@ -124,37 +132,57 @@
         </div>
         <div class="book-footer">
           <span class="book-date">{{ formatDate(book.createdAt) }}</span>
-          <div class="book-actions" @click.stop>
-            <button class="icon-btn edit" @click="openEditModal(book)" title="Edit">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          <!-- Dropdown menu: hanya owner yang bisa manage buku -->
+          <div v-if="book.createdBy === authStore.user?.id" class="book-menu-wrap" @click.stop>
+            <button class="dots-btn" @click="toggleMenu(book.id)" :aria-expanded="openMenuId === book.id">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
               </svg>
             </button>
-            <button class="icon-btn close-book" v-if="book.status === 'active'" @click="confirmClose(book)"
-              title="Tutup Buku">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-            <button class="icon-btn reopen" v-else @click="reopenBook(book)" title="Buka Kembali">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="1 4 1 10 7 10" />
-                <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
-              </svg>
-            </button>
-            <button class="icon-btn delete" @click="confirmDelete(book)" title="Hapus">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14H6L5 6" />
-                <path d="M10 11v6M14 11v6" />
-                <path d="M9 6V4h6v2" />
-              </svg>
-            </button>
+            <div v-if="openMenuId === book.id" class="book-dropdown">
+              <button class="dd-item" :class="{ active: book.isPublished }" @click="togglePublish(book); openMenuId = null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                {{ book.isPublished ? 'Jadikan Pribadi' : 'Publish ke Guru Lain' }}
+              </button>
+              <button class="dd-item" @click="openEditModal(book); openMenuId = null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit Buku
+              </button>
+              <button v-if="book.status === 'active'" class="dd-item warning" @click="confirmClose(book); openMenuId = null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+                Tutup Buku
+              </button>
+              <button v-else class="dd-item success" @click="reopenBook(book); openMenuId = null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+                </svg>
+                Buka Kembali
+              </button>
+              <div class="dd-divider"></div>
+              <button class="dd-item danger" @click="confirmDelete(book); openMenuId = null">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14H6L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4h6v2"/>
+                </svg>
+                Hapus Buku
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </div><!-- /.book-footer -->
+      </div><!-- /.book-card -->
+    </div><!-- /.books-grid -->
 
     <!-- Create/Edit Modal -->
     <div v-if="showFormModal" class="modal-overlay" @click.self="closeFormModal">
@@ -165,13 +193,29 @@
         </div>
         <div class="form-group">
           <label class="form-label">Judul Buku *</label>
-          <input v-model="form.title" type="text" class="form-input" placeholder="cth: Tabungan Ramadhan 2026"
-            maxlength="100" />
+          <input v-model="form.title" type="text" class="form-input" placeholder="cth: Tabungan Ramadhan 2026" maxlength="100" />
         </div>
         <div class="form-group">
           <label class="form-label">Deskripsi (Opsional)</label>
           <textarea v-model="form.description" class="form-input" rows="3"
             placeholder="Catatan tambahan tentang buku tabungan ini..."></textarea>
+        </div>
+        <!-- Publish toggle hanya saat buat baru atau edit buku milik sendiri -->
+        <div class="form-group" v-if="!editingBook || editingBook.createdBy === authStore.user?.id">
+          <label class="publish-toggle-label">
+            <span class="ptl-text">
+              <strong>{{ form.isPublished ? '🌐 Dipublish' : '🔒 Pribadi' }}</strong>
+              <span>{{ form.isPublished ? 'Semua guru bisa melihat & menginput data' : 'Hanya Anda yang bisa melihat buku ini' }}</span>
+            </span>
+            <button
+              type="button"
+              class="toggle-switch"
+              :class="{ on: form.isPublished }"
+              @click="form.isPublished = !form.isPublished"
+            >
+              <span class="toggle-knob"></span>
+            </button>
+          </label>
         </div>
         <div class="modal-actions">
           <button class="btn-cancel" @click="closeFormModal">Batal</button>
@@ -221,14 +265,21 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const { success, error: showError } = useToast()
+const authStore = useAuthStore()
 
 const books = ref([])
 const loading = ref(true)
 const saving = ref(false)
-const guideCollapsed = ref(true) // collapsed by default, user can expand
+const guideCollapsed = ref(true)
+const openMenuId = ref(null)
+
+const toggleMenu = (id) => {
+  openMenuId.value = openMenuId.value === id ? null : id
+}
 
 const showFormModal = ref(false)
 const showCloseModal = ref(false)
@@ -269,13 +320,13 @@ const goToDetail = (id) => router.push(`/dashboard/savings/${id}`)
 
 const openCreateModal = () => {
   editingBook.value = null
-  form.value = { title: '', description: '' }
+  form.value = { title: '', description: '', isPublished: false }
   showFormModal.value = true
 }
 
 const openEditModal = (book) => {
   editingBook.value = book
-  form.value = { title: book.title, description: book.description || '' }
+  form.value = { title: book.title, description: book.description || '', isPublished: book.isPublished ?? false }
   showFormModal.value = true
 }
 
@@ -296,7 +347,7 @@ const saveBook = async () => {
       success('Buku tabungan berhasil diperbarui')
     } else {
       await api.post('/savings/books', form.value)
-      success('Buku tabungan berhasil dibuat')
+      success(`Buku tabungan berhasil dibuat${form.value.isPublished ? ' dan dipublish ke semua guru' : ''}`)
     }
     closeFormModal()
     await fetchBooks()
@@ -304,6 +355,19 @@ const saveBook = async () => {
     showError(e.response?.data?.error || 'Gagal menyimpan buku tabungan')
   } finally {
     saving.value = false
+  }
+}
+
+const togglePublish = async (book) => {
+  const newState = !book.isPublished
+  try {
+    await api.put(`/savings/books/${book.id}`, { isPublished: newState })
+    // Replace array item to guarantee Vue reactivity
+    const idx = books.value.findIndex(b => b.id === book.id)
+    if (idx !== -1) books.value[idx] = { ...books.value[idx], isPublished: newState }
+    success(newState ? 'Buku dipublish — semua guru bisa melihatnya' : 'Buku dijadikan pribadi')
+  } catch (e) {
+    showError(e.response?.data?.error || 'Gagal mengubah status publish')
   }
 }
 
@@ -357,7 +421,10 @@ const deleteBook = async () => {
   }
 }
 
-onMounted(fetchBooks)
+onMounted(() => {
+  fetchBooks()
+  document.addEventListener('click', () => { openMenuId.value = null })
+})
 </script>
 
 <style scoped>
@@ -575,56 +642,89 @@ onMounted(fetchBooks)
   color: var(--gray-400);
 }
 
-.book-actions {
-  display: flex;
-  gap: var(--space-xs);
-}
+/* Dots dropdown menu */
+.book-menu-wrap { position: relative; }
 
-.icon-btn {
-  width: 30px;
-  height: 30px;
+.dots-btn {
+  width: 30px; height: 30px;
   border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-400); transition: all 0.2s;
+  background: transparent;
+}
+.dots-btn:hover { background: var(--gray-100); color: var(--gray-700); }
+
+.book-dropdown {
+  position: absolute; right: 0; bottom: 36px;
+  background: white; border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--gray-100);
+  min-width: 190px; z-index: 100;
+  padding: 6px 0; overflow: hidden;
 }
 
-.icon-btn.edit {
-  color: var(--info);
-  background: rgba(33, 150, 243, 0.1);
+.dd-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 16px;
+  font-size: 0.82rem; color: var(--gray-700); text-align: left;
+  transition: background 0.15s;
+}
+.dd-item:hover { background: var(--gray-50); }
+.dd-item.active { color: #1565C0; font-weight: 600; }
+.dd-item.warning { color: var(--warning); }
+.dd-item.success { color: var(--success); }
+.dd-item.danger { color: var(--error); }
+.dd-item.danger:hover { background: rgba(244, 67, 54, 0.06); }
+.dd-divider { height: 1px; background: var(--gray-100); margin: 4px 0; }
+
+
+
+/* Book badges */
+.book-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.book-shared-badge {
+  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(33, 150, 243, 0.12); color: #1565C0;
+  white-space: nowrap;
+}
+.book-private-badge {
+  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(158, 158, 158, 0.12); color: var(--gray-500);
+  white-space: nowrap;
+}
+.book-owner {
+  font-size: 0.72rem; color: var(--gray-400);
+  margin-bottom: var(--space-xs);
+  margin-top: calc(-1 * var(--space-xs));
 }
 
-.icon-btn.edit:hover {
-  background: rgba(33, 150, 243, 0.2);
+/* Publish toggle in form */
+.publish-toggle-label {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--gray-50); border-radius: var(--radius-lg);
+  border: 2px solid var(--gray-200); cursor: pointer; gap: var(--space-md);
 }
+.ptl-text { display: flex; flex-direction: column; gap: 2px; }
+.ptl-text strong { font-size: 0.875rem; color: var(--primary-dark); }
+.ptl-text span { font-size: 0.75rem; color: var(--gray-500); }
 
-.icon-btn.close-book {
-  color: var(--warning);
-  background: rgba(255, 152, 0, 0.1);
+.toggle-switch {
+  flex-shrink: 0;
+  width: 44px; height: 24px;
+  background: var(--gray-300); border-radius: 50px;
+  position: relative; transition: background 0.25s; cursor: pointer;
 }
+.toggle-switch.on { background: var(--primary); }
+.toggle-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle-switch.on .toggle-knob { transform: translateX(20px); }
 
-.icon-btn.close-book:hover {
-  background: rgba(255, 152, 0, 0.2);
-}
-
-.icon-btn.reopen {
-  color: var(--success);
-  background: rgba(76, 175, 80, 0.1);
-}
-
-.icon-btn.reopen:hover {
-  background: rgba(76, 175, 80, 0.2);
-}
-
-.icon-btn.delete {
-  color: var(--error);
-  background: rgba(244, 67, 54, 0.1);
-}
-
-.icon-btn.delete:hover {
-  background: rgba(244, 67, 54, 0.2);
-}
 
 /* Empty */
 .empty-state {

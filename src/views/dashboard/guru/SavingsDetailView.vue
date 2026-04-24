@@ -7,13 +7,71 @@
         </svg>
         Kembali
       </button>
-      <div class="header-info" v-if="book">
-        <div class="title-row">
-          <h1>{{ book.title }}</h1>
-          <span class="book-badge" :class="book.status">{{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}</span>
+      <div class="flex w-full">
+
+        <div class="header-info" v-if="book">
+          <div class="title-row">
+            <h1>{{ book.title }}</h1>
+            <span class="book-badge" :class="book.status">{{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}</span>
+            <span v-if="book.isPublished" class="badge-shared">🌐 Bersama</span>
+          </div>
+          <p v-if="book.description">{{ book.description }}</p>
+          <p class="book-meta">Dibuat oleh {{ book.createdByName }} &middot; {{ formatDate(book.createdAt) }}</p>
         </div>
-        <p v-if="book.description">{{ book.description }}</p>
-        <p class="book-meta">Dibuat oleh {{ book.createdByName }} · {{ formatDate(book.createdAt) }}</p>
+        <!-- Book action menu: hanya owner atau admin -->
+        <div v-if="book && canManageBook" class="book-action-wrap" @click.stop>
+          <button class="book-action-dots" @click="showBookMenu = !showBookMenu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="5" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="19" r="1.5" />
+            </svg>
+          </button>
+          <div v-if="showBookMenu" class="book-action-dropdown">
+            <button v-if="!authStore.isAdmin" class="bad-item" :class="{ active: book.isPublished }"
+              @click="toggleBookPublish(); showBookMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              {{ book.isPublished ? 'Jadikan Pribadi' : 'Publish ke Guru Lain' }}
+            </button>
+            <button class="bad-item" @click="openBookEdit(); showBookMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Buku
+            </button>
+            <button v-if="book.status === 'active'" class="bad-item warning"
+              @click="confirmBookClose(); showBookMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+              Tutup Buku
+            </button>
+            <button v-else class="bad-item success" @click="reopenThisBook(); showBookMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1 4 1 10 7 10" />
+                <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
+              </svg>
+              Buka Kembali
+            </button>
+            <div class="bad-divider"></div>
+            <button class="bad-item danger" @click="confirmBookDelete(); showBookMenu = false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14H6L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4h6v2" />
+              </svg>
+              Hapus Buku
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -26,17 +84,33 @@
       <!-- Summary Cards -->
       <div class="summary-grid">
         <div class="sum-card glass-card">
-          <div class="sum-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">👥</div>
+          <div class="sum-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)"><svg width="22" height="22"
+              viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg></div>
           <div class="sum-info"><span class="sum-val">{{ summary.length }}</span><span class="sum-label">Anggota</span>
           </div>
         </div>
         <div class="sum-card glass-card">
-          <div class="sum-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">📋</div>
+          <div class="sum-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)"><svg width="22" height="22"
+              viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <rect x="9" y="2" width="6" height="4" rx="1" />
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <line x1="9" y1="12" x2="15" y2="12" />
+              <line x1="9" y1="16" x2="15" y2="16" />
+            </svg></div>
           <div class="sum-info"><span class="sum-val">{{ transactions.length }}</span><span
               class="sum-label">Transaksi</span></div>
         </div>
         <div class="sum-card glass-card">
-          <div class="sum-icon" style="background:linear-gradient(135deg,#f6d365,#fda085)">💰</div>
+          <div class="sum-icon" style="background:linear-gradient(135deg,#f6d365,#fda085)"><svg width="22" height="22"
+              viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg></div>
           <div class="sum-info"><span class="sum-val">Rp {{ formatCurrency(totalBalance) }}</span><span
               class="sum-label">Total Terkumpul</span></div>
         </div>
@@ -88,8 +162,8 @@
           <!-- Amount -->
           <div class="form-group">
             <label class="form-label">Jumlah Setoran (Rp) *</label>
-            <input v-model="newTx.amount" type="number" class="form-input" placeholder="cth: 5000" min="1" step="1"
-              @input="sanitizeAmount" />
+            <input v-model="newTx.amount" type="text" inputmode="numeric" pattern="[0-9]*" class="form-input"
+              placeholder="cth: 5000" />
           </div>
           <!-- Date -->
           <div class="form-group">
@@ -107,9 +181,11 @@
         </div>
       </div>
 
-      <!-- Closed notice -->
-      <div v-else class="closed-notice glass-card">
-        🔒 Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat ditambahkan.
+      <div v-else class="closed-notice glass-card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg> Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat ditambahkan.
       </div>
 
       <!-- Per-Santri Summary -->
@@ -129,7 +205,7 @@
             <tbody>
               <tr v-for="s in summary" :key="s.santriId">
                 <td><span class="santri-name">{{ s.santriName }}</span></td>
-                <td class="center">{{ s.transactionCount }}x</td>
+                <td>{{ s.transactionCount }}x</td>
                 <td class="amount-cell">Rp {{ formatCurrency(s.balance) }}</td>
                 <td class=" muted">{{ formatDateTime(s.lastTransaction) }}</td>
               </tr>
@@ -151,8 +227,9 @@
             <div class="tx-info">
               <span class="tx-santri">{{ tx.santriName }}</span>
               <span class="tx-notes">{{ tx.notes || 'Tidak ada catatan' }}</span>
-              <span class="tx-meta">{{ formatDateTime(tx.date) }} · dicatat oleh {{ tx.recordedByName }}</span>
+              <span class="tx-meta">{{ formatDateTime(tx.date) }} &middot; dicatat oleh {{ tx.recordedByName }}</span>
             </div>
+
             <div class="tx-right">
               <span class="tx-amount">+Rp {{ formatCurrency(tx.amount) }}</span>
               <div class="tx-actions">
@@ -180,11 +257,11 @@
       <div class="modal glass-card">
         <div class="modal-header">
           <h3>Edit Transaksi</h3>
-          <button class="close-btn" @click="editingTx = null">×</button>
+          <button class="close-btn" @click="editingTx = null">&times;</button>
         </div>
         <div class="form-group">
           <label class="form-label">Jumlah (Rp)</label>
-          <input v-model="editForm.amount" type="number" class="form-input" min="1" step="1" />
+          <input v-model="editForm.amount" type="text" inputmode="numeric" pattern="[0-9]*" class="form-input" />
         </div>
         <div class="form-group">
           <label class="form-label">Waktu Setoran</label>
@@ -197,7 +274,7 @@
         <div class="modal-actions">
           <button class="btn-cancel" @click="editingTx = null">Batal</button>
           <button class="btn-save" @click="saveEditTx" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan'
-            }}</button>
+          }}</button>
         </div>
       </div>
     </div>
@@ -205,7 +282,13 @@
     <!-- Delete Tx Confirm -->
     <div v-if="deletingTx" class="modal-overlay" @click.self="deletingTx = null">
       <div class="modal glass-card confirm-modal">
-        <div class="confirm-icon">🗑️</div>
+        <div class="confirm-icon danger-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14H6L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M9 6V4h6v2" />
+          </svg></div>
         <h3>Hapus Transaksi?</h3>
         <p>Setoran <strong>Rp {{ formatCurrency(deletingTx.amount) }}</strong> atas nama <strong>{{
           deletingTx.santriName
@@ -213,7 +296,72 @@
         <div class="modal-actions">
           <button class="btn-cancel" @click="deletingTx = null">Batal</button>
           <button class="btn-delete" @click="deleteTx" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus'
-            }}</button>
+          }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Edit Modal -->
+    <div v-if="showBookEditModal" class="modal-overlay" @click.self="showBookEditModal = false">
+      <div class="modal glass-card">
+        <div class="modal-header">
+          <h3>Edit Buku</h3>
+          <button class="close-btn" @click="showBookEditModal = false">&times;</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Judul *</label>
+          <input v-model="bookEditForm.title" type="text" class="form-input" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi</label>
+          <textarea v-model="bookEditForm.description" class="form-input" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showBookEditModal = false">Batal</button>
+          <button class="btn-save" @click="saveBookEdit" :disabled="saving">{{ saving ? 'Menyimpan...' : 'Simpan'
+          }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Close Confirm -->
+    <div v-if="showBookCloseModal" class="modal-overlay" @click.self="showBookCloseModal = false">
+      <div class="modal glass-card confirm-modal">
+        <div class="confirm-icon warning-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg></div>
+        <h3>Tutup Buku?</h3>
+        <p>Buku "<strong>{{ book?.title }}</strong>" akan ditutup. Tidak ada transaksi baru yang bisa ditambahkan, namun
+          riwayat tetap tersimpan.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showBookCloseModal = false">Batal</button>
+          <button class="btn-close-book" @click="closeThisBook" :disabled="saving">
+            {{ saving ? 'Menutup...' : 'Ya,Tutup' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Book Delete Confirm -->
+    <div v-if="showBookDeleteModal" class="modal-overlay" @click.self="showBookDeleteModal = false">
+      <div class="modal glass-card confirm-modal">
+        <div class="confirm-icon danger-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14H6L5 6" />
+            <path d="M10 11v6M14 11v6" />
+            <path d="M9 6V4h6v2" />
+          </svg></div>
+        <h3>Hapus Buku?</h3>
+        <p>Buku "<strong>{{ book?.title }}</strong>" akan dihapus permanen. Hanya buku tanpa transaksi yang bisa
+          dihapus.
+        </p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showBookDeleteModal = false">Batal</button>
+          <button class="btn-delete" @click="deleteThisBook" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus'
+          }}</button>
         </div>
       </div>
     </div>
@@ -225,10 +373,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const { success, error: showError } = useToast()
+const authStore = useAuthStore()
 const bookId = route.params.bookId
 
 const book = ref(null)
@@ -243,6 +393,19 @@ const showSuggestions = ref(false)
 const editingTx = ref(null)
 const deletingTx = ref(null)
 const editForm = ref({ amount: 0, date: '', notes: '' })
+
+// Book management state
+const showBookMenu = ref(false)
+const showBookEditModal = ref(false)
+const showBookCloseModal = ref(false)
+const showBookDeleteModal = ref(false)
+const bookEditForm = ref({ title: '', description: '' })
+
+const canManageBook = computed(() => {
+  if (!book.value) return false
+  return authStore.isAdmin || book.value.createdBy === authStore.user?.id
+})
+
 
 const getNowStr = () => {
   const d = new Date()
@@ -366,7 +529,7 @@ const addTransaction = async () => {
     await api.post(`/savings/books/${bookId}/transactions`, {
       santriId: newTx.value.santriId,
       santriName: newTx.value.santriName.trim(),
-      amount: parseInt(String(newTx.value.amount).replace(/[^0-9]/g, ''), 10),
+      amount: Math.round(Number(String(newTx.value.amount).replace(/[^0-9]/g, ''))),
       notes: newTx.value.notes,
       date: finalDate
     })
@@ -404,7 +567,7 @@ const saveEditTx = async () => {
   try {
     let finalDate = editForm.value.date ? new Date(editForm.value.date).toISOString() : new Date().toISOString()
     await api.put(`/savings/transactions/${editingTx.value.id}`, {
-      amount: parseInt(String(editForm.value.amount).replace(/[^0-9]/g, ''), 10),
+      amount: Math.round(Number(String(editForm.value.amount).replace(/[^0-9]/g, ''))),
       date: finalDate,
       notes: editForm.value.notes
     })
@@ -434,7 +597,71 @@ const deleteTx = async () => {
   }
 }
 
-onMounted(fetchAll)
+// Book management functions
+const toggleBookPublish = async () => {
+  const newState = !book.value.isPublished
+  try {
+    await api.put(`/savings/books/${bookId}`, { isPublished: newState })
+    book.value = { ...book.value, isPublished: newState }
+    success(newState ? 'Buku berhasil dipublish ke semua guru' : 'Buku dijadikan pribadi')
+  } catch (e) { showError(e.response?.data?.error || 'Gagal mengubah status publish') }
+}
+
+const openBookEdit = () => {
+  bookEditForm.value = { title: book.value.title, description: book.value.description || '' }
+  showBookEditModal.value = true
+}
+
+const saveBookEdit = async () => {
+  if (!bookEditForm.value.title.trim()) { showError('Judul buku wajib diisi'); return }
+  saving.value = true
+  try {
+    await api.put(`/savings/books/${bookId}`, bookEditForm.value)
+    book.value = { ...book.value, title: bookEditForm.value.title, description: bookEditForm.value.description }
+    showBookEditModal.value = false
+    success('Buku berhasil diperbarui')
+  } catch (e) { showError(e.response?.data?.error || 'Gagal memperbarui buku') }
+  finally { saving.value = false }
+}
+
+const confirmBookClose = () => { showBookCloseModal.value = true }
+
+const closeThisBook = async () => {
+  saving.value = true
+  try {
+    await api.put(`/savings/books/${bookId}`, { status: 'closed' })
+    book.value = { ...book.value, status: 'closed' }
+    showBookCloseModal.value = false
+    success('Buku berhasil ditutup')
+  } catch (e) { showError(e.response?.data?.error || 'Gagal menutup buku') }
+  finally { saving.value = false }
+}
+
+const reopenThisBook = async () => {
+  try {
+    await api.put(`/savings/books/${bookId}`, { status: 'active' })
+    book.value = { ...book.value, status: 'active' }
+    success('Buku berhasil dibuka kembali')
+  } catch (e) { showError(e.response?.data?.error || 'Gagal membuka buku') }
+}
+
+const confirmBookDelete = () => { showBookDeleteModal.value = true }
+
+const deleteThisBook = async () => {
+  saving.value = true
+  try {
+    await api.delete(`/savings/books/${bookId}`)
+    success('Buku berhasil dihapus')
+    router.push(authStore.isAdmin ? '/dashboard/admin-savings' : '/dashboard/savings')
+  } catch (e) { showError(e.response?.data?.error || 'Gagal menghapus buku') }
+  finally { saving.value = false }
+}
+
+onMounted(() => {
+  fetchAll()
+  document.addEventListener('click', () => { showBookMenu.value = false })
+})
+
 </script>
 
 <style scoped>
@@ -450,6 +677,10 @@ onMounted(fetchAll)
 
 .page-header {
   margin-bottom: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
 .back-btn {
@@ -462,10 +693,15 @@ onMounted(fetchAll)
   margin-bottom: var(--space-lg);
   padding: var(--space-sm) 0;
   transition: gap 0.2s;
+  flex-shrink: 0;
 }
 
 .back-btn:hover {
   gap: var(--space-md);
+}
+
+.header-info {
+  flex: 1;
 }
 
 .title-row {
@@ -473,6 +709,97 @@ onMounted(fetchAll)
   align-items: center;
   gap: var(--space-md);
   flex-wrap: wrap;
+}
+
+.badge-shared {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(33, 150, 243, 0.12);
+  color: #1565C0;
+  white-space: nowrap;
+}
+
+/* Book action dots */
+.book-action-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.book-action-dots {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+  transition: all 0.2s;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+}
+
+.book-action-dots:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.book-action-dropdown {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-100);
+  min-width: 200px;
+  z-index: 200;
+  padding: 6px 0;
+  overflow: hidden;
+}
+
+.bad-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  color: var(--gray-700);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.bad-item:hover {
+  background: var(--gray-50);
+}
+
+.bad-item.active {
+  color: #1565C0;
+  font-weight: 600;
+}
+
+.bad-item.warning {
+  color: var(--warning);
+}
+
+.bad-item.success {
+  color: var(--success);
+}
+
+.bad-item.danger {
+  color: var(--error);
+}
+
+.bad-item.danger:hover {
+  background: rgba(244, 67, 54, 0.06);
+}
+
+.bad-divider {
+  height: 1px;
+  background: var(--gray-100);
+  margin: 4px 0;
 }
 
 .header-info h1 {
@@ -483,6 +810,7 @@ onMounted(fetchAll)
 .header-info p {
   color: var(--gray-600);
   margin-top: 2px;
+
   font-size: 0.9rem;
 }
 
@@ -806,7 +1134,7 @@ onMounted(fetchAll)
 }
 
 .center {
-  text-align: center;
+  text-align: center !important;
 }
 
 .amount-cell {
@@ -1005,10 +1333,7 @@ onMounted(fetchAll)
   max-width: 380px;
 }
 
-.confirm-icon {
-  font-size: 2.5rem;
-  margin-bottom: var(--space-md);
-}
+
 
 .confirm-modal h3 {
   color: var(--primary-dark);
@@ -1032,5 +1357,46 @@ onMounted(fetchAll)
 .btn-delete:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-close-book {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #e65100, #ff9800);
+  color: white;
+  font-weight: 600;
+}
+
+.btn-close-book:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Confirm icon variants */
+.confirm-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-md);
+}
+
+.confirm-icon.danger-icon {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+}
+
+.confirm-icon.warning-icon {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+}
+
+/* Sum icon SVG fix */
+.sum-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
