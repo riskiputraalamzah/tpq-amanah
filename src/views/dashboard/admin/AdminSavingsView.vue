@@ -1,8 +1,8 @@
 <template>
   <div class="admin-savings">
     <header class="page-header">
-      <h1>Rekap Tabungan</h1>
-      <p>Lihat semua buku tabungan dari seluruh guru</p>
+      <h1>Rekap Notulen Keuangan</h1>
+      <p>Lihat semua buku catatan keuangan dari seluruh guru</p>
     </header>
 
     <!-- Global Stats -->
@@ -55,8 +55,8 @@
     <!-- Empty -->
     <div v-else-if="filteredBooks.length === 0" class="empty-state glass-card">
       <div class="empty-icon">🏦</div>
-      <h3>{{ allBooks.length === 0 ? 'Belum Ada Buku Tabungan' : 'Tidak Ada Hasil' }}</h3>
-      <p>{{ allBooks.length === 0 ? 'Guru belum membuat buku tabungan apapun' : 'Coba ubah filter pencarian' }}</p>
+      <h3>{{ allBooks.length === 0 ? 'Belum Ada Buku Catatan' : 'Tidak Ada Hasil' }}</h3>
+      <p>{{ allBooks.length === 0 ? 'Guru belum membuat buku catatan keuangan apapun' : 'Coba ubah filter pencarian' }}</p>
     </div>
 
     <!-- Books List -->
@@ -82,7 +82,7 @@
         <div class="book-stats">
           <div class="bstat">
             <span class="bstat-val">{{ book.santriCount || 0 }}</span>
-            <span class="bstat-label">Santri</span>
+            <span class="bstat-label">Anggota</span>
           </div>
           <div class="bstat">
             <span class="bstat-val">{{ book.totalTransactions || 0 }}</span>

@@ -27,7 +27,7 @@
       <div class="summary-grid">
         <div class="sum-card glass-card">
           <div class="sum-icon" style="background:linear-gradient(135deg,#11998e,#38ef7d)">👥</div>
-          <div class="sum-info"><span class="sum-val">{{ summary.length }}</span><span class="sum-label">Santri</span>
+          <div class="sum-info"><span class="sum-val">{{ summary.length }}</span><span class="sum-label">Anggota</span>
           </div>
         </div>
         <div class="sum-card glass-card">
@@ -54,7 +54,7 @@
         <div class="add-form">
           <!-- Santri Select Mode -->
           <div class="form-group" style="position:relative">
-            <label class="form-label">Nama Santri *</label>
+            <label class="form-label">Nama Anggota *</label>
 
             <div class="santri-input-modes">
               <button class="mode-btn" :class="{ active: inputMode === 'select' }"
@@ -63,20 +63,20 @@
               </button>
               <button class="mode-btn" :class="{ active: inputMode === 'search' }"
                 @click="inputMode = 'search'; resetSantriInput()" type="button">
-                Cari Santri Baru
+                Input Data Baru
               </button>
             </div>
 
             <select v-if="inputMode === 'select'" v-model="selectedExistingSantri" class="form-input mt-2"
               @change="onSelectExisting">
-              <option value="">-- Pilih Santri --</option>
+              <option value="">-- Pilih Anggota --</option>
               <option v-for="s in summary" :key="s.santriId" :value="s.santriId">
                 {{ s.santriName }}
               </option>
             </select>
 
             <div v-else class="mt-2" style="position:relative">
-              <input v-model="newTx.santriName" type="text" class="form-input" placeholder="Ketik nama santri..."
+              <input v-model="newTx.santriName" type="text" class="form-input" placeholder="Ketik nama anggota..."
                 @input="searchSantri" @focus="showSuggestions = true" autocomplete="off" />
               <div v-if="showSuggestions && suggestions.length" class="suggestions-dropdown">
                 <div v-for="s in suggestions" :key="s.id" class="suggestion-item" @mousedown.prevent="selectSantri(s)">
@@ -114,13 +114,13 @@
 
       <!-- Per-Santri Summary -->
       <div class="section glass-card">
-        <h2>Ringkasan per Santri</h2>
-        <div v-if="summary.length === 0" class="empty-text">Belum ada data santri</div>
+        <h2>Ringkasan per Anggota</h2>
+        <div v-if="summary.length === 0" class="empty-text">Belum ada data anggota</div>
         <div v-else class="santri-table-wrap">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Nama Santri</th>
+                <th>Nama</th>
                 <th>Transaksi</th>
                 <th>Total Tabungan</th>
                 <th>Terakhir Setor</th>
@@ -142,7 +142,7 @@
       <div class="section glass-card">
         <div class="section-header">
           <h2>Riwayat Transaksi</h2>
-          <input v-model="searchTx" type="text" class="search-input" placeholder="Cari nama santri..." />
+          <input v-model="searchTx" type="text" class="search-input" placeholder="Cari nama anggota..." />
         </div>
         <div v-if="filteredTx.length === 0" class="empty-text">Belum ada transaksi</div>
         <div v-else class="tx-list">
@@ -347,7 +347,7 @@ const selectSantri = (s) => {
 }
 
 const addTransaction = async () => {
-  if (!newTx.value.santriName.trim()) { showError('Nama santri wajib diisi'); return }
+  if (!newTx.value.santriName.trim()) { showError('Nama anggota wajib diisi'); return }
   if (!newTx.value.santriId) {
     // Allow manual name entry - generate temp id from name
     newTx.value.santriId = 'manual_' + newTx.value.santriName.toLowerCase().replace(/\s+/g, '_')

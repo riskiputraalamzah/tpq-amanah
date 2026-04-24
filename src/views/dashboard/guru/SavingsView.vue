@@ -3,8 +3,8 @@
     <header class="page-header">
       <div class="header-content">
         <div>
-          <h1>Tabungan Santri</h1>
-          <p>Kelola buku tabungan santri Anda</p>
+          <h1>Notulen Keuangan</h1>
+          <p>Kelola buku catatan keuangan & tabungan kelompok Anda</p>
         </div>
         <button class="btn-create" @click="openCreateModal">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -15,6 +15,55 @@
         </button>
       </div>
     </header>
+
+    <!-- Panduan Penggunaan (collapsible) -->
+    <div class="guide-box glass-card" :class="{ collapsed: guideCollapsed }">
+      <button class="guide-toggle" @click="guideCollapsed = !guideCollapsed">
+        <div class="guide-toggle-left">
+          <span class="guide-icon">💡</span>
+          <span class="guide-title">Cara Menggunakan Notulen Keuangan</span>
+        </div>
+        <svg class="guide-chevron" :class="{ rotated: !guideCollapsed }" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <div class="guide-content" v-show="!guideCollapsed">
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <strong>Buat Buku Baru</strong>
+              <span>Klik tombol <em>"+ Buku Baru"</em> di pojok kanan atas. Beri nama buku, contoh: <em>"Tabungan Santri Kelas A"</em>, <em>"Kas Guru April"</em>, atau <em>"Iuran Kegiatan"</em>.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <strong>Buka Buku & Catat Setoran</strong>
+              <span>Klik kartu buku untuk masuk ke detailnya. Pilih anggota dari riwayat atau ketik nama baru, lalu masukkan jumlah dan waktu setoran.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <strong>Pantau Riwayat & Saldo</strong>
+              <span>Semua setoran tercatat otomatis lengkap dengan waktu. Anda bisa melihat total per anggota dan keseluruhan kapan saja.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <strong>Tutup Buku Jika Selesai</strong>
+              <span>Jika dana sudah digunakan atau periode selesai, tutup buku dengan ikon <em>×</em>. Riwayat tetap tersimpan untuk keperluan audit.</span>
+            </div>
+          </div>
+        </div>
+        <div class="guide-tips">
+          <span class="tip-badge">💡 Tips</span>
+          Buku ini bisa dipakai untuk apa saja: tabungan santri, kas kelas, iuran guru, dana kegiatan, dll.
+        </div>
+      </div>
+    </div>
 
     <!-- Stats -->
     <div class="stats-row" v-if="!loading">
@@ -43,7 +92,7 @@
     <div v-else-if="books.length === 0" class="empty-state glass-card">
       <div class="empty-icon">🏦</div>
       <h3>Belum Ada Buku Tabungan</h3>
-      <p>Buat buku tabungan pertama untuk mulai mencatat setoran santri</p>
+      <p>Buat buku catatan pertama untuk mulai mencatat setoran atau iuran</p>
       <button class="btn-create m-auto" @click="openCreateModal">Buat Buku Pertama</button>
     </div>
 
@@ -62,7 +111,7 @@
         <div class="book-stats">
           <div class="bstat">
             <span class="bstat-val">{{ book.santriCount || 0 }}</span>
-            <span class="bstat-label">Santri</span>
+            <span class="bstat-label">Anggota</span>
           </div>
           <div class="bstat">
             <span class="bstat-val">{{ book.totalTransactions || 0 }}</span>
@@ -179,10 +228,12 @@ const { success, error: showError } = useToast()
 const books = ref([])
 const loading = ref(true)
 const saving = ref(false)
+const guideCollapsed = ref(true) // collapsed by default, user can expand
 
 const showFormModal = ref(false)
 const showCloseModal = ref(false)
 const showDeleteModal = ref(false)
+
 const editingBook = ref(null)
 const closingBook = ref(null)
 const deletingBook = ref(null)
@@ -769,4 +820,123 @@ onMounted(fetchBooks)
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Panduan / Guide Box ── */
+.guide-box {
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.guide-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  text-align: left;
+  transition: background 0.2s;
+}
+.guide-toggle:hover { background: rgba(27, 94, 32, 0.04); }
+
+.guide-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.guide-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.guide-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.guide-chevron {
+  color: var(--gray-400);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+.guide-chevron.rotated { transform: rotate(180deg); }
+
+.guide-content {
+  padding: 0 var(--space-xl) var(--space-xl);
+}
+
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+@media (max-width: 600px) {
+  .guide-steps { grid-template-columns: 1fr; }
+}
+
+.guide-step {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(27, 94, 32, 0.04);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--primary);
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.step-body strong {
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+.step-body span {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+.step-body em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.guide-tips {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.tip-badge {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #92400e;
+  white-space: nowrap;
+}
 </style>
+
