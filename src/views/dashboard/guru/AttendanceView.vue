@@ -6,21 +6,29 @@
     </header>
 
     <!-- Holiday Banner -->
-    <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
-      <div class="holiday-alert-icon">🎉</div>
-      <div class="holiday-alert-content">
-        <span class="holiday-alert-label">{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional'
-        }}</span>
-        <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+    <div v-if="loadingHolidays" class="holiday-alert skeleton-holiday-alert">
+      <div class="skeleton-icon"></div>
+      <div class="skeleton-text-container">
+        <div class="skeleton-text label"></div>
+        <div class="skeleton-text name"></div>
       </div>
     </div>
-    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
-      <div class="holiday-alert-icon">📅</div>
-      <div class="holiday-alert-content">
-        <span class="holiday-alert-label">Besok Libur Nasional</span>
-        <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+    <template v-else>
+      <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
+        <div class="holiday-alert-icon">🎉</div>
+        <div class="holiday-alert-content">
+          <span class="holiday-alert-label">{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional' }}</span>
+          <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+        </div>
       </div>
-    </div>
+      <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
+        <div class="holiday-alert-icon">📅</div>
+        <div class="holiday-alert-content">
+          <span class="holiday-alert-label">Besok Libur Nasional</span>
+          <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+        </div>
+      </div>
+    </template>
 
     <!-- Today's Card - Prominent Design -->
     <div class="today-card glass-card">
@@ -293,6 +301,7 @@ const selectedStatus = ref(null)
 const notes = ref('')
 const submitting = ref(false)
 const loading = ref(true)
+const loadingHolidays = ref(true)
 const todayAttendance = ref(null)
 const attendanceHistory = ref([])
 const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
@@ -712,14 +721,18 @@ const submitUpdate = async () => {
 }
 
 onMounted(async () => {
+  loadingHolidays.value = true
   // Fetch national holidays
   holidays.value = await fetchHolidays()
+  
   // Fetch custom holidays then merge
   await Promise.all([
     fetchCustomHolidays(),
     fetchDismissedHolidays(),
     fetchCurrentMonthCustomHolidays()
   ])
+  
+  loadingHolidays.value = false
 
   // Fetch attendance
   await fetchAttendance()
@@ -1480,6 +1493,44 @@ onMounted(async () => {
 .tomorrow-holiday {
   background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(30, 136, 229, 0.2));
   border: 2px solid rgba(33, 150, 243, 0.3);
+}
+
+.skeleton-holiday-alert {
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+}
+
+.skeleton-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text.label {
+  width: 150px;
+}
+
+.skeleton-text.name {
+  width: 250px;
+  height: 20px;
 }
 
 .holiday-alert-icon {

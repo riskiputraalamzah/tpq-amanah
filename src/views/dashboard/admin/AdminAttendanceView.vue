@@ -46,22 +46,29 @@
     </header>
 
     <!-- Holiday Banner -->
-    <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
-      <div class="holiday-alert-icon">🎉</div>
-      <div class="holiday-alert-content">
-        <span class="holiday-alert-label">Hari Ini Libur Nasional</span>
-        <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+    <div v-if="loadingHolidays" class="holiday-alert skeleton-holiday-alert" style="margin-bottom: var(--space-lg);">
+      <div class="skeleton-icon"></div>
+      <div class="skeleton-text-container">
+        <div class="skeleton-text label"></div>
+        <div class="skeleton-text name"></div>
       </div>
     </div>
-    <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
-      <div class="holiday-alert-icon">📅</div>
-      <div class="holiday-alert-content">
-        <span class="holiday-alert-label">Besok Libur Nasional</span>
-        <span class="holiday-alert-name">{{
-          tomorrowHoliday.holidayName
-        }}</span>
+    <template v-else>
+      <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
+        <div class="holiday-alert-icon">🎉</div>
+        <div class="holiday-alert-content">
+          <span class="holiday-alert-label">Hari Ini Libur Nasional</span>
+          <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
+        </div>
       </div>
-    </div>
+      <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
+        <div class="holiday-alert-icon">📅</div>
+        <div class="holiday-alert-content">
+          <span class="holiday-alert-label">Besok Libur Nasional</span>
+          <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
+        </div>
+      </div>
+    </template>
 
     <!-- Summary Cards -->
     <div class="summary-row">
@@ -683,6 +690,7 @@ const selectedMonth = ref(
 );
 const holidays = ref([]);
 const monthHolidays = ref([]);
+const loadingHolidays = ref(true);
 
 // Custom holidays state
 const customHolidays = ref([]);
@@ -1583,11 +1591,14 @@ const deleteHoliday = async (id) => {
 onMounted(async () => {
   document.addEventListener("click", closeDropdownOnClickOutside);
 
+  loadingHolidays.value = true;
   // Fetch national holidays
   holidays.value = await fetchHolidays();
-
-  // Fetch attendance data (also fetches custom holidays internally)
+  
+  // Fetch custom and dismissed holidays internally through fetchData -> updateMonthHolidays etc
   await fetchData();
+  
+  loadingHolidays.value = false;
 });
 
 onUnmounted(() => {
@@ -3363,5 +3374,43 @@ onUnmounted(() => {
   .header-actions select {
     width: 100%;
   }
+}
+
+.skeleton-holiday-alert {
+  background: var(--gray-50);
+  border: 2px solid var(--gray-200);
+}
+
+.skeleton-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-text.label {
+  width: 150px;
+}
+
+.skeleton-text.name {
+  width: 250px;
+  height: 20px;
 }
 </style>
