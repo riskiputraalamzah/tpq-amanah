@@ -290,25 +290,49 @@
           </div>
           <div v-else class="popup-content">
             <template v-if="selectedTeacherId === 'all'">
-              <!-- Holiday/Weekend Logic -->
-              <div v-if="
-                getHolidayForDate(selectedDate) || isWeekend(selectedDate)
-              " class="popup-section" style="text-align: center; padding: 20px 0">
+              <!-- Weekend Only (no action buttons) -->
+              <div v-if="isWeekend(selectedDate) && !getHolidayForDate(selectedDate)" class="popup-section" style="text-align: center; padding: 20px 0">
                 <div style="font-size: 3rem; margin-bottom: 10px">🏝️</div>
-                <h5 style="
-                    font-size: 1.1rem;
-                    color: var(--primary-dark);
-                    margin-bottom: 8px;
-                  ">
-                  Tidak Ada KBM
-                </h5>
-                <p class="text-muted">
-                  {{
-                    getHolidayForDate(selectedDate)
-                      ? (getHolidayForDate(selectedDate).isCustom ? 'Hari Libur' : 'Hari Libur Nasional')
-                      : 'Akhir Pekan (Weekend)'
-                  }}
-                </p>
+                <h5 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 8px;">Tidak Ada KBM</h5>
+                <p class="text-muted">Akhir Pekan (Weekend)</p>
+              </div>
+
+              <!-- National/Custom Holiday (with admin actions) -->
+              <div v-else-if="getHolidayForDate(selectedDate)" class="popup-section">
+                <!-- Holiday info + icon -->
+                <div style="text-align: center; padding: 10px 0 16px">
+                  <div style="font-size: 3rem; margin-bottom: 10px">🏝️</div>
+                  <h5 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 4px;">Tidak Ada KBM</h5>
+                  <p class="text-muted" style="margin-bottom: 0">
+                    {{ getHolidayForDate(selectedDate).isCustom ? 'Hari Libur' : 'Hari Libur Nasional' }}
+                  </p>
+                </div>
+
+                <!-- Show teachers who were marked present on this holiday -->
+                <div v-if="getPresentTeachersWithTime(selectedDate).length > 0" class="popup-section" style="border-top: 1px solid var(--gray-200); padding-top: 16px">
+                  <h5>✅ Guru Masuk di Hari Libur ({{ getPresentTeachersWithTime(selectedDate).length }})</h5>
+                  <div class="teacher-list-popup">
+                    <div v-for="t in getPresentTeachersWithTime(selectedDate)" :key="t.id" class="popup-teacher-item">
+                      <div class="mini-avatar" :style="{ backgroundColor: getTeacherColor(t.displayName) }">
+                        {{ getInitials(t.displayName) }}
+                      </div>
+                      <div class="teacher-info">
+                        <span class="teacher-name">{{ t.displayName }}</span>
+                        <span v-if="t.checkinTime" class="checkin-time">{{ t.checkinTime }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Admin Action Buttons -->
+                <div v-if="isAdmin" class="popup-holiday-actions" style="border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 12px;">
+                  <button class="btn-action-primary" style="width: 100%; margin-bottom: 8px;" @click="openAddModal(selectedDate)">
+                    ➕ Catat Kehadiran Guru
+                  </button>
+                  <button v-if="!getHolidayForDate(selectedDate).isCustom" class="btn-action-danger" style="width: 100%;" @click="dismissNationalHoliday(selectedDate)">
+                    🗑️ Hapus Libur Nasional Ini
+                  </button>
+                </div>
               </div>
 
               <!-- Normal Days Logic -->
@@ -411,7 +435,7 @@
                     {{ getTeacherAttendanceForDate(selectedDate).notes || "-" }}
                   </p>
 
-                  <div v-if="isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
+                  <div v-if="isAdmin && !isWeekend(selectedDate)"
                     class="mt-2 text-center">
                     <button class="btn-action-secondary mx-auto" @click="
                       openAddModal(
@@ -429,7 +453,7 @@
                 </p>
 
                 <div
-                  v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin && !getHolidayForDate(selectedDate) && !isWeekend(selectedDate)"
+                  v-if="!getTeacherAttendanceForDate(selectedDate) && isAdmin && !isWeekend(selectedDate)"
                   class="mt-3 text-center">
                   <button class="btn-action-primary mx-auto" @click="openAddModal(selectedDate, selectedTeacherId)"
                     :disabled="loading">
@@ -577,7 +601,7 @@
 
         <!-- Existing Custom Holidays List -->
         <div class="holiday-list">
-          <h4>Hari Libur Bulan Ini ({{ monthNames[currentMonth] }} {{ currentYear }})</h4>
+          <h4>Hari Libur Custom Bulan Ini ({{ monthNames[currentMonth] }} {{ currentYear }})</h4>
           <div v-if="customHolidaysForMonth.length === 0" class="text-muted" style="text-align: center; padding: 16px">
             Belum ada hari libur custom untuk bulan ini
           </div>
@@ -589,6 +613,22 @@
               </div>
               <button class="btn-delete-holiday" @click="deleteHoliday(h.id)" title="Hapus hari libur">
                 🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dismissed National Holidays List -->
+        <div class="holiday-list" v-if="dismissedHolidaysForMonth.length > 0">
+          <h4>🚫 Libur Nasional yang Dihapus</h4>
+          <div class="holiday-items">
+            <div v-for="d in dismissedHolidaysForMonth" :key="d.id" class="holiday-item dismissed-item">
+              <div class="holiday-item-info">
+                <span class="holiday-item-date">{{ formatHolidayDate(d.date) }}</span>
+                <span class="holiday-item-name" style="text-decoration: line-through; opacity: 0.7">{{ d.originalName }}</span>
+              </div>
+              <button class="btn-restore-holiday" @click="restoreDismissedHoliday(d.date)" title="Kembalikan libur nasional">
+                ♻️ Restore
               </button>
             </div>
           </div>
@@ -653,6 +693,9 @@ const holidayForm = ref({
   endDate: "",
   name: "",
 });
+
+// Dismissed national holidays state
+const dismissedHolidays = ref([]);
 
 // Calendar state
 const currentMonth = ref(today.getMonth());
@@ -740,6 +783,16 @@ const customHolidaysForMonth = computed(() => {
   return customHolidays.value.filter(h => {
     const [hy, hm] = h.date.split('-').map(Number);
     return hy === y && hm === m;
+  });
+});
+
+// Computed: dismissed national holidays filtered for current month
+const dismissedHolidaysForMonth = computed(() => {
+  const m = currentMonth.value + 1;
+  const y = currentYear.value;
+  return dismissedHolidays.value.filter(d => {
+    const [dy, dm] = d.date.split('-').map(Number);
+    return dy === y && dm === m;
   });
 });
 
@@ -835,19 +888,26 @@ const getHolidayForDate = (date) => {
 };
 
 const updateMonthHolidays = () => {
-  // Merge national holidays with custom holidays
+  // Merge national holidays with custom holidays, excluding dismissed national holidays
   const national = getHolidaysForMonth(
     currentMonth.value,
     currentYear.value,
     holidays.value,
   );
+  
+  // Filter out dismissed national holidays
+  const dismissedDates = new Set(dismissedHolidaysForMonth.value.map(d => {
+    return parseInt(d.date.split('-')[2]);
+  }));
+  const filteredNational = national.filter(h => !dismissedDates.has(h.date));
+  
   const custom = customHolidaysForMonth.value.map(h => ({
     date: parseInt(h.date.split('-')[2]),
     name: h.name,
     isCustom: true,
   }));
   // Merge, avoiding duplicates by date
-  const merged = [...national];
+  const merged = [...filteredNational];
   for (const ch of custom) {
     if (!merged.some(m => m.date === ch.date)) {
       merged.push(ch);
@@ -1096,8 +1156,9 @@ const fetchData = async () => {
     currentMonth.value = month - 1;
     currentYear.value = year;
 
-    // Fetch custom holidays for the selected month
+    // Fetch custom holidays and dismissed holidays for the selected month
     await fetchCustomHolidays();
+    await fetchDismissedHolidays();
 
     const { data: guruData } = await api.get("/users?role=guru");
     teachers.value = guruData.sort((a, b) =>
@@ -1373,6 +1434,53 @@ const fetchCustomHolidays = async () => {
     updateMonthHolidays();
   } catch (e) {
     console.error('Fetch custom holidays error:', e);
+  }
+};
+
+// Dismissed national holidays functions
+const fetchDismissedHolidays = async () => {
+  try {
+    const { data } = await api.get('/holidays/dismissed', {
+      params: { month: currentMonth.value + 1, year: currentYear.value }
+    });
+    dismissedHolidays.value = data;
+    updateMonthHolidays();
+  } catch (e) {
+    console.error('Fetch dismissed holidays error:', e);
+  }
+};
+
+const dismissNationalHoliday = async (date) => {
+  const holiday = getHolidayForDate(date);
+  if (!holiday || holiday.isCustom) return;
+
+  const fullDate = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+  const confirmMsg = `Yakin ingin menghapus libur nasional "${holiday.name}" pada tanggal ${formatFullDate(date)}?\n\nHari ini akan dianggap hari kerja biasa.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    await api.post('/holidays/dismiss-national', {
+      date: fullDate,
+      originalName: holiday.name,
+    });
+    success('Libur nasional berhasil dihapus');
+    selectedDate.value = null;
+    await fetchDismissedHolidays();
+  } catch (e) {
+    console.error('Dismiss national holiday error:', e);
+    showError(e.response?.data?.error || 'Gagal menghapus libur nasional');
+  }
+};
+
+const restoreDismissedHoliday = async (dateStr) => {
+  if (!confirm('Yakin ingin mengembalikan libur nasional ini?')) return;
+  try {
+    await api.delete(`/holidays/dismiss-national/${dateStr}`);
+    success('Libur nasional berhasil dikembalikan');
+    await fetchDismissedHolidays();
+  } catch (e) {
+    console.error('Restore dismissed holiday error:', e);
+    showError('Gagal mengembalikan libur nasional');
   }
 };
 
@@ -2891,6 +2999,53 @@ onUnmounted(() => {
   background: #f9fafb;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn-action-danger {
+  background: linear-gradient(135deg, #ef5350, #e53935);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(239, 83, 80, 0.3), 0 2px 4px -1px rgba(239, 83, 80, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.btn-action-danger:hover {
+  background: linear-gradient(135deg, #e53935, #d32f2f);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(239, 83, 80, 0.4), 0 4px 6px -2px rgba(239, 83, 80, 0.2);
+}
+
+.btn-restore-holiday {
+  background: linear-gradient(135deg, #66bb6a, #43a047);
+  color: white;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-restore-holiday:hover {
+  background: linear-gradient(135deg, #43a047, #388e3c);
+  transform: translateY(-1px);
+}
+
+.dismissed-item {
+  background: rgba(239, 83, 80, 0.05);
+  border: 1px dashed rgba(239, 83, 80, 0.3);
 }
 
 @media (max-width: 768px) {

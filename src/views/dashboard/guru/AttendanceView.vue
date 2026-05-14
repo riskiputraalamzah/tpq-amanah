@@ -38,6 +38,28 @@
           <SkeletonLoader type="text" height="20px" width="140px" />
         </div>
 
+        <div v-else-if="todayAttendance" class="attendance-done"
+          :class="{ 'holiday-override': todayHoliday.isHoliday }">
+          <div class="done-icon" v-if="!todayHoliday.isHoliday">✅</div>
+          <div class="done-icon" v-else>⚠️</div>
+          <h3 v-if="todayHoliday.isHoliday">Absen Masuk (Hari Libur)</h3>
+          <h3 v-else>Absensi Hari Ini Sudah Tercatat</h3>
+
+          <div class="status-display" :class="todayAttendance.status"
+            :style="todayHoliday.isHoliday ? 'background: rgba(255, 193, 7, 0.15); color: #e65100;' : ''">
+            {{ todayAttendance.status === 'hadir' ? 'HADIR' : 'TIDAK HADIR' }}
+          </div>
+
+          <p v-if="todayHoliday.isHoliday" class="notes-text override-notice">
+            📌 Anda masuk pada hari libur, dan admin telah mengabsenkan anda.
+          </p>
+          <p v-if="todayAttendance.notes" class="notes-text">Catatan: {{ todayAttendance.notes }}</p>
+
+          <button v-if="!todayHoliday.isHoliday" class="btn btn-secondary ms-2 btn-update" @click="openUpdateModal">
+            ✏️ Ubah Status
+          </button>
+        </div>
+
         <div v-else-if="isWeekend" class="weekend-notice">
           <span class="weekend-icon">🏖️</span>
           <p>Hari ini adalah akhir pekan.<br />Absensi hanya untuk hari Senin - Jumat.</p>
@@ -48,18 +70,6 @@
           <h3>{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional' }}</h3>
           <p class="holiday-notice-name">{{ todayHoliday.holidayName }}</p>
           <p class="holiday-notice-text">Tidak ada absensi untuk hari libur.<br />Selamat beristirahat! 🙏</p>
-        </div>
-
-        <div v-else-if="todayAttendance" class="attendance-done">
-          <div class="done-icon">✅</div>
-          <h3>Absensi Hari Ini Sudah Tercatat</h3>
-          <div class="status-display" :class="todayAttendance.status">
-            {{ todayAttendance.status === 'hadir' ? 'HADIR' : 'TIDAK HADIR' }}
-          </div>
-          <p v-if="todayAttendance.notes" class="notes-text">Catatan: {{ todayAttendance.notes }}</p>
-          <button class="btn btn-secondary ms-2 btn-update" @click="openUpdateModal">
-            ✏️ Ubah Status
-          </button>
         </div>
 
         <div v-else class="attendance-form">
@@ -201,13 +211,20 @@
         </div>
 
         <div class="popup-content" v-if="selectedCalendarAttendance">
-          <div class="popup-status" :class="selectedCalendarAttendance.status">
+          <div class="popup-status" :class="selectedCalendarAttendance.status"
+            :style="getHolidayForDate(selectedCalendarDate) ? 'background: rgba(255, 193, 7, 0.15); color: #e65100;' : ''">
             {{ selectedCalendarAttendance.status === 'hadir' ? '✅ Hadir' : '❌ Tidak Hadir' }}
           </div>
+
+          <p v-if="getHolidayForDate(selectedCalendarDate)" class="popup-notes"
+            style="background-color: rgba(255, 193, 7, 0.15); color: #e65100; border: 1px dashed rgba(255, 152, 0, 0.3);">
+            <strong>📌 Catatan Sistem:</strong><br />Anda masuk pada hari libur, dan admin telah mengabsenkan anda.
+          </p>
+
           <p v-if="selectedCalendarAttendance.notes" class="popup-notes">
             <strong>Catatan:</strong> {{ selectedCalendarAttendance.notes }}
           </p>
-          <p v-else class="popup-notes empty">Tidak ada catatan</p>
+          <p v-else-if="!getHolidayForDate(selectedCalendarDate)" class="popup-notes empty">Tidak ada catatan</p>
         </div>
         <div class="popup-content" v-else>
           <p class="popup-notes empty">Tidak ada data absensi</p>
@@ -296,23 +313,44 @@ const selectedCalendarDate = ref(null)
 const holidays = ref([])
 const monthHolidays = ref([])
 const customHolidays = ref([])
+const dismissedHolidays = ref([])
 // Store current month custom holidays separately for "Today" check
 const currentMonthCustomHolidays = ref([])
+const currentMonthDismissedHolidays = ref([])
 
 // Computed for holidays
 const todayHoliday = computed(() => {
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  // Check if today's national holiday was dismissed
+  const isDismissed = currentMonthDismissedHolidays.value.some(d => d.date === todayStr)
+
   // Check national holidays first
   const national = isTodayHoliday(holidays.value)
-  if (national.isHoliday) return national
+  if (national.isHoliday && !isDismissed) return national
+
   // Check custom holidays for today using the separately fetched list
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const customH = currentMonthCustomHolidays.value.find(h => h.date === todayStr)
   if (customH) {
     return { isHoliday: true, holidayName: customH.name, isCustom: true }
   }
   return { isHoliday: false }
 })
-const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value))
+
+const tomorrowHoliday = computed(() => {
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+
+  // Check if tomorrow's national holiday was dismissed
+  const isDismissed = currentMonthDismissedHolidays.value.some(d => d.date === tomorrowStr)
+
+  const national = isTomorrowHoliday(holidays.value)
+  if (national.isHoliday && isDismissed) {
+    return { isHoliday: false }
+  }
+  return national
+})
 
 const isCurrentCalendarMonth = computed(() => {
   return calendarMonth.value === today.getMonth() && calendarYear.value === today.getFullYear()
@@ -428,6 +466,7 @@ const getCalendarCellClass = (date) => {
   // Check if this date is a holiday
   if (getHolidayForDate(date)) {
     classes.push('libur')
+    if (attendance) classes.push('libur-override')
   }
 
   return classes.join(' ')
@@ -439,9 +478,19 @@ const getHolidayForDate = (date) => {
 
 const updateMonthHolidays = () => {
   const national = getHolidaysForMonth(calendarMonth.value, calendarYear.value, holidays.value)
-  // Merge with custom holidays for current month
+
   const m = calendarMonth.value + 1
   const y = calendarYear.value
+
+  // Filter out dismissed national holidays
+  const dismissedDates = new Set(dismissedHolidays.value.filter(d => {
+    const [dy, dm] = d.date.split('-').map(Number)
+    return dy === y && dm === m
+  }).map(d => parseInt(d.date.split('-')[2])))
+
+  const filteredNational = national.filter(h => !dismissedDates.has(h.date))
+
+  // Merge with custom holidays for current month
   const custom = customHolidays.value
     .filter(h => {
       const [hy, hm] = h.date.split('-').map(Number)
@@ -452,7 +501,7 @@ const updateMonthHolidays = () => {
       name: h.name,
       isCustom: true,
     }))
-  const merged = [...national]
+  const merged = [...filteredNational]
   for (const ch of custom) {
     if (!merged.some(m => m.date === ch.date)) {
       merged.push(ch)
@@ -473,16 +522,31 @@ const fetchCustomHolidays = async () => {
   }
 }
 
-// Fetch custom holidays specifically for the current real-time month
-// This ensures "Today" checks are always accurate even when viewing other months in calendar
+const fetchDismissedHolidays = async () => {
+  try {
+    const { data } = await api.get('/holidays/dismissed', {
+      params: { month: calendarMonth.value + 1, year: calendarYear.value }
+    })
+    dismissedHolidays.value = data
+    updateMonthHolidays()
+  } catch (e) {
+    console.error('Fetch dismissed holidays error:', e)
+  }
+}
+
 const fetchCurrentMonthCustomHolidays = async () => {
   try {
-    const { data } = await api.get('/holidays', {
+    const { data: customData } = await api.get('/holidays', {
       params: { month: today.getMonth() + 1, year: today.getFullYear() }
     })
-    currentMonthCustomHolidays.value = data
+    currentMonthCustomHolidays.value = customData
+
+    const { data: dismissedData } = await api.get('/holidays/dismissed', {
+      params: { month: today.getMonth() + 1, year: today.getFullYear() }
+    })
+    currentMonthDismissedHolidays.value = dismissedData
   } catch (e) {
-    console.error('Fetch current month custom holidays error:', e)
+    console.error('Fetch current month holidays error:', e)
   }
 }
 
@@ -521,6 +585,7 @@ const prevMonth = () => {
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
   fetchCustomHolidays()
+  fetchDismissedHolidays()
   fetchAttendance()
 }
 
@@ -535,6 +600,7 @@ const nextMonth = () => {
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
   fetchCustomHolidays()
+  fetchDismissedHolidays()
   fetchAttendance()
 }
 
@@ -651,6 +717,7 @@ onMounted(async () => {
   // Fetch custom holidays then merge
   await Promise.all([
     fetchCustomHolidays(),
+    fetchDismissedHolidays(),
     fetchCurrentMonthCustomHolidays()
   ])
 
@@ -807,6 +874,22 @@ onMounted(async () => {
   font-size: 0.9rem;
   margin: 0;
   line-height: 1.5;
+}
+
+.holiday-override {
+  background: rgba(139, 195, 74, 0.1);
+  border: 2px dashed rgba(255, 152, 0, 0.3);
+  border-radius: var(--radius-xl);
+}
+
+.override-notice {
+  color: #e65100 !important;
+  font-weight: 500;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: var(--radius-md);
+  display: inline-block;
+  margin-top: var(--space-lg) !important;
 }
 
 .attendance-done {
@@ -1347,6 +1430,11 @@ onMounted(async () => {
   background: rgba(255, 193, 7, 0.25) !important;
   border: 2px solid #ffc107 !important;
   position: relative;
+}
+
+.calendar-cell.libur-override {
+  background: rgba(139, 195, 74, 0.2) !important;
+  border: 2px dashed #ffc107 !important;
 }
 
 .calendar-cell.libur.no-data {
