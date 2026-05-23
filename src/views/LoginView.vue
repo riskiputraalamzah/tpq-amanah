@@ -1,12 +1,10 @@
 <template>
   <div
-    class="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-primary-100 via-primary-50 to-green-50 islamic-pattern"
+    class="flex items-center justify-center p-4 min-h-dvh bg-gradient-to-br from-primary-100 via-primary-50 to-green-50 islamic-pattern"
   >
     <div class="grid items-center w-full max-w-md gap-8">
       <!-- Login Card -->
-      <div
-        class="w-full p-6 glass-card-solid sm:p-8 animate-slide-up"
-      >
+      <div class="w-full p-6 glass-card-solid sm:p-8 animate-slide-up">
         <!-- Logo -->
         <div class="mb-6 text-center">
           <img
