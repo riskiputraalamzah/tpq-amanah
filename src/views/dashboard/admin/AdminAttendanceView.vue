@@ -154,7 +154,7 @@
               </svg>
             </button>
             <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
-            <button class="nav-btn" @click="nextMonth" :disabled="isCurrentMonth">
+            <button class="nav-btn" @click="nextMonth" :disabled="isLastAllowedMonth">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 18l6-6-6-6" />
               </svg>
@@ -663,6 +663,10 @@ const { success, error: showError, warning } = useToast();
 const authStore = useAuthStore();
 
 const isAdmin = computed(() => authStore.isAdmin);
+const canViewFutureCalendar = computed(() => {
+  const permissions = authStore.user?.permissions?.features || [];
+  return isAdmin.value || permissions.includes("admin-attendance-view");
+});
 
 const today = new Date();
 const monthNames = [
@@ -746,10 +750,11 @@ const availableMonths = computed(() => {
   const months = [];
   const startYear = 2026;
   const startMonth = 0;
+  const maxDate = getMaxCalendarDate();
 
-  for (let year = startYear; year <= today.getFullYear(); year++) {
+  for (let year = startYear; year <= maxDate.getFullYear(); year++) {
     const monthStart = year === startYear ? startMonth : 0;
-    const monthEnd = year === today.getFullYear() ? today.getMonth() : 11;
+    const monthEnd = year === maxDate.getFullYear() ? maxDate.getMonth() : 11;
 
     for (let month = monthStart; month <= monthEnd; month++) {
       months.push({
@@ -809,6 +814,22 @@ const isCurrentMonth = computed(() => {
   return (
     currentMonth.value === today.getMonth() &&
     currentYear.value === today.getFullYear()
+  );
+});
+
+const getMaxCalendarDate = () => {
+  const maxDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  if (canViewFutureCalendar.value) {
+    maxDate.setMonth(maxDate.getMonth() + 12);
+  }
+  return maxDate;
+};
+
+const isLastAllowedMonth = computed(() => {
+  const maxDate = getMaxCalendarDate();
+  return (
+    currentYear.value === maxDate.getFullYear() &&
+    currentMonth.value === maxDate.getMonth()
   );
 });
 
@@ -1131,7 +1152,7 @@ const prevMonth = () => {
 };
 
 const nextMonth = () => {
-  if (isCurrentMonth.value) return;
+  if (isLastAllowedMonth.value) return;
   if (currentMonth.value === 11) {
     currentMonth.value = 0;
     currentYear.value++;
