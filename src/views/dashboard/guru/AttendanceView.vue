@@ -583,6 +583,15 @@ const showCalendarDetail = (date) => {
   selectedCalendarDate.value = date
 }
 
+const refreshCalendarData = async () => {
+  holidays.value = await fetchHolidays(calendarYear.value)
+  await Promise.all([
+    fetchCustomHolidays(),
+    fetchDismissedHolidays(),
+    fetchAttendance()
+  ])
+}
+
 const prevMonth = () => {
   if (isFirstMonth.value) return
   if (calendarMonth.value === 0) {
@@ -593,9 +602,7 @@ const prevMonth = () => {
   }
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
-  fetchCustomHolidays()
-  fetchDismissedHolidays()
-  fetchAttendance()
+  refreshCalendarData()
 }
 
 const nextMonth = () => {
@@ -608,9 +615,7 @@ const nextMonth = () => {
   }
   // Update selectedMonth and fetch
   selectedMonth.value = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2, '0')}`
-  fetchCustomHolidays()
-  fetchDismissedHolidays()
-  fetchAttendance()
+  refreshCalendarData()
 }
 
 const fetchAttendance = async () => {
@@ -722,10 +727,7 @@ const submitUpdate = async () => {
 
 onMounted(async () => {
   loadingHolidays.value = true
-  // Fetch national holidays
-  holidays.value = await fetchHolidays()
-  
-  // Fetch custom holidays then merge
+  holidays.value = await fetchHolidays(calendarYear.value)
   await Promise.all([
     fetchCustomHolidays(),
     fetchDismissedHolidays(),

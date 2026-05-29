@@ -1164,6 +1164,8 @@ const fetchData = async () => {
     currentMonth.value = month - 1;
     currentYear.value = year;
 
+    holidays.value = await fetchHolidays(year);
+
     // Fetch custom holidays and dismissed holidays for the selected month
     await fetchCustomHolidays();
     await fetchDismissedHolidays();
@@ -1592,10 +1594,6 @@ onMounted(async () => {
   document.addEventListener("click", closeDropdownOnClickOutside);
 
   loadingHolidays.value = true;
-  // Fetch national holidays
-  holidays.value = await fetchHolidays();
-  
-  // Fetch custom and dismissed holidays internally through fetchData -> updateMonthHolidays etc
   await fetchData();
   
   loadingHolidays.value = false;
