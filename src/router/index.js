@@ -12,6 +12,11 @@ const routes = [
         component: () => import('../views/LoginView.vue')
     },
     {
+        path: '/a/:code',
+        name: 'QuickAttendance',
+        component: () => import('../views/QuickAttendanceView.vue')
+    },
+    {
         path: '/dashboard',
         name: 'Dashboard',
         component: () => import('../views/dashboard/DashboardLayout.vue'),
