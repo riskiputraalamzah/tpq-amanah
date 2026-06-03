@@ -33,6 +33,9 @@
               <button class="dropdown-item" @click="openHolidayModal">
                 📅 Kelola Hari Libur
               </button>
+              <button class="dropdown-item" @click="openQuickSettingsModal">
+                🔗 Pengaturan Link WA
+              </button>
             </div>
           </transition>
         </div>
@@ -576,6 +579,56 @@
     </div>
 
     <!-- Holiday Management Modal -->
+    <div v-if="showQuickSettingsModal" class="modal-overlay" @click.self="closeQuickSettingsModal">
+      <div class="modal glass-card quick-settings-modal">
+        <h3>🔗 Pengaturan Link Absensi WA</h3>
+
+        <div v-if="quickSettingsLoading" class="quick-settings-loading">
+          Memuat pengaturan...
+        </div>
+
+        <template v-else>
+          <div class="settings-info-box">
+            <strong>Pengaturan ini berlaku untuk link baru.</strong>
+            <span>Link yang sudah terkirim tetap memakai waktu expired saat link dibuat.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mode Expired</label>
+            <select v-model="quickSettingsForm.mode" class="form-input form-select">
+              <option value="end_of_day">Sampai 23.59 WIB</option>
+              <option value="minutes">Durasi menit setelah dikirim</option>
+              <option value="custom_time">Sampai jam tertentu</option>
+            </select>
+          </div>
+
+          <div v-if="quickSettingsForm.mode === 'minutes'" class="form-group">
+            <label class="form-label">Durasi Aktif (menit)</label>
+            <input v-model.number="quickSettingsForm.minutes" type="number" min="1" max="1440" class="form-input" />
+          </div>
+
+          <div v-if="quickSettingsForm.mode === 'custom_time'" class="form-group">
+            <label class="form-label">Jam Expired (WIB)</label>
+            <input v-model="quickSettingsForm.expiresAtTime" type="time" class="form-input" />
+          </div>
+
+          <div class="settings-preview">
+            {{ quickSettingsPreview }}
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeQuickSettingsModal">
+              Batal
+            </button>
+            <button class="btn btn-primary" @click="saveQuickSettings" :disabled="savingQuickSettings">
+              {{ savingQuickSettings ? "Menyimpan..." : "Simpan" }}
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Holiday Management Modal -->
     <div v-if="showHolidayModal" class="modal-overlay" @click.self="closeHolidayModal">
       <div class="modal glass-card holiday-modal">
         <div class="holiday-modal-header">
@@ -706,6 +759,16 @@ const holidayForm = ref({
   name: "",
 });
 
+// WhatsApp one-click attendance link settings
+const showQuickSettingsModal = ref(false);
+const quickSettingsLoading = ref(false);
+const savingQuickSettings = ref(false);
+const quickSettingsForm = ref({
+  mode: "end_of_day",
+  minutes: 5,
+  expiresAtTime: "23:59",
+});
+
 // Dismissed national holidays state
 const dismissedHolidays = ref([]);
 
@@ -787,6 +850,18 @@ const activeDays = computed(() => {
     count++;
   }
   return count;
+});
+
+const quickSettingsPreview = computed(() => {
+  if (quickSettingsForm.value.mode === "minutes") {
+    return `Link WA akan aktif selama ${quickSettingsForm.value.minutes || 0} menit setelah dikirim.`;
+  }
+
+  if (quickSettingsForm.value.mode === "custom_time") {
+    return `Link WA akan aktif sampai pukul ${quickSettingsForm.value.expiresAtTime || "--:--"} WIB pada hari pengiriman.`;
+  }
+
+  return "Link WA akan aktif sampai pukul 23.59 WIB pada hari pengiriman.";
 });
 
 // Computed: custom holidays filtered for current month
@@ -1236,6 +1311,65 @@ const closeModal = () => {
 const onGuruChange = () => {
   const t = teachers.value.find((t) => t.id === form.value.guruId);
   form.value.guruName = t?.displayName || "";
+};
+
+const fetchQuickSettings = async () => {
+  quickSettingsLoading.value = true;
+  try {
+    const { data } = await api.get("/attendance/quick-settings");
+    quickSettingsForm.value = {
+      mode: data.mode || "end_of_day",
+      minutes: data.minutes || 5,
+      expiresAtTime: data.expiresAtTime || "23:59",
+    };
+  } catch (e) {
+    console.error("Fetch quick attendance settings error:", e);
+    showError(e.response?.data?.error || "Gagal memuat pengaturan link WA");
+  } finally {
+    quickSettingsLoading.value = false;
+  }
+};
+
+const openQuickSettingsModal = async () => {
+  dropdownOpen.value = false;
+  showQuickSettingsModal.value = true;
+  await fetchQuickSettings();
+};
+
+const closeQuickSettingsModal = () => {
+  showQuickSettingsModal.value = false;
+};
+
+const saveQuickSettings = async () => {
+  if (quickSettingsForm.value.mode === "minutes") {
+    const minutes = Number(quickSettingsForm.value.minutes);
+    if (!Number.isFinite(minutes) || minutes < 1 || minutes > 1440) {
+      warning("Durasi menit harus di antara 1 sampai 1440");
+      return;
+    }
+  }
+
+  if (quickSettingsForm.value.mode === "custom_time" && !quickSettingsForm.value.expiresAtTime) {
+    warning("Jam expired wajib diisi");
+    return;
+  }
+
+  savingQuickSettings.value = true;
+  try {
+    const payload = {
+      mode: quickSettingsForm.value.mode,
+      minutes: Number(quickSettingsForm.value.minutes) || 5,
+      expiresAtTime: quickSettingsForm.value.expiresAtTime || "23:59",
+    };
+    await api.put("/attendance/quick-settings", payload);
+    success("Pengaturan link absensi WA berhasil disimpan");
+    closeQuickSettingsModal();
+  } catch (e) {
+    console.error("Save quick attendance settings error:", e);
+    showError(e.response?.data?.error || "Gagal menyimpan pengaturan link WA");
+  } finally {
+    savingQuickSettings.value = false;
+  }
 };
 
 // Export to PDF
@@ -2489,6 +2623,43 @@ onUnmounted(() => {
 .modal h3 {
   color: var(--primary-dark);
   margin-bottom: var(--space-lg);
+}
+
+.quick-settings-modal {
+  max-width: 520px;
+}
+
+.quick-settings-loading {
+  padding: var(--space-lg);
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.settings-info-box,
+.settings-preview {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+}
+
+.settings-info-box {
+  display: grid;
+  gap: 4px;
+  color: var(--primary-dark);
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.24);
+}
+
+.settings-info-box span {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.settings-preview {
+  color: #1565c0;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.22);
+  font-size: 0.95rem;
 }
 
 .modal-actions {

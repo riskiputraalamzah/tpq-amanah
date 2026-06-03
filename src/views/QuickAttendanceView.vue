@@ -73,7 +73,7 @@
       <div v-else-if="state === 'expired'" class="state-block expired">
         <div class="status-icon">×</div>
         <h1>Link Sudah Expired</h1>
-        <p>Link absensi dari WhatsApp hanya berlaku 5 menit.</p>
+        <p>Link absensi dari WhatsApp berlaku sampai {{ expiryLabel }}.</p>
         <router-link
           class="primary-btn"
           to="/login?redirect=/dashboard/attendance"
@@ -119,6 +119,42 @@ const resultStatusLabel = computed(() => {
   return (
     result.value?.statusLabel || details.value?.requestedStatusLabel || "-"
   );
+});
+
+const expiryLabel = computed(() => {
+  if (
+    details.value?.expirySettings?.mode === "minutes" &&
+    Number(details.value.expirySettings.minutes) > 0
+  ) {
+    return `${Number(details.value.expirySettings.minutes)} menit setelah link dikirim`;
+  }
+
+  if (
+    details.value?.expirySettings?.mode === "custom_time" &&
+    details.value.expirySettings.expiresAtTime
+  ) {
+    return `pukul ${details.value.expirySettings.expiresAtTime.replace(":", ".")} WIB`;
+  }
+
+  if (!details.value?.expiresAt) {
+    return "waktu yang ditentukan admin";
+  }
+
+  const date = new Date(details.value.expiresAt);
+  if (Number.isNaN(date.getTime())) {
+    return "waktu yang ditentukan admin";
+  }
+
+  const formatted = date
+    .toLocaleTimeString("id-ID", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+    .replace(":", ".");
+
+  return `pukul ${formatted} WIB`;
 });
 
 function applyError(error) {
