@@ -73,7 +73,7 @@
       <div v-else-if="state === 'expired'" class="state-block expired">
         <div class="status-icon">×</div>
         <h1>Link Sudah Expired</h1>
-        <p>Link absensi dari WhatsApp berlaku sampai {{ expiryLabel }}.</p>
+        <p>{{ expiredMessage }}</p>
         <router-link
           class="primary-btn"
           :to="dashboardLink"
@@ -156,6 +156,14 @@ const expiryLabel = computed(() => {
     .replace(":", ".");
 
   return `pukul ${formatted} WIB`;
+});
+
+const expiredMessage = computed(() => {
+  if (details.value?.expiredReason === "settings_changed") {
+    return "Link ini sudah tidak berlaku karena admin memperbarui pengaturan link WA. Silakan isi manual lewat Dashboard.";
+  }
+
+  return `Link absensi dari WhatsApp berlaku sampai ${expiryLabel.value}.`;
 });
 
 function applyError(error) {

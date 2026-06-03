@@ -589,8 +589,8 @@
 
         <template v-else>
           <div class="settings-info-box">
-            <strong>Pengaturan ini berlaku untuk link baru.</strong>
-            <span>Link yang sudah terkirim tetap memakai waktu expired saat link dibuat.</span>
+            <strong>Pengaturan ini berlaku sejak disimpan.</strong>
+            <span>Link lama yang dibuat sebelum pengaturan terakhir disimpan akan otomatis tidak berlaku.</span>
           </div>
 
           <div class="form-group">
