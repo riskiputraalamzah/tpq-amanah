@@ -1,7 +1,7 @@
 <template>
   <main class="quick-attendance-page">
     <section class="quick-card">
-      <img :src="logoUrl" alt="TPQ AMANAH" class="quick-logo" />
+      <img :src="logoUrl" alt="TPQ AMANAH" class="mx-auto quick-logo" />
 
       <div v-if="state === 'loading'" class="state-block">
         <div class="spinner"></div>
@@ -14,9 +14,13 @@
         <h1>{{ resultTitle }}</h1>
         <p>
           Absensi {{ details?.guruName || "guru" }} tercatat sebagai
-          <strong>{{ resultStatusLabel }}</strong>.
+          <strong>{{ resultStatusLabel }}</strong
+          >.
         </p>
-        <router-link class="secondary-link" to="/login?redirect=/dashboard/attendance">
+        <router-link
+          class="secondary-link"
+          to="/login?redirect=/dashboard/attendance"
+        >
           Buka Dashboard
         </router-link>
       </div>
@@ -26,9 +30,16 @@
         <h1>Absensi Sudah Tercatat</h1>
         <p>
           Status hari ini sudah
-          <strong>{{ details?.existingAttendance?.statusLabel || details?.requestedStatusLabel }}</strong>.
+          <strong>{{
+            details?.existingAttendance?.statusLabel ||
+            details?.requestedStatusLabel
+          }}</strong
+          >.
         </p>
-        <router-link class="secondary-link" to="/login?redirect=/dashboard/attendance">
+        <router-link
+          class="secondary-link"
+          to="/login?redirect=/dashboard/attendance"
+        >
           Buka Dashboard
         </router-link>
       </div>
@@ -38,14 +49,22 @@
         <h1>Absensi Sudah Ada</h1>
         <p>
           Status saat ini
-          <strong>{{ details?.existingAttendance?.statusLabel }}</strong>.
-          Ubah menjadi <strong>{{ details?.requestedStatusLabel }}</strong>?
+          <strong>{{ details?.existingAttendance?.statusLabel }}</strong
+          >. Ubah menjadi <strong>{{ details?.requestedStatusLabel }}</strong
+          >?
         </p>
         <div class="actions">
-          <button class="primary-btn" :disabled="submitting" @click="confirmUpdate">
+          <button
+            class="primary-btn"
+            :disabled="submitting"
+            @click="confirmUpdate"
+          >
             {{ submitting ? "Mengubah..." : "Ya, Ubah Status" }}
           </button>
-          <router-link class="ghost-btn" to="/login?redirect=/dashboard/attendance">
+          <router-link
+            class="ghost-btn"
+            to="/login?redirect=/dashboard/attendance"
+          >
             Cek Dashboard
           </router-link>
         </div>
@@ -55,7 +74,10 @@
         <div class="status-icon">×</div>
         <h1>Link Sudah Expired</h1>
         <p>Link absensi dari WhatsApp hanya berlaku 5 menit.</p>
-        <router-link class="primary-btn" to="/login?redirect=/dashboard/attendance">
+        <router-link
+          class="primary-btn"
+          to="/login?redirect=/dashboard/attendance"
+        >
           Absen Manual
         </router-link>
       </div>
@@ -64,7 +86,10 @@
         <div class="status-icon">×</div>
         <h1>Link Tidak Bisa Dipakai</h1>
         <p>{{ errorMessage }}</p>
-        <router-link class="primary-btn" to="/login?redirect=/dashboard/attendance">
+        <router-link
+          class="primary-btn"
+          to="/login?redirect=/dashboard/attendance"
+        >
           Buka Dashboard
         </router-link>
       </div>
@@ -91,7 +116,9 @@ const resultTitle = computed(() => {
 });
 
 const resultStatusLabel = computed(() => {
-  return result.value?.statusLabel || details.value?.requestedStatusLabel || "-";
+  return (
+    result.value?.statusLabel || details.value?.requestedStatusLabel || "-"
+  );
 });
 
 function applyError(error) {
@@ -112,7 +139,8 @@ function applyError(error) {
     return;
   }
 
-  errorMessage.value = data?.error || "Link absensi tidak valid atau sudah tidak tersedia.";
+  errorMessage.value =
+    data?.error || "Link absensi tidak valid atau sudah tidak tersedia.";
   state.value = "error";
 }
 
@@ -129,7 +157,9 @@ async function submitQuickAttendance() {
 async function confirmUpdate() {
   submitting.value = true;
   try {
-    const { data } = await api.post(`/attendance/quick/${route.params.code}/confirm`);
+    const { data } = await api.post(
+      `/attendance/quick/${route.params.code}/confirm`,
+    );
     result.value = data;
     state.value = "success";
   } catch (error) {
