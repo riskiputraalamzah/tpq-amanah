@@ -19,7 +19,7 @@
         </p>
         <router-link
           class="secondary-link"
-          to="/login?redirect=/dashboard/attendance"
+          :to="dashboardLink"
         >
           Buka Dashboard
         </router-link>
@@ -38,7 +38,7 @@
         </p>
         <router-link
           class="secondary-link"
-          to="/login?redirect=/dashboard/attendance"
+          :to="dashboardLink"
         >
           Buka Dashboard
         </router-link>
@@ -63,7 +63,7 @@
           </button>
           <router-link
             class="ghost-btn"
-            to="/login?redirect=/dashboard/attendance"
+            :to="dashboardLink"
           >
             Cek Dashboard
           </router-link>
@@ -76,7 +76,7 @@
         <p>Link absensi dari WhatsApp berlaku sampai {{ expiryLabel }}.</p>
         <router-link
           class="primary-btn"
-          to="/login?redirect=/dashboard/attendance"
+          :to="dashboardLink"
         >
           Absen Manual
         </router-link>
@@ -88,7 +88,7 @@
         <p>{{ errorMessage }}</p>
         <router-link
           class="primary-btn"
-          to="/login?redirect=/dashboard/attendance"
+          :to="dashboardLink"
         >
           Buka Dashboard
         </router-link>
@@ -104,6 +104,7 @@ import api from "../services/api";
 import logoUrl from "../assets/logo.png";
 
 const route = useRoute();
+const dashboardLink = "/dashboard/attendance";
 const state = ref("loading");
 const details = ref(null);
 const result = ref(null);

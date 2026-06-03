@@ -130,6 +130,13 @@ const router = createRouter({
     }
 })
 
+function getSafeRedirect(redirect, fallback = '/dashboard') {
+    if (typeof redirect !== 'string') return fallback
+    if (!redirect.startsWith('/') || redirect.startsWith('//')) return fallback
+    if (redirect.startsWith('/login')) return fallback
+    return redirect
+}
+
 // Navigation guards
 router.beforeEach(async (to, from, next) => {
     const { useAuthStore } = await import('../stores/auth')
@@ -143,7 +150,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAuth && !authStore.isAuthenticated) {
         next({ name: 'Login', query: { redirect: to.fullPath } })
     } else if (to.name === 'Login' && authStore.isAuthenticated) {
-        next({ name: 'Dashboard' })
+        next(getSafeRedirect(to.query.redirect))
     } else if (to.meta.role) {
         const requiredRoles = Array.isArray(to.meta.role) ? to.meta.role : [to.meta.role]
         const userRole = authStore.user?.role

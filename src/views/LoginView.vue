@@ -408,6 +408,21 @@ const error = ref(null);
 
 const loading = computed(() => authStore.loading);
 
+const getSafeRedirect = () => {
+  const redirect = route.query.redirect;
+
+  if (
+    typeof redirect === "string" &&
+    redirect.startsWith("/") &&
+    !redirect.startsWith("//") &&
+    !redirect.startsWith("/login")
+  ) {
+    return redirect;
+  }
+
+  return "/dashboard";
+};
+
 // Login dengan username/password
 const handleCredentialsLogin = async () => {
   error.value = null;
@@ -417,8 +432,7 @@ const handleCredentialsLogin = async () => {
   );
 
   if (result.success) {
-    const redirect = route.query.redirect || "/dashboard";
-    router.push(redirect);
+    router.push(getSafeRedirect());
   } else {
     error.value = result.error;
   }
@@ -430,8 +444,7 @@ const handleGoogleLogin = async () => {
   const result = await authStore.loginWithGoogle();
 
   if (result.success) {
-    const redirect = route.query.redirect || "/dashboard";
-    router.push(redirect);
+    router.push(getSafeRedirect());
   } else {
     // Ignore popup-closed error
     if (result.error?.code !== "auth/popup-closed-by-user") {
