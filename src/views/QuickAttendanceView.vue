@@ -17,10 +17,7 @@
           <strong>{{ resultStatusLabel }}</strong
           >.
         </p>
-        <router-link
-          class="secondary-link"
-          :to="dashboardLink"
-        >
+        <router-link class="secondary-link" :to="dashboardLink">
           Buka Dashboard
         </router-link>
       </div>
@@ -36,10 +33,7 @@
           }}</strong
           >.
         </p>
-        <router-link
-          class="secondary-link"
-          :to="dashboardLink"
-        >
+        <router-link class="secondary-link" :to="dashboardLink">
           Buka Dashboard
         </router-link>
       </div>
@@ -61,10 +55,7 @@
           >
             {{ submitting ? "Mengubah..." : "Ya, Ubah Status" }}
           </button>
-          <router-link
-            class="ghost-btn"
-            :to="dashboardLink"
-          >
+          <router-link class="ghost-btn" :to="dashboardLink">
             Cek Dashboard
           </router-link>
         </div>
@@ -74,10 +65,7 @@
         <div class="status-icon">×</div>
         <h1>Link Sudah Expired</h1>
         <p>{{ expiredMessage }}</p>
-        <router-link
-          class="primary-btn"
-          :to="dashboardLink"
-        >
+        <router-link class="primary-btn" :to="dashboardLink">
           Absen Manual
         </router-link>
       </div>
@@ -86,10 +74,7 @@
         <div class="status-icon">×</div>
         <h1>Link Tidak Bisa Dipakai</h1>
         <p>{{ errorMessage }}</p>
-        <router-link
-          class="primary-btn"
-          :to="dashboardLink"
-        >
+        <router-link class="primary-btn" :to="dashboardLink">
           Buka Dashboard
         </router-link>
       </div>
@@ -238,7 +223,7 @@ onMounted(async () => {
 
 <style scoped>
 .quick-attendance-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
