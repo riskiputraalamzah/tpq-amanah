@@ -227,6 +227,10 @@
         </div>
 
         <div class="modal-actions">
+          <button v-if="channelUsesWhatsapp(form.deliveryChannel)" class="btn-test-wa" @click="sendTestWhatsapp"
+            :disabled="testingWa || saving">
+            {{ testingWa ? 'Menyiapkan Test...' : 'Siapkan Test WA' }}
+          </button>
           <button class="btn-cancel" @click="closeForm">Batal</button>
           <button class="btn-save" @click="saveAnnouncement" :disabled="saving">
             {{ saving ? 'Menyimpan...' : (editingId ? 'Simpan Perubahan' : 'Buat Pengumuman') }}
@@ -262,6 +266,7 @@ const announcements = ref([])
 const loading = ref(true)
 const saving = ref(false)
 const aiDrafting = ref(false)
+const testingWa = ref(false)
 const showForm = ref(false)
 const editingId = ref(null)
 const deletingId = ref(null)
@@ -515,6 +520,28 @@ const saveAnnouncement = async () => {
     showError(e.response?.data?.error || 'Gagal menyimpan pengumuman')
   } finally {
     saving.value = false
+  }
+}
+
+const sendTestWhatsapp = async () => {
+  if (!form.value.title.trim()) { showError('Judul wajib diisi sebelum test WA'); return }
+  if (!form.value.message.trim()) { showError('Pesan wajib diisi sebelum test WA'); return }
+  if (testingWa.value) return
+
+  testingWa.value = true
+  try {
+    const payload = getPayload()
+    await api.post('/announcements/test-wa', {
+      title: payload.title,
+      message: payload.message,
+      linkUrl: payload.linkUrl,
+      linkLabel: payload.linkLabel
+    }, { timeout: 30000 })
+    success('Test WA disiapkan. Buka /tes-info di WA bot Termux.')
+  } catch (e) {
+    showError(e.response?.data?.error || 'Gagal menyiapkan test WA')
+  } finally {
+    testingWa.value = false
   }
 }
 
@@ -1206,6 +1233,23 @@ onMounted(async () => {
   color: var(--gray-600);
   background: var(--gray-100);
   font-weight: 600;
+}
+
+.btn-test-wa {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-lg);
+  color: #0B6B60;
+  background: rgba(18, 140, 126, 0.12);
+  font-weight: 700;
+}
+
+.btn-test-wa:hover {
+  background: rgba(18, 140, 126, 0.18);
+}
+
+.btn-test-wa:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-save {

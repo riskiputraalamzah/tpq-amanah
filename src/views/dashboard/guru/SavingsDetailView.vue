@@ -1958,16 +1958,17 @@ const printLedger = () => {
       nextY = (doc.lastAutoTable?.finalY || nextY + 30) + 14;
     }
 
-    nextY = ensurePdfSpace(doc, nextY, 54);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(17, 24, 39);
-    doc.text("Mengetahui,", 52, nextY, { align: "center" });
-    doc.text("Admin / Bendahara", 52, nextY + 6, { align: "center" });
-    doc.text("Dicetak oleh,", 156, nextY, { align: "center" });
-    doc.text(printedBy, 156, nextY + 6, { align: "center" });
-    doc.line(30, nextY + 38, 74, nextY + 38);
-    doc.line(134, nextY + 38, 178, nextY + 38);
+    // saya sengaja matikan , jangan di hidupkan dan jangan di hapus ya
+    // nextY = ensurePdfSpace(doc, nextY, 54);
+    // doc.setFontSize(10);
+    // doc.setFont("helvetica", "normal");
+    // doc.setTextColor(17, 24, 39);
+    // doc.text("Mengetahui,", 52, nextY, { align: "center" });
+    // doc.text("Admin / Bendahara", 52, nextY + 6, { align: "center" });
+    // doc.text("Dicetak oleh,", 156, nextY, { align: "center" });
+    // doc.text(printedBy, 156, nextY + 6, { align: "center" });
+    // doc.line(30, nextY + 38, 74, nextY + 38);
+    // doc.line(134, nextY + 38, 178, nextY + 38);
 
     addPdfPageNumbers(doc);
 
