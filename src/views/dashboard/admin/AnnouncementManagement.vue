@@ -39,6 +39,10 @@
               {{ typeLabel[ann.type] || ann.type }}
             </span>
             <span class="ann-role-badge">{{ roleLabel[ann.targetRole] || ann.targetRole }}</span>
+            <span class="ann-channel-badge">{{ channelLabel[ann.deliveryChannel || 'web'] }}</span>
+            <span v-if="ann.whatsapp?.enabled" class="ann-wa-badge" :class="'wa-' + getWhatsappTone(ann.whatsapp.status)">
+              WA {{ whatsappStatusLabel[ann.whatsapp.status] || 'Dijadwalkan' }}
+            </span>
           </div>
           <div class="ann-actions">
             <!-- Toggle Active -->
@@ -89,11 +93,17 @@
             </svg>
             {{ ann.dismissCount }} pengguna menutup
           </span>
+          <span v-if="ann.whatsapp?.enabled" class="ann-wa-meta">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
+            {{ formatWhatsappMeta(ann.whatsapp) }}
+          </span>
           <span class="ann-date">{{ formatDate(ann.createdAt) }}</span>
         </div>
 
         <!-- Preview Banner -->
-        <div class="ann-preview" :class="'preview-' + ann.type">
+        <div v-if="ann.showOnWebsite !== false" class="ann-preview" :class="'preview-' + ann.type">
           <div class="preview-inner">
             <span class="preview-title">{{ ann.title }}</span>
             <span class="preview-msg">{{ ann.message }}</span>
@@ -111,6 +121,18 @@
           <button class="close-btn" @click="closeForm">×</button>
         </div>
 
+        <div class="ai-draft-panel">
+          <input ref="aiFileInput" class="hidden-file-input" type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
+            @change="handleAiFileChange" />
+          <div>
+            <strong>Buat draft dari PDF/gambar</strong>
+            <small>Upload undangan atau gambar info, AI akan mengisi judul dan pesan. Admin tetap bisa edit sebelum disimpan.</small>
+          </div>
+          <button class="btn-ai" :disabled="aiDrafting" @click="aiFileInput?.click()">
+            {{ aiDrafting ? 'Menganalisis...' : 'Upload File' }}
+          </button>
+        </div>
+
         <div class="form-grid">
           <div class="form-group full">
             <label class="form-label">Judul *</label>
@@ -122,6 +144,16 @@
             <textarea v-model="form.message" class="form-input" rows="3"
               placeholder="Deskripsi singkat tentang pengumuman ini..."></textarea>
           </div>
+          <div class="form-group full">
+            <label class="form-label">Mode Pengiriman</label>
+            <div class="channel-segment">
+              <button v-for="option in channelOptions" :key="option.value" type="button"
+                :class="{ active: form.deliveryChannel === option.value }" @click="setDeliveryChannel(option.value)">
+                <strong>{{ option.label }}</strong>
+                <small>{{ option.description }}</small>
+              </button>
+            </div>
+          </div>
           <div class="form-group">
             <label class="form-label">Tipe / Warna</label>
             <select v-model="form.type" class="form-input">
@@ -130,7 +162,7 @@
               <option value="warning">⚠️ Penting (Oranye)</option>
             </select>
           </div>
-          <div class="form-group">
+          <div v-if="form.deliveryChannel !== 'wa'" class="form-group">
             <label class="form-label">Target Pengguna</label>
             <select v-model="form.targetRole" class="form-input">
               <option value="all">Semua Pengguna</option>
@@ -148,14 +180,50 @@
           </div>
         </div>
 
+        <div v-if="channelUsesWhatsapp(form.deliveryChannel)" class="wa-delivery-panel">
+          <div class="wa-options">
+            <div class="wa-options-head">
+              <span>Jadwal Pengiriman WhatsApp</span>
+              <small>Pilih tanggal dan jam. Bisa lebih dari satu jadwal.</small>
+            </div>
+
+            <div class="wa-schedule-list">
+              <div v-for="(schedule, index) in form.whatsappSchedules" :key="index" class="wa-schedule-row">
+                <input v-model="schedule.date" type="date" class="form-input" />
+                <input v-model="schedule.time" type="time" class="form-input" />
+                <button type="button" class="icon-btn delete" :disabled="form.whatsappSchedules.length === 1"
+                  @click="removeWhatsappSchedule(index)" title="Hapus jadwal">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="button" class="btn-add-schedule" @click="addWhatsappSchedule">+ Tambah Jadwal</button>
+
+            <p class="wa-hint">
+              Bot akan mengirim ke nomor guru unik di kontak WA. Jika satu nomor ada di beberapa kontak, tetap dikirim sekali untuk pengumuman yang sama.
+            </p>
+          </div>
+        </div>
+
         <!-- Live Preview -->
-        <div class="preview-label">Preview Banner:</div>
-        <div class="ann-preview" :class="'preview-' + form.type" style="margin-top:0">
+        <div v-if="form.deliveryChannel !== 'wa'" class="preview-label">Preview Banner:</div>
+        <div v-if="form.deliveryChannel !== 'wa'" class="ann-preview" :class="'preview-' + form.type" style="margin-top:0">
           <div class="preview-inner">
             <span class="preview-title">{{ form.title || 'Judul Pengumuman' }}</span>
             <span class="preview-msg">{{ form.message || 'Pesan pengumuman akan tampil di sini' }}</span>
             <span v-if="form.linkUrl" class="preview-cta">{{ form.linkLabel || 'Lihat Selengkapnya' }} →</span>
           </div>
+        </div>
+
+        <div v-if="channelUsesWhatsapp(form.deliveryChannel)" class="preview-label wa-preview-label">Preview WhatsApp:</div>
+        <div v-if="channelUsesWhatsapp(form.deliveryChannel)" class="wa-message-preview">
+          <strong>📢 {{ form.title || 'Judul Pengumuman' }}</strong>
+          <span>{{ form.message || 'Pesan pengumuman akan tampil di sini' }}</span>
+          <small v-if="form.linkUrl">{{ form.linkLabel || 'Buka pengumuman' }}: {{ form.linkUrl }}</small>
         </div>
 
         <div class="modal-actions">
@@ -193,15 +261,60 @@ const { success, error: showError } = useToast()
 const announcements = ref([])
 const loading = ref(true)
 const saving = ref(false)
+const aiDrafting = ref(false)
 const showForm = ref(false)
 const editingId = ref(null)
 const deletingId = ref(null)
 const deletingTitle = ref('')
+const aiFileInput = ref(null)
 
 const typeLabel = { info: 'ℹ️ Info', success: '✅ Sukses', warning: '⚠️ Penting' }
 const roleLabel = { all: '👥 Semua', guru: '🧑‍🏫 Guru', admin: '🔧 Admin' }
+const channelLabel = { web: 'Web', web_wa: 'Web + WA', wa: 'WA Saja' }
+const channelOptions = [
+  { value: 'web', label: 'Website saja', description: 'Tampil sebagai popup/banner dashboard.' },
+  { value: 'web_wa', label: 'Website + WA Guru', description: 'Tampil di dashboard dan terkirim ke WA guru.' },
+  { value: 'wa', label: 'WA Guru saja', description: 'Tidak tampil di website, hanya dikirim ke WA guru.' }
+]
+const whatsappStatusLabel = {
+  disabled: 'Nonaktif',
+  scheduled: 'Dijadwalkan',
+  queued: 'Antrean',
+  sent: 'Terkirim',
+  partial: 'Sebagian',
+  failed: 'Gagal'
+}
 
-const defaultForm = () => ({ title: '', message: '', type: 'info', targetRole: 'all', linkUrl: '', linkLabel: '' })
+const getDateInputValue = (date = new Date()) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getNextTimeInputValue = () => {
+  const date = new Date(Date.now() + 60 * 60 * 1000)
+  const minutes = Math.ceil(date.getMinutes() / 15) * 15
+  if (minutes >= 60) {
+    date.setHours(date.getHours() + 1, 0, 0, 0)
+  } else {
+    date.setMinutes(minutes, 0, 0)
+  }
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const defaultWhatsappSchedule = () => ({ date: getDateInputValue(), time: getNextTimeInputValue() })
+
+const defaultForm = () => ({
+  title: '',
+  message: '',
+  type: 'info',
+  targetRole: 'all',
+  linkUrl: '',
+  linkLabel: '',
+  deliveryChannel: 'web',
+  whatsappSchedules: [defaultWhatsappSchedule()]
+})
 const form = ref(defaultForm())
 
 const formatDate = (d) => {
@@ -228,24 +341,172 @@ const openCreate = () => {
   showForm.value = true
 }
 
+const channelUsesWhatsapp = (channel) => channel === 'web_wa' || channel === 'wa'
+
+const normalizeWhatsappScheduleForForm = (schedule) => {
+  if (typeof schedule === 'string') {
+    return { date: getDateInputValue(), time: schedule }
+  }
+
+  return {
+    date: schedule?.date || getDateInputValue(),
+    time: schedule?.time || getNextTimeInputValue()
+  }
+}
+
 const openEdit = (ann) => {
   editingId.value = ann.id
-  form.value = { title: ann.title, message: ann.message, type: ann.type, targetRole: ann.targetRole, linkUrl: ann.linkUrl || '', linkLabel: ann.linkLabel || '' }
+  const deliveryChannel = ann.deliveryChannel || (ann.whatsapp?.enabled ? 'web_wa' : 'web')
+  const schedules = (ann.whatsapp?.schedules || []).map(normalizeWhatsappScheduleForForm)
+  form.value = {
+    title: ann.title,
+    message: ann.message,
+    type: ann.type,
+    targetRole: ann.targetRole,
+    linkUrl: ann.linkUrl || '',
+    linkLabel: ann.linkLabel || '',
+    deliveryChannel,
+    whatsappSchedules: schedules.length ? schedules : [defaultWhatsappSchedule()]
+  }
   showForm.value = true
 }
 
 const closeForm = () => { showForm.value = false }
 
+const setDeliveryChannel = (channel) => {
+  form.value.deliveryChannel = channel
+  if (channel === 'wa') {
+    form.value.targetRole = 'guru'
+  }
+}
+
+const addWhatsappSchedule = () => {
+  form.value.whatsappSchedules.push(defaultWhatsappSchedule())
+}
+
+const removeWhatsappSchedule = (index) => {
+  if (form.value.whatsappSchedules.length === 1) return
+  form.value.whatsappSchedules.splice(index, 1)
+}
+
+const getCleanWhatsappSchedules = () => form.value.whatsappSchedules
+  .map(schedule => ({
+    date: String(schedule.date || '').trim(),
+    time: String(schedule.time || '').trim()
+  }))
+  .filter(schedule => schedule.date || schedule.time)
+
+const getPayload = () => ({
+  title: form.value.title,
+  message: form.value.message,
+  type: form.value.type,
+  targetRole: form.value.deliveryChannel === 'wa' ? 'guru' : form.value.targetRole,
+  linkUrl: form.value.linkUrl,
+  linkLabel: form.value.linkLabel,
+  deliveryChannel: form.value.deliveryChannel,
+  whatsapp: {
+    enabled: channelUsesWhatsapp(form.value.deliveryChannel),
+    schedules: getCleanWhatsappSchedules()
+  }
+})
+
+const getWhatsappTone = (status) => {
+  if (status === 'sent') return 'success'
+  if (status === 'failed') return 'danger'
+  if (status === 'partial' || status === 'queued') return 'warning'
+  return 'info'
+}
+
+const formatWhatsappMeta = (whatsapp = {}) => {
+  const schedules = (whatsapp.schedules || [])
+    .map(schedule => schedule?.label || (schedule?.date && schedule?.time ? `${schedule.date} ${schedule.time} WIB` : schedule))
+    .join(', ')
+  const sent = Number(whatsapp.sentCount || 0)
+  const queued = Number(whatsapp.queuedCount || 0)
+  const failed = Number(whatsapp.failedCount || 0)
+  const status = whatsappStatusLabel[whatsapp.status] || 'Dijadwalkan'
+  const counts = []
+
+  if (sent) counts.push(`${sent} terkirim`)
+  if (queued) counts.push(`${queued} antrean`)
+  if (failed) counts.push(`${failed} gagal`)
+
+  return `WA ${schedules || '-'} · ${status}${counts.length ? ` · ${counts.join(', ')}` : ''}`
+}
+
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => {
+    const result = String(reader.result || '')
+    resolve(result.includes(',') ? result.split(',')[1] : result)
+  }
+  reader.onerror = () => reject(reader.error)
+  reader.readAsDataURL(file)
+})
+
+const handleAiFileChange = async (event) => {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    showError('File harus berupa PDF, JPG, PNG, atau WEBP')
+    return
+  }
+
+  if (file.size > 8 * 1024 * 1024) {
+    showError('Ukuran file maksimal 8 MB')
+    return
+  }
+
+  aiDrafting.value = true
+  try {
+    const dataBase64 = await fileToBase64(file)
+    const { data } = await api.post('/announcements/ai-draft', {
+      fileName: file.name,
+      mimeType: file.type,
+      dataBase64
+    }, { timeout: 60000 })
+
+    const draft = data.draft || {}
+    form.value.title = draft.title || form.value.title
+    form.value.message = draft.message || form.value.message
+    form.value.type = draft.type || form.value.type
+    form.value.targetRole = draft.targetRole || form.value.targetRole
+    form.value.linkUrl = draft.linkUrl || form.value.linkUrl
+    form.value.linkLabel = draft.linkLabel || form.value.linkLabel
+    success('Draft pengumuman berhasil dibuat dari file')
+  } catch (e) {
+    showError(e.response?.data?.error || 'Gagal menganalisis file')
+  } finally {
+    aiDrafting.value = false
+  }
+}
+
 const saveAnnouncement = async () => {
   if (!form.value.title.trim()) { showError('Judul wajib diisi'); return }
   if (!form.value.message.trim()) { showError('Pesan wajib diisi'); return }
+  if (channelUsesWhatsapp(form.value.deliveryChannel)) {
+    const schedules = getCleanWhatsappSchedules()
+    if (schedules.length === 0) {
+      showError('Pilih minimal satu jadwal WhatsApp')
+      return
+    }
+    const incomplete = schedules.some(schedule => !schedule.date || !schedule.time)
+    if (incomplete) {
+      showError('Tanggal dan jam WhatsApp wajib diisi')
+      return
+    }
+  }
   saving.value = true
   try {
+    const payload = getPayload()
     if (editingId.value) {
-      await api.put(`/announcements/${editingId.value}`, form.value)
+      await api.put(`/announcements/${editingId.value}`, payload)
       success('Pengumuman berhasil diperbarui')
     } else {
-      await api.post('/announcements', form.value)
+      await api.post('/announcements', payload)
       success('Pengumuman berhasil dibuat')
     }
     closeForm()
@@ -294,7 +555,9 @@ const deleteAnn = async () => {
   }
 }
 
-onMounted(fetchAll)
+onMounted(async () => {
+  await fetchAll()
+})
 </script>
 
 <style scoped>
@@ -399,7 +662,9 @@ onMounted(fetchAll)
 }
 
 .ann-type-badge,
-.ann-role-badge {
+.ann-role-badge,
+.ann-channel-badge,
+.ann-wa-badge {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 10px;
@@ -424,6 +689,31 @@ onMounted(fetchAll)
 .ann-role-badge {
   background: var(--gray-100);
   color: var(--gray-600);
+}
+
+.ann-channel-badge {
+  background: rgba(18, 140, 126, 0.1);
+  color: #0B6B60;
+}
+
+.ann-wa-badge.wa-info {
+  background: rgba(33, 150, 243, 0.12);
+  color: #1565C0;
+}
+
+.ann-wa-badge.wa-success {
+  background: rgba(76, 175, 80, 0.14);
+  color: var(--success);
+}
+
+.ann-wa-badge.wa-warning {
+  background: rgba(255, 152, 0, 0.16);
+  color: #E65100;
+}
+
+.ann-wa-badge.wa-danger {
+  background: rgba(244, 67, 54, 0.12);
+  color: var(--error);
 }
 
 .ann-actions {
@@ -532,6 +822,10 @@ onMounted(fetchAll)
   color: #1565C0 !important;
 }
 
+.ann-wa-meta {
+  color: #128C7E !important;
+}
+
 .ann-dismiss {}
 
 .ann-date {
@@ -626,7 +920,7 @@ onMounted(fetchAll)
 
 .modal {
   width: 100%;
-  max-width: 580px;
+  max-width: 680px;
   padding: var(--space-2xl);
   max-height: 90vh;
   overflow-y: auto;
@@ -694,6 +988,90 @@ onMounted(fetchAll)
   border-color: var(--primary);
 }
 
+.hidden-file-input {
+  display: none;
+}
+
+.ai-draft-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(21, 101, 192, 0.18);
+  background: rgba(33, 150, 243, 0.06);
+}
+
+.ai-draft-panel div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ai-draft-panel strong {
+  color: var(--primary-dark);
+  font-size: 0.9rem;
+}
+
+.ai-draft-panel small {
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.btn-ai {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  color: #1565C0;
+  background: rgba(33, 150, 243, 0.12);
+  font-weight: 700;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn-ai:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.channel-segment {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.channel-segment button {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 76px;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  background: white;
+  color: var(--gray-600);
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.channel-segment button.active {
+  border-color: #128C7E;
+  background: rgba(18, 140, 126, 0.1);
+  color: #0B6B60;
+  box-shadow: 0 0 0 2px rgba(18, 140, 126, 0.1);
+}
+
+.channel-segment strong {
+  font-size: 0.8rem;
+}
+
+.channel-segment small {
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
 .preview-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -701,6 +1079,118 @@ onMounted(fetchAll)
   margin-bottom: var(--space-sm);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.wa-delivery-panel {
+  border: 1px solid rgba(18, 140, 126, 0.18);
+  background: rgba(18, 140, 126, 0.06);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.wa-options-head small,
+.wa-hint {
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.wa-options {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.wa-options-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.wa-options-head span {
+  color: var(--gray-700);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.wa-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.wa-schedule-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 36px;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.wa-schedule-row .form-input {
+  padding: 10px 12px;
+}
+
+.btn-add-schedule {
+  margin-top: var(--space-sm);
+  color: #128C7E;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.wa-hint {
+  margin-top: var(--space-sm);
+}
+
+.wa-preview-label {
+  margin-top: var(--space-lg);
+}
+
+.wa-message-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: #F7FFFB;
+  border: 1px solid rgba(18, 140, 126, 0.18);
+  color: var(--gray-700);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.wa-message-preview strong {
+  color: var(--primary-dark);
+}
+
+.wa-message-preview span {
+  white-space: pre-wrap;
+}
+
+.wa-message-preview small {
+  color: #128C7E;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .ai-draft-panel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .channel-segment {
+    grid-template-columns: 1fr;
+  }
+
+  .wa-schedule-row {
+    grid-template-columns: 1fr;
+  }
+
+  .wa-options-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 .modal-actions {

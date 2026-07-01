@@ -103,7 +103,7 @@
           </div>
           <div class="bstat">
             <span class="bstat-val amount">Rp {{ formatCurrency(book.totalBalance || 0) }}</span>
-            <span class="bstat-label">Terkumpul</span>
+            <span class="bstat-label">Saldo</span>
           </div>
         </div>
         <div class="book-date">{{ formatDate(book.createdAt) }}</div>

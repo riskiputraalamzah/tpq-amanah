@@ -33,34 +33,55 @@
             <div class="step-num">1</div>
             <div class="step-body">
               <strong>Buat Buku Baru</strong>
-              <span>Klik tombol <em>"+ Buku Baru"</em> di pojok kanan atas. Beri nama buku, contoh: <em>"Tabungan Santri Kelas A"</em>, <em>"Kas Guru April"</em>, atau <em>"Iuran Kegiatan"</em>.</span>
+              <span>Klik tombol <em>"+ Buku Baru"</em>. Gunakan satu buku untuk satu kebutuhan, contoh: <em>"Kas Guru"</em>, <em>"Iuran Kegiatan"</em>, atau <em>"Tabungan Santri Kelas A"</em>.</span>
             </div>
           </div>
           <div class="guide-step">
             <div class="step-num">2</div>
             <div class="step-body">
-              <strong>Buka Buku & Catat Setoran</strong>
-              <span>Klik kartu buku untuk masuk ke detailnya. Pilih anggota dari riwayat atau ketik nama baru, lalu masukkan jumlah dan waktu setoran.</span>
+              <strong>Atur Akses Buku</strong>
+              <span>Buku bisa dibuat <em>Bersama</em> agar guru lain ikut melihat/mencatat, atau <em>Pribadi</em> agar hanya pemilik dan admin yang dapat mengaksesnya.</span>
             </div>
           </div>
           <div class="guide-step">
             <div class="step-num">3</div>
             <div class="step-body">
-              <strong>Pantau Riwayat & Saldo</strong>
-              <span>Semua setoran tercatat otomatis lengkap dengan waktu. Anda bisa melihat total per anggota dan keseluruhan kapan saja.</span>
+              <strong>Catat Pemasukan</strong>
+              <span>Buka detail buku, pilih tab <em>Pemasukan</em>, lalu pilih anggota dari riwayat atau input nama baru. Nominal pemasukan akan menambah saldo buku dan ringkasan anggota.</span>
             </div>
           </div>
           <div class="guide-step">
             <div class="step-num">4</div>
             <div class="step-body">
-              <strong>Tutup Buku Jika Selesai</strong>
-              <span>Jika dana sudah digunakan atau periode selesai, tutup buku dengan ikon <em>×</em>. Riwayat tetap tersimpan untuk keperluan audit.</span>
+              <strong>Catat Pengeluaran</strong>
+              <span>Pilih tab <em>Pengeluaran</em>, isi keterangan seperti bisyarah, sampah, perlengkapan, atau kegiatan, lalu masukkan nominal. Pengeluaran akan mengurangi saldo buku.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <strong>Pantau Saldo & Riwayat</strong>
+              <span>Riwayat menampilkan pemasukan sebagai <em>+Rp</em> dan pengeluaran sebagai <em>-Rp</em>. Ringkasan anggota hanya menghitung pemasukan anggota, sedangkan saldo buku menghitung semua transaksi.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">6</div>
+            <div class="step-body">
+              <strong>Cetak PDF atau Tutup Buku</strong>
+              <span>Gunakan <em>Cetak PDF</em> di detail buku untuk laporan pembukuan per bulan, rentang tanggal, atau semua transaksi. Jika buku sudah selesai dipakai, tutup buku agar tidak ada transaksi baru.</span>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">7</div>
+            <div class="step-body">
+              <strong>Jika Link Tidak Bisa Dibuka</strong>
+              <span>Jika buku yang pernah dibagikan berubah menjadi pribadi, guru lain akan melihat halaman info bahwa buku tidak tersedia dan isi buku tidak ditampilkan demi keamanan data.</span>
             </div>
           </div>
         </div>
         <div class="guide-tips">
           <span class="tip-badge">💡 Tips</span>
-          Buku ini bisa dipakai untuk apa saja: tabungan santri, kas kelas, iuran guru, dana kegiatan, dll.
+          Satu buku sebaiknya dipakai terus untuk satu kas atau kegiatan. Saat laporan dibutuhkan, cetak PDF per bulan agar pembukuan tetap rapi.
         </div>
       </div>
     </div>
@@ -79,7 +100,7 @@
       <div class="stat-pill glass-card">
         <span class="pill-icon">💰</span>
         <div><span class="pill-value">Rp {{ formatCurrency(totalBalance) }}</span><span class="pill-label">Total
-            Terkumpul</span></div>
+            Saldo</span></div>
       </div>
     </div>
 
@@ -92,7 +113,7 @@
     <div v-else-if="books.length === 0" class="empty-state glass-card">
       <div class="empty-icon">🏦</div>
       <h3>Belum Ada Buku Tabungan</h3>
-      <p>Buat buku catatan pertama untuk mulai mencatat setoran atau iuran</p>
+      <p>Buat buku catatan pertama untuk mulai mencatat pemasukan, pengeluaran, atau iuran</p>
       <button class="btn-create m-auto" @click="openCreateModal">Buat Buku Pertama</button>
     </div>
 
@@ -127,7 +148,7 @@
           </div>
           <div class="bstat">
             <span class="bstat-val balance">Rp {{ formatCurrency(book.totalBalance || 0) }}</span>
-            <span class="bstat-label">Terkumpul</span>
+            <span class="bstat-label">Saldo</span>
           </div>
         </div>
         <div class="book-footer">
@@ -1039,4 +1060,3 @@ onMounted(() => {
   white-space: nowrap;
 }
 </style>
-
