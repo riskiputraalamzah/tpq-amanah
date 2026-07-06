@@ -93,13 +93,42 @@
             </svg>
             {{ ann.dismissCount }} pengguna menutup
           </span>
-          <span v-if="ann.whatsapp?.enabled" class="ann-wa-meta">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-            {{ formatWhatsappMeta(ann.whatsapp) }}
-          </span>
           <span class="ann-date">{{ formatDate(ann.createdAt) }}</span>
+
+          <div v-if="ann.whatsapp?.enabled" class="ann-wa-schedule">
+            <div class="ann-wa-schedule-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+              <span>Jadwal WA</span>
+            </div>
+
+            <div class="ann-wa-schedule-list">
+              <span
+                v-for="schedule in getWhatsappScheduleItems(ann.whatsapp)"
+                :key="schedule.key"
+                class="ann-wa-schedule-chip"
+              >
+                <span class="schedule-date">{{ schedule.dateLabel }}</span>
+                <span class="schedule-time">{{ schedule.timeLabel }}</span>
+              </span>
+              <span v-if="getWhatsappScheduleItems(ann.whatsapp).length === 0" class="ann-wa-empty">Belum ada jadwal</span>
+            </div>
+
+            <div class="ann-wa-summary">
+              <span class="ann-wa-status" :class="'wa-' + getWhatsappTone(ann.whatsapp.status)">
+                {{ whatsappStatusLabel[ann.whatsapp.status] || 'Dijadwalkan' }}
+              </span>
+              <span
+                v-for="count in getWhatsappCountItems(ann.whatsapp)"
+                :key="count.key"
+                class="ann-wa-count"
+                :class="'count-' + count.key"
+              >
+                {{ count.label }}
+              </span>
+            </div>
+          </div>
         </div>
 
         <!-- Preview Banner -->
@@ -422,21 +451,69 @@ const getWhatsappTone = (status) => {
   return 'info'
 }
 
-const formatWhatsappMeta = (whatsapp = {}) => {
-  const schedules = (whatsapp.schedules || [])
-    .map(schedule => schedule?.label || (schedule?.date && schedule?.time ? `${schedule.date} ${schedule.time} WIB` : schedule))
-    .join(', ')
+const formatScheduleDateLabel = (value) => {
+  if (!value) return '-'
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString('id-ID', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short'
+    })
+  }
+
+  const date = value?.seconds ? new Date(value.seconds * 1000) : new Date(value)
+  if (isNaN(date)) return '-'
+
+  return date.toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short'
+  })
+}
+
+const formatScheduleTimeLabel = (value) => {
+  if (!value) return '-'
+  if (/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return `${value} WIB`
+
+  const date = value?.seconds ? new Date(value.seconds * 1000) : new Date(value)
+  if (isNaN(date)) return `${value} WIB`
+
+  return `${date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })} WIB`
+}
+
+const getWhatsappScheduleItems = (whatsapp = {}) => (whatsapp.schedules || [])
+  .map((schedule, index) => {
+    if (typeof schedule === 'string') {
+      return {
+        key: `legacy-${index}-${schedule}`,
+        dateLabel: '-',
+        timeLabel: formatScheduleTimeLabel(schedule)
+      }
+    }
+
+    const dateValue = schedule?.date || schedule?.sendAt
+    const timeValue = schedule?.time || schedule?.sendAt
+
+    return {
+      key: schedule?.key || `${schedule?.date || 'date'}-${schedule?.time || 'time'}-${index}`,
+      dateLabel: formatScheduleDateLabel(dateValue),
+      timeLabel: formatScheduleTimeLabel(timeValue)
+    }
+  })
+
+const getWhatsappCountItems = (whatsapp = {}) => {
   const sent = Number(whatsapp.sentCount || 0)
   const queued = Number(whatsapp.queuedCount || 0)
   const failed = Number(whatsapp.failedCount || 0)
-  const status = whatsappStatusLabel[whatsapp.status] || 'Dijadwalkan'
   const counts = []
 
-  if (sent) counts.push(`${sent} terkirim`)
-  if (queued) counts.push(`${queued} antrean`)
-  if (failed) counts.push(`${failed} gagal`)
+  if (sent) counts.push({ key: 'sent', label: `${sent} terkirim` })
+  if (queued) counts.push({ key: 'queued', label: `${queued} antrean` })
+  if (failed) counts.push({ key: 'failed', label: `${failed} gagal` })
 
-  return `WA ${schedules || '-'} · ${status}${counts.length ? ` · ${counts.join(', ')}` : ''}`
+  return counts
 }
 
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
@@ -837,7 +914,7 @@ onMounted(async () => {
   margin-bottom: var(--space-lg);
 }
 
-.ann-meta span {
+.ann-meta > span {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -849,14 +926,112 @@ onMounted(async () => {
   color: #1565C0 !important;
 }
 
-.ann-wa-meta {
-  color: #128C7E !important;
-}
-
 .ann-dismiss {}
 
 .ann-date {
   margin-left: auto;
+}
+
+.ann-wa-schedule {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(18, 140, 126, 0.14);
+}
+
+.ann-wa-schedule-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0B6B60;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ann-wa-schedule-list {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.ann-wa-schedule-chip {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid rgba(18, 140, 126, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(18, 140, 126, 0.06);
+  color: #0B6B60;
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.schedule-date,
+.schedule-time {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.schedule-time {
+  background: rgba(18, 140, 126, 0.1);
+}
+
+.ann-wa-empty {
+  color: var(--gray-400);
+  font-size: 0.75rem;
+}
+
+.ann-wa-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ann-wa-status,
+.ann-wa-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ann-wa-status.wa-info {
+  background: rgba(33, 150, 243, 0.12);
+  color: #1565C0;
+}
+
+.ann-wa-status.wa-success,
+.ann-wa-count.count-sent {
+  background: rgba(76, 175, 80, 0.14);
+  color: var(--success);
+}
+
+.ann-wa-status.wa-warning,
+.ann-wa-count.count-queued {
+  background: rgba(255, 152, 0, 0.16);
+  color: #E65100;
+}
+
+.ann-wa-status.wa-danger,
+.ann-wa-count.count-failed {
+  background: rgba(244, 67, 54, 0.12);
+  color: var(--error);
 }
 
 /* Preview Banner */
@@ -1201,6 +1376,23 @@ onMounted(async () => {
 }
 
 @media (max-width: 640px) {
+  .ann-left,
+  .ann-actions {
+    flex-wrap: wrap;
+  }
+
+  .ann-date {
+    margin-left: 0;
+  }
+
+  .ann-wa-schedule {
+    grid-template-columns: 1fr;
+  }
+
+  .ann-wa-summary {
+    justify-content: flex-start;
+  }
+
   .ai-draft-panel {
     align-items: flex-start;
     flex-direction: column;
