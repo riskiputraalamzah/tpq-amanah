@@ -204,7 +204,7 @@
             <button type="button" class="btn-add-schedule" @click="addWhatsappSchedule">+ Tambah Jadwal</button>
 
             <p class="wa-hint">
-              Bot akan mengirim ke nomor guru unik di kontak WA. Jika satu nomor ada di beberapa kontak, tetap dikirim sekali untuk pengumuman yang sama.
+              Bot akan mengirim ke nomor guru unik di kontak WA. Jika satu nomor ada di beberapa kontak, tetap dikirim sekali per jadwal.
             </p>
           </div>
         </div>
