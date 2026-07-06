@@ -100,27 +100,56 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
-              <span>Jadwal WA</span>
+              <span>Jadwal aktif</span>
             </div>
 
             <div class="ann-wa-schedule-list">
               <span
-                v-for="schedule in getWhatsappScheduleItems(ann.whatsapp)"
+                v-for="schedule in getWhatsappActiveScheduleItems(ann.whatsapp)"
                 :key="schedule.key"
                 class="ann-wa-schedule-chip"
               >
                 <span class="schedule-date">{{ schedule.dateLabel }}</span>
                 <span class="schedule-time">{{ schedule.timeLabel }}</span>
               </span>
-              <span v-if="getWhatsappScheduleItems(ann.whatsapp).length === 0" class="ann-wa-empty">Belum ada jadwal</span>
+              <span v-if="getWhatsappActiveScheduleItems(ann.whatsapp).length === 0" class="ann-wa-empty">Tidak ada jadwal aktif</span>
             </div>
 
             <div class="ann-wa-summary">
               <span class="ann-wa-status" :class="'wa-' + getWhatsappTone(ann.whatsapp.status)">
-                {{ whatsappStatusLabel[ann.whatsapp.status] || 'Dijadwalkan' }}
+                {{ getWhatsappActiveSummary(ann.whatsapp) }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="ann.whatsapp?.enabled && getWhatsappHistoryItems(ann.whatsapp).length" class="ann-wa-schedule ann-wa-history">
+            <div class="ann-wa-schedule-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 8v5l3 2" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+              <span>History kirim</span>
+            </div>
+
+            <div class="ann-wa-schedule-list">
+              <span
+                v-for="schedule in getWhatsappHistoryItems(ann.whatsapp)"
+                :key="schedule.key"
+                class="ann-wa-schedule-chip history-chip"
+                :class="'history-' + schedule.tone"
+              >
+                <span class="schedule-date">{{ schedule.dateLabel }}</span>
+                <span class="schedule-time">{{ schedule.timeLabel }}</span>
+                <span class="schedule-result">{{ schedule.resultLabel }}</span>
+              </span>
+            </div>
+
+            <div class="ann-wa-summary">
+              <span class="ann-wa-count count-sent">
+                {{ getWhatsappHistorySummary(ann.whatsapp) }}
               </span>
               <span
-                v-for="count in getWhatsappCountItems(ann.whatsapp)"
+                v-for="count in getWhatsappMessageCountItems(ann.whatsapp)"
                 :key="count.key"
                 class="ann-wa-count"
                 :class="'count-' + count.key"
@@ -220,7 +249,7 @@
               <div v-for="(schedule, index) in form.whatsappSchedules" :key="index" class="wa-schedule-row">
                 <input v-model="schedule.date" type="date" class="form-input" />
                 <input v-model="schedule.time" type="time" class="form-input" />
-                <button type="button" class="icon-btn delete" :disabled="form.whatsappSchedules.length === 1"
+                <button type="button" class="icon-btn delete" :disabled="!canRemoveWhatsappSchedule(schedule)"
                   @click="removeWhatsappSchedule(index)" title="Hapus jadwal">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6" />
@@ -228,9 +257,32 @@
                   </svg>
                 </button>
               </div>
+              <div v-if="form.whatsappSchedules.length === 0" class="wa-schedule-empty">
+                Tidak ada jadwal aktif. Tambahkan jadwal baru jika pengumuman perlu dikirim lagi.
+              </div>
             </div>
 
             <button type="button" class="btn-add-schedule" @click="addWhatsappSchedule">+ Tambah Jadwal</button>
+
+            <div v-if="form.whatsappHistory.length" class="wa-history-panel">
+              <div class="wa-history-head">
+                <span>History pengiriman</span>
+                <small>Jadwal yang sudah diproses tersimpan sebagai riwayat dan tidak bisa dihapus.</small>
+              </div>
+
+              <div class="wa-history-list">
+                <span
+                  v-for="item in form.whatsappHistory"
+                  :key="item.key"
+                  class="ann-wa-schedule-chip history-chip"
+                  :class="'history-' + item.tone"
+                >
+                  <span class="schedule-date">{{ item.dateLabel }}</span>
+                  <span class="schedule-time">{{ item.timeLabel }}</span>
+                  <span class="schedule-result">{{ item.resultLabel }}</span>
+                </span>
+              </div>
+            </div>
 
             <p class="wa-hint">
               Bot akan mengirim ke nomor guru unik di kontak WA. Jika satu nomor ada di beberapa kontak, tetap dikirim sekali per jadwal.
@@ -347,7 +399,8 @@ const defaultForm = () => ({
   linkUrl: '',
   linkLabel: '',
   deliveryChannel: 'web',
-  whatsappSchedules: [defaultWhatsappSchedule()]
+  whatsappSchedules: [defaultWhatsappSchedule()],
+  whatsappHistory: []
 })
 const form = ref(defaultForm())
 
@@ -388,10 +441,30 @@ const normalizeWhatsappScheduleForForm = (schedule) => {
   }
 }
 
+const getWhatsappReports = (whatsapp = {}) => Array.isArray(whatsapp.scheduleReports)
+  ? whatsapp.scheduleReports
+  : []
+
+const reportToFormSchedule = (report) => ({
+  date: report?.scheduleDate || getDateInputValue(),
+  time: report?.scheduleTime || getNextTimeInputValue(),
+  locked: report?.canRemove === false
+})
+
 const openEdit = (ann) => {
   editingId.value = ann.id
   const deliveryChannel = ann.deliveryChannel || (ann.whatsapp?.enabled ? 'web_wa' : 'web')
-  const schedules = (ann.whatsapp?.schedules || []).map(normalizeWhatsappScheduleForForm)
+  const reports = getWhatsappReports(ann.whatsapp)
+  const activeSchedules = reports.length
+    ? reports
+      .filter(report => report.isActive)
+      .map(reportToFormSchedule)
+    : (ann.whatsapp?.schedules || []).map(normalizeWhatsappScheduleForForm)
+  const history = getWhatsappHistoryItems(ann.whatsapp)
+  const schedules = activeSchedules.length
+    ? activeSchedules
+    : (history.length ? [] : [defaultWhatsappSchedule()])
+
   form.value = {
     title: ann.title,
     message: ann.message,
@@ -400,7 +473,8 @@ const openEdit = (ann) => {
     linkUrl: ann.linkUrl || '',
     linkLabel: ann.linkLabel || '',
     deliveryChannel,
-    whatsappSchedules: schedules.length ? schedules : [defaultWhatsappSchedule()]
+    whatsappSchedules: schedules,
+    whatsappHistory: history
   }
   showForm.value = true
 }
@@ -418,12 +492,18 @@ const addWhatsappSchedule = () => {
   form.value.whatsappSchedules.push(defaultWhatsappSchedule())
 }
 
+const canRemoveWhatsappSchedule = (schedule) => {
+  if (schedule?.locked) return false
+  return form.value.whatsappSchedules.length > 1 || form.value.whatsappHistory.length > 0
+}
+
 const removeWhatsappSchedule = (index) => {
-  if (form.value.whatsappSchedules.length === 1) return
+  if (!canRemoveWhatsappSchedule(form.value.whatsappSchedules[index])) return
   form.value.whatsappSchedules.splice(index, 1)
 }
 
 const getCleanWhatsappSchedules = () => form.value.whatsappSchedules
+  .filter(schedule => !schedule.locked)
   .map(schedule => ({
     date: String(schedule.date || '').trim(),
     time: String(schedule.time || '').trim()
@@ -503,13 +583,75 @@ const getWhatsappScheduleItems = (whatsapp = {}) => (whatsapp.schedules || [])
     }
   })
 
-const getWhatsappCountItems = (whatsapp = {}) => {
-  const sent = Number(whatsapp.sentCount || 0)
+const getReportTone = (report = {}) => {
+  if (report.status === 'failed' || Number(report.summary?.failed || 0) > 0) return 'danger'
+  if (report.status === 'partial' || report.status === 'queued' || Number(report.summary?.queued || 0) > 0) return 'warning'
+  if (report.status === 'sent' || Number(report.summary?.sent || 0) > 0) return 'success'
+  if (report.status === 'skipped') return 'muted'
+  return 'info'
+}
+
+const getReportResultLabel = (report = {}) => {
+  const sent = Number(report.summary?.sent || 0)
+  const queued = Number(report.summary?.queued || 0)
+  const failed = Number(report.summary?.failed || 0)
+  const skipped = Number(report.summary?.skipped || 0)
+  const parts = []
+
+  if (sent) parts.push(`${sent} terkirim`)
+  if (queued) parts.push(`${queued} antrean`)
+  if (failed) parts.push(`${failed} gagal`)
+  if (skipped) parts.push(`${skipped} dilewati`)
+
+  return parts.length ? parts.join(', ') : (whatsappStatusLabel[report.status] || 'Selesai')
+}
+
+const reportToScheduleItem = (report = {}) => ({
+  key: report.id || report.scheduleKey || `${report.scheduleDate || 'date'}-${report.scheduleTime || 'time'}`,
+  dateLabel: formatScheduleDateLabel(report.scheduleDate || report.sendAt),
+  timeLabel: formatScheduleTimeLabel(report.scheduleTime || report.sendAt),
+  resultLabel: getReportResultLabel(report),
+  tone: getReportTone(report),
+  status: report.status
+})
+
+const getWhatsappActiveReports = (whatsapp = {}) => getWhatsappReports(whatsapp)
+  .filter(report => report.isActive && report.status !== 'cancelled')
+
+const getWhatsappHistoryReports = (whatsapp = {}) => getWhatsappReports(whatsapp)
+  .filter(report => report.isHistory && report.status !== 'cancelled')
+
+const getWhatsappActiveScheduleItems = (whatsapp = {}) => {
+  const allReports = getWhatsappReports(whatsapp)
+  const reports = getWhatsappActiveReports(whatsapp)
+  return allReports.length ? reports.map(reportToScheduleItem) : getWhatsappScheduleItems(whatsapp)
+}
+
+const getWhatsappHistoryItems = (whatsapp = {}) => getWhatsappHistoryReports(whatsapp)
+  .map(reportToScheduleItem)
+
+const getWhatsappActiveSummary = (whatsapp = {}) => {
+  const activeCount = getWhatsappActiveScheduleItems(whatsapp).length
+  if (activeCount > 0) return `${activeCount} menunggu`
+  if (getWhatsappHistoryItems(whatsapp).length > 0) return 'Tidak ada jadwal aktif'
+  return whatsappStatusLabel[whatsapp.status] || 'Dijadwalkan'
+}
+
+const getWhatsappHistorySummary = (whatsapp = {}) => {
+  const history = getWhatsappHistoryItems(whatsapp)
+  const sentSchedules = getWhatsappHistoryReports(whatsapp)
+    .filter(report => report.status === 'sent' || report.status === 'partial')
+    .length
+
+  if (sentSchedules > 0) return `${sentSchedules} jadwal terkirim`
+  return `${history.length} riwayat`
+}
+
+const getWhatsappMessageCountItems = (whatsapp = {}) => {
   const queued = Number(whatsapp.queuedCount || 0)
   const failed = Number(whatsapp.failedCount || 0)
   const counts = []
 
-  if (sent) counts.push({ key: 'sent', label: `${sent} terkirim` })
   if (queued) counts.push({ key: 'queued', label: `${queued} antrean` })
   if (failed) counts.push({ key: 'failed', label: `${failed} gagal` })
 
@@ -571,7 +713,9 @@ const saveAnnouncement = async () => {
   if (!form.value.message.trim()) { showError('Pesan wajib diisi'); return }
   if (channelUsesWhatsapp(form.value.deliveryChannel)) {
     const schedules = getCleanWhatsappSchedules()
-    if (schedules.length === 0) {
+    const hasReadonlyHistory = form.value.whatsappHistory.length > 0
+
+    if (schedules.length === 0 && !hasReadonlyHistory) {
       showError('Pilih minimal satu jadwal WhatsApp')
       return
     }
@@ -942,6 +1086,10 @@ onMounted(async () => {
   border-top: 1px solid rgba(18, 140, 126, 0.14);
 }
 
+.ann-wa-history {
+  border-top-style: dashed;
+}
+
 .ann-wa-schedule-label {
   display: inline-flex;
   align-items: center;
@@ -974,7 +1122,8 @@ onMounted(async () => {
 }
 
 .schedule-date,
-.schedule-time {
+.schedule-time,
+.schedule-result {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
@@ -984,6 +1133,35 @@ onMounted(async () => {
 
 .schedule-time {
   background: rgba(18, 140, 126, 0.1);
+}
+
+.schedule-result {
+  background: rgba(255, 255, 255, 0.62);
+  border-left: 1px solid rgba(18, 140, 126, 0.14);
+}
+
+.history-chip.history-success {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.2);
+  color: var(--success);
+}
+
+.history-chip.history-warning {
+  background: rgba(255, 152, 0, 0.1);
+  border-color: rgba(255, 152, 0, 0.22);
+  color: #E65100;
+}
+
+.history-chip.history-danger {
+  background: rgba(244, 67, 54, 0.08);
+  border-color: rgba(244, 67, 54, 0.2);
+  color: var(--error);
+}
+
+.history-chip.history-muted {
+  background: rgba(100, 116, 139, 0.08);
+  border-color: rgba(100, 116, 139, 0.16);
+  color: var(--gray-500);
 }
 
 .ann-wa-empty {
@@ -1334,6 +1512,53 @@ onMounted(async () => {
   padding: 10px 12px;
 }
 
+.wa-schedule-empty {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(18, 140, 126, 0.24);
+  color: var(--gray-500);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.wa-history-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(18, 140, 126, 0.16);
+  background: rgba(247, 255, 251, 0.72);
+}
+
+.wa-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.wa-history-head span {
+  color: #0B6B60;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.wa-history-head small {
+  max-width: 440px;
+  color: var(--gray-500);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.wa-history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .btn-add-schedule {
   margin-top: var(--space-sm);
   color: #128C7E;
@@ -1409,6 +1634,14 @@ onMounted(async () => {
   .wa-options-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .wa-history-head {
+    flex-direction: column;
+  }
+
+  .wa-history-head small {
+    text-align: left;
   }
 }
 
