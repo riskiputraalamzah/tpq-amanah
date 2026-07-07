@@ -12,7 +12,10 @@
       <div v-else-if="state === 'success'" class="state-block success">
         <div class="status-icon">✓</div>
         <h1>{{ resultTitle }}</h1>
-        <p>
+        <p v-if="isTestResult">
+          Link test WA berhasil diproses. Tidak ada absensi yang dicatat.
+        </p>
+        <p v-else>
           Absensi {{ details?.guruName || "guru" }} tercatat sebagai
           <strong>{{ resultStatusLabel }}</strong
           >.
@@ -97,8 +100,13 @@ const errorMessage = ref("Link absensi tidak valid atau sudah tidak tersedia.");
 const submitting = ref(false);
 
 const resultTitle = computed(() => {
+  if (result.value?.action === "test") return "Test Link Berhasil";
   if (result.value?.action === "updated") return "Absensi Diperbarui";
   return "Absensi Berhasil";
+});
+
+const isTestResult = computed(() => {
+  return result.value?.action === "test" || result.value?.isTest === true;
 });
 
 const resultStatusLabel = computed(() => {
