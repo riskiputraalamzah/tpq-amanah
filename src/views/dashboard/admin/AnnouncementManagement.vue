@@ -116,6 +116,7 @@
             </div>
 
             <div class="ann-wa-summary">
+              <span class="ann-wa-target">{{ getWhatsappTargetLabel(ann.whatsapp) }}</span>
               <span class="ann-wa-status" :class="'wa-' + getWhatsappTone(ann.whatsapp.status)">
                 {{ getWhatsappActiveSummary(ann.whatsapp) }}
               </span>
@@ -239,6 +240,43 @@
         </div>
 
         <div v-if="channelUsesWhatsapp(form.deliveryChannel)" class="wa-delivery-panel">
+          <div class="wa-target-panel">
+            <div class="wa-target-head">
+              <div>
+                <span>Target Guru WhatsApp</span>
+                <small>Default dikirim ke semua guru. Centang manual jika hanya ingin mengirim ke guru tertentu.</small>
+              </div>
+              <button type="button" class="btn-target-all" :class="{ active: isAllGuruTargeted() }" @click="selectAllGuruTargets">
+                Semua guru
+              </button>
+            </div>
+
+            <div v-if="waTargetTeachers.length" class="wa-target-list">
+              <label
+                v-for="teacher in waTargetTeachers"
+                :key="teacher.id"
+                class="wa-target-option"
+                :class="{ active: isTeacherTargetSelected(teacher.id) }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="isTeacherTargetSelected(teacher.id)"
+                  @change="toggleTeacherTarget(teacher.id)"
+                />
+                <span class="target-avatar">{{ getInitials(teacher.displayName || teacher.username || teacher.id) }}</span>
+                <span class="target-body">
+                  <strong>{{ teacher.displayName || teacher.username || teacher.id }}</strong>
+                  <small>{{ teacher.username || teacher.phone || teacher.id }}</small>
+                </span>
+              </label>
+            </div>
+            <div v-else class="wa-target-empty">
+              Data guru belum tersedia. Jika dibiarkan, bot tetap memakai default semua kontak WA.
+            </div>
+
+            <p class="wa-target-summary">{{ getTargetGuruSummary() }}</p>
+          </div>
+
           <div class="wa-options">
             <div class="wa-options-head">
               <span>Jadwal Pengiriman WhatsApp</span>
@@ -353,6 +391,7 @@ const editingId = ref(null)
 const deletingId = ref(null)
 const deletingTitle = ref('')
 const aiFileInput = ref(null)
+const waTargetTeachers = ref([])
 
 const typeLabel = { info: 'ℹ️ Info', success: '✅ Sukses', warning: '⚠️ Penting' }
 const roleLabel = { all: '👥 Semua', guru: '🧑‍🏫 Guru', admin: '🔧 Admin' }
@@ -400,7 +439,8 @@ const defaultForm = () => ({
   linkLabel: '',
   deliveryChannel: 'web',
   whatsappSchedules: [defaultWhatsappSchedule()],
-  whatsappHistory: []
+  whatsappHistory: [],
+  targetGuruIds: []
 })
 const form = ref(defaultForm())
 
@@ -410,15 +450,32 @@ const formatDate = (d) => {
   return isNaN(dt) ? '-' : dt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+const getInitials = (name) => {
+  if (!name) return 'G'
+  return String(name)
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
 const fetchAll = async () => {
   loading.value = true
   try {
-    const { data } = await api.get('/announcements')
-    announcements.value = data
+    const announcementsResponse = await api.get('/announcements')
+    announcements.value = announcementsResponse.data
   } catch (e) {
     showError('Gagal memuat pengumuman')
   } finally {
     loading.value = false
+  }
+
+  try {
+    const teachersResponse = await api.get('/users?role=guru')
+    waTargetTeachers.value = Array.isArray(teachersResponse.data) ? teachersResponse.data : []
+  } catch (e) {
+    waTargetTeachers.value = []
   }
 }
 
@@ -474,7 +531,8 @@ const openEdit = (ann) => {
     linkLabel: ann.linkLabel || '',
     deliveryChannel,
     whatsappSchedules: schedules,
-    whatsappHistory: history
+    whatsappHistory: history,
+    targetGuruIds: Array.isArray(ann.whatsapp?.targetGuruIds) ? [...ann.whatsapp.targetGuruIds] : []
   }
   showForm.value = true
 }
@@ -520,9 +578,57 @@ const getPayload = () => ({
   deliveryChannel: form.value.deliveryChannel,
   whatsapp: {
     enabled: channelUsesWhatsapp(form.value.deliveryChannel),
-    schedules: getCleanWhatsappSchedules()
+    schedules: getCleanWhatsappSchedules(),
+    targetGuruIds: form.value.targetGuruIds
   }
 })
+
+const getAllTeacherTargetIds = () => waTargetTeachers.value.map(teacher => String(teacher.id))
+
+const isAllGuruTargeted = () => form.value.targetGuruIds.length === 0
+
+const isTeacherTargetSelected = (teacherId) => {
+  if (isAllGuruTargeted()) return true
+  return form.value.targetGuruIds.includes(String(teacherId))
+}
+
+const selectAllGuruTargets = () => {
+  form.value.targetGuruIds = []
+}
+
+const toggleTeacherTarget = (teacherId) => {
+  const id = String(teacherId)
+
+  if (isAllGuruTargeted()) {
+    form.value.targetGuruIds = getAllTeacherTargetIds().filter(item => item !== id)
+    return
+  }
+
+  if (form.value.targetGuruIds.includes(id)) {
+    const next = form.value.targetGuruIds.filter(item => item !== id)
+    if (next.length === 0) {
+      showError('Minimal pilih satu guru, atau gunakan tombol Semua guru')
+      return
+    }
+    form.value.targetGuruIds = next
+    return
+  }
+
+  form.value.targetGuruIds = [...form.value.targetGuruIds, id]
+}
+
+const getTargetGuruSummary = () => {
+  if (isAllGuruTargeted()) {
+    return `Target: semua guru${waTargetTeachers.value.length ? ` (${waTargetTeachers.value.length})` : ''}`
+  }
+
+  return `Target: ${form.value.targetGuruIds.length} guru dipilih`
+}
+
+const getWhatsappTargetLabel = (whatsapp = {}) => {
+  const ids = Array.isArray(whatsapp.targetGuruIds) ? whatsapp.targetGuruIds : []
+  return ids.length ? `${ids.length} guru dipilih` : 'Semua guru'
+}
 
 const getWhatsappTone = (status) => {
   if (status === 'sent') return 'success'
@@ -1178,7 +1284,8 @@ onMounted(async () => {
 }
 
 .ann-wa-status,
-.ann-wa-count {
+.ann-wa-count,
+.ann-wa-target {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
@@ -1187,6 +1294,11 @@ onMounted(async () => {
   font-size: 0.72rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.ann-wa-target {
+  background: rgba(18, 140, 126, 0.1);
+  color: #0B6B60;
 }
 
 .ann-wa-status.wa-info {
@@ -1469,6 +1581,128 @@ onMounted(async () => {
   margin-bottom: var(--space-lg);
 }
 
+.wa-target-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(18, 140, 126, 0.14);
+}
+
+.wa-target-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.wa-target-head div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wa-target-head span {
+  color: var(--gray-700);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.wa-target-head small,
+.wa-target-summary,
+.wa-target-empty {
+  color: var(--gray-500);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.btn-target-all {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  color: #0B6B60;
+  background: rgba(18, 140, 126, 0.1);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.btn-target-all.active {
+  background: rgba(76, 175, 80, 0.16);
+  color: var(--success);
+}
+
+.wa-target-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-sm);
+}
+
+.wa-target-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.wa-target-option.active {
+  border-color: rgba(18, 140, 126, 0.32);
+  background: rgba(18, 140, 126, 0.09);
+}
+
+.wa-target-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #128C7E;
+  flex: 0 0 auto;
+}
+
+.target-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18, 140, 126, 0.12);
+  color: #0B6B60;
+  font-size: 0.72rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.target-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.target-body strong,
+.target-body small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.target-body strong {
+  color: var(--gray-700);
+  font-size: 0.78rem;
+}
+
+.target-body small {
+  color: var(--gray-400);
+  font-size: 0.7rem;
+}
+
 .wa-options-head small,
 .wa-hint {
   color: var(--gray-500);
@@ -1633,6 +1867,10 @@ onMounted(async () => {
 
   .wa-options-head {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wa-target-head {
     flex-direction: column;
   }
 
