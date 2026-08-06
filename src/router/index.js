@@ -108,6 +108,12 @@ const routes = [
                 name: 'AnnouncementManagement',
                 component: () => import('../views/dashboard/admin/AnnouncementManagement.vue'),
                 meta: { role: 'admin' }
+            },
+            {
+                path: 'broadcasts',
+                name: 'BroadcastManagement',
+                component: () => import('../views/dashboard/admin/BroadcastManagement.vue'),
+                meta: { role: 'admin' }
             }
         ]
     },
