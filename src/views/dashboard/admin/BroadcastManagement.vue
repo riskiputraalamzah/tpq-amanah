@@ -342,7 +342,8 @@ const parseCSV = (text) => {
   const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean)
   if (lines.length <= 1) return []
 
-  const header = lines[0].split(',').map(h => h.trim().toLowerCase())
+  const originalHeader = lines[0].split(',').map(h => h.trim())
+  const header = originalHeader.map(h => h.toLowerCase())
   const nameIdx = header.findIndex(h => h.includes('nama') || h.includes('name'))
   const numIdx = header.findIndex(h => h.includes('nomor') || h.includes('number') || h.includes('phone') || h.includes('telp'))
 
@@ -358,7 +359,7 @@ const parseCSV = (text) => {
     if (!name || !number) continue
 
     const variables = {}
-    header.forEach((h, index) => {
+    originalHeader.forEach((h, index) => {
       if (index !== nameIdx && index !== numIdx && cols[index] !== undefined) {
         variables[h] = cols[index]
       }
@@ -411,8 +412,10 @@ const processedPreviewMessage = computed(() => {
   // Replace variables
   let message = template
   Object.keys(vars).forEach(key => {
-    const placeholder = `{${key}}`
-    message = message.split(placeholder).join(vars[key])
+    const escapedKey = key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    const regex = new RegExp(`{${escapedKey}}`, 'gi')
+    const val = vars[key] !== undefined ? String(vars[key]) : ""
+    message = message.replace(regex, val)
   });
 
   return message
