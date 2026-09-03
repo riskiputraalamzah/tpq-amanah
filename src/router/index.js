@@ -103,6 +103,38 @@ const routes = [
                 component: () => import('../views/dashboard/admin/AdminSavingsView.vue'),
                 meta: { role: 'admin' }
             },
+            // Teacher LJP
+            {
+                path: 'ljp',
+                name: 'LjpTeacherList',
+                component: () => import('../views/dashboard/ljp/LjpTeacherList.vue'),
+                meta: { role: 'guru' }
+            },
+            {
+                path: 'ljp/:reportId',
+                name: 'LjpTeacherReportDetail',
+                component: () => import('../views/dashboard/ljp/LjpTeacherReportDetail.vue'),
+                meta: { role: 'guru' }
+            },
+            // Admin LJP
+            {
+                path: 'admin-ljp',
+                name: 'LjpPackageList',
+                component: () => import('../views/dashboard/ljp/LjpPackageList.vue'),
+                meta: { role: 'admin' }
+            },
+            {
+                path: 'admin-ljp/:packageId',
+                name: 'LjpPackageDetail',
+                component: () => import('../views/dashboard/ljp/LjpPackageDetail.vue'),
+                meta: { role: 'admin' }
+            },
+            {
+                path: 'admin-ljp/report/:reportId',
+                name: 'LjpAdminReportDetail',
+                component: () => import('../views/dashboard/ljp/LjpAdminReportDetail.vue'),
+                meta: { role: 'admin' }
+            },
             {
                 path: 'announcements',
                 name: 'AnnouncementManagement',
