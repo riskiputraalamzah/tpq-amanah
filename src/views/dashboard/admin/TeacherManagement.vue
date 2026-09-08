@@ -31,6 +31,8 @@
         </div>
         <h4>{{ teacher.displayName }}</h4>
         <p class="position">{{ teacher.position || 'Pengajar' }}</p>
+        <p class="nik-badge" v-if="teacher.nik">NIK: {{ teacher.nik }}</p>
+        <p class="nik-badge warning-badge" v-else>NIK: Belum diisi</p>
         <p v-if="teacher.bio" class="bio">{{ teacher.bio }}</p>
         <p class="email">{{ teacher.email || teacher.username || '-' }}</p>
         <div class="teacher-actions">
@@ -43,31 +45,61 @@
     <!-- Edit Modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal glass-card animate-fadeInUp">
-        <h3>Edit Info Pengajar</h3>
+        <div class="modal-header">
+          <h3>Edit Info Pengajar</h3>
+          <p class="modal-subtitle">Kelengkapan data diperlukan untuk dokumen SPTJM & LPJ</p>
+        </div>
         
-        <div class="form-group">
-          <label class="form-label">Nama</label>
-          <input v-model="form.displayName" type="text" class="form-input" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Jabatan</label>
-          <input v-model="form.position" type="text" class="form-input" placeholder="Contoh: Kepala TPQ, Guru Iqro" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">URL Foto</label>
-          <input v-model="form.photoURL" type="url" class="form-input" placeholder="https://..." />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Bio</label>
-          <textarea v-model="form.bio" class="form-input" rows="3" placeholder="Deskripsi singkat tentang guru"></textarea>
-        </div>
+        <form @submit.prevent="saveTeacher" class="modal-form">
+          <div class="modal-grid">
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
+              <input v-model="form.displayName" type="text" class="form-input" required />
+            </div>
 
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeModal">Batal</button>
-          <button class="btn btn-primary" @click="saveTeacher" :disabled="saving">
-            {{ saving ? 'Menyimpan...' : 'Simpan' }}
-          </button>
-        </div>
+            <div class="form-group">
+              <label class="form-label">NIK (16 Digit) <span class="text-red-500">*</span></label>
+              <input v-model="form.nik" type="text" maxlength="16" class="form-input" placeholder="16 digit NIK" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Tempat Lahir</label>
+              <input v-model="form.birthPlace" type="text" class="form-input" placeholder="Kota/Kabupaten" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Tanggal Lahir</label>
+              <input v-model="form.birthDate" type="date" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Jabatan</label>
+              <input v-model="form.position" type="text" class="form-input" placeholder="Contoh: Pengajar Iqro, Wali Kelas" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">URL Foto</label>
+              <input v-model="form.photoURL" type="url" class="form-input" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Alamat Lengkap</label>
+            <textarea v-model="form.address" class="form-input" rows="2" placeholder="Alamat tempat tinggal lengkap"></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Bio / Keterangan</label>
+            <textarea v-model="form.bio" class="form-input" rows="2" placeholder="Deskripsi singkat tentang guru"></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" @click="closeModal" :disabled="saving">Batal</button>
+            <button type="submit" class="btn btn-primary" :disabled="saving">
+              {{ saving ? 'Menyimpan...' : 'Simpan' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -90,6 +122,10 @@ const selectedId = ref(null)
 
 const form = ref({
   displayName: '',
+  nik: '',
+  birthPlace: '',
+  birthDate: '',
+  address: '',
   position: '',
   photoURL: '',
   bio: ''
@@ -116,6 +152,10 @@ const openEditModal = (teacher) => {
   selectedId.value = teacher.id
   form.value = { 
     displayName: teacher.displayName || '',
+    nik: teacher.nik || '',
+    birthPlace: teacher.birthPlace || '',
+    birthDate: teacher.birthDate || '',
+    address: teacher.address || '',
     position: teacher.position || '',
     photoURL: teacher.photoURL || '',
     bio: teacher.bio || ''
@@ -129,20 +169,31 @@ const closeModal = () => {
 }
 
 const saveTeacher = async () => {
-  if (!form.value.displayName) {
+  if (!form.value.displayName?.trim()) {
     warning('Nama wajib diisi')
     return
   }
 
   saving.value = true
   try {
-    await api.patch(`/users/${selectedId.value}`, form.value)
+    const payload = {
+      displayName: form.value.displayName.trim(),
+      nik: form.value.nik ? form.value.nik.trim() : null,
+      birthPlace: form.value.birthPlace ? form.value.birthPlace.trim() : null,
+      birthDate: form.value.birthDate || null,
+      address: form.value.address ? form.value.address.trim() : null,
+      position: form.value.position ? form.value.position.trim() : null,
+      photoURL: form.value.photoURL ? form.value.photoURL.trim() : null,
+      bio: form.value.bio ? form.value.bio.trim() : null
+    }
+
+    await api.patch('/users/' + selectedId.value, payload)
     success('Data guru berhasil disimpan')
     await fetchTeachers()
     closeModal()
   } catch (error) {
     console.error('Failed to update teacher:', error)
-    showError('Gagal menyimpan data')
+    showError(error.response?.data?.error || 'Gagal menyimpan data')
   } finally {
     saving.value = false
   }
@@ -248,145 +299,108 @@ onMounted(() => {
 
 .teacher-card h4 {
   color: var(--primary-dark);
-  margin-bottom: var(--space-xs);
+  margin-bottom: 2px;
 }
 
 .position {
-  color: var(--accent-dark);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.nik-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.warning-badge {
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
 }
 
 .bio {
+  font-size: 0.8rem;
   color: var(--gray-600);
-  font-size: 0.875rem;
-  margin-top: var(--space-sm);
+  margin-bottom: var(--space-sm);
 }
 
 .email {
-  color: var(--gray-400);
   font-size: 0.75rem;
-  margin-top: var(--space-xs);
-}
-
-.empty-state {
-  padding: var(--space-3xl);
-  text-align: center;
-  color: var(--gray-500);
-  grid-column: 1 / -1;
+  color: var(--gray-400);
+  margin-bottom: var(--space-md);
 }
 
 .teacher-actions {
   display: flex;
-  justify-content: center;
   gap: var(--space-sm);
-  margin-top: var(--space-lg);
+  justify-content: center;
 }
 
-.btn-danger {
-  background: var(--error);
-  color: var(--white);
-}
-
+/* Modal */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
-  padding: var(--space-lg);
+  padding: var(--space-md);
 }
 
 .modal {
   width: 100%;
-  max-width: 450px;
-  padding: var(--space-xl);
-  background: var(--white);
+  max-width: 650px;
   max-height: 90vh;
   overflow-y: auto;
+  padding: var(--space-2xl);
+  background: white;
 }
 
-.modal h3 {
+.modal-header {
   margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.modal-header h3 {
   color: var(--primary-dark);
+  margin-bottom: 2px;
+}
+
+.modal-subtitle {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .modal-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 .modal-actions {
   display: flex;
-  gap: var(--space-md);
   justify-content: flex-end;
-  margin-top: var(--space-xl);
-}
-
-/* Skeleton Styles */
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.skeleton-avatar-lg,
-.skeleton-title,
-.skeleton-text,
-.skeleton-text-sm,
-.skeleton-text-xs,
-.skeleton-btn {
-  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-sm);
-  margin-inline: auto;
-}
-
-.skeleton-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: var(--space-md);
-}
-
-.skeleton-avatar-lg {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
-}
-
-.skeleton-title {
-  height: 20px;
-  width: 60%;
-  margin-bottom: var(--space-xs);
-}
-
-.skeleton-text {
-  height: 16px;
-  width: 40%;
-}
-
-.skeleton-text-sm {
-  height: 14px;
-  width: 80%;
-  margin-top: var(--space-sm);
-}
-
-.skeleton-text-xs {
-  height: 12px;
-  width: 50%;
-  margin-top: var(--space-xs);
-}
-
-.skeleton-actions {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-lg);
-}
-
-.skeleton-btn {
-  width: 80px;
-  height: 32px;
-  border-radius: var(--radius-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--gray-100);
 }
 </style>
