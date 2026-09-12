@@ -49,6 +49,13 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "santri",
+        name: "SantriManagement",
+        component: () =>
+          import("../views/dashboard/admin/AdminSantriView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "admin-attendance",
         name: "AdminAttendance",
         component: () =>
@@ -71,6 +78,54 @@ const routes = [
         meta: { role: "admin" },
       },
       // Guru routes
+      {
+        path: "kbm",
+        name: "Kbm",
+        component: () => import("../views/dashboard/guru/KbmView.vue"),
+        meta: { role: "guru" },
+      },
+      {
+        path: "kbm/:id/jurnal",
+        name: "Journal",
+        component: () =>
+          import("../views/dashboard/guru/JournalView.vue"),
+        meta: { role: "guru" },
+      },
+      {
+        path: "kbm/:id/absensi",
+        name: "StudentAttendance",
+        component: () =>
+          import("../views/dashboard/guru/StudentAttendanceView.vue"),
+        meta: { role: "guru" },
+      },
+      {
+        path: "lpj",
+        name: "MonthlyLpj",
+        component: () =>
+          import("../views/dashboard/guru/MonthlyLpjView.vue"),
+        meta: { role: "guru" },
+      },
+      {
+        path: "lpj/:id",
+        name: "LpjDetail",
+        component: () =>
+          import("../views/dashboard/guru/LpjDetailView.vue"),
+        meta: { role: ["guru", "admin"] },
+      },
+      {
+        path: "lpj/:id/sptjm",
+        name: "Sptjm",
+        component: () =>
+          import("../views/dashboard/guru/SptjmView.vue"),
+        meta: { role: ["guru", "admin"] },
+      },
+      {
+        path: "admin-lpj",
+        name: "AdminLpj",
+        component: () =>
+          import("../views/dashboard/admin/AdminLpjView.vue"),
+        meta: { role: "admin" },
+      },
       {
         path: "attendance",
         name: "Attendance",

@@ -238,7 +238,7 @@ onMounted(fetchPeriods)
 .admin-grading-view { padding-top: 60px; }
 @media (min-width: 1024px) { .admin-grading-view { padding-top: 0; } }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl); }
-.page-header h1 { color: var(--primary-dark); }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
 
 .tab-toggle { display: flex; gap: var(--space-sm); margin-bottom: var(--space-xl); }
 .tab-btn { padding: var(--space-md) var(--space-xl); border-radius: var(--radius-lg); font-weight: 500; color: var(--gray-600); background: rgba(255, 255, 255, 0.7); transition: all 0.2s; }

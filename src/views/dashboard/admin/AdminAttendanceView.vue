@@ -1774,14 +1774,15 @@ onUnmounted(() => {
 }
 
 .page-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--primary-dark);
   margin-bottom: 4px;
 }
 
 .page-header p {
   color: var(--gray-600);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   margin: 0;
 }
 
@@ -1799,7 +1800,7 @@ onUnmounted(() => {
   flex: 2;
 }
 
-.header-actions> :not(:first-child) {
+.header-actions > :not(:first-child) {
   flex: 1;
 }
 

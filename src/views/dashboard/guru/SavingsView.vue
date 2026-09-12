@@ -11,7 +11,7 @@
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Buku Baru
+          <span>Buku Baru</span>
         </button>
       </div>
     </header>
@@ -20,12 +20,15 @@
     <div class="guide-box glass-card" :class="{ collapsed: guideCollapsed }">
       <button class="guide-toggle" @click="guideCollapsed = !guideCollapsed">
         <div class="guide-toggle-left">
-          <span class="guide-icon">💡</span>
+          <span class="guide-badge-icon">💡</span>
           <span class="guide-title">Cara Menggunakan Notulen Keuangan</span>
         </div>
-        <svg class="guide-chevron" :class="{ rotated: !guideCollapsed }" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
+        <div class="guide-toggle-right">
+          <span class="guide-hint">{{ guideCollapsed ? 'Buka Panduan' : 'Tutup' }}</span>
+          <svg class="guide-chevron" :class="{ rotated: !guideCollapsed }" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
       </button>
       <div class="guide-content" v-show="!guideCollapsed">
         <div class="guide-steps">
@@ -81,48 +84,95 @@
         </div>
         <div class="guide-tips">
           <span class="tip-badge">💡 Tips</span>
-          Satu buku sebaiknya dipakai terus untuk satu kas atau kegiatan. Saat laporan dibutuhkan, cetak PDF per bulan agar pembukuan tetap rapi.
+          <span>Satu buku sebaiknya dipakai terus untuk satu kas atau kegiatan. Saat laporan dibutuhkan, cetak PDF per bulan agar pembukuan tetap rapi.</span>
         </div>
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats Row (Responsive 3 Cards / Mobile 2+1 Layout) -->
     <div class="stats-row" v-if="!loading">
       <div class="stat-pill glass-card">
-        <span class="pill-icon">📚</span>
-        <div><span class="pill-value">{{ books.length }}</span><span class="pill-label">Total Buku</span></div>
+        <div class="pill-icon-wrapper icon-books">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+        </div>
+        <div class="pill-info">
+          <span class="pill-value">{{ books.length }}</span>
+          <span class="pill-label">Total Buku</span>
+        </div>
       </div>
+
       <div class="stat-pill glass-card">
-        <span class="pill-icon">✅</span>
-        <div><span class="pill-value">{{books.filter(b => b.status === 'active').length}}</span><span
-            class="pill-label">Aktif</span></div>
+        <div class="pill-icon-wrapper icon-active">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <div class="pill-info">
+          <span class="pill-value">{{ books.filter(b => b.status === 'active').length }}</span>
+          <span class="pill-label">Buku Aktif</span>
+        </div>
       </div>
-      <div class="stat-pill glass-card">
-        <span class="pill-icon">💰</span>
-        <div><span class="pill-value">Rp {{ formatCurrency(totalBalance) }}</span><span class="pill-label">Total
-            Saldo</span></div>
+
+      <div class="stat-pill glass-card stat-saldo">
+        <div class="pill-icon-wrapper icon-balance">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <circle cx="12" cy="12" r="2" />
+            <path d="M6 12h.01M18 12h.01" />
+          </svg>
+        </div>
+        <div class="pill-info">
+          <span class="pill-value text-balance">Rp {{ formatCurrency(totalBalance) }}</span>
+          <span class="pill-label">Total Saldo Terhimpun</span>
+        </div>
       </div>
     </div>
 
-    <!-- Loading -->
+    <!-- Loading Skeleton -->
     <div v-if="loading" class="books-grid">
       <div v-for="i in 3" :key="i" class="book-card-skeleton glass-card"></div>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="books.length === 0" class="empty-state glass-card">
-      <div class="empty-icon">🏦</div>
+      <div class="empty-icon-circle">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M6 12h.01M18 12h.01" />
+        </svg>
+      </div>
       <h3>Belum Ada Buku Tabungan</h3>
-      <p>Buat buku catatan pertama untuk mulai mencatat pemasukan, pengeluaran, atau iuran</p>
-      <button class="btn-create m-auto" @click="openCreateModal">Buat Buku Pertama</button>
+      <p>Buat buku catatan pertama untuk mulai mencatat pemasukan, pengeluaran, atau iuran kelompok Anda.</p>
+      <button class="btn-create m-auto" @click="openCreateModal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        <span>Buat Buku Pertama</span>
+      </button>
     </div>
 
     <!-- Books Grid -->
     <div v-else class="books-grid">
-      <div v-for="book in books" :key="book.id" class="book-card glass-card"
-        :class="{ 'closed': book.status === 'closed' }" @click="goToDetail(book.id)">
+      <div
+        v-for="book in books"
+        :key="book.id"
+        class="book-card glass-card"
+        :class="{ 'closed': book.status === 'closed' }"
+        @click="goToDetail(book.id)"
+      >
         <div class="book-card-header">
-          <div class="book-icon">📒</div>
+          <div class="book-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+          </div>
           <div class="book-badges">
             <span class="book-status" :class="book.status">
               {{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}
@@ -131,12 +181,14 @@
             <span v-else-if="book.createdBy === authStore.user?.id" class="book-private-badge">🔒 Pribadi</span>
           </div>
         </div>
+
         <p v-if="book.createdBy !== authStore.user?.id" class="book-owner">
-          📌 Oleh {{ book.createdByName }}
+          👤 Oleh {{ book.createdByName }}
         </p>
 
         <h3 class="book-title">{{ book.title }}</h3>
         <p class="book-desc" v-if="book.description">{{ book.description }}</p>
+
         <div class="book-stats">
           <div class="bstat">
             <span class="bstat-val">{{ book.santriCount || 0 }}</span>
@@ -151,11 +203,17 @@
             <span class="bstat-label">Saldo</span>
           </div>
         </div>
+
         <div class="book-footer">
           <span class="book-date">{{ formatDate(book.createdAt) }}</span>
           <!-- Dropdown menu: hanya owner yang bisa manage buku -->
           <div v-if="book.createdBy === authStore.user?.id" class="book-menu-wrap" @click.stop>
-            <button class="dots-btn" @click="toggleMenu(book.id)" :aria-expanded="openMenuId === book.id">
+            <button
+              class="dots-btn"
+              @click="toggleMenu(book.id)"
+              :aria-expanded="openMenuId === book.id"
+              aria-label="Menu Aksi Buku"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
               </svg>
@@ -473,26 +531,190 @@ onMounted(() => {
 
 .page-header h1 {
   font-size: 1.75rem;
+  font-weight: 700;
   color: var(--primary-dark);
+  margin-bottom: 4px;
 }
 
 .page-header p {
+  font-size: 0.95rem;
   color: var(--gray-600);
-  margin-top: 2px;
 }
 
-/* Stats */
+@media (max-width: 640px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-create {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Panduan / Guide Box ── */
+.guide-box {
+  margin-bottom: var(--space-xl);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.guide-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-lg) var(--space-xl);
+  text-align: left;
+  transition: background 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.guide-toggle:hover {
+  background: rgba(27, 94, 32, 0.04);
+}
+
+.guide-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.guide-badge-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.guide-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.guide-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.guide-hint {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.guide-chevron {
+  color: var(--gray-400);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.guide-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.guide-content {
+  padding: 0 var(--space-xl) var(--space-xl);
+}
+
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 680px) {
+  .guide-steps {
+    grid-template-columns: 1fr;
+  }
+  .guide-content {
+    padding: 0 var(--space-lg) var(--space-lg);
+  }
+  .guide-toggle {
+    padding: var(--space-md) var(--space-lg);
+  }
+}
+
+.guide-step {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(27, 94, 32, 0.04);
+  border-radius: var(--radius-lg);
+  border-left: 3px solid var(--primary);
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.step-body strong {
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.step-body span {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.step-body em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.guide-tips {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: var(--radius-lg);
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.tip-badge {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+/* ── Stats Row ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-md);
   margin-bottom: var(--space-xl);
-}
-
-@media (max-width: 480px) {
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
 }
 
 .stat-pill {
@@ -502,70 +724,124 @@ onMounted(() => {
   padding: var(--space-lg);
 }
 
-.pill-icon {
-  font-size: 1.5rem;
+.pill-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.stat-pill div {
+.icon-books {
+  background: rgba(33, 150, 243, 0.12);
+  color: #1976d2;
+}
+
+.icon-active {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+}
+
+.icon-balance {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.pill-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .pill-value {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary-dark);
+  line-height: 1.2;
+}
+
+.pill-value.text-balance {
+  font-size: clamp(1rem, 2.3vw, 1.25rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pill-label {
   font-size: 0.72rem;
   color: var(--gray-500);
+  margin-top: 2px;
 }
 
-/* Books Grid */
+@media (max-width: 640px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .stat-saldo {
+    grid-column: 1 / -1;
+  }
+
+  .stat-pill {
+    padding: var(--space-md);
+  }
+
+  .pill-icon-wrapper {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Books Grid ── */
 .books-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: var(--space-lg);
 }
 
 @media (max-width: 480px) {
   .books-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-md);
   }
 }
 
 .book-card-skeleton {
-  height: 200px;
+  height: 220px;
+  border-radius: var(--radius-xl);
   animation: pulse 1.5s ease infinite;
 }
 
 @keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1
-  }
-
-  50% {
-    opacity: .5
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 .book-card {
   padding: var(--space-xl);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .book-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(27, 94, 32, 0.18);
+  box-shadow: 0 16px 36px rgba(27, 94, 32, 0.14);
 }
 
 .book-card.closed {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .book-card.closed:hover {
@@ -576,20 +852,37 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-sm);
   margin-bottom: var(--space-md);
 }
 
-.book-icon {
-  font-size: 2rem;
+.book-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(27, 94, 32, 0.08);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.book-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .book-status {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.68rem;
+  font-weight: 700;
   padding: 3px 10px;
   border-radius: var(--radius-full);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .book-status.active {
@@ -602,12 +895,39 @@ onMounted(() => {
   color: var(--gray-500);
 }
 
+.book-shared-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(33, 150, 243, 0.12);
+  color: #1565c0;
+  white-space: nowrap;
+}
+
+.book-private-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(158, 158, 158, 0.12);
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+.book-owner {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  margin-bottom: var(--space-xs);
+  margin-top: calc(-1 * var(--space-xs));
+}
+
 .book-title {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--primary-dark);
   margin-bottom: var(--space-xs);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .book-desc {
@@ -618,32 +938,41 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.45;
 }
 
 .book-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   background: var(--gray-50);
   border-radius: var(--radius-lg);
-  padding: var(--space-md);
-  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-sm);
+  margin-top: auto;
+  margin-bottom: var(--space-md);
 }
 
 .bstat {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
+  min-width: 0;
 }
 
 .bstat-val {
   font-weight: 700;
   color: var(--primary-dark);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .bstat-val.balance {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  color: var(--primary-dark);
 }
 
 .bstat-label {
@@ -656,6 +985,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-top: var(--space-xs);
 }
 
 .book-date {
@@ -663,112 +993,128 @@ onMounted(() => {
   color: var(--gray-400);
 }
 
-/* Dots dropdown menu */
-.book-menu-wrap { position: relative; }
+/* ── Dots Dropdown Menu ── */
+.book-menu-wrap {
+  position: relative;
+}
 
 .dots-btn {
-  width: 30px; height: 30px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
   border-radius: var(--radius-md);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gray-400); transition: all 0.2s;
-  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+  transition: all 0.2s;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  cursor: pointer;
 }
-.dots-btn:hover { background: var(--gray-100); color: var(--gray-700); }
+
+.dots-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
 
 .book-dropdown {
-  position: absolute; right: 0; bottom: 36px;
-  background: white; border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
-  border: 1px solid var(--gray-100);
-  min-width: 190px; z-index: 100;
-  padding: 6px 0; overflow: hidden;
+  position: absolute;
+  right: 0;
+  bottom: 44px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--gray-200);
+  min-width: 200px;
+  z-index: 100;
+  padding: 6px;
+  overflow: hidden;
 }
 
 .dd-item {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 9px 16px;
-  font-size: 0.82rem; color: var(--gray-700); text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  color: var(--gray-700);
+  text-align: left;
   transition: background 0.15s;
-}
-.dd-item:hover { background: var(--gray-50); }
-.dd-item.active { color: #1565C0; font-weight: 600; }
-.dd-item.warning { color: var(--warning); }
-.dd-item.success { color: var(--success); }
-.dd-item.danger { color: var(--error); }
-.dd-item.danger:hover { background: rgba(244, 67, 54, 0.06); }
-.dd-divider { height: 1px; background: var(--gray-100); margin: 4px 0; }
-
-
-
-/* Book badges */
-.book-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.book-shared-badge {
-  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(33, 150, 243, 0.12); color: #1565C0;
-  white-space: nowrap;
-}
-.book-private-badge {
-  font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
-  border-radius: var(--radius-full);
-  background: rgba(158, 158, 158, 0.12); color: var(--gray-500);
-  white-space: nowrap;
-}
-.book-owner {
-  font-size: 0.72rem; color: var(--gray-400);
-  margin-bottom: var(--space-xs);
-  margin-top: calc(-1 * var(--space-xs));
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
-/* Publish toggle in form */
-.publish-toggle-label {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--space-md) var(--space-lg);
-  background: var(--gray-50); border-radius: var(--radius-lg);
-  border: 2px solid var(--gray-200); cursor: pointer; gap: var(--space-md);
+.dd-item:hover {
+  background: var(--gray-100);
 }
-.ptl-text { display: flex; flex-direction: column; gap: 2px; }
-.ptl-text strong { font-size: 0.875rem; color: var(--primary-dark); }
-.ptl-text span { font-size: 0.75rem; color: var(--gray-500); }
 
-.toggle-switch {
-  flex-shrink: 0;
-  width: 44px; height: 24px;
-  background: var(--gray-300); border-radius: 50px;
-  position: relative; transition: background 0.25s; cursor: pointer;
+.dd-item.active {
+  color: #1565c0;
+  font-weight: 600;
 }
-.toggle-switch.on { background: var(--primary); }
-.toggle-knob {
-  position: absolute; top: 3px; left: 3px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: white; transition: transform 0.25s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
+.dd-item.warning {
+  color: var(--warning);
 }
-.toggle-switch.on .toggle-knob { transform: translateX(20px); }
 
+.dd-item.success {
+  color: var(--success);
+}
 
-/* Empty */
+.dd-item.danger {
+  color: var(--error);
+}
+
+.dd-item.danger:hover {
+  background: rgba(244, 67, 54, 0.08);
+}
+
+.dd-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: 4px 0;
+}
+
+/* ── Empty State ── */
 .empty-state {
   text-align: center;
   padding: var(--space-3xl) var(--space-xl);
 }
 
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: var(--space-lg);
+.empty-icon-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  margin: 0 auto var(--space-lg);
+  background: rgba(27, 94, 32, 0.08);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(27, 94, 32, 0.08);
 }
 
 .empty-state h3 {
   color: var(--primary-dark);
+  font-size: 1.15rem;
+  font-weight: 700;
   margin-bottom: var(--space-sm);
 }
 
 .empty-state p {
   color: var(--gray-500);
-  margin-bottom: var(--space-xl);
+  font-size: 0.9rem;
+  max-width: 440px;
+  margin: 0 auto var(--space-xl);
+  line-height: 1.5;
 }
 
-/* Buttons */
+/* ── Buttons ── */
 .btn-create {
   display: flex;
   align-items: center;
@@ -782,6 +1128,8 @@ onMounted(() => {
   transition: all 0.2s;
   box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
   white-space: nowrap;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-create:hover {
@@ -789,7 +1137,71 @@ onMounted(() => {
   box-shadow: 0 8px 25px rgba(27, 94, 32, 0.4);
 }
 
-/* Modal */
+.m-auto {
+  margin: 0 auto;
+}
+
+/* ── Publish toggle in form ── */
+.publish-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--gray-200);
+  cursor: pointer;
+  gap: var(--space-md);
+}
+
+.ptl-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ptl-text strong {
+  font-size: 0.875rem;
+  color: var(--primary-dark);
+}
+
+.ptl-text span {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.toggle-switch {
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  background: var(--gray-300);
+  border-radius: 50px;
+  position: relative;
+  transition: background 0.25s;
+  cursor: pointer;
+}
+
+.toggle-switch.on {
+  background: var(--primary);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.on .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ── Modals ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -806,6 +1218,14 @@ onMounted(() => {
   width: 100%;
   max-width: 480px;
   padding: var(--space-2xl);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: var(--space-lg);
+  }
 }
 
 .modal-header {
@@ -818,17 +1238,23 @@ onMounted(() => {
 .modal-header h3 {
   font-size: 1.15rem;
   color: var(--primary-dark);
+  font-weight: 700;
 }
 
 .close-btn {
   font-size: 1.5rem;
   color: var(--gray-400);
   line-height: 1;
-  padding: 0 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
 }
 
 .close-btn:hover {
   color: var(--gray-700);
+  background: var(--gray-100);
 }
 
 .form-group {
@@ -866,6 +1292,17 @@ onMounted(() => {
   margin-top: var(--space-xl);
 }
 
+@media (max-width: 480px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .btn-cancel, .btn-save, .btn-close-book, .btn-delete {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
 .btn-cancel {
   padding: var(--space-md) var(--space-xl);
   border-radius: var(--radius-lg);
@@ -873,6 +1310,8 @@ onMounted(() => {
   background: var(--gray-100);
   font-weight: 600;
   transition: background 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-cancel:hover {
@@ -886,6 +1325,8 @@ onMounted(() => {
   color: white;
   font-weight: 600;
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-save:hover {
@@ -897,7 +1338,7 @@ onMounted(() => {
   cursor: not-allowed;
 }
 
-/* Confirm Modal */
+/* ── Confirm Modal ── */
 .confirm-modal {
   text-align: center;
   max-width: 400px;
@@ -911,6 +1352,7 @@ onMounted(() => {
 .confirm-modal h3 {
   color: var(--primary-dark);
   margin-bottom: var(--space-md);
+  font-weight: 700;
 }
 
 .confirm-modal p {
@@ -926,6 +1368,8 @@ onMounted(() => {
   background: linear-gradient(135deg, #f57c00, #ff9800);
   color: white;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-delete {
@@ -934,129 +1378,13 @@ onMounted(() => {
   background: linear-gradient(135deg, #c62828, #f44336);
   color: white;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-close-book:disabled,
 .btn-delete:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* ── Panduan / Guide Box ── */
-.guide-box {
-  margin-bottom: var(--space-xl);
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.guide-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--space-lg) var(--space-xl);
-  text-align: left;
-  transition: background 0.2s;
-}
-.guide-toggle:hover { background: rgba(27, 94, 32, 0.04); }
-
-.guide-toggle-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.guide-icon { font-size: 1.2rem; flex-shrink: 0; }
-
-.guide-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--primary-dark);
-}
-
-.guide-chevron {
-  color: var(--gray-400);
-  transition: transform 0.3s ease;
-  flex-shrink: 0;
-}
-.guide-chevron.rotated { transform: rotate(180deg); }
-
-.guide-content {
-  padding: 0 var(--space-xl) var(--space-xl);
-}
-
-.guide-steps {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-@media (max-width: 600px) {
-  .guide-steps { grid-template-columns: 1fr; }
-}
-
-.guide-step {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
-  padding: var(--space-md) var(--space-lg);
-  background: rgba(27, 94, 32, 0.04);
-  border-radius: var(--radius-lg);
-  border-left: 3px solid var(--primary);
-}
-
-.step-num {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--primary-gradient);
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.step-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.step-body strong {
-  font-size: 0.82rem;
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-.step-body span {
-  font-size: 0.78rem;
-  color: var(--gray-600);
-  line-height: 1.5;
-}
-.step-body em {
-  font-style: normal;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.guide-tips {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  background: rgba(251, 191, 36, 0.1);
-  border-radius: var(--radius-lg);
-  font-size: 0.8rem;
-  color: var(--gray-700);
-  line-height: 1.5;
-  border: 1px solid rgba(251, 191, 36, 0.25);
-}
-
-.tip-badge {
-  flex-shrink: 0;
-  font-weight: 700;
-  color: #92400e;
-  white-space: nowrap;
 }
 </style>

@@ -758,10 +758,13 @@ onMounted(async () => {
 
 .page-header h1 {
   font-size: 1.75rem;
+  font-weight: 700;
   color: var(--primary-dark);
+  margin-bottom: 4px;
 }
 
 .page-header p {
+  font-size: 0.95rem;
   color: var(--gray-600);
 }
 

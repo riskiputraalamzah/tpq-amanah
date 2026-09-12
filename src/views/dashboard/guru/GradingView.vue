@@ -2,7 +2,7 @@
   <div class="grading-view">
     <header class="page-header">
       <div>
-        <h1>📝 Input Nilai Santri</h1>
+        <h1>Input Nilai Santri</h1>
         <p>Pilih periode penilaian dan input nilai santri</p>
       </div>
     </header>
@@ -80,8 +80,8 @@ onMounted(fetchPeriods)
 .grading-view { padding-top: 60px; }
 @media (min-width: 1024px) { .grading-view { padding-top: 0; } }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl); }
-.page-header h1 { color: var(--primary-dark); }
-.page-header p { color: var(--gray-600); }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+.page-header p { font-size: 0.95rem; color: var(--gray-600); }
 
 .periods-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: var(--space-lg); }
 @media (min-width: 768px) { .periods-grid { grid-template-columns: repeat(2, 1fr); } }

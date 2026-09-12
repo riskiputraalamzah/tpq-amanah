@@ -17,11 +17,11 @@
           </router-link>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden lg:flex items-center gap-8">
+          <nav class="hidden lg:flex items-center gap-4 xl:gap-6">
             <a v-for="link in navLinks" :key="link.href" :href="link.href"
               :target="link.external ? '_blank' : undefined" :rel="link.external ? 'noopener noreferrer' : undefined"
               @click="link.external ? null : scrollToSection($event, link.href)"
-              class="nav-link flex items-center gap-1.5 transition-colors duration-300 font-medium" :class="[
+              class="nav-link whitespace-nowrap text-sm flex items-center gap-1 transition-colors duration-300 font-medium" :class="[
                 isScrolled
                   ? (activeSection === link.section ? 'text-primary-600 font-semibold' : 'text-gray-600 hover:text-primary-500')
                   : (activeSection === link.section ? 'text-accent-300 font-semibold' : 'text-white/90 hover:text-accent-300')
@@ -33,10 +33,10 @@
               {{ link.label }}
             </a>
 
-            <router-link v-if="isAuthenticated" to="/dashboard" class="btn-accent px-5 py-2.5 text-sm">
+            <router-link v-if="isAuthenticated" to="/dashboard" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
               Dashboard
             </router-link>
-            <router-link v-else to="/login" class="btn-accent px-5 py-2.5 text-sm">
+            <router-link v-else to="/login" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
               Login
             </router-link>
           </nav>
@@ -106,10 +106,14 @@ const activeSection = ref('beranda')
 
 const navLinks = [
   { href: '#beranda', label: 'Beranda', section: 'beranda' },
-  { href: '#tentang', label: 'Tentang Kami', section: 'tentang' },
+  { href: '#pendaftaran', label: 'Pendaftaran', section: 'pendaftaran' },
+  { href: '#keunggulan', label: 'Keunggulan', section: 'keunggulan' },
+  { href: '#tentang', label: 'Profil', section: 'tentang' },
+  { href: '#program', label: 'Program', section: 'program' },
+  { href: '#at-tartil', label: 'E-Kitab', section: 'at-tartil' },
+  { href: '#jadwal', label: 'Jadwal', section: 'jadwal' },
   { href: '#pengajar', label: 'Pengajar', section: 'pengajar' },
-  { href: '#kontak', label: 'Kontak', section: 'kontak' },
-  { href: '#at-tartil', label: 'At-Tartil', section: 'at-tartil' }
+  { href: '#kontak', label: 'Kontak', section: 'kontak' }
 ]
 
 let observer = null
@@ -129,7 +133,7 @@ const scrollToSection = (event, href) => {
 
   const element = document.querySelector(href)
   if (element) {
-    const offset = 80 // Navbar height
+    const offset = 120 // Generous offset to ensure title is fully below floating navbar
     const top = element.getBoundingClientRect().top + window.scrollY - offset
     window.scrollTo({ top, behavior: 'smooth' })
   }

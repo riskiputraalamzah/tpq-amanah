@@ -181,6 +181,7 @@
     <section v-if="isGuru || isAdmin" class="quick-actions">
       <h2>Aksi Cepat</h2>
       <div class="action-grid">
+        <!-- Isi Absensi (Guru) -->
         <router-link to="/dashboard/attendance" class="action-card glass-card" v-if="isGuru">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -190,27 +191,61 @@
           </div>
           <span>Isi Absensi</span>
         </router-link>
+
+        <!-- Rekap Absensi (Admin) -->
         <router-link to="/dashboard/admin-attendance" class="action-card glass-card" v-if="isAdmin">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4" />
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <path d="M12 16v-4" />
+              <path d="M8 16v-2" />
+              <path d="M16 16v-3" />
             </svg>
           </div>
           <span>Rekap Absensi</span>
         </router-link>
 
+        <!-- KBM / Mengajar (Guru) -->
+        <router-link to="/dashboard/kbm" class="action-card glass-card" v-if="isGuru">
+          <div class="action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+          </div>
+          <span>KBM / Mengajar</span>
+        </router-link>
+
+        <!-- Penilaian Santri (Guru & Admin) -->
         <router-link to="/dashboard/grading" class="action-card glass-card">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
-          <span>Buat Penilaian</span>
+          <span>Penilaian Santri</span>
         </router-link>
 
-        <!-- Tabungan Guru -->
+        <!-- LPJ Bulanan (Guru) -->
+        <router-link to="/dashboard/lpj" class="action-card glass-card" v-if="isGuru">
+          <div class="action-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+          <span>LPJ Bulanan</span>
+        </router-link>
+
+        <!-- Tabungan Santri (Guru) -->
         <router-link to="/dashboard/savings" class="action-card glass-card savings-action" v-if="isGuru">
           <div class="action-icon savings-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -219,7 +254,7 @@
               <path d="M8 14h8"/>
             </svg>
           </div>
-          <span>Tabungan</span>
+          <span>Tabungan Santri</span>
         </router-link>
 
         <template v-if="isAdmin">

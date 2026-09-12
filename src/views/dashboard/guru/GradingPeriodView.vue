@@ -156,14 +156,12 @@
                 <div v-else class="suggestion-new-badge">Belum ada penilaian</div>
               </div>
               
-              <!-- Add new santri option -->
-              <div 
-                v-if="searchQuery.length >= 2 && !suggestions.some(s => s.nameNormalized === searchQuery.toLowerCase().trim())" 
-                class="suggestion-item add-new"
-                @click="addNewSantri"
+              <!-- Santri master is admin-managed: no guru create path -->
+              <div
+                v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching"
+                class="suggestion-item add-new disabled"
               >
-                <span class="add-icon">+</span>
-                <span>Tambahkan "<strong>{{ searchQuery }}</strong>" sebagai santri baru</span>
+                <span>Santri tidak ditemukan. Hubungi admin untuk menambah data santri.</span>
               </div>
               
               <!-- No results message -->
@@ -400,31 +398,6 @@ const selectSantri = (santri) => {
   searchQuery.value = ''
 }
 
-const addNewSantri = async () => {
-  if (!searchQuery.value || searchQuery.value.length < 2) return
-  
-  searching.value = true
-  try {
-    const { data } = await api.post('/santri', { name: searchQuery.value })
-    
-    if (data.alreadyExists) {
-      warning('Santri dengan nama ini sudah terdaftar')
-    } else {
-      success('Santri berhasil ditambahkan')
-    }
-    
-    form.value.santriId = data.id
-    form.value.santriName = data.name
-    selectedSantriGradingInfo.value = []
-    showSuggestions.value = false
-    searchQuery.value = ''
-  } catch (e) {
-    console.error('Add santri error:', e)
-    showError('Gagal menambahkan santri')
-  } finally {
-    searching.value = false
-  }
-}
 
 const clearSelectedSantri = () => {
   form.value.santriId = ''

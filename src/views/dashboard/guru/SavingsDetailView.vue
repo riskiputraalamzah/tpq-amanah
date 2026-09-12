@@ -12,9 +12,9 @@
         >
           <path d="M19 12H5M12 5l-7 7 7 7" />
         </svg>
-        Kembali
+        <span>Kembali</span>
       </button>
-      <div class="flex w-full">
+      <div class="header-main-row">
         <div class="header-info" v-if="book">
           <div class="title-row">
             <h1>{{ book.title }}</h1>
@@ -235,16 +235,13 @@
       <!-- Summary Cards -->
       <div class="summary-grid">
         <div class="sum-card glass-card">
-          <div
-            class="sum-icon"
-            style="background: linear-gradient(135deg, #11998e, #38ef7d)"
-          >
+          <div class="sum-icon icon-members">
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               stroke-width="2"
             >
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -254,21 +251,19 @@
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val">{{ summary.length }}</span
-            ><span class="sum-label">Anggota</span>
+            <span class="sum-val">{{ summary.length }}</span>
+            <span class="sum-label">Anggota</span>
           </div>
         </div>
+
         <div class="sum-card glass-card">
-          <div
-            class="sum-icon"
-            style="background: linear-gradient(135deg, #4facfe, #00f2fe)"
-          >
+          <div class="sum-icon icon-tx">
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               stroke-width="2"
             >
               <rect x="9" y="2" width="6" height="4" rx="1" />
@@ -280,21 +275,19 @@
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val">{{ transactions.length }}</span
-            ><span class="sum-label">Transaksi</span>
+            <span class="sum-val">{{ transactions.length }}</span>
+            <span class="sum-label">Transaksi</span>
           </div>
         </div>
+
         <div class="sum-card glass-card">
-          <div
-            class="sum-icon"
-            style="background: linear-gradient(135deg, #ff6a6a, #ff9a76)"
-          >
+          <div class="sum-icon icon-expense">
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               stroke-width="2"
             >
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -303,343 +296,622 @@
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val">Rp {{ formatCurrency(totalExpense) }}</span
-            ><span class="sum-label">Pengeluaran</span>
+            <span class="sum-val text-expense">Rp {{ formatCurrency(totalExpense) }}</span>
+            <span class="sum-label">Pengeluaran</span>
           </div>
         </div>
-        <div class="sum-card glass-card">
-          <div
-            class="sum-icon"
-            style="background: linear-gradient(135deg, #f6d365, #fda085)"
-          >
+
+        <div class="sum-card glass-card sum-card-balance">
+          <div class="sum-icon icon-balance">
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="white"
+              stroke="currentColor"
               stroke-width="2"
             >
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M6 12h.01M18 12h.01" />
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val">{{ formatLedgerCurrency(totalBalance) }}</span
-            ><span class="sum-label">Saldo Buku</span>
+            <span class="sum-val text-balance">{{ formatLedgerCurrency(totalBalance) }}</span>
+            <span class="sum-label">Saldo Buku</span>
           </div>
         </div>
       </div>
 
-      <!-- Add Transaction (only if active) -->
-      <div v-if="book?.status === 'active'" class="add-section glass-card">
-        <h2>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+      <!-- Mobile Segmented View Tabs (< 1024px) -->
+      <div class="mobile-view-tabs mobile-only">
+        <button
+          v-if="book?.status === 'active'"
+          type="button"
+          class="mobile-tab-btn"
+          :class="{ active: mobileView === 'form' }"
+          @click="setMobileView('form')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          Catat Transaksi Baru
-        </h2>
-        <div class="transaction-type-tabs">
-          <button
-            type="button"
-            class="type-tab income"
-            :class="{ active: newTx.type === 'income' }"
-            @click="setTransactionType('income')"
-          >
-            Pemasukan
-          </button>
-          <button
-            type="button"
-            class="type-tab expense"
-            :class="{ active: newTx.type === 'expense' }"
-            @click="setTransactionType('expense')"
-          >
-            Pengeluaran
-          </button>
-        </div>
-        <div class="add-form">
-          <!-- Santri Select Mode -->
-          <div
-            v-if="newTx.type === 'income'"
-            class="form-group"
-            style="position: relative"
-          >
-            <label class="form-label">Nama Anggota *</label>
+          <span>Catat</span>
+        </button>
+        <button
+          type="button"
+          class="mobile-tab-btn"
+          :class="{ active: mobileView === 'history' }"
+          @click="setMobileView('history')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="2" width="6" height="4" rx="1" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <line x1="9" y1="12" x2="15" y2="12" />
+            <line x1="9" y1="16" x2="15" y2="16" />
+          </svg>
+          <span>Riwayat</span>
+          <span class="mobile-tab-count">{{ transactions.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="mobile-tab-btn"
+          :class="{ active: mobileView === 'members' }"
+          @click="setMobileView('members')"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Anggota</span>
+          <span class="mobile-tab-count">{{ summary.length }}</span>
+        </button>
+      </div>
 
-            <div class="santri-input-modes">
+      <!-- Main Layout: 2 Kolom di Desktop (>= 1024px), Tampilan Dinamis di Mobile (< 1024px) -->
+      <div
+        class="detail-main-layout"
+        :class="{ 'form-collapsed': isFormCollapsed || book?.status !== 'active' }"
+      >
+        <!-- Side Column: Form Catat Transaksi (only if active) -->
+        <aside
+          v-if="book?.status === 'active'"
+          class="layout-side-col"
+          :class="{ 'mobile-visible': mobileView === 'form' }"
+        >
+          <!-- Collapsed State on Desktop -->
+          <div
+            v-if="isFormCollapsed"
+            class="collapsed-form-card glass-card desktop-only"
+            @click="isFormCollapsed = false"
+            title="Klik untuk membuka form pencatatan"
+          >
+            <div class="collapsed-content">
+              <div class="collapsed-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </div>
+              <span class="collapsed-label">Buka Form Catat</span>
+            </div>
+          </div>
+
+          <!-- Active Form Card -->
+          <div v-show="!isFormCollapsed" class="add-section glass-card sticky-card">
+            <div class="side-col-header">
+              <h2>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Catat Transaksi Baru</span>
+              </h2>
               <button
-                class="mode-btn"
-                :class="{ active: inputMode === 'select' }"
-                @click="
-                  inputMode = 'select';
-                  resetSantriInput();
-                "
                 type="button"
+                class="collapse-toggle-btn desktop-only"
+                @click="isFormCollapsed = true"
+                title="Sembunyikan Form untuk memperluas tabel"
               >
-                Pilih dari Riwayat
-              </button>
-              <button
-                class="mode-btn"
-                :class="{ active: inputMode === 'search' }"
-                @click="
-                  inputMode = 'search';
-                  resetSantriInput();
-                "
-                type="button"
-              >
-                Input Data Baru
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
               </button>
             </div>
 
-            <select
-              v-if="inputMode === 'select'"
-              v-model="selectedExistingSantri"
-              class="mt-2 form-input"
-              @change="onSelectExisting"
-            >
-              <option value="">-- Pilih Anggota --</option>
-              <option
-                v-for="s in summary"
-                :key="s.santriId"
-                :value="s.santriId"
+            <!-- Segmented Type Tabs: Pemasukan / Pengeluaran -->
+            <div class="transaction-type-tabs">
+              <button
+                type="button"
+                class="type-tab income"
+                :class="{ active: newTx.type === 'income' }"
+                @click="setTransactionType('income')"
               >
-                {{ s.santriName }}
-              </option>
-            </select>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Pemasukan</span>
+              </button>
+              <button
+                type="button"
+                class="type-tab expense"
+                :class="{ active: newTx.type === 'expense' }"
+                @click="setTransactionType('expense')"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Pengeluaran</span>
+              </button>
+            </div>
 
-            <div v-else class="mt-2" style="position: relative">
-              <input
-                v-model="newTx.santriName"
-                type="text"
-                class="form-input"
-                placeholder="Ketik nama anggota..."
-                @input="searchSantri"
-                @focus="showSuggestions = true"
-                autocomplete="off"
-              />
+            <div class="add-form side-form">
+              <!-- Santri Select Mode -->
               <div
-                v-if="showSuggestions && suggestions.length"
-                class="suggestions-dropdown"
+                v-if="newTx.type === 'income'"
+                class="form-group"
+                style="position: relative"
               >
-                <div
-                  v-for="s in suggestions"
-                  :key="s.id"
-                  class="suggestion-item"
-                  @mousedown.prevent="selectSantri(s)"
+                <div class="form-label-row">
+                  <label class="form-label mb-0">Nama Anggota *</label>
+                  <div class="santri-input-modes">
+                    <button
+                      class="mode-btn"
+                      :class="{ active: inputMode === 'select' }"
+                      @click="
+                        inputMode = 'select';
+                        resetSantriInput();
+                      "
+                      type="button"
+                    >
+                      Riwayat
+                    </button>
+                    <button
+                      class="mode-btn"
+                      :class="{ active: inputMode === 'search' }"
+                      @click="
+                        inputMode = 'search';
+                        resetSantriInput();
+                      "
+                      type="button"
+                    >
+                      Input Baru
+                    </button>
+                  </div>
+                </div>
+
+                <select
+                  v-if="inputMode === 'select'"
+                  v-model="selectedExistingSantri"
+                  class="mt-2 form-input"
+                  @change="onSelectExisting"
                 >
-                  {{ s.name }}
+                  <option value="">-- Pilih Anggota --</option>
+                  <option
+                    v-for="s in summary"
+                    :key="s.santriId"
+                    :value="s.santriId"
+                  >
+                    {{ s.santriName }}
+                  </option>
+                </select>
+
+                <div v-else class="mt-2" style="position: relative">
+                  <input
+                    v-model="newTx.santriName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ketik nama anggota..."
+                    @input="searchSantri"
+                    @focus="showSuggestions = true"
+                    autocomplete="off"
+                  />
+                  <div
+                    v-if="showSuggestions && suggestions.length"
+                    class="suggestions-dropdown"
+                  >
+                    <div
+                      v-for="s in suggestions"
+                      :key="s.id"
+                      class="suggestion-item"
+                      @mousedown.prevent="selectSantri(s)"
+                    >
+                      {{ s.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="form-group">
+                <label class="form-label">Keterangan Pengeluaran *</label>
+                <input
+                  v-model="newTx.description"
+                  type="text"
+                  class="form-input"
+                  placeholder="cth: Bisyarah guru, sampah, perlengkapan"
+                />
+              </div>
+
+              <!-- Amount -->
+              <div class="form-group">
+                <label class="form-label">{{
+                  newTx.type === "expense"
+                    ? "Jumlah Pengeluaran (Rp) *"
+                    : "Jumlah Pemasukan (Rp) *"
+                }}</label>
+                <input
+                  v-model="newTx.amount"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  class="form-input"
+                  placeholder="cth: 5000"
+                />
+              </div>
+
+              <!-- Date -->
+              <div class="form-group">
+                <label class="form-label">Waktu Transaksi (Jam & Menit) *</label>
+                <input
+                  v-model="newTx.date"
+                  type="datetime-local"
+                  class="form-input"
+                  :max="nowStr"
+                />
+              </div>
+
+              <!-- Notes -->
+              <div class="form-group form-group-notes">
+                <label class="form-label">Catatan (Opsional)</label>
+                <input
+                  v-model="newTx.notes"
+                  type="text"
+                  class="form-input"
+                  :placeholder="
+                    newTx.type === 'expense'
+                      ? 'cth: Dibayar tunai oleh bendahara'
+                      : 'cth: Uang jajan hari ini'
+                  "
+                />
+              </div>
+
+              <button
+                class="btn-add"
+                :class="{ 'btn-expense': newTx.type === 'expense' }"
+                @click="addTransaction"
+                :disabled="submitting"
+              >
+                <svg v-if="!submitting" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line v-if="newTx.type === 'income'" x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>
+                  {{
+                    submitting
+                      ? "Menyimpan..."
+                      : newTx.type === "expense"
+                        ? "Simpan Pengeluaran"
+                        : "Simpan Pemasukan"
+                  }}
+                </span>
+              </button>
+
+              <!-- Mobile Quick Switch to History -->
+              <div class="mobile-only quick-history-link" v-if="transactions.length > 0">
+                <button type="button" class="btn-text-link" @click="setMobileView('history')">
+                  Lihat riwayat transaksi ({{ transactions.length }}) &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Column: Data Workspace (Riwayat & Ringkasan Anggota) -->
+        <main
+          class="layout-main-col"
+          :class="{ 'mobile-visible': mobileView !== 'form' }"
+        >
+          <div v-if="book?.status !== 'active'" class="closed-notice glass-card">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="vertical-align: middle; margin-right: 6px"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat ditambahkan.
+          </div>
+
+          <div class="data-workspace-card glass-card">
+            <!-- Workspace Tabs Bar (Riwayat & Anggota) -->
+            <div class="ws-tabs-bar">
+              <div class="ws-tabs-left">
+                <button
+                  type="button"
+                  class="ws-tab-btn"
+                  :class="{ active: activeDataTab === 'history' }"
+                  @click="setActiveDataTab('history')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="2" width="6" height="4" rx="1" />
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                    <line x1="9" y1="12" x2="15" y2="12" />
+                    <line x1="9" y1="16" x2="15" y2="16" />
+                  </svg>
+                  <span>Riwayat Transaksi</span>
+                  <span class="tab-count-badge">{{ transactions.length }}</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="ws-tab-btn"
+                  :class="{ active: activeDataTab === 'members' }"
+                  @click="setActiveDataTab('members')"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  <span>Ringkasan Anggota</span>
+                  <span class="tab-count-badge">{{ summary.length }}</span>
+                </button>
+              </div>
+
+              <!-- Quick uncollapse button on desktop if form is collapsed -->
+              <div v-if="isFormCollapsed && book?.status === 'active'" class="ws-tabs-right desktop-only">
+                <button class="uncollapse-btn" @click="isFormCollapsed = false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Buka Form Catat</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tab Panel 1: Riwayat Transaksi -->
+            <div v-if="activeDataTab === 'history'" class="tab-panel">
+              <div class="history-controls-row">
+                <div class="tx-filter-chips">
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    :class="{ active: txFilterType === 'all' }"
+                    @click="txFilterType = 'all'"
+                  >
+                    Semua ({{ transactions.length }})
+                  </button>
+                  <button
+                    type="button"
+                    class="filter-chip income-chip"
+                    :class="{ active: txFilterType === 'income' }"
+                    @click="txFilterType = 'income'"
+                  >
+                    Pemasukan ({{ incomeTxCount }})
+                  </button>
+                  <button
+                    type="button"
+                    class="filter-chip expense-chip"
+                    :class="{ active: txFilterType === 'expense' }"
+                    @click="txFilterType = 'expense'"
+                  >
+                    Pengeluaran ({{ expenseTxCount }})
+                  </button>
+                </div>
+
+                <div class="tx-search-wrap">
+                  <svg
+                    class="search-icon"
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    v-model="searchTx"
+                    type="text"
+                    class="search-input"
+                    placeholder="Cari transaksi..."
+                  />
+                  <button
+                    v-if="searchTx"
+                    type="button"
+                    class="clear-search-btn"
+                    @click="searchTx = ''"
+                    title="Hapus pencarian"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="filteredTx.length === 0" class="empty-text">
+                <div class="empty-icon-wrap">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </div>
+                <p>{{ searchTx ? "Tidak ada transaksi yang cocok dengan pencarian" : "Belum ada riwayat transaksi" }}</p>
+              </div>
+
+              <div v-else class="tx-list scrollable-tx-list">
+                <div
+                  v-for="tx in filteredTx"
+                  :key="tx.id"
+                  class="tx-item"
+                  :class="{ expense: isExpenseTransaction(tx) }"
+                >
+                  <div
+                    class="tx-avatar"
+                    :class="{ expense: isExpenseTransaction(tx) }"
+                  >
+                    {{ getTransactionInitial(tx) }}
+                  </div>
+                  <div class="tx-info">
+                    <span class="tx-santri">{{ getTransactionTitle(tx) }}</span>
+                    <span class="tx-notes">{{ getTransactionSubtitle(tx) }}</span>
+                    <span class="tx-meta"
+                      >{{ formatDateTime(tx.date) }} &middot; dicatat oleh
+                      {{ tx.recordedByName }}</span
+                    >
+                  </div>
+
+                  <div class="tx-right">
+                    <span
+                      class="tx-amount"
+                      :class="{ expense: isExpenseTransaction(tx) }"
+                    >
+                      {{ formatTransactionAmount(tx) }}
+                    </span>
+                    <div class="tx-actions">
+                      <button
+                        class="icon-btn edit"
+                        @click="openEditTx(tx)"
+                        title="Edit"
+                        v-if="book?.status === 'active'"
+                      >
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                          />
+                          <path
+                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        class="icon-btn delete"
+                        @click="confirmDeleteTx(tx)"
+                        title="Hapus"
+                      >
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14H6L5 6" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div v-else class="form-group">
-            <label class="form-label">Keterangan Pengeluaran *</label>
-            <input
-              v-model="newTx.description"
-              type="text"
-              class="form-input"
-              placeholder="cth: Bisyarah guru, sampah, perlengkapan"
-            />
-          </div>
 
-          <!-- Amount -->
-          <div class="form-group">
-            <label class="form-label">{{
-              newTx.type === "expense"
-                ? "Jumlah Pengeluaran (Rp) *"
-                : "Jumlah Pemasukan (Rp) *"
-            }}</label>
-            <input
-              v-model="newTx.amount"
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              class="form-input"
-              placeholder="cth: 5000"
-            />
-          </div>
-          <!-- Date -->
-          <div class="form-group">
-            <label class="form-label">Waktu Transaksi (Jam & Menit) *</label>
-            <input
-              v-model="newTx.date"
-              type="datetime-local"
-              class="form-input"
-              :max="nowStr"
-            />
-          </div>
-          <!-- Notes -->
-          <div class="form-group">
-            <label class="form-label">Catatan (Opsional)</label>
-            <input
-              v-model="newTx.notes"
-              type="text"
-              class="form-input"
-              :placeholder="
-                newTx.type === 'expense'
-                  ? 'cth: Dibayar tunai oleh bendahara'
-                  : 'cth: Uang jajan hari ini'
-              "
-            />
-          </div>
-          <button
-            class="btn-add"
-            @click="addTransaction"
-            :disabled="submitting"
-          >
-            {{
-              submitting
-                ? "Menyimpan..."
-                : newTx.type === "expense"
-                  ? "Simpan Pengeluaran"
-                  : "Simpan Pemasukan"
-            }}
-          </button>
-        </div>
-      </div>
+            <!-- Tab Panel 2: Ringkasan per Anggota -->
+            <div v-else-if="activeDataTab === 'members'" class="tab-panel">
+              <div class="members-controls-row">
+                <div class="members-summary-badge">
+                  Total Anggota: <strong>{{ summary.length }} orang</strong>
+                </div>
 
-      <div v-else class="closed-notice glass-card">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          style="vertical-align: middle; margin-right: 6px"
-        >
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat
-        ditambahkan.
-      </div>
-
-      <!-- Per-Santri Summary -->
-      <div class="section glass-card">
-        <h2>Ringkasan per Anggota</h2>
-        <div v-if="summary.length === 0" class="empty-text">
-          Belum ada data anggota
-        </div>
-        <div v-else class="santri-table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nama</th>
-                <th>Transaksi</th>
-                <th>Total Tabungan</th>
-                <th>Terakhir Setor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="s in summary" :key="s.santriId">
-                <td>
-                  <span class="santri-name">{{ s.santriName }}</span>
-                </td>
-                <td>{{ s.transactionCount }}x</td>
-                <td class="amount-cell">Rp {{ formatCurrency(s.balance) }}</td>
-                <td class="muted">{{ formatDateTime(s.lastTransaction) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Transaction History -->
-      <div class="section glass-card">
-        <div class="section-header">
-          <h2>Riwayat Transaksi</h2>
-          <input
-            v-model="searchTx"
-            type="text"
-            class="search-input"
-            placeholder="Cari transaksi..."
-          />
-        </div>
-        <div v-if="filteredTx.length === 0" class="empty-text">
-          Belum ada transaksi
-        </div>
-        <div v-else class="tx-list">
-          <div
-            v-for="tx in filteredTx"
-            :key="tx.id"
-            class="tx-item"
-            :class="{ expense: isExpenseTransaction(tx) }"
-          >
-            <div
-              class="tx-avatar"
-              :class="{ expense: isExpenseTransaction(tx) }"
-            >
-              {{ getTransactionInitial(tx) }}
-            </div>
-            <div class="tx-info">
-              <span class="tx-santri">{{ getTransactionTitle(tx) }}</span>
-              <span class="tx-notes">{{ getTransactionSubtitle(tx) }}</span>
-              <span class="tx-meta"
-                >{{ formatDateTime(tx.date) }} &middot; dicatat oleh
-                {{ tx.recordedByName }}</span
-              >
-            </div>
-
-            <div class="tx-right">
-              <span
-                class="tx-amount"
-                :class="{ expense: isExpenseTransaction(tx) }"
-              >
-                {{ formatTransactionAmount(tx) }}
-              </span>
-              <div class="tx-actions">
-                <button
-                  class="icon-btn edit"
-                  @click="openEditTx(tx)"
-                  title="Edit"
-                  v-if="book?.status === 'active'"
-                >
+                <div class="tx-search-wrap">
                   <svg
-                    width="13"
-                    height="13"
+                    class="search-icon"
+                    width="15"
+                    height="15"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
+                    stroke-width="2.5"
                   >
-                    <path
-                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                    />
-                    <path
-                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                    />
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
-                </button>
-                <button
-                  class="icon-btn delete"
-                  @click="confirmDeleteTx(tx)"
-                  title="Hapus"
-                >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
+                  <input
+                    v-model="searchMember"
+                    type="text"
+                    class="search-input"
+                    placeholder="Cari nama anggota..."
+                  />
+                  <button
+                    v-if="searchMember"
+                    type="button"
+                    class="clear-search-btn"
+                    @click="searchMember = ''"
+                    title="Hapus pencarian"
                   >
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6l-1 14H6L5 6" />
+                    &times;
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="filteredSummary.length === 0" class="empty-text">
+                <div class="empty-icon-wrap">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
-                </button>
+                </div>
+                <p>{{ searchMember ? "Anggota tidak ditemukan" : "Belum ada data anggota" }}</p>
+              </div>
+
+              <div v-else class="santri-table-wrap scrollable-table-wrap">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nama Anggota</th>
+                      <th>Transaksi</th>
+                      <th>Total Tabungan</th>
+                      <th>Terakhir Setor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="s in filteredSummary" :key="s.santriId">
+                      <td>
+                        <div class="member-name-cell">
+                          <div class="member-avatar">
+                            {{ s.santriName ? s.santriName.charAt(0).toUpperCase() : 'A' }}
+                          </div>
+                          <span class="santri-name">{{ s.santriName }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="tx-count-pill">{{ s.transactionCount }}x</span>
+                      </td>
+                      <td class="amount-cell">Rp {{ formatCurrency(s.balance) }}</td>
+                      <td class="muted">{{ formatDateTime(s.lastTransaction) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </template>
 
@@ -1019,6 +1291,33 @@ const nowStr = ref(getNowStr());
 const inputMode = ref("select"); // 'select' or 'search'
 const selectedExistingSantri = ref("");
 
+// Workspace Tabs & Layout state
+const activeDataTab = ref("history"); // 'history' | 'members'
+const mobileView = ref("history"); // 'form' | 'history' | 'members'
+const isFormCollapsed = ref(false);
+const txFilterType = ref("all"); // 'all' | 'income' | 'expense'
+const searchMember = ref("");
+
+const setMobileView = (tab) => {
+  mobileView.value = tab;
+  if (tab === "history" || tab === "members") {
+    activeDataTab.value = tab;
+  }
+};
+
+const setActiveDataTab = (tab) => {
+  activeDataTab.value = tab;
+  mobileView.value = tab;
+};
+
+const filteredSummary = computed(() => {
+  if (!searchMember.value.trim()) return summary.value;
+  const q = searchMember.value.toLowerCase();
+  return summary.value.filter((s) =>
+    (s.santriName || "").toLowerCase().includes(q),
+  );
+});
+
 const newTx = ref({
   type: "income",
   santriId: "",
@@ -1063,15 +1362,6 @@ const totalExpense = computed(
 const totalBalance = computed(
   () => book.value?.totalBalance ?? totalIncome.value - totalExpense.value,
 );
-const filteredTx = computed(() => {
-  if (!searchTx.value.trim()) return transactions.value;
-  const q = searchTx.value.toLowerCase();
-  return transactions.value.filter((t) => {
-    return [t.santriName, t.description, t.notes, t.recordedByName]
-      .filter(Boolean)
-      .some((value) => value.toLowerCase().includes(q));
-  });
-});
 
 const formatCurrency = (n) => (n || 0).toLocaleString("id-ID");
 const formatDate = (d) => {
@@ -1132,6 +1422,29 @@ const getTxAmount = (tx) => {
   return raw;
 };
 const isExpenseTransaction = (tx) => getTxAmount(tx) < 0;
+
+const incomeTxCount = computed(
+  () => transactions.value.filter((t) => !isExpenseTransaction(t)).length,
+);
+const expenseTxCount = computed(
+  () => transactions.value.filter((t) => isExpenseTransaction(t)).length,
+);
+
+const filteredTx = computed(() => {
+  let list = transactions.value;
+  if (txFilterType.value === "income") {
+    list = list.filter((t) => !isExpenseTransaction(t));
+  } else if (txFilterType.value === "expense") {
+    list = list.filter((t) => isExpenseTransaction(t));
+  }
+  if (!searchTx.value.trim()) return list;
+  const q = searchTx.value.toLowerCase();
+  return list.filter((t) => {
+    return [t.santriName, t.description, t.notes, t.recordedByName]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(q));
+  });
+});
 const getTransactionTitle = (tx) => {
   if (!tx) return "-";
   if (isExpenseTransaction(tx))
@@ -2018,62 +2331,86 @@ onBeforeUnmount(() => {
 }
 
 .back-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 6px;
   color: var(--primary);
-  font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: var(--space-lg);
-  padding: var(--space-sm) 0;
-  transition: gap 0.2s;
-  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: var(--space-md);
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(27, 94, 32, 0.06);
+  border: 1px solid rgba(27, 94, 32, 0.12);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .back-btn:hover {
+  background: rgba(27, 94, 32, 0.12);
+  transform: translateX(-2px);
+}
+
+.header-main-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--space-md);
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .header-info {
   flex: 1;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-left: auto;
-}
-
-.print-trigger-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-sm);
-  min-height: 38px;
-  padding: 0 var(--space-lg);
-  border-radius: var(--radius-md);
-  background: var(--primary);
-  color: white;
-  font-size: 0.82rem;
-  font-weight: 700;
-  box-shadow: 0 8px 22px rgba(27, 94, 32, 0.22);
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
-  white-space: nowrap;
-}
-
-.print-trigger-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(27, 94, 32, 0.28);
+  min-width: 0;
 }
 
 .title-row {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.title-row h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.header-info p {
+  color: var(--gray-600);
+  margin-top: 4px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.book-meta {
+  color: var(--gray-500) !important;
+  font-size: 0.8rem !important;
+  margin-top: 4px;
+}
+
+.book-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.book-badge.active {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+}
+
+.book-badge.closed {
+  background: rgba(158, 158, 158, 0.15);
+  color: var(--gray-500);
 }
 
 .badge-shared {
@@ -2086,16 +2423,49 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-/* Book action dots */
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.print-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 40px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.print-trigger-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(27, 94, 32, 0.35);
+}
+
 .book-action-wrap {
   position: relative;
   flex-shrink: 0;
 }
 
 .book-action-dots {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2103,26 +2473,25 @@ onBeforeUnmount(() => {
   transition: all 0.2s;
   background: var(--gray-50);
   border: 1.5px solid var(--gray-200);
+  cursor: pointer;
 }
 
 .book-action-dots:hover {
   background: var(--gray-100);
-  color: var(--gray-700);
+  color: var(--gray-800);
 }
 
 .book-action-dropdown {
   position: absolute;
   right: 0;
-  top: 42px;
+  top: 46px;
   background: white;
   border-radius: var(--radius-lg);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.14),
-    0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--gray-100);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--gray-200);
   min-width: 200px;
   z-index: 200;
-  padding: 6px 0;
+  padding: 6px;
   overflow: hidden;
 }
 
@@ -2131,15 +2500,19 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 16px;
-  font-size: 0.82rem;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
   color: var(--gray-700);
   text-align: left;
   transition: background 0.15s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .bad-item:hover {
-  background: var(--gray-50);
+  background: var(--gray-100);
 }
 
 .bad-item.active {
@@ -2160,51 +2533,16 @@ onBeforeUnmount(() => {
 }
 
 .bad-item.danger:hover {
-  background: rgba(244, 67, 54, 0.06);
+  background: rgba(244, 67, 54, 0.08);
 }
 
 .bad-divider {
   height: 1px;
-  background: var(--gray-100);
+  background: var(--gray-200);
   margin: 4px 0;
 }
 
-.header-info h1 {
-  font-size: 1.75rem;
-  color: var(--primary-dark);
-}
-
-.header-info p {
-  color: var(--gray-600);
-  margin-top: 2px;
-
-  font-size: 0.9rem;
-}
-
-.book-meta {
-  color: var(--gray-400) !important;
-  font-size: 0.8rem !important;
-  margin-top: 4px;
-}
-
-.book-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 12px;
-  border-radius: var(--radius-full);
-  text-transform: uppercase;
-}
-
-.book-badge.active {
-  background: rgba(76, 175, 80, 0.15);
-  color: var(--success);
-}
-
-.book-badge.closed {
-  background: rgba(158, 158, 158, 0.15);
-  color: var(--gray-500);
-}
-
+/* Loading & Unavailable States */
 .loading-state {
   display: flex;
   justify-content: center;
@@ -2308,7 +2646,7 @@ onBeforeUnmount(() => {
   margin-top: var(--space-2xl);
 }
 
-/* Summary */
+/* ── Summary Cards Grid ── */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2316,70 +2654,66 @@ onBeforeUnmount(() => {
   margin-bottom: var(--space-xl);
 }
 
-@media (max-width: 1100px) {
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-    margin-left: 0;
-  }
-
-  .print-trigger-btn {
-    flex: 1;
-  }
-
-  .book-unavailable {
-    margin: var(--space-xl) auto;
-    padding: var(--space-2xl) var(--space-xl);
-  }
-
-  .unavailable-content h1 {
-    font-size: 1.25rem;
-  }
-
-  .unavailable-owner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 2px;
-  }
-}
-
 .sum-card {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   padding: var(--space-lg);
 }
 
 .sum-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
   flex-shrink: 0;
+}
+
+.sum-icon.icon-members {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+}
+
+.sum-icon.icon-tx {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+}
+
+.sum-icon.icon-expense {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.sum-icon.icon-balance {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
 }
 
 .sum-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .sum-val {
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary-dark);
-  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.sum-val.text-expense {
+  color: #dc2626;
+}
+
+.sum-val.text-balance {
+  color: #b45309;
+  font-size: clamp(1rem, 2.3vw, 1.25rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sum-label {
@@ -2388,68 +2722,133 @@ onBeforeUnmount(() => {
   margin-top: 2px;
 }
 
-/* Add Section */
+/* ── Add Transaction & Side Column ── */
 .add-section {
   padding: var(--space-xl);
-  margin-bottom: var(--space-xl);
+  border-radius: var(--radius-xl);
 }
 
-.add-section h2 {
+.side-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.side-col-header h2 {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   font-size: 1.05rem;
+  font-weight: 700;
   color: var(--primary-dark);
+  margin: 0;
+}
+
+.collapse-toggle-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collapse-toggle-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+.collapsed-form-card {
+  cursor: pointer;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-xl);
   margin-bottom: var(--space-xl);
+  border: 1.5px dashed rgba(27, 94, 32, 0.3);
+  background: rgba(27, 94, 32, 0.04);
+  transition: all 0.2s;
+}
+
+.collapsed-form-card:hover {
+  background: rgba(27, 94, 32, 0.08);
+  border-color: var(--primary);
+}
+
+.collapsed-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.collapsed-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .transaction-type-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-sm);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  background: var(--gray-100);
+  padding: 5px;
+  border-radius: var(--radius-xl);
   margin-bottom: var(--space-xl);
 }
 
 .type-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 var(--space-lg);
   border-radius: var(--radius-lg);
-  border: 1.5px solid var(--gray-200);
-  background: white;
+  border: none;
+  background: transparent;
   color: var(--gray-600);
-  font-size: 0.85rem;
-  font-weight: 800;
-  transition: all 0.2s;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--gray-800);
 }
 
 .type-tab.active.income {
-  border-color: transparent;
-  background: var(--primary);
+  background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 8px 22px rgba(27, 94, 32, 0.18);
+  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
 }
 
 .type-tab.active.expense {
-  border-color: transparent;
-  background: #d32f2f;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
   color: white;
-  box-shadow: 0 8px 22px rgba(211, 47, 47, 0.18);
+  box-shadow: 0 4px 14px rgba(211, 47, 47, 0.25);
 }
 
 .add-form {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-md);
-}
-
-@media (max-width: 600px) {
-  .add-form {
-    grid-template-columns: 1fr;
-  }
-}
-
-.add-form .form-group:last-of-type {
-  grid-column: 1 / -1;
 }
 
 .form-group {
@@ -2457,58 +2856,70 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+  flex-wrap: wrap;
+}
+
 .form-label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--gray-700);
   margin-bottom: var(--space-xs);
 }
 
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.santri-input-modes {
+  display: flex;
+  gap: 4px;
+  background: var(--gray-100);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+
+.mode-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: transparent;
+  color: var(--gray-600);
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.mode-btn.active {
+  background: white;
+  color: var(--primary-dark);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
 .form-input {
-  padding: var(--space-md) var(--space-lg);
-  border: 2px solid var(--gray-200);
+  padding: 10px 14px;
+  border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  font-size: 0.875rem;
+  font-size: 0.88rem;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: white;
 }
 
 .form-input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
 }
 
 .mt-2 {
   margin-top: 8px;
-}
-
-/* Input Modes */
-.santri-input-modes {
-  display: flex;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-xs);
-}
-
-.mode-btn {
-  flex: 1;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--gray-100);
-  color: var(--gray-600);
-  border: 1px solid var(--gray-200);
-  transition: all 0.2s;
-}
-
-.mode-btn.active {
-  background: var(--primary-gradient);
-  color: white;
-  border-color: transparent;
-}
-
-.mode-btn:hover:not(.active) {
-  background: var(--gray-200);
 }
 
 .suggestions-dropdown {
@@ -2517,16 +2928,17 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid var(--gray-200);
+  border: 1.5px solid var(--gray-200);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
   z-index: 50;
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
+  margin-top: 4px;
 }
 
 .suggestion-item {
-  padding: var(--space-md) var(--space-lg);
+  padding: 10px 14px;
   cursor: pointer;
   font-size: 0.875rem;
   transition: background 0.15s;
@@ -2538,20 +2950,36 @@ onBeforeUnmount(() => {
 }
 
 .btn-add {
-  grid-column: 1 / -1;
-  padding: var(--space-md) var(--space-xl);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 46px;
+  padding: 0 var(--space-xl);
   background: var(--primary-gradient);
   color: white;
   border-radius: var(--radius-lg);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.92rem;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.28);
+  border: none;
+  cursor: pointer;
+  margin-top: var(--space-xs);
 }
 
 .btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(27, 94, 32, 0.4);
+  box-shadow: 0 8px 24px rgba(27, 94, 32, 0.38);
+}
+
+.btn-add.btn-expense {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.28);
+}
+
+.btn-add.btn-expense:hover {
+  box-shadow: 0 8px 24px rgba(211, 47, 47, 0.38);
 }
 
 .btn-add:disabled {
@@ -2560,28 +2988,204 @@ onBeforeUnmount(() => {
   transform: none;
 }
 
+.quick-history-link {
+  text-align: center;
+  margin-top: var(--space-sm);
+}
+
+.btn-text-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+}
+
 .closed-notice {
   padding: var(--space-xl);
   text-align: center;
-  color: var(--gray-500);
+  color: var(--gray-600);
   font-size: 0.9rem;
   margin-bottom: var(--space-xl);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-xl);
 }
 
-/* Sections */
-.section {
-  padding: var(--space-xl);
+/* ── Mobile Segmented View Tabs (< 1024px) ── */
+.mobile-view-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--gray-100);
+  padding: 5px;
+  border-radius: var(--radius-xl);
   margin-bottom: var(--space-xl);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.section h2,
-.section-header h2 {
-  font-size: 1.05rem;
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 8px;
+  border-radius: var(--radius-lg);
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-tab-btn.active {
+  background: white;
   color: var(--primary-dark);
-  margin-bottom: var(--space-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.section-header {
+.mobile-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.mobile-tab-btn.active .mobile-tab-count {
+  background: rgba(27, 94, 32, 0.15);
+  color: var(--primary-dark);
+}
+
+/* ── Main Layout Architecture (Split Grid on Desktop) ── */
+.detail-main-layout {
+  display: grid;
+  grid-template-columns: 390px 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+  margin-bottom: var(--space-2xl);
+}
+
+.detail-main-layout.form-collapsed {
+  grid-template-columns: 1fr;
+}
+
+.layout-side-col {
+  min-width: 0;
+}
+
+.sticky-card {
+  position: sticky;
+  top: 20px;
+  z-index: 10;
+}
+
+.layout-main-col {
+  min-width: 0;
+}
+
+/* ── Data Workspace Card ── */
+.data-workspace-card {
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+}
+
+.ws-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid var(--gray-200);
+  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.ws-tabs-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ws-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ws-tab-btn:hover:not(.active) {
+  background: var(--gray-100);
+  color: var(--gray-800);
+}
+
+.ws-tab-btn.active {
+  background: rgba(27, 94, 32, 0.1);
+  color: var(--primary-dark);
+}
+
+.tab-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.ws-tab-btn.active .tab-count-badge {
+  background: var(--primary);
+  color: white;
+}
+
+.uncollapse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(27, 94, 32, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(27, 94, 32, 0.18);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.uncollapse-btn:hover {
+  background: rgba(27, 94, 32, 0.15);
+}
+
+/* ── History & Member Controls ── */
+.history-controls-row,
+.members-controls-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2590,33 +3194,160 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
-.search-input {
-  padding: var(--space-sm) var(--space-md);
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  font-size: 0.8rem;
-  outline: none;
-  width: 200px;
+.tx-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.search-input:focus {
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--gray-200);
+  background: white;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip:hover:not(.active) {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.filter-chip.active {
+  background: var(--primary-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(27, 94, 32, 0.2);
+}
+
+.filter-chip.expense-chip.active {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.2);
+}
+
+.members-summary-badge {
+  font-size: 0.88rem;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.members-summary-badge strong {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.tx-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tx-search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+.tx-search-wrap .search-input {
+  padding: 8px 32px 8px 36px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+  width: 220px;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tx-search-wrap .search-input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  color: var(--gray-400);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.clear-search-btn:hover {
+  color: var(--gray-700);
 }
 
 .empty-text {
   text-align: center;
-  color: var(--gray-400);
-  padding: var(--space-xl) 0;
+  color: var(--gray-500);
+  padding: var(--space-2xl) var(--space-lg);
   font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Table */
-.santri-table-wrap {
+.empty-icon-wrap {
+  color: var(--gray-300);
+  margin-bottom: var(--space-xs);
+}
+
+/* ── Scrollable Containers ── */
+.scrollable-tx-list {
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.scrollable-tx-list::-webkit-scrollbar,
+.scrollable-table-wrap::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollable-tx-list::-webkit-scrollbar-track,
+.scrollable-table-wrap::-webkit-scrollbar-track {
+  background: var(--gray-50);
+  border-radius: 4px;
+}
+
+.scrollable-tx-list::-webkit-scrollbar-thumb,
+.scrollable-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.scrollable-tx-list::-webkit-scrollbar-thumb:hover,
+.scrollable-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+.scrollable-table-wrap {
+  max-height: 640px;
+  overflow-y: auto;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-100);
+}
+
+/* ── Table ── */
+.santri-table-wrap {
+  margin-top: var(--space-xs);
 }
 
 .data-table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -2624,21 +3355,50 @@ onBeforeUnmount(() => {
 .data-table th {
   text-align: left;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--gray-500);
   padding: var(--space-sm) var(--space-md);
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 2px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  background: #fbfdfa;
+  z-index: 5;
 }
 
 .data-table td {
   padding: var(--space-md);
-  border-bottom: 1px solid var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.data-table tr:hover td {
+  background: rgba(27, 94, 32, 0.02);
 }
 
 .data-table tr:last-child td {
   border-bottom: none;
+}
+
+.member-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(27, 94, 32, 0.09);
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .santri-name {
@@ -2646,8 +3406,14 @@ onBeforeUnmount(() => {
   color: var(--primary-dark);
 }
 
-.center {
-  text-align: center !important;
+.tx-count-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--gray-100);
+  color: var(--gray-700);
+  font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .amount-cell {
@@ -2660,11 +3426,11 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
 }
 
-/* Transactions */
+/* ── Transactions List ── */
 .tx-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .tx-item {
@@ -2674,15 +3440,18 @@ onBeforeUnmount(() => {
   padding: var(--space-md);
   border-radius: var(--radius-lg);
   background: var(--gray-50);
-  transition: background 0.2s;
+  border: 1px solid var(--gray-100);
+  transition: all 0.2s;
 }
 
 .tx-item:hover {
-  background: rgba(27, 94, 32, 0.05);
+  background: rgba(27, 94, 32, 0.04);
+  border-color: rgba(27, 94, 32, 0.15);
 }
 
 .tx-item.expense:hover {
-  background: rgba(211, 47, 47, 0.05);
+  background: rgba(211, 47, 47, 0.04);
+  border-color: rgba(211, 47, 47, 0.15);
 }
 
 .tx-avatar {
@@ -2711,17 +3480,18 @@ onBeforeUnmount(() => {
 }
 
 .tx-santri {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--primary-dark);
   font-size: 0.875rem;
 }
 
 .tx-notes {
-  color: var(--gray-500);
+  color: var(--gray-600);
   font-size: 0.78rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
 .tx-meta {
@@ -2741,7 +3511,7 @@ onBeforeUnmount(() => {
 .tx-amount {
   font-weight: 700;
   color: var(--success);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   white-space: nowrap;
 }
 
@@ -2755,13 +3525,17 @@ onBeforeUnmount(() => {
 }
 
 .icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .icon-btn.edit {
@@ -2780,6 +3554,160 @@ onBeforeUnmount(() => {
 
 .icon-btn.delete:hover {
   background: rgba(244, 67, 54, 0.2);
+}
+
+/* ── Mobile & Responsive Breakpoints ── */
+@media (min-width: 1024px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .detail-main-layout {
+    display: block;
+  }
+
+  .layout-side-col {
+    display: none;
+  }
+
+  .layout-side-col.mobile-visible {
+    display: block;
+  }
+
+  .layout-main-col {
+    display: none;
+  }
+
+  .layout-main-col.mobile-visible {
+    display: block;
+  }
+
+  .scrollable-tx-list,
+  .scrollable-table-wrap {
+    max-height: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .header-main-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .print-trigger-btn {
+    flex: 1;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .sum-card-balance {
+    grid-column: 1 / -1;
+  }
+
+  .sum-card {
+    padding: var(--space-md) !important;
+    gap: var(--space-sm) !important;
+  }
+
+  .sum-icon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .sum-val {
+    font-size: clamp(0.95rem, 2.2vw, 1.15rem) !important;
+  }
+
+  .add-section {
+    padding: var(--space-lg);
+  }
+
+  .data-workspace-card {
+    padding: var(--space-lg);
+  }
+
+  .history-controls-row,
+  .members-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .tx-search-wrap {
+    width: 100%;
+  }
+
+  .tx-search-wrap .search-input {
+    width: 100%;
+  }
+
+  .tx-item {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .tx-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  .tx-santri {
+    font-size: 0.82rem;
+  }
+
+  .tx-notes {
+    font-size: 0.74rem;
+  }
+
+  .tx-amount {
+    font-size: 0.84rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .book-unavailable {
+    margin: var(--space-xl) auto;
+    padding: var(--space-2xl) var(--space-xl);
+  }
+
+  .unavailable-content h1 {
+    font-size: 1.25rem;
+  }
+
+  .unavailable-owner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Modal */
