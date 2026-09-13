@@ -5,7 +5,7 @@
     <!-- ================================================================= -->
     <!-- 1. HERO SECTION (MINIMALIST, INSPIRING & VISUALLY STUNNING) -->
     <!-- ================================================================= -->
-    <section id="beranda" class="relative bg-gradient-to-br from-emerald-950 via-primary-900 to-emerald-950 overflow-hidden pt-28 pb-16 sm:pt-32 sm:pb-20 lg:pt-36 lg:pb-24">
+    <section id="beranda" class="relative flex items-center bg-gradient-to-br from-emerald-950 via-primary-900 to-emerald-950 overflow-hidden min-h-[100dvh] pt-28 pb-20 sm:pt-32 sm:pb-24 lg:pt-32 lg:pb-32">
       <!-- Background Ambient Glow & Islamic Star Motif -->
       <div class="absolute inset-0 islamic-pattern opacity-10 pointer-events-none"></div>
       <div class="absolute inset-0 bg-gradient-radial from-amber-400/15 via-transparent to-transparent pointer-events-none"></div>
@@ -20,17 +20,17 @@
           <!-- Left Column: Concise & Inspiring Copywriting (6 cols) -->
           <div class="lg:col-span-6 text-center lg:text-left flex flex-col justify-center">
             <!-- Bismillah Calligraphy -->
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-arabic text-accent-300 mb-4 tracking-wider drop-shadow-[0_2px_12px_rgba(255,213,79,0.35)]">
+            <p class="text-3xl sm:text-4xl lg:text-5xl font-arabic text-accent-300 mb-6 tracking-wider drop-shadow-[0_2px_12px_rgba(255,213,79,0.35)]">
               بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
             </p>
 
             <!-- Main Punchy Headline -->
-            <h1 class="font-jakarta font-extrabold text-white text-3xl sm:text-4xl lg:text-[2.85rem] tracking-tight leading-[1.2] mb-4">
+            <h1 class="font-jakarta font-extrabold text-white text-4xl sm:text-5xl lg:text-[3.25rem] tracking-tight leading-[1.15] mb-6">
               Mencetak Generasi <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent-300 via-amber-200 to-accent-400 drop-shadow-[0_2px_15px_rgba(250,204,21,0.3)]">Qur'ani</span> yang Berakhlak Mulia
             </h1>
 
             <!-- Concise Subtitle (Only 2 Lines!) -->
-            <p class="text-base sm:text-lg text-emerald-100/90 leading-relaxed font-inter max-w-xl mx-auto lg:mx-0 mb-8">
+            <p class="text-base sm:text-lg lg:text-xl text-emerald-100/90 leading-relaxed font-inter max-w-xl mx-auto lg:mx-0 mb-10">
               Bimbingan membaca dan menghafal Al-Qur'an metode <strong>At-Tartil</strong> terstandar dengan asatidz yang sabar, ramah anak, dan barakah di Sawotratap, Sidoarjo.
             </p>
 
@@ -93,10 +93,10 @@
               <img
                 src="/hero-blended-1.webp"
                 alt="Santri mengaji riang bersama ustadzah di TPQ Amanah"
-                width="480"
-                height="340"
+                width="560"
+                height="420"
                 fetchpriority="high"
-                class="relative z-10 w-full h-auto max-h-[380px] object-contain mx-auto drop-shadow-2xl animate-float pointer-events-none"
+                class="relative z-10 w-full h-auto max-h-[460px] object-contain mx-auto drop-shadow-2xl animate-float pointer-events-none"
               />
 
               <!-- Floating Glass Badge 1: Top Right (Methodology Status) -->
