@@ -277,6 +277,10 @@ const progressSub = (id) => {
 };
 
 const fetchCompleteness = async (report) => {
+  if ((report.status === "submitted" || report.status === "approved" || (report.status === "draft" && !report.isCompletenessStale)) && report.completeness) {
+    completenessMap.value = { ...completenessMap.value, [report.id]: report.completeness };
+    return;
+  }
   try {
     const res = await api.get(`/ljp/reports/${report.id}/completeness`);
     completenessMap.value = { ...completenessMap.value, [report.id]: res.data };
