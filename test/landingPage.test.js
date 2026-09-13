@@ -44,8 +44,8 @@ test("HomeView uses WebP assets for lightweight image loading", () => {
     "Hero image should no longer use heavy 1.6MB PNG"
   );
   assert.ok(
-    homeViewSrc.includes("/qr-pendaftaran.webp"),
-    "Must reference QR code webp asset"
+    !homeViewSrc.includes("/qr-pendaftaran.webp"),
+    "QR code should no longer be referenced in HomeView"
   );
   assert.ok(
     homeViewSrc.includes(".webp"),
