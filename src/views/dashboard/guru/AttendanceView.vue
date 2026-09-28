@@ -405,8 +405,20 @@ const availableMonths = computed(() => {
 })
 
 const monthlyStats = computed(() => {
-  const hadir = attendanceHistory.value.filter(a => a.status === 'hadir').length
-  const tidakHadir = attendanceHistory.value.filter(a => a.status !== 'hadir').length
+  const filtered = attendanceHistory.value.filter(a => a.type !== 'student_attendance')
+  const uniqueDays = new Map()
+  filtered.forEach(a => {
+    const d = parseDate(a.date)
+    if (d) {
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      if (!uniqueDays.has(dayKey) || a.status === 'hadir') {
+        uniqueDays.set(dayKey, a)
+      }
+    }
+  })
+  const uniqueRecords = Array.from(uniqueDays.values())
+  const hadir = uniqueRecords.filter(a => a.status === 'hadir').length
+  const tidakHadir = uniqueRecords.filter(a => a.status !== 'hadir').length
   return { hadir, tidakHadir }
 })
 
@@ -452,11 +464,13 @@ const parseDate = (val) => {
   if (val.toDate && typeof val.toDate === 'function') return val.toDate()
   if (val._seconds !== undefined) return new Date(val._seconds * 1000)
   if (val.seconds !== undefined) return new Date(val.seconds * 1000)
-  return new Date(val)
+  const d = new Date(val)
+  return isNaN(d.getTime()) ? null : d
 }
 
 const getAttendanceForDate = (date) => {
   return attendanceHistory.value.find(a => {
+    if (a.type === 'student_attendance') return false
     const d = parseDate(a.date)
     return d && d.getDate() === date && d.getMonth() === calendarMonth.value && d.getFullYear() === calendarYear.value
   })
@@ -627,7 +641,7 @@ const fetchAttendance = async () => {
         year: calendarYear.value
       }
     })
-    attendanceHistory.value = data
+    attendanceHistory.value = (data || []).filter(a => a.type !== 'student_attendance')
 
     // Check for today's attendance using local date comparison
     const todayYear = today.getFullYear()

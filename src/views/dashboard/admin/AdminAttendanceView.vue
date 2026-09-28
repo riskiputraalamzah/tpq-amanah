@@ -790,9 +790,20 @@ const tomorrowHoliday = computed(() => isTomorrowHoliday(holidays.value));
 
 const teachersWithStats = computed(() => {
   return teachers.value.map((t) => {
-    const records = attendanceData.value.filter((a) => a.guruId === t.id);
-    const hadirCount = records.filter((a) => a.status === "hadir").length;
-    const tidakHadirCount = records.filter((a) => a.status !== "hadir").length;
+    const records = attendanceData.value.filter((a) => a.guruId === t.id && a.type !== "student_attendance");
+    const uniqueDays = new Map();
+    records.forEach((a) => {
+      const d = parseDate(a.date);
+      if (d) {
+        const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        if (!uniqueDays.has(dayKey) || a.status === "hadir") {
+          uniqueDays.set(dayKey, a);
+        }
+      }
+    });
+    const uniqueRecords = Array.from(uniqueDays.values());
+    const hadirCount = uniqueRecords.filter((a) => a.status === "hadir").length;
+    const tidakHadirCount = uniqueRecords.filter((a) => a.status !== "hadir").length;
     return { ...t, hadirCount, tidakHadirCount };
   });
 });
@@ -934,7 +945,8 @@ const parseDate = (val) => {
   if (val.seconds !== undefined) {
     return new Date(val.seconds * 1000);
   }
-  return new Date(val);
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
 };
 
 const getInitials = (name) => {
@@ -1022,6 +1034,7 @@ const updateMonthHolidays = () => {
 
 const getAttendanceForDate = (date) => {
   return attendanceData.value.filter((a) => {
+    if (a.type === "student_attendance") return false;
     const d = parseDate(a.date);
     return (
       d &&
@@ -1055,7 +1068,14 @@ const getPresentTeachersWithTime = (date) => {
     return timeB - timeA; // Descending order
   });
 
-  return presentAttendance.map((a) => {
+  const seenGurus = new Set();
+  const uniquePresent = presentAttendance.filter((a) => {
+    if (seenGurus.has(a.guruId)) return false;
+    seenGurus.add(a.guruId);
+    return true;
+  });
+
+  return uniquePresent.map((a) => {
     const teacher = teachers.value.find((t) => t.id === a.guruId);
     return {
       id: a.guruId,
@@ -1094,6 +1114,7 @@ const getTeacherAttendanceForDate = (date) => {
   if (selectedTeacherId.value === "all") return null;
 
   return attendanceData.value.find((a) => {
+    if (a.type === "student_attendance") return false;
     const d = parseDate(a.date);
     return (
       d &&
@@ -1275,7 +1296,7 @@ const fetchData = async () => {
     const { data: attData } = await api.get("/attendance", {
       params: { month, year },
     });
-    attendanceData.value = attData;
+    attendanceData.value = (attData || []).filter(a => a.type !== 'student_attendance');
   } catch (e) {
     console.error("Fetch error:", e);
     showError("Gagal memuat data. Periksa izin akses.");

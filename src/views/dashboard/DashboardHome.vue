@@ -376,6 +376,15 @@ const stats = ref({
   activePeriods: 0
 })
 
+const parseDate = (val) => {
+  if (!val) return null
+  if (val.toDate && typeof val.toDate === 'function') return val.toDate()
+  if (val._seconds !== undefined) return new Date(val._seconds * 1000)
+  if (val.seconds !== undefined) return new Date(val.seconds * 1000)
+  const d = new Date(val)
+  return isNaN(d.getTime()) ? null : d
+}
+
 const fetchStats = async () => {
   loading.value = true
   try {
@@ -393,7 +402,19 @@ const fetchStats = async () => {
           year: new Date().getFullYear()
         }
       })
-      stats.value.attendanceThisMonth = attendance.filter(a => a.status === 'hadir').length
+      const uniqueDays = new Map()
+      const myAtt = (attendance || []).filter(a => a.type !== 'student_attendance')
+      myAtt.forEach(a => {
+        const d = parseDate(a.date)
+        if (d && !isNaN(d.getTime())) {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+          if (!uniqueDays.has(key) || a.status === 'hadir') {
+            uniqueDays.set(key, a)
+          }
+        }
+      })
+      const uniqueList = uniqueDays.size > 0 ? Array.from(uniqueDays.values()) : myAtt
+      stats.value.attendanceThisMonth = uniqueList.filter(a => a.status === 'hadir').length
 
       const { data: periods } = await api.get('/grading/periods')
       stats.value.activePeriods = periods.filter(p => p.status === 'active').length
@@ -410,7 +431,7 @@ const fetchStats = async () => {
             api.get('/users', { params: { role: 'guru' } })
           ])
 
-          exportData.value.attendance = attResponse.data
+          exportData.value.attendance = (attResponse.data || []).filter(a => a.type !== 'student_attendance')
           exportData.value.teachers = teachersResponse.data
         } catch (err) {
           console.error('Failed to pre-fetch export data:', err)
@@ -430,9 +451,20 @@ const exportStats = computed(() => {
 
   const attendanceData = exportData.value.attendance
   return exportData.value.teachers.map(t => {
-    const teacherAttendance = attendanceData.filter(a => a.guruId === t.id)
-    const hadirCount = teacherAttendance.filter(a => a.status === 'hadir').length
-    const tidakHadirCount = teacherAttendance.filter(a => a.status !== 'hadir').length
+    const teacherAttendance = attendanceData.filter(a => a.guruId === t.id && a.type !== 'student_attendance')
+    const uniqueDays = new Map()
+    teacherAttendance.forEach(a => {
+      const d = parseDate(a.date)
+      if (d && !isNaN(d.getTime())) {
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        if (!uniqueDays.has(key) || a.status === 'hadir') {
+          uniqueDays.set(key, a)
+        }
+      }
+    })
+    const uniqueRecords = uniqueDays.size > 0 ? Array.from(uniqueDays.values()) : teacherAttendance
+    const hadirCount = uniqueRecords.filter(a => a.status === 'hadir').length
+    const tidakHadirCount = uniqueRecords.filter(a => a.status !== 'hadir').length
     return { ...t, hadirCount, tidakHadirCount }
   })
 })
