@@ -409,6 +409,7 @@
                 :key="chip"
                 type="button"
                 class="quick-mat-chip"
+                :class="{ active: isChipActive(chip) }"
                 @click="applyQuickMaterial(chip)"
               >
                 {{ chip }}
@@ -645,14 +646,18 @@ const quickMaterialOptions = [
   "📝 Murojaah & Evaluasi"
 ];
 
+function isChipActive(chipText) {
+  const cleanText = chipText.replace(/^[^\w\s\u0600-\u06FF']+\s*/, '');
+  return journalForm.value.material === cleanText || journalForm.value.material.startsWith(cleanText);
+}
+
 function applyQuickMaterial(chipText) {
   const cleanText = chipText.replace(/^[^\w\s\u0600-\u06FF']+\s*/, '');
-  if (!journalForm.value.material.trim()) {
-    journalForm.value.material = cleanText;
+  // Replace input content directly (toggle off if clicked again)
+  if (journalForm.value.material === cleanText) {
+    journalForm.value.material = '';
   } else {
-    if (!journalForm.value.material.includes(cleanText)) {
-      journalForm.value.material += `, ${cleanText}`;
-    }
+    journalForm.value.material = cleanText;
   }
 }
 
@@ -1970,6 +1975,13 @@ onMounted(async () => {
   border-color: #2d6a4f;
   color: #1b4332;
   transform: translateY(-1px);
+}
+
+.quick-mat-chip.active {
+  background: var(--primary, #2d6a4f);
+  color: white;
+  border-color: var(--primary-dark, #1b4332);
+  box-shadow: 0 2px 6px rgba(45, 106, 79, 0.25);
 }
 
 .quick-mat-chip:active {
