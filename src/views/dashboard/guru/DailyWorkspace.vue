@@ -377,7 +377,42 @@
                   Kegiatan Khusus
                 </span>
               </div>
-              <p>Materi inti telah diisi otomatis dari kurikulum TPQ</p>
+              <p v-if="curriculum?.material">Materi kurikulum tersedia untuk pertemuan ini. Anda dapat menggunakannya atau menulis materi sendiri.</p>
+              <p v-else>Tuliskan materi KBM hari ini, atau klik pilihan cepat di bawah.</p>
+            </div>
+          </div>
+
+          <!-- RPP Suggestion Box (If available from curriculum) -->
+          <div v-if="curriculum?.material" class="rpp-suggestion-box">
+            <div class="rpp-suggestion-info">
+              <span class="rpp-sparkle">✨</span>
+              <div>
+                <span class="rpp-sug-title">Saran RPP Pertemuan ke-{{ curriculum.meetingNumber }}:</span>
+                <strong class="rpp-sug-text">"{{ curriculum.material }}"</strong>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-outline-success btn-sm btn-use-rpp" 
+              @click="applyRppCurriculum"
+            >
+              Gunakan Saran Ini
+            </button>
+          </div>
+
+          <!-- Quick Template Chips for Teaching Topics -->
+          <div class="quick-materials-wrap">
+            <span class="quick-materials-label">💡 Pilihan Cepat (Klik untuk Mengisi):</span>
+            <div class="quick-materials-chips">
+              <button
+                v-for="chip in quickMaterialOptions"
+                :key="chip"
+                type="button"
+                class="quick-mat-chip"
+                @click="applyQuickMaterial(chip)"
+              >
+                {{ chip }}
+              </button>
             </div>
           </div>
 
@@ -390,7 +425,7 @@
                 v-model="journalForm.material"
                 type="text"
                 class="form-input"
-                placeholder="Materi inti pembelajaran"
+                placeholder="Contoh: Baca Tartila hal. 14, Hafalan Surat An-Nas..."
                 required
               />
             </div>
@@ -403,7 +438,7 @@
                 v-model="journalForm.supportingMaterial"
                 rows="2"
                 class="form-textarea"
-                placeholder="Penjelasan ringkas materi pendukung..."
+                placeholder="Penjelasan ringkas materi pendukung atau evaluasi santri..."
               ></textarea>
             </div>
 
@@ -597,6 +632,39 @@ const journalForm = ref({
   supportingMaterial: '',
   notes: ''
 });
+
+// Quick Material Options & Handlers
+const quickMaterialOptions = [
+  "📖 Baca Tartila",
+  "📖 Baca Iqro'",
+  "📖 Tadarrus Al-Qur'an",
+  "🧠 Hafalan Surat Pendek",
+  "🤲 Doa Harian & Hadits",
+  "🕌 Fasholatan & Wudhu",
+  "✍️ Tajwid Aplikatif",
+  "📝 Murojaah & Evaluasi"
+];
+
+function applyQuickMaterial(chipText) {
+  const cleanText = chipText.replace(/^[^\w\s\u0600-\u06FF']+\s*/, '');
+  if (!journalForm.value.material.trim()) {
+    journalForm.value.material = cleanText;
+  } else {
+    if (!journalForm.value.material.includes(cleanText)) {
+      journalForm.value.material += `, ${cleanText}`;
+    }
+  }
+}
+
+function applyRppCurriculum() {
+  if (curriculum.value?.material) {
+    journalForm.value.material = curriculum.value.material;
+    if (curriculum.value.supportingMaterial) {
+      journalForm.value.supportingMaterial = curriculum.value.supportingMaterial;
+    }
+    success('Materi kurikulum RPP berhasil diterapkan.');
+  }
+}
 
 // Rename Santri State & Handlers
 const renamingSantri = ref(null);
@@ -1813,6 +1881,100 @@ onMounted(async () => {
 .pill-sakit.active { background: #f59e0b; color: white; border-color: #f59e0b; }
 .pill-izin.active { background: #6366f1; color: white; border-color: #6366f1; }
 .pill-alpa.active { background: #ef4444; color: white; border-color: #ef4444; }
+
+/* Journal RPP Suggestion Box */
+.rpp-suggestion-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .rpp-suggestion-box {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .btn-use-rpp {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.rpp-suggestion-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.rpp-sparkle {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.rpp-sug-title {
+  font-size: 0.78rem;
+  color: #166534;
+  display: block;
+}
+
+.rpp-sug-text {
+  font-size: 0.9rem;
+  color: #14532d;
+  word-break: break-word;
+}
+
+/* Quick Materials Chips */
+.quick-materials-wrap {
+  margin-bottom: 0.85rem;
+}
+
+.quick-materials-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gray-600, #4b5563);
+  margin-bottom: 0.4rem;
+}
+
+.quick-materials-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.quick-mat-chip {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.quick-mat-chip:hover {
+  background: #d8f3dc;
+  border-color: #2d6a4f;
+  color: #1b4332;
+  transform: translateY(-1px);
+}
+
+.quick-mat-chip:active {
+  transform: scale(0.97);
+}
 
 /* Journal */
 .journal-fields {
