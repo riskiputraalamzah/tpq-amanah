@@ -61,6 +61,40 @@
     <div v-else class="workspace-grid">
       <!-- Left Column: Session Slot & Level Selector -->
       <div class="workspace-main">
+        <!-- Today's Saved Sessions Summary Card -->
+        <div v-if="dailyContext?.existingSessions?.length > 0" class="today-sessions-card glass-card">
+          <div class="today-sessions-header">
+            <div class="today-sessions-title">
+              <span class="sessions-indicator-icon">📋</span>
+              <div>
+                <h3>Sesi Mengajar Hari Ini ({{ dailyContext.existingSessions.length }} Tersimpan)</h3>
+                <span class="today-sessions-hint">Guru dapat mengajar lebih dari 1 jilid/kelas. Anda dapat mengisi jilid berikutnya di bawah.</span>
+              </div>
+            </div>
+          </div>
+          <div class="today-sessions-grid">
+            <div
+              v-for="sess in dailyContext.existingSessions"
+              :key="sess.id"
+              class="today-session-chip"
+            >
+              <span class="slot-pill" :class="sess.sessionSlotId === 'wave_2' ? 'slot-pill-malam' : 'slot-pill-sore'">
+                {{ sess.sessionSlotId === 'wave_2' ? 'MALAM' : 'SORE' }}
+              </span>
+              <div class="session-chip-content">
+                <span class="session-chip-class">
+                  {{ sess.className || ('Jilid ' + (sess.classId || sess.levelId)) }}
+                </span>
+                <span class="session-chip-meta">
+                  {{ sess.studentAttendances?.length || sess.attendance?.length || 0 }} Santri
+                  <template v-if="sess.journal?.material">• {{ sess.journal.material }}</template>
+                </span>
+              </div>
+              <span class="session-chip-status">✓ Tersimpan</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Section 1: Session Slot -->
         <section class="workspace-section glass-card">
           <div class="section-header">
@@ -77,7 +111,7 @@
               class="slot-btn"
               :class="{
                 active: selectedSlotId === 'wave_1',
-                disabled: isSlotSaved('wave_1')
+                'has-sessions': getSavedSessionsForSlot('wave_1').length > 0
               }"
               @click="selectSlot('wave_1')"
             >
@@ -86,8 +120,8 @@
                 <span class="slot-time">15.00 – 16.30</span>
               </div>
               <span class="slot-wave">Gelombang 1</span>
-              <div v-if="getSavedSession('wave_1')" class="slot-status-saved">
-                ✓ {{ getSavedSessionSummary('wave_1') }} — Tersimpan
+              <div v-if="getSavedSessionsForSlot('wave_1').length > 0" class="slot-status-saved">
+                ✓ {{ getSavedSessionsForSlot('wave_1').length }} Sesi ({{ getSavedSessionsNamesForSlot('wave_1') }})
               </div>
             </button>
 
@@ -96,7 +130,7 @@
               class="slot-btn"
               :class="{
                 active: selectedSlotId === 'wave_2',
-                disabled: isSlotSaved('wave_2')
+                'has-sessions': getSavedSessionsForSlot('wave_2').length > 0
               }"
               @click="selectSlot('wave_2')"
             >
@@ -105,8 +139,8 @@
                 <span class="slot-time">18.00 – 19.30</span>
               </div>
               <span class="slot-wave">Gelombang 2</span>
-              <div v-if="getSavedSession('wave_2')" class="slot-status-saved">
-                ✓ {{ getSavedSessionSummary('wave_2') }} — Tersimpan
+              <div v-if="getSavedSessionsForSlot('wave_2').length > 0" class="slot-status-saved">
+                ✓ {{ getSavedSessionsForSlot('wave_2').length }} Sesi ({{ getSavedSessionsNamesForSlot('wave_2') }})
               </div>
             </button>
           </div>
@@ -132,12 +166,16 @@
               class="level-card"
               :class="{
                 active: selectedLevelId === item.levelId,
-                recommended: dailyContext?.suggestedLevelId === item.levelId
+                recommended: dailyContext?.suggestedLevelId === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
+                'level-saved': isLevelSavedInSelectedSlot(item.levelId)
               }"
               @click="selectLevel(item.levelId)"
             >
               <span class="level-name">{{ item.levelName }}</span>
-              <span v-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
+              <span v-if="isLevelSavedInSelectedSlot(item.levelId)" class="badge-saved">
+                ✓ Tersimpan ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})
+              </span>
+              <span v-else-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
                 Rekomendasi
               </span>
             </button>
@@ -153,12 +191,16 @@
               class="level-card"
               :class="{
                 active: selectedLevelId === item.levelId,
-                recommended: dailyContext?.suggestedLevelId === item.levelId
+                recommended: dailyContext?.suggestedLevelId === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
+                'level-saved': isLevelSavedInSelectedSlot(item.levelId)
               }"
               @click="selectLevel(item.levelId)"
             >
               <span class="level-name">{{ item.levelName }}</span>
-              <span v-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
+              <span v-if="isLevelSavedInSelectedSlot(item.levelId)" class="badge-saved">
+                ✓ Tersimpan ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})
+              </span>
+              <span v-else-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
                 Rekomendasi
               </span>
             </button>
@@ -167,6 +209,15 @@
 
         <!-- Section 3: Roster & Student Attendance -->
         <section v-if="selectedLevelId" class="workspace-section glass-card">
+          <!-- Notification if this level already saved in selected slot -->
+          <div v-if="isAlreadySavedForCurrentSlot" class="already-saved-alert">
+            <span class="alert-icon">⚠️</span>
+            <div>
+              <strong>Sesi Sudah Tersimpan</strong>
+              <p>Sesi untuk <strong>{{ currentLevelName }} ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})</strong> sudah tercatat hari ini. Silakan pilih Jilid / Marhalah lain di atas untuk mengisi kelas Anda berikutnya.</p>
+            </div>
+          </div>
+
           <div class="section-header">
             <span class="step-num">3</span>
             <div class="flex-1">
@@ -408,9 +459,13 @@
               @click="submitKbm"
             >
               <span v-if="submitting">Menyimpan KBM...</span>
+              <span v-else-if="isAlreadySavedForCurrentSlot">SESI INI SUDAH TERSIMPAN</span>
               <span v-else>SIMPAN KBM</span>
             </button>
-            <p v-if="!canSubmit && selectedLevelId" class="text-center text-xs text-gray-500 mt-2">
+            <p v-if="isAlreadySavedForCurrentSlot" class="text-center text-xs text-amber-600 font-semibold mt-2">
+              Pilih Jilid / Marhalah lain di atas untuk mengisi kelas berikutnya.
+            </p>
+            <p v-else-if="!canSubmit && selectedLevelId" class="text-center text-xs text-gray-500 mt-2">
               Lengkapi materi jurnal untuk menyimpan.
             </p>
           </div>
@@ -435,7 +490,7 @@
   
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary w-full" @click="handleAddNewSession">
-              + Tambah Sesi Lainnya
+              + Isi Jilid / Sesi Lainnya
             </button>
             <button type="button" class="btn btn-primary w-full mt-2" @click="handleReturnToLpj">
               {{ dailyContext?.lpj?.eligible ? (isBackfill ? 'Kembali ke LPJ Riwayat' : 'Kembali ke LPJ') : 'Kembali ke KBM' }}
@@ -661,12 +716,27 @@ const stats = computed(() => {
   return count;
 });
 
+// Check if a level is already saved for the selected slot
+function isLevelSavedInSelectedSlot(levelId) {
+  const sessions = dailyContext.value?.existingSessions || [];
+  return sessions.some(s => 
+    (s.sessionSlotId || 'wave_1') === selectedSlotId.value &&
+    String(s.classId || s.levelId) === String(levelId)
+  );
+}
+
+const isAlreadySavedForCurrentSlot = computed(() => {
+  if (!selectedLevelId.value) return false;
+  return isLevelSavedInSelectedSlot(selectedLevelId.value);
+});
+
 // Submission Validation
 const canSubmit = computed(() => {
   const isLpjBackfill = (dailyContext.value?.isBackfill || isBackfill) && dailyContext.value?.lpj?.eligible;
   const teacherOk = isLpjBackfill || dailyContext.value?.teacherAttendance?.status === 'hadir';
   return (
     teacherOk &&
+    !isAlreadySavedForCurrentSlot.value &&
     !!selectedSlotId.value &&
     !!selectedLevelId.value &&
     roster.value.length > 0 &&
@@ -674,21 +744,15 @@ const canSubmit = computed(() => {
   );
 });
 
-// Check if a slot already has a saved session
-function isSlotSaved(slotId) {
+// Slot helpers
+function getSavedSessionsForSlot(slotId) {
   const sessions = dailyContext.value?.existingSessions || [];
-  return sessions.some(s => (s.sessionSlotId || 'wave_1') === slotId);
+  return sessions.filter(s => (s.sessionSlotId || 'wave_1') === slotId);
 }
 
-function getSavedSession(slotId) {
-  const sessions = dailyContext.value?.existingSessions || [];
-  return sessions.find(s => (s.sessionSlotId || 'wave_1') === slotId);
-}
-
-function getSavedSessionSummary(slotId) {
-  const s = getSavedSession(slotId);
-  if (!s) return '';
-  return s.className || `Jilid ${s.classId || s.levelId}`;
+function getSavedSessionsNamesForSlot(slotId) {
+  const list = getSavedSessionsForSlot(slotId);
+  return list.map(s => s.className || `Jilid ${s.classId || s.levelId}`).join(', ');
 }
 
 // Select Slot
@@ -718,7 +782,7 @@ function setSantriStatus(santriId, status) {
 }
 
 // Load Daily Context
-async function loadDailyContext() {
+async function loadDailyContext(isAddingNewSession = false) {
   loadingContext.value = true;
   blockingError.value = null;
 
@@ -770,9 +834,15 @@ async function loadDailyContext() {
       return;
     }
 
-    // Set suggested level if present
-    if (data.suggestedLevelId) {
-      selectLevel(data.suggestedLevelId);
+    // Set suggested level if present and not already saved for this slot
+    if (!isAddingNewSession && data.suggestedLevelId) {
+      const alreadySaved = (data.existingSessions || []).some(s => 
+        (s.sessionSlotId || 'wave_1') === selectedSlotId.value &&
+        String(s.classId || s.levelId) === String(data.suggestedLevelId)
+      );
+      if (!alreadySaved) {
+        selectLevel(data.suggestedLevelId);
+      }
     }
   } catch (err) {
     console.error('Failed to load daily context:', err);
@@ -861,15 +931,17 @@ async function submitKbm() {
   }
 }
 
-// Multi-session: Add another session
+// Multi-session: Add another session for another Jilid or slot
 async function handleAddNewSession() {
   showSuccessModal.value = false;
   selectedLevelId.value = '';
   roster.value = [];
+  inactiveSantri.value = [];
+  curriculum.value = null;
   journalForm.value.material = '';
   journalForm.value.supportingMaterial = '';
   journalForm.value.notes = '';
-  await loadDailyContext();
+  await loadDailyContext(true);
 }
 
 // Return to LPJ
@@ -1142,6 +1214,143 @@ onMounted(async () => {
   }
 }
 
+/* Today Saved Sessions Card */
+.today-sessions-card {
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
+  border: 1.5px solid #86efac;
+  box-shadow: 0 4px 15px rgba(22, 101, 52, 0.06);
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .today-sessions-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+.today-sessions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #dcfce7;
+}
+
+.today-sessions-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sessions-indicator-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.today-sessions-title h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #14532d;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .today-sessions-title h3 {
+    font-size: 0.95rem;
+  }
+}
+
+.today-sessions-hint {
+  font-size: 0.78rem;
+  color: #166534;
+  font-weight: 500;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.today-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .today-sessions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.today-session-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.slot-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.slot-pill-sore {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.slot-pill-malam {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.session-chip-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.session-chip-class {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.session-chip-meta {
+  font-size: 0.78rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-chip-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
 /* Slots Grid */
 .slots-grid {
   display: grid;
@@ -1179,7 +1388,7 @@ onMounted(async () => {
   }
 }
 
-.slot-btn:hover:not(.disabled) {
+.slot-btn:hover {
   border-color: var(--primary, #2d6a4f);
   transform: translateY(-2px);
 }
@@ -1190,10 +1399,9 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(45, 106, 79, 0.15);
 }
 
-.slot-btn.disabled {
-  opacity: 0.6;
-  background: #f9fafb;
-  cursor: default;
+.slot-btn.has-sessions {
+  border-color: #a7f3d0;
+  background: #fbfdfc;
 }
 
 .slot-header {
@@ -1254,8 +1462,13 @@ onMounted(async () => {
 .slot-status-saved {
   margin-top: 0.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #059669;
+  background: #ecfdf5;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
+  line-height: 1.3;
 }
 
 /* Levels Grid */
@@ -1321,6 +1534,11 @@ onMounted(async () => {
   box-shadow: 0 4px 10px rgba(45, 106, 79, 0.15);
 }
 
+.level-card.level-saved {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
 .level-name {
   font-weight: 700;
   font-size: 0.95rem;
@@ -1336,10 +1554,53 @@ onMounted(async () => {
     line-height: 1.2;
   }
 
-  .badge-rec {
+  .badge-rec, .badge-saved {
     font-size: 0.65rem;
     padding: 0.1rem 0.35rem;
   }
+}
+
+.badge-saved {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 0.65rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  border: 1px solid #a7f3d0;
+  margin-top: 0.15rem;
+  text-align: center;
+}
+
+/* Already Saved Alert in Section 3 */
+.already-saved-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+}
+
+.already-saved-alert .alert-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.already-saved-alert strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: #78350f;
+}
+
+.already-saved-alert p {
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Roster */
