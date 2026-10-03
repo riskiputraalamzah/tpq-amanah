@@ -55,7 +55,7 @@ const routes = [
         name: "SantriManagement",
         component: () =>
           import("../views/dashboard/admin/AdminSantriView.vue"),
-        meta: { role: "admin" },
+        meta: { role: ["admin", "guru"] },
       },
       {
         path: "admin-attendance",
@@ -85,6 +85,12 @@ const routes = [
         name: "Kbm",
         component: () => import("../views/dashboard/guru/KbmView.vue"),
         meta: { role: "guru" },
+      },
+      {
+        path: "kbm/daily-workspace",
+        name: "DailyWorkspace",
+        component: () => import("../views/dashboard/guru/DailyWorkspace.vue"),
+        meta: { role: ["guru", "admin"] },
       },
       {
         path: "kbm/:id/jurnal",
@@ -126,6 +132,13 @@ const routes = [
         name: "AdminLpj",
         component: () =>
           import("../views/dashboard/admin/AdminLpjView.vue"),
+        meta: { role: "admin" },
+      },
+      {
+        path: "admin-documents",
+        name: "AdminDocuments",
+        component: () =>
+          import("../views/dashboard/admin/AdminDocumentView.vue"),
         meta: { role: "admin" },
       },
       {

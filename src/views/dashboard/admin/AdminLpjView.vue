@@ -29,6 +29,13 @@
         >
           {{ loading ? "Memuat..." : "Tampilkan" }}
         </button>
+        <router-link
+          to="/dashboard/admin-documents"
+          class="btn btn-secondary px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5 transition-all text-slate-700 shrink-0"
+        >
+          <span>📄</span>
+          <span>Dokumen LPJ</span>
+        </router-link>
       </div>
     </header>
 

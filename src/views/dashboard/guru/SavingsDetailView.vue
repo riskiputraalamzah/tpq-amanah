@@ -916,34 +916,34 @@
     </template>
 
     <!-- Edit Tx Modal -->
-    <div v-if="editingTx" class="modal-overlay" @click.self="editingTx = null">
-      <div class="modal glass-card">
-        <div class="modal-header">
-          <h3>Edit {{ isEditingExpense ? "Pengeluaran" : "Pemasukan" }}</h3>
-          <button class="close-btn" @click="editingTx = null">&times;</button>
-        </div>
-        <div v-if="isEditingExpense" class="form-group">
-          <label class="form-label">Keterangan Pengeluaran</label>
-          <input
-            v-model="editForm.description"
-            type="text"
-            class="form-input"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label">{{
-            isEditingExpense
-              ? "Jumlah Pengeluaran (Rp)"
-              : "Jumlah Pemasukan (Rp)"
-          }}</label>
-          <input
-            v-model="editForm.amount"
-            type="text"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            class="form-input"
-          />
-        </div>
+      <div v-if="editingTx" class="modal-overlay" @click.self="editingTx = null">
+        <div class="modal glass-card">
+          <div class="modal-header">
+            <h3>Edit {{ isEditingExpense ? "Pengeluaran" : "Pemasukan" }}</h3>
+            <button class="close-btn" @click="editingTx = null">&times;</button>
+          </div>
+          <div v-if="isEditingExpense" class="form-group">
+            <label class="form-label">Keterangan Pengeluaran</label>
+            <input
+              v-model="editForm.description"
+              type="text"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{
+              isEditingExpense
+                ? "Jumlah Pengeluaran (Rp)"
+                : "Jumlah Pemasukan (Rp)"
+            }}</label>
+            <input
+              v-model="editForm.amount"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              class="form-input"
+            />
+          </div>
         <div class="form-group">
           <label class="form-label">Waktu Transaksi</label>
           <input
@@ -969,8 +969,8 @@
     <!-- Delete Tx Confirm -->
     <div
       v-if="deletingTx"
-      class="modal-overlay"
-      @click.self="deletingTx = null"
+        class="modal-overlay"
+        @click.self="deletingTx = null"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon danger-icon">
@@ -1008,8 +1008,8 @@
     <!-- Book Edit Modal -->
     <div
       v-if="showBookEditModal"
-      class="modal-overlay"
-      @click.self="showBookEditModal = false"
+        class="modal-overlay"
+        @click.self="showBookEditModal = false"
     >
       <div class="modal glass-card">
         <div class="modal-header">
@@ -1049,8 +1049,8 @@
     <!-- Book Close Confirm -->
     <div
       v-if="showBookCloseModal"
-      class="modal-overlay"
-      @click.self="showBookCloseModal = false"
+        class="modal-overlay"
+        @click.self="showBookCloseModal = false"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon warning-icon">
@@ -1090,8 +1090,8 @@
     <!-- Book Delete Confirm -->
     <div
       v-if="showBookDeleteModal"
-      class="modal-overlay"
-      @click.self="showBookDeleteModal = false"
+        class="modal-overlay"
+        @click.self="showBookDeleteModal = false"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon danger-icon">
@@ -1129,8 +1129,8 @@
     <!-- Print Period Modal -->
     <div
       v-if="showPrintModal"
-      class="modal-overlay"
-      @click.self="showPrintModal = false"
+        class="modal-overlay"
+        @click.self="showPrintModal = false"
     >
       <div class="modal glass-card print-modal">
         <div class="modal-header">

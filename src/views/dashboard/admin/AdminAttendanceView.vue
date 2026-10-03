@@ -36,6 +36,9 @@
               <button class="dropdown-item" @click="openQuickSettingsModal">
                 🔗 Pengaturan Link WA
               </button>
+              <button class="dropdown-item dropdown-item-danger" @click="openResetTestingModal()">
+                🧪 Reset Sesi Testing
+              </button>
             </div>
           </transition>
         </div>
@@ -227,8 +230,8 @@
         </template>
 
         <!-- Date Detail Popup -->
-        <div v-if="selectedDate" class="calendar-popup-overlay" @click="selectedDate = null"></div>
-        <div v-if="selectedDate" class="calendar-popup glass-card">
+          <div v-if="selectedDate" class="calendar-popup-overlay" @click="selectedDate = null"></div>
+          <div v-if="selectedDate" class="calendar-popup glass-card">
           <div class="popup-header">
             <h4>{{ formatFullDate(selectedDate) }}</h4>
             <button class="close-btn" @click="selectedDate = null">×</button>
@@ -473,7 +476,7 @@
               </div>
             </template>
           </div>
-        </div>
+          </div>
       </div>
     </div>
 
@@ -511,8 +514,8 @@
     </div>
 
     <!-- Add Attendance Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal glass-card">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal glass-card">
         <h3>Tambah Data Absensi</h3>
 
         <!-- Summary for Quick Add (Hidden Inputs) -->
@@ -576,11 +579,11 @@
           </button>
         </div>
       </div>
-    </div>
+      </div>
 
-    <!-- Holiday Management Modal -->
-    <div v-if="showQuickSettingsModal" class="modal-overlay" @click.self="closeQuickSettingsModal">
-      <div class="modal glass-card quick-settings-modal">
+    <!-- Quick Settings Modal -->
+      <div v-if="showQuickSettingsModal" class="modal-overlay" @click.self="closeQuickSettingsModal">
+        <div class="modal glass-card quick-settings-modal">
         <h3>🔗 Pengaturan Link Absensi WA</h3>
 
         <div v-if="quickSettingsLoading" class="quick-settings-loading">
@@ -625,12 +628,12 @@
             </button>
           </div>
         </template>
+        </div>
       </div>
-    </div>
 
     <!-- Holiday Management Modal -->
-    <div v-if="showHolidayModal" class="modal-overlay" @click.self="closeHolidayModal">
-      <div class="modal glass-card holiday-modal">
+      <div v-if="showHolidayModal" class="modal-overlay" @click.self="closeHolidayModal">
+        <div class="modal glass-card holiday-modal">
         <div class="holiday-modal-header">
           <h3>📅 Kelola Hari Libur</h3>
           <button class="close-btn" @click="closeHolidayModal">×</button>
@@ -695,6 +698,155 @@
         </div>
       </div>
     </div>
+    <!-- Reset Testing Modal -->
+    <Teleport to="body">
+      <div v-if="showResetTestingModal" class="modal-overlay" @click.self="closeResetTestingModal">
+        <div class="modal glass-card reset-testing-modal-card">
+          <div class="reset-modal-header">
+            <div class="reset-header-icon">
+              🧪
+            </div>
+            <div>
+              <h3 class="modal-title">Reset Sesi KBM & Absen (Testing Tool)</h3>
+              <p class="modal-subtitle">Bersihkan data testing tanpa perlu menghapus manual di Firebase Console</p>
+            </div>
+          </div>
+
+          <div class="reset-modal-body">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label font-semibold">Pilih Guru:</label>
+                <select v-model="resetForm.guruId" class="form-input form-select" @change="fetchResetPreview" :disabled="resetSubmitting">
+                  <option value="" disabled>-- Pilih Guru --</option>
+                  <option v-for="t in teachers" :key="t.id" :value="t.id">
+                    {{ t.displayName }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label class="form-label font-semibold">Pilih Tanggal:</label>
+                <input
+                  v-model="resetForm.date"
+                  type="date"
+                  class="form-input"
+                  @change="fetchResetPreview"
+                  :disabled="resetSubmitting"
+                />
+              </div>
+            </div>
+
+            <!-- Preview Data Section -->
+            <div class="preview-section mt-3">
+              <div v-if="resetPreviewLoading" class="preview-loading">
+                <div class="spinner-sm"></div>
+                <span>Memeriksa data di tanggal ini...</span>
+              </div>
+
+              <div v-else-if="!resetPreviewData" class="preview-hint">
+                Pilih guru dan tanggal untuk memeriksa data sesi dan absensi.
+              </div>
+
+              <div v-else class="preview-result">
+                <div v-if="hasDataToReset" class="preview-found-box">
+                  <div class="preview-found-title">
+                    <span>🔍 Data Ditemukan di Database:</span>
+                  </div>
+
+                  <ul class="preview-items-list">
+                    <li v-if="resetPreviewData.sessions && resetPreviewData.sessions.length > 0" class="preview-item">
+                      <span class="preview-icon">📚</span>
+                      <div>
+                        <strong>{{ resetPreviewData.sessions.length }} Sesi KBM di teaching_sessions:</strong>
+                        <div class="text-xs text-gray-600 mt-1">
+                          <span v-for="s in resetPreviewData.sessions" :key="s.id" class="badge-session mr-1">
+                            {{ s.className }} ({{ s.slotId || 'Gelombang' }}) — {{ s.activityName }}
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                    <li v-else class="preview-item text-gray-400">
+                      <span class="preview-icon">⚪</span>
+                      <span>Tidak ada sesi di <code>teaching_sessions</code></span>
+                    </li>
+
+                    <li v-if="resetPreviewData.studentAttendanceCount > 0" class="preview-item">
+                      <span class="preview-icon">👦</span>
+                      <span><strong>{{ resetPreviewData.studentAttendanceCount }}</strong> presensi santri di <code>attendance</code></span>
+                    </li>
+                    <li v-else class="preview-item text-gray-400">
+                      <span class="preview-icon">⚪</span>
+                      <span>Tidak ada presensi santri</span>
+                    </li>
+
+                    <li v-if="resetPreviewData.teacherAttendance" class="preview-item">
+                      <span class="preview-icon">👨‍🏫</span>
+                      <span>Absen Guru: Status <strong>{{ resetPreviewData.teacherAttendance.status.toUpperCase() }}</strong></span>
+                    </li>
+                    <li v-else class="preview-item text-gray-400">
+                      <span class="preview-icon">⚪</span>
+                      <span>Absen guru belum tercatat / sudah terhapus</span>
+                    </li>
+
+                    <li v-if="resetPreviewData.quickLinksCount > 0" class="preview-item">
+                      <span class="preview-icon">🔗</span>
+                      <span><strong>{{ resetPreviewData.quickLinksCount }}</strong> token link WhatsApp di <code>attendance_quick_links</code></span>
+                    </li>
+                  </ul>
+
+                  <!-- Checkboxes for Options -->
+                  <div class="reset-options-box mt-3">
+                    <div class="options-title font-semibold mb-2">Pilihan yang akan dibersihkan:</div>
+                    <label class="checkbox-label">
+                      <input type="checkbox" v-model="resetForm.resetTeachingSessions" :disabled="resetSubmitting" />
+                      <span>Hapus Sesi Mengajar & Jurnal (teaching_sessions)</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" v-model="resetForm.resetStudentAttendance" :disabled="resetSubmitting" />
+                      <span>Hapus Presensi Santri Terkait</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" v-model="resetForm.resetTeacherAttendance" :disabled="resetSubmitting" />
+                      <span>Hapus Absensi Guru</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" v-model="resetForm.resetQuickLinks" :disabled="resetSubmitting" />
+                      <span>Reset / Hapus Token Link WhatsApp</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div v-else class="preview-empty-box">
+                  <span>✅ Bersih! Tidak ada data KBM, absensi, atau link WA pada tanggal ini. Guru dapat mulai testing dari awal.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reset-notice-box mt-3">
+              <span class="notice-icon">💡</span>
+              <span class="notice-text">
+                Fitur ini khusus mempermudah testing. Sekali klik, data KBM & absensi pada tanggal tersebut terhapus bersih dan Anda bisa langsung tes alur link WA kembali.
+              </span>
+            </div>
+          </div>
+
+          <div class="modal-actions mt-4">
+            <button type="button" class="btn btn-secondary" :disabled="resetSubmitting" @click="closeResetTestingModal">
+              Tutup
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger btn-reset-action"
+              :disabled="resetSubmitting || !hasDataToReset || resetPreviewLoading"
+              @click="submitResetTesting"
+            >
+              <span v-if="resetSubmitting">Sedang Mereset...</span>
+              <span v-else>🗑️ Reset Data Terpilih</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -812,6 +964,32 @@ const teachersWithStats = computed(() => {
 const showModal = ref(false);
 const saving = ref(false);
 const exporting = ref(false);
+
+// Reset Testing Modal state
+const showResetTestingModal = ref(false);
+const resetPreviewLoading = ref(false);
+const resetPreviewData = ref(null);
+const resetSubmitting = ref(false);
+const resetForm = ref({
+  guruId: "",
+  date: new Date().toLocaleDateString("sv-SE"),
+  resetTeachingSessions: true,
+  resetStudentAttendance: true,
+  resetTeacherAttendance: true,
+  resetQuickLinks: true,
+});
+
+const hasDataToReset = computed(() => {
+  if (!resetPreviewData.value) return false;
+  const p = resetPreviewData.value;
+  return (
+    (p.sessions && p.sessions.length > 0) ||
+    p.studentAttendanceCount > 0 ||
+    !!p.teacherAttendance ||
+    p.quickLinksCount > 0
+  );
+});
+
 const form = ref({
   date: "",
   guruId: "",
@@ -1327,6 +1505,102 @@ const openAddModal = (day = null, guruId = "", existingData = null) => {
 
 const closeModal = () => {
   showModal.value = false;
+};
+
+// Reset Testing Methods
+const openResetTestingModal = (dateStr = null, guruId = null) => {
+  dropdownOpen.value = false;
+  resetForm.value.guruId = guruId || (teachers.value.length > 0 ? teachers.value[0].id : "");
+  resetForm.value.date = dateStr || new Date().toLocaleDateString("sv-SE");
+  resetForm.value.resetTeachingSessions = true;
+  resetForm.value.resetStudentAttendance = true;
+  resetForm.value.resetTeacherAttendance = true;
+  resetForm.value.resetQuickLinks = true;
+  showResetTestingModal.value = true;
+  fetchResetPreview();
+};
+
+const closeResetTestingModal = () => {
+  showResetTestingModal.value = false;
+  resetPreviewData.value = null;
+};
+
+const fetchResetPreview = async () => {
+  if (!resetForm.value.guruId || !resetForm.value.date) {
+    resetPreviewData.value = null;
+    return;
+  }
+  resetPreviewLoading.value = true;
+  try {
+    const res = await api.get("/teaching_sessions/admin/check-reset-data", {
+      params: {
+        guruId: resetForm.value.guruId,
+        date: resetForm.value.date,
+      },
+    });
+    resetPreviewData.value = res.data;
+  } catch (err) {
+    console.error("Fetch reset preview error:", err);
+    resetPreviewData.value = null;
+  } finally {
+    resetPreviewLoading.value = false;
+  }
+};
+
+const submitResetTesting = async () => {
+  if (!resetForm.value.guruId || !resetForm.value.date || resetSubmitting.value || !hasDataToReset.value) return;
+
+  const teacher = teachers.value.find((t) => t.id === resetForm.value.guruId);
+  const teacherName = teacher?.displayName || "Guru";
+  const [y, m, d] = resetForm.value.date.split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const formattedDate = dateObj.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  if (
+    !confirm(
+      `Apakah Anda yakin ingin mereset/menghapus data testing ${teacherName} pada ${formattedDate}? Sesi KBM, presensi santri, absen guru, dan link WA yang dipilih akan dibersihkan.`,
+    )
+  ) {
+    return;
+  }
+
+  resetSubmitting.value = true;
+  try {
+    const res = await api.post("/teaching_sessions/admin/reset-session", {
+      guruId: resetForm.value.guruId,
+      date: resetForm.value.date,
+      options: {
+        resetTeachingSessions: resetForm.value.resetTeachingSessions,
+        resetStudentAttendance: resetForm.value.resetStudentAttendance,
+        resetTeacherAttendance: resetForm.value.resetTeacherAttendance,
+        resetQuickLinks: resetForm.value.resetQuickLinks,
+      },
+    });
+
+    success(res.data.message || "Data testing berhasil direset!");
+
+    // Instantly update the preview so the UI flips to "Bersih" immediately
+    await fetchResetPreview();
+
+    // Refresh calendar in background
+    await fetchData();
+
+    // Close modal automatically after 1 second
+    setTimeout(() => {
+      showResetTestingModal.value = false;
+      resetPreviewData.value = null;
+    }, 1000);
+  } catch (err) {
+    console.error("Submit reset error:", err);
+    showError(err.response?.data?.error || "Gagal mereset data sesi testing.");
+  } finally {
+    resetSubmitting.value = false;
+  }
 };
 
 const onGuruChange = () => {
@@ -3625,4 +3899,170 @@ onUnmounted(() => {
   width: 250px;
   height: 20px;
 }
+
+/* --- Reset Testing Modal Styles --- */
+.reset-testing-modal-card {
+  max-width: 540px;
+  width: 95%;
+  padding: 1.75rem;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 25px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.reset-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.reset-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.preview-section {
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  padding: 1rem;
+}
+
+.preview-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gray-600, #4b5563);
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--gray-300, #d1d5db);
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.preview-hint {
+  color: var(--gray-500, #6b7280);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.preview-found-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #b91c1c;
+  margin-bottom: 0.75rem;
+}
+
+.preview-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+}
+
+.preview-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--gray-800, #1f2937);
+}
+
+.badge-session {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.preview-empty-box {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.reset-options-box {
+  background: white;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+  color: var(--gray-700, #374151);
+}
+
+.reset-notice-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: #92400e;
+}
+
+.dropdown-item-danger {
+  color: #dc2626 !important;
+}
+
+.dropdown-item-danger:hover {
+  background: #fef2f2 !important;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>
+

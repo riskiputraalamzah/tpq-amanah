@@ -300,6 +300,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
+import { useToast } from "@/composables/useToast";
 import { formatSessionDateID, formatTimeID } from "@/utils/studentAttendanceState";
 import {
   summarizeStudentAttendance,
@@ -307,6 +308,8 @@ import {
   journalSaveButtonLabel,
   isJournalFilled,
 } from "@/utils/journalState";
+
+const { success, error: showError, warning } = useToast();
 
 const route = useRoute();
 const router = useRouter();
@@ -411,6 +414,7 @@ const save = async () => {
     journalStatus.value = "saved";
     lastSavedAt.value = formatTimeID();
     saveMessage.value = "Jurnal berhasil disimpan.";
+    success("✅ Jurnal KBM berhasil disimpan!");
     justSaved.value = true;
     if (justSavedTimer) clearTimeout(justSavedTimer);
     justSavedTimer = setTimeout(() => {
@@ -421,7 +425,9 @@ const save = async () => {
   } catch (error) {
     saveOk.value = false;
     journalStatus.value = "error";
-    saveMessage.value = error.response?.data?.error || "Gagal menyimpan jurnal.";
+    const msg = error.response?.data?.error || "Gagal menyimpan jurnal.";
+    saveMessage.value = msg;
+    showError("❌ " + msg);
   } finally {
     saving.value = false;
   }

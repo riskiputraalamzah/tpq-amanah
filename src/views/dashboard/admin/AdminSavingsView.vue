@@ -178,41 +178,41 @@
     </div>
 
     <!-- Create Book Modal -->
-    <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
-      <div class="modal glass-card">
-        <div class="modal-header">
-          <h3>Buat Buku Baru</h3>
-          <button class="close-btn" @click="showCreateModal = false">&times;</button>
+      <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+        <div class="modal glass-card">
+          <div class="modal-header">
+            <h3>Buat Buku Baru</h3>
+            <button class="close-btn" @click="showCreateModal = false">&times;</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Judul Buku *</label>
+            <input
+              v-model="createForm.title"
+              type="text"
+              class="form-input"
+              placeholder="cth: Kas Guru April 2026"
+              maxlength="100"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deskripsi (Opsional)</label>
+            <textarea
+              v-model="createForm.description"
+              class="form-input"
+              rows="3"
+              placeholder="Catatan tentang buku ini..."
+            ></textarea>
+          </div>
+          <div class="info-note">
+            🌐 Buku yang dibuat admin otomatis dipublish dan bisa dilihat oleh semua guru.
+          </div>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="showCreateModal = false">Batal</button>
+            <button class="btn-save" @click="createBook" :disabled="creating">
+              {{ creating ? 'Menyimpan...' : 'Buat Buku' }}
+            </button>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Judul Buku *</label>
-          <input
-            v-model="createForm.title"
-            type="text"
-            class="form-input"
-            placeholder="cth: Kas Guru April 2026"
-            maxlength="100"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Deskripsi (Opsional)</label>
-          <textarea
-            v-model="createForm.description"
-            class="form-input"
-            rows="3"
-            placeholder="Catatan tentang buku ini..."
-          ></textarea>
-        </div>
-        <div class="info-note">
-          🌐 Buku yang dibuat admin otomatis dipublish dan bisa dilihat oleh semua guru.
-        </div>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showCreateModal = false">Batal</button>
-          <button class="btn-save" @click="createBook" :disabled="creating">
-            {{ creating ? 'Menyimpan...' : 'Buat Buku' }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>

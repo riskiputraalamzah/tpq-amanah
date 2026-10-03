@@ -117,86 +117,86 @@
     </div>
 
     <!-- Add Criteria Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal glass-card">
-        <h3>{{ selectedStudent ? `Tambah Kriteria untuk ${selectedStudent.santriName}` : 'Input Nilai Baru' }}</h3>
-        
-        <!-- Student Selection (only if adding new student) -->
-        <div v-if="!selectedStudent" class="form-group">
-          <label class="form-label">Cari atau Tambah Santri</label>
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal glass-card">
+          <h3>{{ selectedStudent ? `Tambah Kriteria untuk ${selectedStudent.santriName}` : 'Input Nilai Baru' }}</h3>
           
-          <div class="santri-search-container">
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="form-input" 
-              placeholder="Ketik nama santri..." 
-              @input="onSearchInput"
-              @focus="showSuggestions = true"
-            />
+          <!-- Student Selection (only if adding new student) -->
+          <div v-if="!selectedStudent" class="form-group">
+            <label class="form-label">Cari atau Tambah Santri</label>
             
-            <!-- Loading indicator -->
-            <div v-if="searching" class="search-loading">
-              <span class="spinner-sm"></span> Mencari...
-            </div>
-            
-            <!-- Suggestions dropdown -->
-            <div v-if="showSuggestions && (suggestions.length > 0 || (searchQuery.length >= 2 && !searching))" class="suggestions-dropdown">
-              <!-- Existing santri suggestions -->
-              <div 
-                v-for="s in suggestions" 
-                :key="s.id" 
-                class="suggestion-item"
-                @click="selectSantri(s)"
-              >
-                <div class="suggestion-name">{{ s.name }}</div>
-                <div v-if="s.gradingInfo && s.gradingInfo.length > 0" class="suggestion-grading-info">
-                  <span class="grading-badge">Sudah dinilai oleh {{ s.gradingInfo.map(g => g.guruName).join(', ') }}</span>
+            <div class="santri-search-container">
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                class="form-input" 
+                placeholder="Ketik nama santri..." 
+                @input="onSearchInput"
+                @focus="showSuggestions = true"
+              />
+              
+              <!-- Loading indicator -->
+              <div v-if="searching" class="search-loading">
+                <span class="spinner-sm"></span> Mencari...
+              </div>
+              
+              <!-- Suggestions dropdown -->
+              <div v-if="showSuggestions && (suggestions.length > 0 || (searchQuery.length >= 2 && !searching))" class="suggestions-dropdown">
+                <!-- Existing santri suggestions -->
+                <div 
+                  v-for="s in suggestions" 
+                  :key="s.id" 
+                  class="suggestion-item"
+                  @click="selectSantri(s)"
+                >
+                  <div class="suggestion-name">{{ s.name }}</div>
+                  <div v-if="s.gradingInfo && s.gradingInfo.length > 0" class="suggestion-grading-info">
+                    <span class="grading-badge">Sudah dinilai oleh {{ s.gradingInfo.map(g => g.guruName).join(', ') }}</span>
+                  </div>
+                  <div v-else class="suggestion-new-badge">Belum ada penilaian</div>
                 </div>
-                <div v-else class="suggestion-new-badge">Belum ada penilaian</div>
+                
+                <!-- Santri master is admin-managed: no guru create path -->
+                <div
+                  v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching"
+                  class="suggestion-item add-new disabled"
+                >
+                  <span>Santri tidak ditemukan. Hubungi admin untuk menambah data santri.</span>
+                </div>
+                
+                <!-- No results message -->
+                <div v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching" class="no-results">
+                  <p>Tidak ditemukan santri dengan nama "{{ searchQuery }}"</p>
+                </div>
               </div>
-              
-              <!-- Santri master is admin-managed: no guru create path -->
-              <div
-                v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching"
-                class="suggestion-item add-new disabled"
-              >
-                <span>Santri tidak ditemukan. Hubungi admin untuk menambah data santri.</span>
-              </div>
-              
-              <!-- No results message -->
-              <div v-if="searchQuery.length >= 2 && suggestions.length === 0 && !searching" class="no-results">
-                <p>Tidak ditemukan santri dengan nama "{{ searchQuery }}"</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Selected santri display -->
-          <div v-if="form.santriId && form.santriName" class="selected-santri">
-            <div class="selected-santri-info">
-              <span class="selected-name">{{ form.santriName }}</span>
-              <button type="button" class="btn-clear" @click="clearSelectedSantri">×</button>
             </div>
             
-            <!-- Previous grading info -->
-            <div v-if="selectedSantriGradingInfo && selectedSantriGradingInfo.length > 0" class="previous-grading-alert">
-              <div class="alert-icon">ℹ️</div>
-              <div class="alert-content">
-                <strong>Santri ini sudah dinilai oleh:</strong>
-                <ul>
-                  <li v-for="(g, gIdx) in selectedSantriGradingInfo" :key="gIdx">
-                    {{ g.guruName }} ({{ g.criteriaCount }} kriteria) - {{ formatDate(g.createdAt) }}
-                  </li>
-                </ul>
+            <!-- Selected santri display -->
+            <div v-if="form.santriId && form.santriName" class="selected-santri">
+              <div class="selected-santri-info">
+                <span class="selected-name">{{ form.santriName }}</span>
+                <button type="button" class="btn-clear" @click="clearSelectedSantri">×</button>
+              </div>
+              
+              <!-- Previous grading info -->
+              <div v-if="selectedSantriGradingInfo && selectedSantriGradingInfo.length > 0" class="previous-grading-alert">
+                <div class="alert-icon">ℹ️</div>
+                <div class="alert-content">
+                  <strong>Santri ini sudah dinilai oleh:</strong>
+                  <ul>
+                    <li v-for="(g, gIdx) in selectedSantriGradingInfo" :key="gIdx">
+                      {{ g.guruName }} ({{ g.criteriaCount }} kriteria) - {{ formatDate(g.createdAt) }}
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Kriteria Penilaian</label>
-          <input v-model="form.criteria" type="text" class="form-input" placeholder="Contoh: Baca Tartil, Hafalan Juz 30, dll" />
-        </div>
+  
+          <div class="form-group">
+            <label class="form-label">Kriteria Penilaian</label>
+            <input v-model="form.criteria" type="text" class="form-input" placeholder="Contoh: Baca Tartil, Hafalan Juz 30, dll" />
+          </div>
 
         <div class="form-group">
           <label class="form-label">Nilai (0-10)</label>

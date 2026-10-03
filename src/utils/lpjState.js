@@ -35,16 +35,10 @@ export function resolveDayAction(day, sessionsByDate, now = new Date()) {
     return { kind: "none", label: "Lengkap" };
   }
   if (!day.isCovered) {
-    if (String(day.note || "").includes(NOTE_NO_ATTENDANCE)) {
-      return { kind: "link", label: "Isi Absensi", to: "/dashboard/attendance", primary: false };
+    if (isFutureDay(day.date, now)) {
+      return { kind: "disabled", label: "KBM / Mengajar", reason: "Belum dapat diisi" };
     }
-    if (String(day.note || "").includes(NOTE_PRESENT_NO_SESSION)) {
-      if (isFutureDay(day.date, now)) {
-        return { kind: "disabled", label: "KBM / Mengajar", reason: "Belum dapat diisi" };
-      }
-      return { kind: "link", label: "KBM / Mengajar", to: `/dashboard/kbm?date=${day.date}`, primary: true };
-    }
-    return { kind: "link", label: "Isi Absensi", to: "/dashboard/attendance" };
+    return { kind: "link", label: "Lengkapi KBM", to: `/dashboard/kbm/daily-workspace?date=${day.date}&isBackfill=true`, primary: true };
   }
   const withoutAttendance = sessions.find(
     (s) => !Array.isArray(s.studentAttendances) || s.studentAttendances.length === 0,

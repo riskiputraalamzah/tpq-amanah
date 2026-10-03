@@ -57,7 +57,7 @@
                 placeholder="16 digit NIK sesuai KTP"
                 required
               />
-              <span class="field-hint">Wajib untuk kelengkapan SPTJM & Dokumen LPJ</span>
+              <span class="field-hint">Wajib untuk kelengkapan administrasi data pendidik</span>
             </div>
 
             <!-- Tempat Lahir -->

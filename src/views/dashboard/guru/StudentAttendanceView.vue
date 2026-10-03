@@ -193,6 +193,17 @@
                           {{ getInitials(row.name) }}
                         </div>
                         <span class="student-name">{{ row.name }}</span>
+                        <button
+                          type="button"
+                          class="btn-rename-santri"
+                          @click.stop="openRenameModal(row)"
+                          title="Ubah Nama Santri"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
                       </div>
                     </td>
                     <td>
@@ -269,7 +280,20 @@
                   </div>
                   <div class="roster-info">
                     <span class="roster-num">#{{ idx + 1 }}</span>
-                    <span class="roster-name">{{ row.name }}</span>
+                    <div class="roster-name-row">
+                      <span class="roster-name">{{ row.name }}</span>
+                      <button
+                        type="button"
+                        class="btn-rename-santri"
+                        @click.stop="openRenameModal(row)"
+                        title="Ubah Nama Santri"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -327,64 +351,164 @@
                 </label>
               </li>
             </ul>
-
-            <!-- Save Feedback & Status -->
-            <div class="save-feedback-area">
-              <div v-if="saveStatus !== 'empty'" class="save-status" :class="'save-' + saveStatus">
-                <span v-if="saveStatus === 'saved'">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="status-icon">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Tersimpan<span v-if="lastSavedAt"> · Terakhir disimpan {{ lastSavedAt }}</span>
-                </span>
-                <span v-else-if="saveStatus === 'unsaved'">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  Ada perubahan belum disimpan
-                </span>
-                <span v-else-if="saveStatus === 'saving'">
-                  <span class="inline-spinner"></span>
-                  Menyimpan absensi...
-                </span>
-                <span v-else-if="saveStatus === 'error'">
-                  Gagal menyimpan. Periksa kembali.
-                </span>
-              </div>
-
-              <div v-if="isFuture" class="alert alert-error">
-                Sesi ini berada di masa depan. Absensi santri tidak dapat disimpan.
-              </div>
-
-              <div
-                v-if="saveMessage"
-                class="alert"
-                :class="saveOk ? 'alert-success' : 'alert-error'"
-              >
-                {{ saveMessage }}
-              </div>
-
-              <!-- Main Save Action CTA -->
-              <button
-                type="button"
-                class="mt-4 btn btn-primary btn-save-attendance"
-                :disabled="!dirty || saving || roster.length === 0 || isFuture"
-                @click="save"
-              >
-                <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                <span>{{ saveButtonLabel({ saving: saving, justSaved: justSaved }) }}</span>
-              </button>
-            </div>
           </template>
+
+          <!-- Inactive / Graduated Santri Info List -->
+          <div v-if="inactiveSantri.length > 0" class="inactive-santri-section">
+            <div class="inactive-header">
+              <div class="inactive-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="inactive-title">Santri Nonaktif / Lulus ({{ inactiveSantri.length }})</h3>
+                <p class="inactive-desc">
+                  Santri dengan status Lulus atau Nonaktif otomatis dikecualikan dari absensi harian
+                </p>
+              </div>
+            </div>
+
+            <div class="inactive-list">
+              <div
+                v-for="st in inactiveSantri"
+                :key="st.id"
+                class="inactive-item"
+              >
+                <div class="inactive-item-main">
+                  <div class="inactive-avatar">
+                    {{ getInitials(st.name) }}
+                  </div>
+                  <span class="inactive-name">{{ st.name }}</span>
+                </div>
+                <span
+                  class="badge-status-santri"
+                  :class="'badge-santri-' + (st.status || 'nonaktif').toLowerCase()"
+                >
+                  {{ (st.status || '').toLowerCase() === 'lulus' ? 'Lulus' : 'Nonaktif' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Feedback & Status -->
+          <div v-if="roster.length > 0" class="save-feedback-area">
+            <div v-if="saveStatus !== 'empty'" class="save-status" :class="'save-' + saveStatus">
+              <span v-if="saveStatus === 'saved'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="status-icon">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Tersimpan<span v-if="lastSavedAt"> · Terakhir disimpan {{ lastSavedAt }}</span>
+              </span>
+              <span v-else-if="saveStatus === 'unsaved'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="status-icon">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Ada perubahan belum disimpan
+              </span>
+              <span v-else-if="saveStatus === 'saving'">
+                <span class="inline-spinner"></span>
+                Menyimpan absensi...
+              </span>
+              <span v-else-if="saveStatus === 'error'">
+                Gagal menyimpan. Periksa kembali.
+              </span>
+            </div>
+
+            <div v-if="isFuture" class="alert alert-error">
+              Sesi ini berada di masa depan. Absensi santri tidak dapat disimpan.
+            </div>
+
+            <div
+              v-if="saveMessage"
+              class="alert"
+              :class="saveOk ? 'alert-success' : 'alert-error'"
+            >
+              {{ saveMessage }}
+            </div>
+
+            <!-- Main Save Action CTA -->
+            <button
+              type="button"
+              class="mt-4 btn btn-primary btn-save-attendance"
+              :disabled="!dirty || saving || roster.length === 0 || isFuture"
+              @click="save"
+            >
+              <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              <span>{{ saveButtonLabel({ saving: saving, justSaved: justSaved }) }}</span>
+            </button>
+          </div>
         </section>
       </div>
     </template>
+
+    <!-- Modal Ubah Nama Santri (Teleport to body for viewport centering) -->
+    <Teleport to="body">
+      <div v-if="renamingSantri" class="modal-overlay" @click.self="closeRenameModal">
+        <div class="modal glass-card rename-modal-card">
+          <div class="rename-modal-header">
+            <div class="rename-header-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="modal-title">Ubah Nama Santri</h3>
+              <p class="modal-subtitle">{{ levelName }}</p>
+            </div>
+          </div>
+
+          <form @submit.prevent="submitRename" class="rename-modal-body">
+            <div class="form-group mb-4">
+              <label class="form-label font-semibold">Nama Lengkap Santri:</label>
+              <input
+                ref="renameInputRef"
+                v-model="renameFormName"
+                type="text"
+                class="form-input rename-input"
+                placeholder="Contoh: Muhammad Rizky Pratama"
+                required
+                :disabled="renamingLoading"
+              />
+              <small class="help-text">
+                Ubah nama panggilan menjadi nama lengkap santri untuk keperluan administrasi dan laporan.
+              </small>
+            </div>
+
+            <div v-if="renameError" class="alert alert-error mb-3">
+              {{ renameError }}
+            </div>
+
+            <div class="modal-action-buttons">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                :disabled="renamingLoading"
+                @click="closeRenameModal"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                :disabled="renamingLoading || !renameFormName.trim()"
+              >
+                {{ renamingLoading ? "Menyimpan..." : "Simpan Nama" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -392,6 +516,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
+import { useToast } from "@/composables/useToast";
 import {
   formatSessionDateID,
   formatTimeID,
@@ -400,6 +525,8 @@ import {
   applyAllPresent,
   saveButtonLabel,
 } from "@/utils/studentAttendanceState";
+
+const { success, error: showError, warning } = useToast();
 
 const STATUS_OPTIONS = [
   { value: "hadir", label: "Hadir" },
@@ -418,6 +545,7 @@ const session = ref({});
 const sessionSlots = ref([]);
 const classes = ref([]);
 const roster = ref([]);
+const inactiveSantri = ref([]);
 const dirty = ref(false);
 const saving = ref(false);
 const saveMessage = ref("");
@@ -426,6 +554,50 @@ const saveStatus = ref("empty");
 const lastSavedAt = ref("");
 const justSaved = ref(false);
 let justSavedTimer = null;
+
+// Rename santri modal state
+const renamingSantri = ref(null);
+const renameFormName = ref("");
+const renamingLoading = ref(false);
+const renameError = ref("");
+const renameInputRef = ref(null);
+
+const openRenameModal = (row) => {
+  renamingSantri.value = row;
+  renameFormName.value = row.name;
+  renameError.value = "";
+  setTimeout(() => {
+    renameInputRef.value?.focus();
+    renameInputRef.value?.select();
+  }, 100);
+};
+
+const closeRenameModal = () => {
+  if (renamingLoading.value) return;
+  renamingSantri.value = null;
+  renameFormName.value = "";
+  renameError.value = "";
+};
+
+const submitRename = async () => {
+  if (!renamingSantri.value || !renameFormName.value.trim() || renamingLoading.value) return;
+  renamingLoading.value = true;
+  renameError.value = "";
+  try {
+    const res = await api.patch(`/santri/${renamingSantri.value.id}/name`, {
+      name: renameFormName.value.trim(),
+    });
+    const updatedName = res.data.name || renameFormName.value.trim();
+    renamingSantri.value.name = updatedName;
+    dirty.value = true;
+    success(`✅ Nama santri berhasil diubah menjadi "${updatedName}"!`);
+    closeRenameModal();
+  } catch (err) {
+    renameError.value = err.response?.data?.error || "Gagal mengubah nama santri.";
+  } finally {
+    renamingLoading.value = false;
+  }
+};
 
 const levelId = computed(() =>
   session.value ? String(session.value.levelId || session.value.classId || "") : "",
@@ -516,13 +688,33 @@ const fetchData = async () => {
     classes.value = classesRes.data;
 
     if (["teaching", "special_non_kbm"].includes(session.value.type)) {
+      const targetClassId = String(session.value.levelId || session.value.classId || "");
       const rosterRes = await api.get("/santri", {
-        params: { classId: String(session.value.levelId || session.value.classId || "") },
+        params: { classId: targetClassId },
       });
+
+      const allSantri = rosterRes.data || [];
+      const activeSantri = allSantri.filter((s) => {
+        const st = String(s.status || "aktif").toLowerCase();
+        return st === "aktif" || st === "-";
+      });
+
+      const inactiveList = allSantri.filter((s) => {
+        const st = String(s.status || "").toLowerCase();
+        return st === "nonaktif" || st === "lulus";
+      });
+
+      inactiveSantri.value = inactiveList.map((s) => ({
+        id: s.id,
+        name: s.name,
+        status: s.status || "nonaktif",
+      }));
+
       const existing = new Map(
         (session.value.studentAttendances || []).map((s) => [s.santriId, s.status]),
       );
-      roster.value = rosterRes.data.map((s) => ({
+
+      roster.value = activeSantri.map((s) => ({
         id: s.id,
         name: s.name,
         status: existing.get(s.id) || "hadir",
@@ -562,6 +754,7 @@ const save = async () => {
     saveStatus.value = "saved";
     lastSavedAt.value = formatTimeID();
     saveMessage.value = "Absensi santri berhasil disimpan.";
+    success("✅ Absensi santri berhasil disimpan!");
     justSaved.value = true;
     if (justSavedTimer) clearTimeout(justSavedTimer);
     justSavedTimer = setTimeout(() => {
@@ -572,7 +765,9 @@ const save = async () => {
   } catch (error) {
     saveOk.value = false;
     saveStatus.value = "error";
-    saveMessage.value = error.response?.data?.error || "Gagal menyimpan absensi santri.";
+    const msg = error.response?.data?.error || "Gagal menyimpan absensi santri.";
+    saveMessage.value = msg;
+    showError("❌ " + msg);
   } finally {
     saving.value = false;
   }
@@ -1437,5 +1632,170 @@ onMounted(fetchData);
   .student-attendance-view .btn-primary {
     min-height: 44px;
   }
+}
+
+/* --- Rename Santri Button & Modal --- */
+.btn-rename-santri {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 6px;
+  color: var(--gray-400, #9ca3af);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.btn-rename-santri:hover {
+  background: rgba(46, 125, 50, 0.1);
+  border-color: rgba(46, 125, 50, 0.25);
+  color: var(--primary, #2e7d32);
+}
+
+.roster-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rename-modal-card {
+  max-width: 440px;
+  width: 92%;
+  padding: 1.5rem;
+}
+
+.rename-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.rename-header-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--primary, #2e7d32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rename-input {
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 14px;
+}
+
+/* --- Inactive / Graduated Santri Section --- */
+.inactive-santri-section {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.inactive-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.inactive-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.inactive-title {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+}
+
+.inactive-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.inactive-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.inactive-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.inactive-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inactive-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.inactive-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.badge-status-santri {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.badge-santri-lulus {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-santri-nonaktif {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 </style>

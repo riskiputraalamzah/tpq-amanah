@@ -71,22 +71,22 @@
     </div>
 
     <!-- Add/Edit Period Modal -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal glass-card">
-        <h3>{{ editMode ? 'Edit Periode Penilaian' : 'Buat Periode Penilaian Baru' }}</h3>
-        <div class="form-group">
-          <label class="form-label">Nama Periode</label>
-          <input v-model="form.name" type="text" class="form-input" placeholder="Contoh: Ujian Kenaikan Jilid Juni 2024" />
-        </div>
-        <div class="form-row">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal glass-card">
+          <h3>{{ editMode ? 'Edit Periode Penilaian' : 'Buat Periode Penilaian Baru' }}</h3>
           <div class="form-group">
-            <label class="form-label">Tanggal Mulai</label>
-            <input v-model="form.startDate" type="date" class="form-input" />
+            <label class="form-label">Nama Periode</label>
+            <input v-model="form.name" type="text" class="form-input" placeholder="Contoh: Ujian Kenaikan Jilid Juni 2024" />
           </div>
-          <div class="form-group">
-            <label class="form-label">Tanggal Selesai</label>
-            <input v-model="form.endDate" type="date" class="form-input" />
-          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tanggal Mulai</label>
+              <input v-model="form.startDate" type="date" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tanggal Selesai</label>
+              <input v-model="form.endDate" type="date" class="form-input" />
+            </div>
         </div>
         <div class="form-group">
           <label class="form-label">Deskripsi (opsional)</label>

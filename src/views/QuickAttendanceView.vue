@@ -20,7 +20,18 @@
           <strong>{{ resultStatusLabel }}</strong
           >.
         </p>
-        <router-link class="secondary-link" :to="dashboardLink">
+        <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
+            Mengalihkan ke Daily Workspace...
+          </p>
+          <router-link class="primary-btn" :to="workspaceLink">
+            Buka Daily Workspace →
+          </router-link>
+          <router-link class="secondary-link" :to="dashboardLink">
+            Buka Dashboard
+          </router-link>
+        </div>
+        <router-link v-else class="primary-btn" :to="dashboardLink">
           Buka Dashboard
         </router-link>
       </div>
@@ -36,7 +47,18 @@
           }}</strong
           >.
         </p>
-        <router-link class="secondary-link" :to="dashboardLink">
+        <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
+            Mengalihkan ke Daily Workspace...
+          </p>
+          <router-link class="primary-btn" :to="workspaceLink">
+            Buka Daily Workspace →
+          </router-link>
+          <router-link class="secondary-link" :to="dashboardLink">
+            Buka Dashboard
+          </router-link>
+        </div>
+        <router-link v-else class="secondary-link" :to="dashboardLink">
           Buka Dashboard
         </router-link>
       </div>
@@ -87,17 +109,19 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
 import logoUrl from "../assets/logo.png";
 
 const route = useRoute();
+const router = useRouter();
 const dashboardLink = "/dashboard/attendance";
 const state = ref("loading");
 const details = ref(null);
 const result = ref(null);
 const errorMessage = ref("Link absensi tidak valid atau sudah tidak tersedia.");
 const submitting = ref(false);
+const redirecting = ref(false);
 
 const resultTitle = computed(() => {
   if (result.value?.action === "test") return "Test Link Berhasil";
@@ -114,6 +138,39 @@ const resultStatusLabel = computed(() => {
     result.value?.statusLabel || details.value?.requestedStatusLabel || "-"
   );
 });
+
+const isEligibleHadir = computed(() => {
+  const eligible = result.value?.lpjEligible ?? details.value?.lpjEligible;
+  const status = result.value?.status || details.value?.existingAttendance?.status || details.value?.requestedStatus;
+  return !!eligible && status === "hadir";
+});
+
+const workspaceLink = computed(() => {
+  const dateStr = result.value?.dailyContext?.date || details.value?.dailyContext?.date || details.value?.date;
+  if (dateStr) {
+    return `/dashboard/kbm/daily-workspace?date=${dateStr}`;
+  }
+  return "/dashboard/kbm/daily-workspace";
+});
+
+function triggerAutoRedirectIfEligible(payload) {
+  const eligible = payload?.lpjEligible ?? details.value?.lpjEligible;
+  const status = payload?.status || details.value?.existingAttendance?.status || details.value?.requestedStatus;
+
+  if (eligible && status === "hadir") {
+    redirecting.value = true;
+    const targetDate = payload?.dailyContext?.date || details.value?.dailyContext?.date || details.value?.date;
+    const targetUrl = targetDate
+      ? `/dashboard/kbm/daily-workspace?date=${targetDate}`
+      : "/dashboard/kbm/daily-workspace";
+
+    setTimeout(() => {
+      router.push(targetUrl);
+    }, 600);
+    return true;
+  }
+  return false;
+}
 
 const expiryLabel = computed(() => {
   if (
@@ -187,6 +244,7 @@ async function submitQuickAttendance() {
     const { data } = await api.post(`/attendance/quick/${route.params.code}`);
     result.value = data;
     state.value = data.action === "already_recorded" ? "already" : "success";
+    triggerAutoRedirectIfEligible(data);
   } catch (error) {
     applyError(error);
   }
@@ -200,6 +258,7 @@ async function confirmUpdate() {
     );
     result.value = data;
     state.value = "success";
+    triggerAutoRedirectIfEligible(data);
   } catch (error) {
     applyError(error);
   } finally {
@@ -214,6 +273,7 @@ onMounted(async () => {
 
     if (data.action === "already_recorded") {
       state.value = "already";
+      triggerAutoRedirectIfEligible(data);
       return;
     }
 

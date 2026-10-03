@@ -11,20 +11,8 @@
 
       <nav class="sidebar-nav">
         <!-- Beranda / Utama -->
-        <router-link
-          to="/dashboard"
-          class="sidebar-link"
-          exact-active-class="active"
-          @click="closeSidebar"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+        <router-link to="/dashboard" class="sidebar-link" exact-active-class="active" @click="closeSidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
@@ -37,20 +25,9 @@
         <template v-if="isAdmin">
           <!-- Master Data & TPQ -->
           <div class="sidebar-section">Master Data</div>
-          <router-link
-            to="/dashboard/tpq-profile"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/tpq-profile') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/tpq-profile" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/tpq-profile') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M3 21h18" />
               <path d="M5 21V7l8-4 6 3v15" />
               <path d="M9 10h2" />
@@ -59,20 +36,8 @@
             </svg>
             Profil TPQ
           </router-link>
-          <router-link
-            to="/dashboard/users"
-            class="sidebar-link"
-            active-class="active"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/users" class="sidebar-link" active-class="active" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -80,39 +45,17 @@
             </svg>
             Kelola Users
           </router-link>
-          <router-link
-            to="/dashboard/teachers"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/teachers') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/teachers" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/teachers') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
             Kelola Pengajar
           </router-link>
-          <router-link
-            to="/dashboard/santri"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/santri') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/santri" class="sidebar-link" :class="{ active: isActive('/dashboard/santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -123,20 +66,9 @@
 
           <!-- Akademik & Laporan -->
           <div class="sidebar-section">Akademik & Laporan</div>
-          <router-link
-            to="/dashboard/admin-attendance"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-attendance') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/admin-attendance" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/admin-attendance') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -147,139 +79,71 @@
             </svg>
             Rekap Absensi
           </router-link>
-          <router-link
-            to="/dashboard/admin-grading"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-grading') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
+          <router-link to="/dashboard/admin-grading" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/admin-grading') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
             Kelola Penilaian
           </router-link>
-          <router-link
-            to="/dashboard/admin-lpj"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-lpj') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
+          <router-link to="/dashboard/admin-lpj" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/admin-lpj') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
             LPJ Guru
           </router-link>
+          <router-link to="/dashboard/admin-documents" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/admin-documents') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            Dokumen LPJ
+          </router-link>
 
           <!-- Layanan & Informasi -->
           <div class="sidebar-section">Layanan & Informasi</div>
-          <router-link
-            to="/dashboard/admin-savings"
-            class="sidebar-link"
-            :class="{
-              active:
-                isActive('/dashboard/admin-savings') ||
-                isActive('/dashboard/savings'),
-            }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/admin-savings" class="sidebar-link" :class="{
+            active:
+              isActive('/dashboard/admin-savings') ||
+              isActive('/dashboard/savings'),
+          }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
               <path d="M8 14h8" />
             </svg>
             Tabungan Santri
           </router-link>
-          <router-link
-            to="/dashboard/content"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/content') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-              />
-              <path
-                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-              />
+          <router-link to="/dashboard/content" class="sidebar-link" :class="{ active: isActive('/dashboard/content') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
             Kelola Konten
           </router-link>
-          <router-link
-            to="/dashboard/announcements"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/announcements') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"
-              />
+          <router-link to="/dashboard/announcements" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/announcements') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
             </svg>
             Pengumuman
           </router-link>
-          <router-link
-            to="/dashboard/broadcasts"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/broadcasts') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-              />
+          <router-link to="/dashboard/broadcasts" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/broadcasts') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
             Broadcast WA
@@ -292,20 +156,9 @@
         <template v-if="isGuru">
           <!-- Pembelajaran / Aktivitas Harian -->
           <div class="sidebar-section">Pembelajaran</div>
-          <router-link
-            to="/dashboard/attendance"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/attendance') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/attendance" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/attendance') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -314,70 +167,41 @@
             </svg>
             Absensi
           </router-link>
-          <router-link
-            to="/dashboard/kbm"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/kbm') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/kbm" class="sidebar-link" :class="{ active: isActive('/dashboard/kbm') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path
-                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
-              />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             KBM / Mengajar
+          </router-link>
+          <router-link to="/dashboard/santri" class="sidebar-link" :class="{ active: isActive('/dashboard/santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Data Santri
           </router-link>
 
           <!-- Akademik & Laporan Bulanan -->
           <div class="sidebar-section">Akademik & Laporan</div>
-          <router-link
-            to="/dashboard/grading"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/grading') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
+          <router-link to="/dashboard/grading" class="sidebar-link" :class="{ active: isActive('/dashboard/grading') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
             Penilaian
           </router-link>
-          <router-link v-if="lpjEligible"
-            to="/dashboard/lpj"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/lpj') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
+          <router-link v-if="lpjEligible" to="/dashboard/lpj" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/lpj') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
@@ -387,20 +211,9 @@
 
           <!-- Layanan Santri -->
           <div class="sidebar-section">Layanan</div>
-          <router-link
-            to="/dashboard/savings"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/savings') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/savings" class="sidebar-link" :class="{ active: isActive('/dashboard/savings') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
               <path d="M8 14h8" />
@@ -410,20 +223,9 @@
 
           <!-- Akun Pengguna -->
           <div class="sidebar-section">Akun</div>
-          <router-link
-            to="/dashboard/profile"
-            class="sidebar-link"
-            :class="{ active: isActive('/dashboard/profile') }"
-            @click="closeSidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
+          <router-link to="/dashboard/profile" class="sidebar-link" :class="{ active: isActive('/dashboard/profile') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
@@ -433,21 +235,9 @@
           <!-- Akses Khusus jika guru punya permission -->
           <template v-if="hasCustomPermissions">
             <div class="sidebar-section">Akses Khusus</div>
-            <router-link
-              v-if="hasPermission('admin-attendance-view')"
-              to="/dashboard/admin-attendance"
-              class="sidebar-link"
-              :class="{ active: isActive('/dashboard/admin-attendance') }"
-              @click="closeSidebar"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+            <router-link v-if="hasPermission('admin-attendance-view')" to="/dashboard/admin-attendance"
+              class="sidebar-link" :class="{ active: isActive('/dashboard/admin-attendance') }" @click="closeSidebar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -463,18 +253,8 @@
       </nav>
 
       <div class="sidebar-footer">
-        <router-link
-          to="/dashboard/profile"
-          class="sidebar-user"
-          v-if="user"
-          title="Lihat & Edit Profil"
-        >
-          <img
-            v-if="user.photoURL"
-            :src="user.photoURL"
-            :alt="user.displayName"
-            class="sidebar-user-avatar"
-          />
+        <router-link to="/dashboard/profile" class="sidebar-user" v-if="user" title="Lihat & Edit Profil">
+          <img v-if="user.photoURL" :src="user.photoURL" :alt="user.displayName" class="sidebar-user-avatar" />
           <div v-else class="sidebar-user-avatar-placeholder">
             {{ getInitials(user.displayName) }}
           </div>
@@ -484,14 +264,7 @@
           </div>
         </router-link>
         <button class="sidebar-logout" @click="handleLogout">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
@@ -503,14 +276,7 @@
 
     <!-- Mobile Sidebar Toggle (Admin Only) -->
     <button v-if="isAdmin" class="sidebar-toggle" @click="toggleSidebar">
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="3" y1="12" x2="21" y2="12" />
         <line x1="3" y1="6" x2="21" y2="6" />
         <line x1="3" y1="18" x2="21" y2="18" />
@@ -518,11 +284,7 @@
     </button>
 
     <!-- Overlay -->
-    <div
-      class="sidebar-overlay"
-      :class="{ active: isSidebarOpen }"
-      @click="closeSidebar"
-    ></div>
+    <div class="sidebar-overlay" :class="{ active: isSidebarOpen }" @click="closeSidebar"></div>
 
     <!-- Main Content -->
     <main class="dashboard-main">
@@ -537,20 +299,8 @@
 
     <!-- Mobile Top Header Bar (Guru Only) -->
     <header v-if="isGuru" class="mobile-header">
-      <button
-        type="button"
-        class="mobile-menu-btn"
-        @click="toggleSidebar"
-        aria-label="Buka Menu Navigasi"
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
+      <button type="button" class="mobile-menu-btn" @click="toggleSidebar" aria-label="Buka Menu Navigasi">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="12" x2="21" y2="12" />
           <line x1="3" y1="6" x2="21" y2="6" />
           <line x1="3" y1="18" x2="21" y2="18" />
@@ -562,11 +312,7 @@
         <span class="mobile-title">TPQ AMANAH</span>
       </div>
 
-      <button
-        class="mobile-profile-btn"
-        @click="showProfileMenu = !showProfileMenu"
-        aria-label="Menu Profil"
-      >
+      <button class="mobile-profile-btn" @click="showProfileMenu = !showProfileMenu" aria-label="Menu Profil">
         <img v-if="user?.photoURL" :src="user.photoURL" class="mobile-avatar" />
         <div v-else class="mobile-avatar-placeholder">
           {{ getInitials(user?.displayName) }}
@@ -577,11 +323,7 @@
       <Transition name="slide-down">
         <div v-if="showProfileMenu" class="profile-menu glass-card">
           <div class="profile-header">
-            <img
-              v-if="user?.photoURL"
-              :src="user.photoURL"
-              class="profile-menu-avatar"
-            />
+            <img v-if="user?.photoURL" :src="user.photoURL" class="profile-menu-avatar" />
             <div v-else class="profile-menu-avatar-placeholder">
               {{ getInitials(user?.displayName) }}
             </div>
@@ -591,33 +333,15 @@
             </div>
           </div>
           <div class="profile-menu-actions">
-            <router-link
-              to="/dashboard/profile"
-              class="profile-menu-item"
-              @click="showProfileMenu = false"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+            <router-link to="/dashboard/profile" class="profile-menu-item" @click="showProfileMenu = false">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
               Profil Saya
             </router-link>
             <button class="logout-btn" @click="handleLogout">
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
@@ -629,74 +353,34 @@
       </Transition>
 
       <!-- Profile Menu Overlay -->
-      <div
-        v-if="showProfileMenu"
-        class="profile-overlay"
-        @click="showProfileMenu = false"
-      ></div>
+      <div v-if="showProfileMenu" class="profile-overlay" @click="showProfileMenu = false"></div>
     </header>
 
     <!-- Mobile Bottom Navigation (Guru Only) - 3 Items Symmetric -->
     <nav v-if="isGuru" class="bottom-nav">
-      <router-link
-        to="/dashboard"
-        class="bottom-nav-item"
-        exact-active-class="active"
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
+      <router-link to="/dashboard" class="bottom-nav-item" exact-active-class="active">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
         <span>Home</span>
       </router-link>
 
-      <router-link
-        to="/dashboard/attendance"
-        class="bottom-nav-item cta"
-        :class="{ active: isActive('/dashboard/attendance') }"
-      >
+      <router-link to="/dashboard/attendance" class="bottom-nav-item cta"
+        :class="{ active: isActive('/dashboard/attendance') }">
         <div class="cta-button">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M9 11l3 3L22 4" />
-            <path
-              d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
-            />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
           </svg>
         </div>
         <span>Absensi</span>
       </router-link>
 
-      <router-link
-        to="/dashboard/kbm"
-        class="bottom-nav-item"
-        :class="{ active: isActive('/dashboard/kbm') }"
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
+      <router-link to="/dashboard/kbm" class="bottom-nav-item" :class="{ active: isActive('/dashboard/kbm') }">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path
-            d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
-          />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
         <span>KBM</span>
       </router-link>
@@ -742,7 +426,8 @@ const lpjEligible = ref(false);
 const refreshLpjEligibility = async () => {
   if (!isGuru.value) return;
   try {
-    lpjEligible.value = await fetchMyEligibility(await resolveLpjPeriod());
+    const isCurrentEligible = await fetchMyEligibility(await resolveLpjPeriod());
+    lpjEligible.value = !!isCurrentEligible;
   } catch {
     lpjEligible.value = false;
   }
@@ -798,7 +483,7 @@ watch(
 onMounted(() => {
   if (authStore.isAuthenticated && !announcementStore.fetched) {
     announcementStore.fetchActive();
-  refreshLpjEligibility();
+    refreshLpjEligibility();
   }
 });
 </script>
@@ -1021,8 +706,9 @@ onMounted(() => {
   flex: 1;
   padding: var(--space-xl);
   min-height: 100vh;
-  width: 100%; /* Ensure proper sizing in flex container */
-  overflow-x: hidden; /* Prevent horizontal overflow */
+  width: 100%;
+  /* Ensure proper sizing in flex container */
+  /* Prevent horizontal overflow */
 }
 
 @media (max-width: 768px) {
@@ -1035,6 +721,7 @@ onMounted(() => {
   .dashboard-main {
     padding: var(--space-2xl);
   }
+
   .loading-overlay {
     left: 280px !important;
   }
@@ -1210,6 +897,7 @@ onMounted(() => {
 }
 
 @media (max-width: 1023px) {
+
   /* Only show bottom nav for guru layout on mobile */
   .guru-layout .bottom-nav {
     display: flex;
@@ -1497,6 +1185,7 @@ onMounted(() => {
   :deep(.page-header h1) {
     font-size: 1.45rem;
   }
+
   :deep(.page-header p) {
     font-size: 0.875rem;
   }

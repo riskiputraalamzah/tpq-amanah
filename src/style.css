@@ -1012,3 +1012,138 @@ img {
     font-size: 0.875rem;
   }
 }
+
+/* ============================================================
+   GLOBAL MODAL / OVERLAY SYSTEM
+   All modals are Teleport'd to <body> so these styles apply
+   globally without interference from scroll containers.
+   ============================================================ */
+
+.modal-overlay,
+.modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  padding: 1rem !important;
+  animation: modalOverlayIn 0.2s ease-out both !important;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* All direct children of overlays (the modal boxes) get entrance animation */
+.modal-overlay > *,
+.modal-backdrop > * {
+  animation: modalCardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+@keyframes modalCardIn {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Conflict Modal Styles */
+.conflict-modal-card {
+  max-width: 520px !important;
+  width: 92% !important;
+  padding: 28px !important;
+  border-radius: 20px !important;
+  background: #ffffff !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4) !important;
+}
+.modal-header-danger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.modal-danger-icon {
+  font-size: 2.2rem;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #92400e;
+}
+.modal-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+.modal-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #4b5563;
+  margin-bottom: 24px;
+}
+.modal-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .modal-action-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+/* Calendar popup overlay — same fixed pattern */
+.calendar-popup-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 8999 !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.calendar-popup {
+  position: fixed !important;
+  z-index: 9000 !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  width: min(520px, calc(100vw - 2rem)) !important;
+  animation: modalCardIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+}
+
+/* Ensure modal cards inside overlays are properly sized */
+.modal-overlay .modal,
+.modal-overlay .modal-card,
+.modal-backdrop .modal-card,
+.modal-backdrop .modal {
+  width: 100% !important;
+  max-width: 520px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.1) !important;
+}
+
+/* Body scroll lock when modal is open — handled by Vue adding class */
+body.modal-open {
+  overflow: hidden !important;
+}

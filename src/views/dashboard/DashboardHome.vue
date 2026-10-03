@@ -233,7 +233,7 @@
         </router-link>
 
         <!-- LPJ Bulanan (Guru) -->
-        <router-link to="/dashboard/lpj" class="action-card glass-card" v-if="isGuru">
+        <router-link to="/dashboard/lpj" class="action-card glass-card" v-if="isGuru && lpjEligible">
           <div class="action-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -335,13 +335,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useToast } from '@/composables/useToast'
+import { resolveLpjPeriod, fetchMyEligibility } from '@/utils/lpjEligibility'
 
 const { success, error: showError } = useToast()
 
@@ -359,6 +360,18 @@ const hasCustomPermissions = computed(() => {
 
 const hasPermission = (permissionId) => {
   return user.value?.permissions?.features?.includes(permissionId) || false
+}
+
+const lpjEligible = ref(false)
+
+const checkLpjEligibility = async () => {
+  if (!isGuru.value) return
+  try {
+    const isCurrentEligible = await fetchMyEligibility(await resolveLpjPeriod())
+    lpjEligible.value = !!isCurrentEligible
+  } catch {
+    lpjEligible.value = false
+  }
 }
 
 const loading = ref(true)
@@ -557,15 +570,20 @@ const handleExportPDF = () => {
   }
 }
 
-onMounted(() => {
-  fetchStats()
+onMounted(async () => {
+  await fetchStats()
+  if (isGuru.value) {
+    await checkLpjEligibility()
+  }
 })
 
-// React to permission changes (e.g. after login/rehydration)
-import { watch } from 'vue'
-watch(() => user.value?.permissions, async (newVal) => {
+// React to permission and user changes
+watch(() => user.value, async (newVal) => {
   if (newVal) {
     await fetchStats()
+    if (isGuru.value) {
+      await checkLpjEligibility()
+    }
   }
 }, { deep: true })
 </script>

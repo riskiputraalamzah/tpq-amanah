@@ -100,36 +100,36 @@
     </div>
 
     <!-- Form Modal -->
-    <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
-      <div class="modal glass-card" style="max-width: 700px;">
-        <div class="modal-header">
-          <h3>Buat Broadcast Baru</h3>
-          <button class="close-btn" @click="closeForm">×</button>
-        </div>
-
-        <div class="form-group">
-          <label>Judul Broadcast / Referensi Internal:</label>
-          <input type="text" v-model="form.title" placeholder="Contoh: Tagihan SPP Guru Agustus" class="form-control" />
-        </div>
-
-        <div class="form-group">
-          <label>Tipe Penerima:</label>
-          <div class="channel-segment">
-            <label class="segment-option" :class="{ active: form.type === 'single' }">
-              <input type="radio" v-model="form.type" value="single" class="hidden-radio" />
-              <div class="option-content">
-                <span class="option-title">Satuan (Single)</span>
-                <span class="option-desc">Kirim pesan tunggal ke satu nomor WA saja.</span>
-              </div>
-            </label>
-            <label class="segment-option" :class="{ active: form.type === 'bulk' }">
-              <input type="radio" v-model="form.type" value="bulk" class="hidden-radio" />
-              <div class="option-content">
-                <span class="option-title">Massal (Bulk)</span>
-                <span class="option-desc">Kirim pesan massal dengan nama / data dinamis.</span>
-              </div>
-            </label>
+      <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+        <div class="modal glass-card" style="max-width: 700px;">
+          <div class="modal-header">
+            <h3>Buat Broadcast Baru</h3>
+            <button class="close-btn" @click="closeForm">×</button>
           </div>
+  
+          <div class="form-group">
+            <label>Judul Broadcast / Referensi Internal:</label>
+            <input type="text" v-model="form.title" placeholder="Contoh: Tagihan SPP Guru Agustus" class="form-control" />
+          </div>
+  
+          <div class="form-group">
+            <label>Tipe Penerima:</label>
+            <div class="channel-segment">
+              <label class="segment-option" :class="{ active: form.type === 'single' }">
+                <input type="radio" v-model="form.type" value="single" class="hidden-radio" />
+                <div class="option-content">
+                  <span class="option-title">Satuan (Single)</span>
+                  <span class="option-desc">Kirim pesan tunggal ke satu nomor WA saja.</span>
+                </div>
+              </label>
+              <label class="segment-option" :class="{ active: form.type === 'bulk' }">
+                <input type="radio" v-model="form.type" value="bulk" class="hidden-radio" />
+                <div class="option-content">
+                  <span class="option-title">Massal (Bulk)</span>
+                  <span class="option-desc">Kirim pesan massal dengan nama / data dinamis.</span>
+                </div>
+              </label>
+            </div>
         </div>
 
         <!-- Template Area -->
@@ -214,21 +214,21 @@
     </div>
 
     <!-- Test Modal -->
-    <div v-if="testBroadcastBc" class="modal-overlay" @click.self="testBroadcastBc = null">
-      <div class="modal glass-card confirm-modal" style="max-width: 450px;">
-        <div class="confirm-icon">🧪</div>
-        <h3>Kirim Test Broadcast</h3>
-        <p class="text-sm text-gray-600 mb-4">Pesan test akan langsung dikirim oleh WA bot tanpa menunggu jadwal schedule.</p>
-        
-        <div class="form-group text-left mb-3">
-          <label class="block text-xs font-semibold mb-1">Nama Target Test:</label>
-          <input type="text" v-model="testForm.name" class="form-control" />
-        </div>
-        
-        <div class="form-group text-left mb-4">
-          <label class="block text-xs font-semibold mb-1">Nomor WA Target Test (Kode Negara):</label>
-          <input type="text" v-model="testForm.number" class="form-control" />
-        </div>
+      <div v-if="testBroadcastBc" class="modal-overlay" @click.self="testBroadcastBc = null">
+        <div class="modal glass-card confirm-modal" style="max-width: 450px;">
+          <div class="confirm-icon">🧪</div>
+          <h3>Kirim Test Broadcast</h3>
+          <p class="text-sm text-gray-600 mb-4">Pesan test akan langsung dikirim oleh WA bot tanpa menunggu jadwal schedule.</p>
+          
+          <div class="form-group text-left mb-3">
+            <label class="block text-xs font-semibold mb-1">Nama Target Test:</label>
+            <input type="text" v-model="testForm.name" class="form-control" />
+          </div>
+          
+          <div class="form-group text-left mb-4">
+            <label class="block text-xs font-semibold mb-1">Nomor WA Target Test (Kode Negara):</label>
+            <input type="text" v-model="testForm.number" class="form-control" />
+          </div>
 
         <div class="modal-actions">
           <button class="btn-cancel" @click="testBroadcastBc = null">Batal</button>
@@ -240,17 +240,17 @@
     </div>
 
     <!-- Delete Confirm -->
-    <div v-if="deletingId" class="modal-overlay" @click.self="deletingId = null">
-      <div class="modal glass-card confirm-modal">
-        <div class="confirm-icon">🗑️</div>
-        <h3>Hapus Broadcast?</h3>
-        <p>Broadcast "<strong>{{ deletingTitle }}</strong>" dan riwayatnya akan dihapus permanen.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="deletingId = null">Batal</button>
-          <button class="btn-delete" @click="deleteBc" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus' }}</button>
+      <div v-if="deletingId" class="modal-overlay" @click.self="deletingId = null">
+        <div class="modal glass-card confirm-modal">
+          <div class="confirm-icon">🗑️</div>
+          <h3>Hapus Broadcast?</h3>
+          <p>Broadcast "<strong>{{ deletingTitle }}</strong>" dan riwayatnya akan dihapus permanen.</p>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="deletingId = null">Batal</button>
+            <button class="btn-delete" @click="deleteBc" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus' }}</button>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

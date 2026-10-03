@@ -44,29 +44,28 @@
 
     <!-- Edit Modal -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal glass-card animate-fadeInUp">
-        <div class="modal-header">
-          <h3>Edit Info Pengajar</h3>
-          <p class="modal-subtitle">Kelengkapan data diperlukan untuk dokumen SPTJM & LPJ</p>
-        </div>
-        
-        <form @submit.prevent="saveTeacher" class="modal-form">
-          <div class="modal-grid">
-            <div class="form-group">
-              <label class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
-              <input v-model="form.displayName" type="text" class="form-input" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">NIK (16 Digit) <span class="text-red-500">*</span></label>
-              <input v-model="form.nik" type="text" maxlength="16" class="form-input" placeholder="16 digit NIK" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Tempat Lahir</label>
-              <input v-model="form.birthPlace" type="text" class="form-input" placeholder="Kota/Kabupaten" />
-            </div>
-
+        <div class="modal glass-card animate-fadeInUp">
+          <div class="modal-header">
+            <h3>Edit Info Pengajar</h3>
+            <p class="modal-subtitle">Kelengkapan data diperlukan untuk dokumen SPTJM & LPJ</p>
+          </div>
+          
+          <form @submit.prevent="saveTeacher" class="modal-form">
+            <div class="modal-grid">
+              <div class="form-group">
+                <label class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
+                <input v-model="form.displayName" type="text" class="form-input" required />
+              </div>
+  
+              <div class="form-group">
+                <label class="form-label">NIK (16 Digit) <span class="text-red-500">*</span></label>
+                <input v-model="form.nik" type="text" maxlength="16" class="form-input" placeholder="16 digit NIK" />
+              </div>
+  
+              <div class="form-group">
+                <label class="form-label">Tempat Lahir</label>
+                <input v-model="form.birthPlace" type="text" class="form-input" placeholder="Kota/Kabupaten" />
+              </div>
             <div class="form-group">
               <label class="form-label">Tanggal Lahir</label>
               <input v-model="form.birthDate" type="date" class="form-input" />

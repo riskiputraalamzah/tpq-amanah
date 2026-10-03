@@ -88,126 +88,125 @@
     </div>
 
     <!-- Role Modal -->
-    <div v-if="showRoleModal" class="modal-overlay" @click.self="closeRoleModal">
-      <div class="modal glass-card animate-fadeInUp">
-        <h3>Ubah Role</h3>
-        <p>Mengubah role untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
-
-        <div class="form-group">
-          <label class="form-label">Role Baru:</label>
-          <select v-model="newRole" class="form-input form-select">
-            <option value="admin">Admin</option>
-            <option value="guru">Guru</option>
-            <option value="santri">Santri</option>
-          </select>
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeRoleModal">Batal</button>
-          <button class="btn btn-primary" @click="updateRole" :disabled="updating">
-            {{ updating ? 'Menyimpan...' : 'Simpan' }}
-          </button>
+      <div v-if="showRoleModal" class="modal-overlay" @click.self="closeRoleModal">
+        <div class="modal glass-card animate-fadeInUp">
+          <h3>Ubah Role</h3>
+          <p>Mengubah role untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+  
+          <div class="form-group">
+            <label class="form-label">Role Baru:</label>
+            <select v-model="newRole" class="form-input form-select">
+              <option value="admin">Admin</option>
+              <option value="guru">Guru</option>
+              <option value="santri">Santri</option>
+            </select>
+          </div>
+  
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeRoleModal">Batal</button>
+            <button class="btn btn-primary" @click="updateRole" :disabled="updating">
+              {{ updating ? 'Menyimpan...' : 'Simpan' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Delete Confirmation -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
-      <div class="modal glass-card animate-fadeInUp">
-        <h3>🗑️ Konfirmasi Hapus</h3>
-        <p>Apakah Anda yakin ingin menghapus user <strong>{{ selectedUser?.displayName }}</strong>?</p>
-        <p class="warning-text">Tindakan ini tidak dapat dibatalkan!</p>
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeDeleteModal">Batal</button>
-          <button class="btn btn-danger" @click="deleteUser" :disabled="deleting">
-            {{ deleting ? 'Menghapus...' : 'Hapus' }}
-          </button>
+      <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+        <div class="modal glass-card animate-fadeInUp">
+          <h3>🗑️ Konfirmasi Hapus</h3>
+          <p>Apakah Anda yakin ingin menghapus user <strong>{{ selectedUser?.displayName }}</strong>?</p>
+          <p class="warning-text">Tindakan ini tidak dapat dibatalkan!</p>
+  
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeDeleteModal">Batal</button>
+            <button class="btn btn-danger" @click="deleteUser" :disabled="deleting">
+              {{ deleting ? 'Menghapus...' : 'Hapus' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Permissions Modal -->
-    <div v-if="showPermissionsModal" class="modal-overlay" @click.self="closePermissionsModal">
-      <div class="modal glass-card animate-fadeInUp permissions-modal">
-        <h3>⚙️ Atur Permissions</h3>
-        <p>Mengatur akses khusus untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
-
-        <div class="form-group">
-          <label class="form-label">Nama Grup Menu:</label>
-          <input v-model="permissionsForm.menuGroupName" type="text" class="form-input"
-            placeholder="Contoh: Operator" />
-          <span class="form-hint">Nama menu yang akan muncul di sidebar guru</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Fitur yang Bisa Diakses:</label>
-          <div class="features-list">
-            <label v-for="feature in availableFeatures" :key="feature.id" class="feature-checkbox">
-              <input type="checkbox" :value="feature.id" v-model="permissionsForm.features" />
-              <div class="feature-info">
-                <span class="feature-label">{{ feature.label }}</span>
-                <span class="feature-desc">{{ feature.description }}</span>
-              </div>
-            </label>
+      <div v-if="showPermissionsModal" class="modal-overlay" @click.self="closePermissionsModal">
+        <div class="modal glass-card animate-fadeInUp permissions-modal">
+          <h3>⚙️ Atur Permissions</h3>
+          <p>Mengatur akses khusus untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+  
+          <div class="form-group">
+            <label class="form-label">Nama Grup Menu:</label>
+            <input v-model="permissionsForm.menuGroupName" type="text" class="form-input"
+              placeholder="Contoh: Operator" />
+            <span class="form-hint">Nama menu yang akan muncul di sidebar guru</span>
           </div>
-        </div>
-
-        <div class="current-permissions" v-if="selectedUser?.permissions?.features?.length">
-          <label class="form-label">Permissions Saat Ini:</label>
-          <div class="current-list">
-            <span class="permission-tag" v-for="f in selectedUser.permissions.features" :key="f">{{ getFeatureLabel(f)
-            }}</span>
+  
+          <div class="form-group">
+            <label class="form-label">Fitur yang Bisa Diakses:</label>
+            <div class="features-list">
+              <label v-for="feature in availableFeatures" :key="feature.id" class="feature-checkbox">
+                <input type="checkbox" :value="feature.id" v-model="permissionsForm.features" />
+                <div class="feature-info">
+                  <span class="feature-label">{{ feature.label }}</span>
+                  <span class="feature-desc">{{ feature.description }}</span>
+                </div>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closePermissionsModal">Batal</button>
-          <button class="btn btn-primary" @click="savePermissions" :disabled="savingPermissions">
-            {{ savingPermissions ? 'Menyimpan...' : 'Simpan Permissions' }}
-          </button>
+          <div class="current-permissions" v-if="selectedUser?.permissions?.features?.length">
+            <label class="form-label">Permissions Saat Ini:</label>
+            <div class="current-list">
+              <span class="permission-tag" v-for="f in selectedUser.permissions.features" :key="f">{{ getFeatureLabel(f) }}</span>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closePermissionsModal">Batal</button>
+            <button class="btn btn-primary" @click="savePermissions" :disabled="savingPermissions">
+              {{ savingPermissions ? 'Menyimpan...' : 'Simpan Permissions' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Credentials Modal -->
-    <div v-if="showCredentialsModal" class="modal-overlay" @click.self="closeCredentialsModal">
-      <div class="modal glass-card animate-fadeInUp credentials-modal">
-        <h3>🔑 Edit Credentials</h3>
-        <p>Mengubah credentials untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+      <div v-if="showCredentialsModal" class="modal-overlay" @click.self="closeCredentialsModal">
+        <div class="modal glass-card animate-fadeInUp credentials-modal">
+          <h3>🔑 Edit Credentials</h3>
+          <p>Mengubah credentials untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+  
+          <div class="form-group">
+            <label class="form-label">Display Name:</label>
+            <input v-model="credentialsForm.displayName" type="text" class="form-input" placeholder="Nama lengkap" />
+          </div>
+  
+          <div class="form-group">
+            <label class="form-label">Username:</label>
+            <input v-model="credentialsForm.username" type="text" class="form-input" placeholder="Username" />
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Display Name:</label>
-          <input v-model="credentialsForm.displayName" type="text" class="form-input" placeholder="Nama lengkap" />
-        </div>
+          <div class="form-group">
+            <label class="form-label">Password Baru: <span class="optional">(kosongkan jika tidak diubah)</span></label>
+            <input v-model="credentialsForm.password" type="password" class="form-input"
+              placeholder="Minimal 6 karakter" />
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Username:</label>
-          <input v-model="credentialsForm.username" type="text" class="form-input" placeholder="Username" />
-        </div>
+          <div class="form-group">
+            <label class="form-label">Konfirmasi Password:</label>
+            <input v-model="credentialsForm.confirmPassword" type="password" class="form-input"
+              placeholder="Ulangi password baru" />
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Password Baru: <span class="optional">(kosongkan jika tidak diubah)</span></label>
-          <input v-model="credentialsForm.password" type="password" class="form-input"
-            placeholder="Minimal 6 karakter" />
-        </div>
+          <p v-if="credentialsError" class="error-text">{{ credentialsError }}</p>
 
-        <div class="form-group">
-          <label class="form-label">Konfirmasi Password:</label>
-          <input v-model="credentialsForm.confirmPassword" type="password" class="form-input"
-            placeholder="Ulangi password baru" />
-        </div>
-
-        <p v-if="credentialsError" class="error-text">{{ credentialsError }}</p>
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeCredentialsModal">Batal</button>
-          <button class="btn btn-primary" @click="saveCredentials" :disabled="savingCredentials">
-            {{ savingCredentials ? 'Menyimpan...' : 'Simpan Credentials' }}
-          </button>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeCredentialsModal">Batal</button>
+            <button class="btn btn-primary" @click="saveCredentials" :disabled="savingCredentials">
+              {{ savingCredentials ? 'Menyimpan...' : 'Simpan Credentials' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

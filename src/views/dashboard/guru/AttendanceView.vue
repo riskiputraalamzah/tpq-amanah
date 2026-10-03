@@ -241,39 +241,39 @@
     </div>
 
     <!-- Update Modal -->
-    <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
-      <div class="modal glass-card">
-        <h3>Ubah Status Absensi</h3>
-        <p class="modal-date">{{ dayName }}, {{ dateNumber }} {{ monthYear }}</p>
-
-        <div class="form-group">
-          <label class="form-label">Status Kehadiran</label>
-          <div class="status-buttons modal-status">
-            <button class="status-btn hadir" :class="{ active: updateForm.status === 'hadir' }"
-              @click="updateForm.status = 'hadir'">
-              <span class="btn-icon">✓</span>
-              <span class="btn-text">HADIR</span>
-            </button>
-            <button class="status-btn tidak-hadir" :class="{ active: updateForm.status === 'tidak_hadir' }"
-              @click="updateForm.status = 'tidak_hadir'">
-              <span class="btn-icon">✗</span>
-              <span class="btn-text">TIDAK HADIR</span>
+      <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
+        <div class="modal glass-card">
+          <h3>Ubah Status Absensi</h3>
+          <p class="modal-date">{{ dayName }}, {{ dateNumber }} {{ monthYear }}</p>
+  
+          <div class="form-group">
+            <label class="form-label">Status Kehadiran</label>
+            <div class="status-buttons modal-status">
+              <button class="status-btn hadir" :class="{ active: updateForm.status === 'hadir' }"
+                @click="updateForm.status = 'hadir'">
+                <span class="btn-icon">✓</span>
+                <span class="btn-text">HADIR</span>
+              </button>
+              <button class="status-btn tidak-hadir" :class="{ active: updateForm.status === 'tidak_hadir' }"
+                @click="updateForm.status = 'tidak_hadir'">
+                <span class="btn-icon">✗</span>
+                <span class="btn-text">TIDAK HADIR</span>
+              </button>
+            </div>
+          </div>
+  
+          <div class="form-group">
+            <label class="form-label">Catatan (Opsional)</label>
+            <input v-model="updateForm.notes" type="text" class="form-input" placeholder="Tambahkan catatan..." />
+          </div>
+  
+          <div class="modal-actions">
+            <button class="btn btn-secondary" @click="closeUpdateModal">Batal</button>
+            <button class="btn btn-primary" @click="submitUpdate" :disabled="updating">
+              {{ updating ? 'Menyimpan...' : 'Simpan Perubahan' }}
             </button>
           </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label">Catatan (Opsional)</label>
-          <input v-model="updateForm.notes" type="text" class="form-input" placeholder="Tambahkan catatan..." />
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeUpdateModal">Batal</button>
-          <button class="btn btn-primary" @click="submitUpdate" :disabled="updating">
-            {{ updating ? 'Menyimpan...' : 'Simpan Perubahan' }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>

@@ -57,7 +57,56 @@
               {{ c.name }}
             </option>
           </select>
+          <select v-model="statusFilter" class="form-input filter-select">
+            <option value="">Semua Status</option>
+            <option value="aktif">Aktif</option>
+            <option value="nonaktif">Nonaktif</option>
+            <option value="lulus">Lulus</option>
+          </select>
         </div>
+
+        <!-- Conflict Modal (Fixed Viewport Center via Teleport to body) -->
+        <Teleport to="body">
+          <div v-if="conflictSantri" class="modal-overlay" @click.self="conflictSantri = null">
+            <div class="modal glass-card conflict-modal-card">
+              <div class="modal-header-danger">
+                <span class="modal-danger-icon">⚠️</span>
+                <div>
+                  <h3 class="modal-title">Santri Memiliki Riwayat KBM / Absensi</h3>
+                  <p class="modal-subtitle">Santri: <strong>{{ conflictSantri.name }}</strong></p>
+                </div>
+              </div>
+              <p class="modal-text">
+                Santri ini memiliki catatan riwayat di sistem. Apakah data ini data uji coba (test) yang ingin dibersihkan sepenuhnya, atau santri yang ingin dinonaktifkan?
+              </p>
+              <div class="modal-action-buttons">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  :disabled="saving"
+                  @click="softDeleteSantri(conflictSantri)"
+                >
+                  📁 Nonaktifkan Saja (Soft Delete)
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  :disabled="saving"
+                  @click="removeSantri(conflictSantri, true)"
+                >
+                  🗑️ Hapus Permanen &amp; Bersihkan Riwayat Test
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  @click="conflictSantri = null"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
 
         <div v-if="listError" class="alert alert-error">{{ listError }}</div>
         <div v-else-if="filtered.length === 0" class="alert alert-warning">
@@ -78,9 +127,22 @@
             <tbody>
               <tr v-for="(row, index) in filtered" :key="row.id">
                 <td>{{ index + 1 }}</td>
-                <td>{{ row.name }}</td>
                 <td>
                   <template v-if="editingId === row.id">
+                    <input
+                      v-model="editingName"
+                      type="text"
+                      class="form-input editing-name-input"
+                      placeholder="Nama santri..."
+                      required
+                    />
+                  </template>
+                  <template v-else>
+                    {{ row.name }}
+                  </template>
+                </td>
+                <td>
+                  <template v-if="editingId === row.id && adminMode">
                     <select v-model="editingLevel" class="form-input status-select">
                       <option value="">Belum ditentukan</option>
                       <optgroup label="JILID">
@@ -99,10 +161,23 @@
                     {{ levelName(row.currentClassId) }}
                   </template>
                 </td>
-                <td>{{ row.status || "-" }}</td>
+                <td>
+                  <template v-if="editingId === row.id && adminMode">
+                    <select v-model="editingStatus" class="form-input status-select">
+                      <option value="aktif">Aktif</option>
+                      <option value="nonaktif">Nonaktif</option>
+                      <option value="lulus">Lulus</option>
+                    </select>
+                  </template>
+                  <template v-else>
+                    <span class="badge" :class="statusBadgeClass(row.status)">
+                      {{ statusLabel(row.status) }}
+                    </span>
+                  </template>
+                </td>
                 <td>
                   <template v-if="editingId === row.id">
-                    <button type="button" class="action-link" :disabled="saving" @click="saveLevel(row)">
+                    <button type="button" class="action-link" :disabled="saving" @click="saveSantri(row)">
                       {{ saving ? "Menyimpan..." : "Simpan" }}
                     </button>
                     <button type="button" class="action-link muted" @click="cancelEdit">
@@ -110,7 +185,7 @@
                     </button>
                   </template>
                   <button v-else-if="canEdit(row)" type="button" class="action-link" @click="startEdit(row)">
-                    Ubah
+                    {{ adminMode ? "Ubah" : "Ubah Nama" }}
                   </button>
                   <button
                     v-if="adminMode && editingId !== row.id"
@@ -134,6 +209,10 @@
 import { ref, computed, onMounted } from "vue";
 import api from "@/services/api";
 import { useAuthStore } from "@/stores/auth";
+import { useToast, useConfirm } from "@/composables/useToast";
+
+const { success, error: showError, warning } = useToast();
+const { confirm } = useConfirm();
 
 const props = defineProps({
   title: { type: String, default: "Kelola Santri" },
@@ -144,8 +223,7 @@ const props = defineProps({
 const authStore = useAuthStore();
 const currentUserId = computed(() => authStore.user?.id || "");
 
-const canEdit = (row) =>
-  props.adminMode || (!!row.createdBy && row.createdBy === currentUserId.value);
+const canEdit = () => true;
 
 const loading = ref(true);
 const adding = ref(false);
@@ -154,22 +232,74 @@ const santri = ref([]);
 const classes = ref([]);
 const search = ref("");
 const levelFilter = ref("");
+const statusFilter = ref("");
 const newName = ref("");
 const newLevel = ref("");
 const formMessage = ref("");
 const formOk = ref(false);
 const listError = ref("");
 const editingId = ref(null);
+const editingName = ref("");
 const editingLevel = ref("");
+const editingStatus = ref("aktif");
+const conflictSantri = ref(null);
 
-const removeSantri = async (row) => {
-  if (!confirm("Hapus " + row.name + " dari data santri?")) return;
+const statusLabel = (status) => {
+  const s = String(status || "aktif").toLowerCase();
+  if (s === "nonaktif" || s === "keluar") return "Nonaktif";
+  if (s === "lulus") return "Lulus";
+  return "Aktif";
+};
+
+const statusBadgeClass = (status) => {
+  const s = String(status || "aktif").toLowerCase();
+  if (s === "nonaktif" || s === "keluar") return "badge-warning";
+  if (s === "lulus") return "badge-info";
+  return "badge-success";
+};
+
+const removeSantri = async (row, force = false) => {
+  if (!force) {
+    const ok = await confirm(`Apakah Anda yakin ingin menghapus santri "${row.name}"?`, {
+      title: "Hapus Santri",
+      type: "danger",
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+    });
+    if (!ok) return;
+  }
   listError.value = "";
   try {
-    await api.delete("/santri/" + row.id);
+    const url = force ? `/santri/${row.id}?force=true` : `/santri/${row.id}`;
+    await api.delete(url);
     santri.value = santri.value.filter((item) => item.id !== row.id);
+    conflictSantri.value = null;
+    success(`Santri "${row.name}" berhasil dihapus.`);
   } catch (error) {
-    listError.value = error.response?.data?.error || "Gagal menghapus data santri.";
+    if (error.response?.status === 409) {
+      conflictSantri.value = row;
+    } else {
+      const msg = error.response?.data?.error || "Gagal menghapus data santri.";
+      listError.value = msg;
+      showError(msg);
+    }
+  }
+};
+
+const softDeleteSantri = async (row) => {
+  listError.value = "";
+  saving.value = true;
+  try {
+    await api.delete(`/santri/${row.id}?soft=true`);
+    row.status = "nonaktif";
+    conflictSantri.value = null;
+    success(`Santri "${row.name}" berhasil dinonaktifkan.`);
+  } catch (error) {
+    const msg = error.response?.data?.error || "Gagal menonaktifkan santri.";
+    listError.value = msg;
+    showError(msg);
+  } finally {
+    saving.value = false;
   }
 };
 
@@ -190,8 +320,15 @@ const filtered = computed(() => {
   const q = search.value.trim().toLowerCase();
   return santri.value.filter((row) => {
     if (q && !String(row.name || "").toLowerCase().includes(q)) return false;
-    if (levelFilter.value === "__none") return !row.currentClassId;
-    if (levelFilter.value) return String(row.currentClassId || "") === levelFilter.value;
+    if (levelFilter.value === "__none") {
+      if (row.currentClassId) return false;
+    } else if (levelFilter.value) {
+      if (String(row.currentClassId || "") !== levelFilter.value) return false;
+    }
+    if (statusFilter.value) {
+      const rowStatus = String(row.status || "aktif").toLowerCase();
+      if (rowStatus !== statusFilter.value) return false;
+    }
     return true;
   });
 });
@@ -214,25 +351,32 @@ const fetchData = async () => {
 };
 
 const addSantri = async () => {
-  if (!newName.value.trim() || adding.value) return;
+  const trimmed = newName.value.trim();
+  if (!trimmed || adding.value) return;
   adding.value = true;
   formMessage.value = "";
   try {
-    const payload = { name: newName.value.trim() };
+    const payload = { name: trimmed };
     if (newLevel.value) payload.currentClassId = newLevel.value;
     const res = await api.post("/santri", payload);
     if (!res.data.alreadyExists) {
       santri.value.push(res.data);
     }
     formOk.value = true;
-    formMessage.value = res.data.alreadyExists
-      ? "Santri dengan nama ini sudah terdaftar."
-      : "Santri berhasil ditambahkan.";
+    if (res.data.alreadyExists) {
+      formMessage.value = "Santri dengan nama ini sudah terdaftar.";
+      warning(`Santri "${trimmed}" sudah terdaftar.`);
+    } else {
+      formMessage.value = "Santri berhasil ditambahkan.";
+      success(`Santri "${trimmed}" berhasil ditambahkan!`);
+    }
     newName.value = "";
     newLevel.value = "";
   } catch (error) {
     formOk.value = false;
-    formMessage.value = error.response?.data?.error || "Gagal menambahkan santri.";
+    const msg = error.response?.data?.error || "Gagal menambahkan santri.";
+    formMessage.value = msg;
+    showError(msg);
   } finally {
     adding.value = false;
   }
@@ -240,25 +384,50 @@ const addSantri = async () => {
 
 const startEdit = (row) => {
   editingId.value = row.id;
+  editingName.value = row.name || "";
   editingLevel.value = row.currentClassId ? String(row.currentClassId) : "";
+  editingStatus.value = row.status || "aktif";
   listError.value = "";
 };
 
 const cancelEdit = () => {
   editingId.value = null;
+  editingName.value = "";
   editingLevel.value = "";
+  editingStatus.value = "aktif";
 };
 
-const saveLevel = async (row) => {
+const saveSantri = async (row) => {
   if (saving.value) return;
+  const trimmedName = editingName.value.trim();
+  if (!trimmedName || trimmedName.length < 2) {
+    showError("Nama santri wajib diisi (minimal 2 karakter).");
+    return;
+  }
   saving.value = true;
   try {
-    await api.put(`/santri/${row.id}`, { currentClassId: editingLevel.value || null });
-    row.currentClassId = editingLevel.value || null;
+    const payload = {
+      name: trimmedName,
+    };
+    if (props.adminMode) {
+      payload.currentClassId = editingLevel.value || null;
+      payload.status = editingStatus.value;
+    }
+    const res = await api.put(`/santri/${row.id}`, payload);
+    row.name = res.data.name || trimmedName;
+    if (props.adminMode) {
+      row.currentClassId = editingLevel.value || null;
+      row.status = editingStatus.value;
+    }
     editingId.value = null;
+    editingName.value = "";
     editingLevel.value = "";
+    editingStatus.value = "aktif";
+    success(`Data santri "${row.name}" berhasil diperbarui.`);
   } catch (error) {
-    listError.value = error.response?.data?.error || "Gagal menyimpan Jilid / Marhalah.";
+    const msg = error.response?.data?.error || "Gagal menyimpan perubahan santri.";
+    listError.value = msg;
+    showError(msg);
   } finally {
     saving.value = false;
   }
@@ -424,5 +593,120 @@ onMounted(fetchData);
   background: rgba(255, 152, 0, 0.1);
   color: #ef6c00;
   border: 1px solid rgba(255, 152, 0, 0.2);
+}
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+}
+.badge-success {
+  background: rgba(46, 125, 50, 0.12);
+  color: #2e7d32;
+  border: 1px solid rgba(46, 125, 50, 0.25);
+}
+.badge-warning {
+  background: rgba(239, 108, 0, 0.12);
+  color: #e65100;
+  border: 1px solid rgba(239, 108, 0, 0.25);
+}
+.badge-info {
+  background: rgba(2, 136, 209, 0.12);
+  color: #0277bd;
+  border: 1px solid rgba(2, 136, 209, 0.25);
+}
+.conflict-modal-card {
+  max-width: 520px;
+  width: 92%;
+  padding: 28px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal-header-danger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.modal-danger-icon {
+  font-size: 2.2rem;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 50%;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #92400e;
+}
+.modal-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+.modal-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #4b5563;
+  margin-bottom: 24px;
+}
+.modal-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .modal-action-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+}
+.btn-secondary {
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+.btn-secondary:hover {
+  background: var(--gray-300);
+}
+.btn-danger {
+  background: #d32f2f;
+  color: white;
+}
+.btn-danger:hover {
+  background: #b71c1c;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-600);
+  border: 1px solid var(--gray-300);
+}
+.btn-ghost:hover {
+  background: var(--gray-100);
 }
 </style>

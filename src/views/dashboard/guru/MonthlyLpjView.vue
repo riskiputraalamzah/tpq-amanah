@@ -20,9 +20,30 @@
       </button>
     </div>
 
-    <div v-else-if="notEligible" class="glass-card">
-      <div class="alert alert-warning">Anda tidak terdaftar sebagai peserta LPJ periode ini. Hubungi admin.</div>
-    </div>
+    <!-- Non-Eligible & No Reports Empty State -->
+    <section v-else-if="notEligible && reports.length === 0" class="glass-card text-center py-12 px-6 my-6">
+      <div class="empty-icon-circle mx-auto mb-4" style="width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </svg>
+      </div>
+      <h2 style="font-size: 1.35rem; font-weight: 700; color: #1f2937; margin-bottom: 0.5rem;">Fitur Khusus Guru Terpilih LPJ</h2>
+      <p style="color: #6b7280; font-size: 0.95rem; max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+        Halaman ini khusus diperuntukkan bagi Guru yang dipilih oleh Admin untuk menyusun Laporan Pertanggungjawaban (LPJ). Akun Anda saat ini tidak terdaftar sebagai peserta LPJ, silakan langsung menuju aktivitas KBM harian.
+      </p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <router-link to="/dashboard/kbm" class="btn btn-primary">
+          Buka KBM / Mengajar
+        </router-link>
+        <router-link to="/dashboard" class="btn btn-secondary">
+          Kembali ke Dashboard
+        </router-link>
+      </div>
+    </section>
 
     <template v-else>
       <!-- Active Period Hero Banner -->
@@ -43,6 +64,10 @@
             Laporan Pertanggungjawaban (LPJ) Kinerja Mengajar & Operasional Guru bulan berjalan.
           </p>
 
+          <div v-if="notEligible" class="alert alert-warning mt-3">
+            Anda belum terdaftar sebagai peserta LPJ untuk periode aktif {{ periodLabel(activePeriod) }}. Anda dapat melihat atau melengkapi dokumen LPJ periode sebelumnya pada arsip di bawah jika ditetapkan oleh Admin.
+          </div>
+
           <!-- Current Month Progress Preview -->
           <div v-if="activeReport" class="banner-progress-card">
             <div class="banner-progress-header">
@@ -61,6 +86,7 @@
 
         <div class="banner-cta-container">
           <button
+            v-if="!notEligible || activeReport"
             type="button"
             class="btn-open-active"
             :disabled="opening"
@@ -86,40 +112,52 @@
         <div class="lpj-toolbar">
           <div class="toolbar-title-box">
             <h2>Daftar Dokumen LPJ</h2>
-            <span class="report-count-tag">{{ filteredReports.length }} Laporan</span>
+            <span class="report-count-tag">{{ sortedReports.length }} Laporan</span>
           </div>
 
-          <!-- Archive Filter Controls -->
-          <div class="archive-filter-box">
-            <div class="filter-input-wrapper">
-              <label for="lpj-period" class="filter-label">Pilih Periode:</label>
-              <input
-                id="lpj-period"
-                v-model="selectedMonth"
-                type="month"
-                class="form-input period-input-compact"
-              />
+          <!-- Quick Month Opener in Toolbar -->
+          <div class="toolbar-open-period">
+            <div class="toolbar-input-group">
+              <label for="toolbar-month-select" class="toolbar-open-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span>Buka LPJ Bulan Lain:</span>
+              </label>
+              <select
+                id="toolbar-month-select"
+                v-model="targetPeriod"
+                class="form-select form-select-sm period-month-select"
+              >
+                <option value="" disabled>-- Pilih Periode Bulan --</option>
+                <option
+                  v-for="opt in monthOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}{{ opt.hasReport ? " (Sudah ada di daftar)" : "" }}
+                </option>
+              </select>
               <button
                 type="button"
-                class="btn-filter-apply"
-                @click="filterPeriod = selectedMonth"
+                class="btn btn-primary btn-sm btn-toolbar-action"
+                :disabled="opening || !targetPeriod"
+                @click="openPeriod(targetPeriod)"
               >
-                Tampilkan
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>{{ opening ? "Membuka..." : "Buka LPJ" }}</span>
               </button>
             </div>
-
-            <button
-              v-if="filterPeriod !== activePeriod"
-              type="button"
-              class="btn-reset-filter"
-              @click="resetToActivePeriod"
-            >
-              ✕ Tampilkan Bulan Berjalan
-            </button>
           </div>
         </div>
 
-        <div v-if="filteredReports.length === 0" class="empty-state">
+        <div v-if="sortedReports.length === 0" class="empty-state">
           <div class="empty-icon-circle">
             <svg
               width="40"
@@ -135,32 +173,39 @@
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
-          <h3>Belum Ada Laporan</h3>
-          <p class="text-muted">Tidak ada dokumen LPJ guru pada periode {{ periodLabel(filterPeriod) }}.</p>
+          <h3>Belum Ada Dokumen LPJ</h3>
+          <p class="text-muted">
+            Belum ada dokumen LPJ yang dibuat. Gunakan tombol di atas untuk membuka LPJ periode berjalan, atau pilih periode bulan di bawah untuk membuka LPJ sebelumnya.
+          </p>
           <div class="empty-actions-row">
+            <select
+              v-model="targetPeriod"
+              class="form-select form-select-sm"
+              style="min-width: 220px;"
+            >
+              <option value="" disabled>-- Pilih Periode Bulan --</option>
+              <option
+                v-for="opt in monthOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
+            </select>
             <button
-              v-if="filterPeriod === activePeriod"
               type="button"
               class="btn btn-primary"
-              :disabled="opening"
-              @click="openCurrent"
+              :disabled="opening || !targetPeriod"
+              @click="openPeriod(targetPeriod)"
             >
-              {{ opening ? "Membuka..." : "Buka LPJ Bulan Ini" }}
-            </button>
-            <button
-              v-else
-              type="button"
-              class="btn btn-secondary"
-              @click="resetToActivePeriod"
-            >
-              Kembali ke Bulan Berjalan
+              {{ opening ? "Membuka..." : "Buka LPJ Bulan Terpilih" }}
             </button>
           </div>
         </div>
 
         <div v-else class="report-grid">
           <article
-            v-for="report in filteredReports"
+            v-for="report in sortedReports"
             :key="report.id"
             class="report-card"
             :class="{ 'is-active-period': report.period === activePeriod }"
@@ -216,6 +261,61 @@
               </svg>
             </button>
           </article>
+
+          <!-- Card to open other/previous months -->
+          <article class="report-card add-period-card">
+            <div class="report-head">
+              <div class="report-period-title">
+                <div class="calendar-icon-badge add-icon-badge">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <line x1="12" y1="13" x2="12" y2="17" />
+                    <line x1="10" y1="15" x2="14" y2="15" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.05rem;">Buka LPJ Bulan Lain</h3>
+                  <span class="add-period-indicator">Periode Sebelumnya</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="add-period-desc">
+              Pilih bulan sebelumnya yang ingin Anda buka atau mulai pengerjaannya.
+            </p>
+
+            <div class="add-period-form">
+              <select
+                v-model="targetPeriod"
+                class="form-select form-select-sm card-select-period"
+              >
+                <option value="" disabled>-- Pilih Periode Bulan --</option>
+                <option
+                  v-for="opt in monthOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}{{ opt.hasReport ? " (Sudah ada di daftar)" : "" }}
+                </option>
+              </select>
+
+              <button
+                type="button"
+                class="btn-open-detail btn-open-target-period"
+                :disabled="opening || !targetPeriod"
+                @click="openPeriod(targetPeriod)"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>{{ opening ? "Membuka..." : "Buka Dokumen LPJ" }}</span>
+              </button>
+            </div>
+          </article>
         </div>
       </section>
     </template>
@@ -229,32 +329,51 @@ import api from "@/services/api";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import { currentPeriod, periodLabel, statusLabel } from "@/utils/lpjState";
 import { fetchMyEligibility } from "@/utils/lpjEligibility";
+import { useToast } from "@/composables/useToast";
 
 const router = useRouter();
+const { success, error: showError, warning } = useToast();
+
 const loading = ref(true);
 const loadError = ref("");
 const opening = ref(false);
 const notEligible = ref(false);
+const targetPeriod = ref("");
 
 const reports = ref([]);
 const completenessMap = ref({});
 const activePeriod = ref(currentPeriod());
-const filterPeriod = ref(currentPeriod());
-const selectedMonth = ref(currentPeriod());
 
 const activeReport = computed(() => {
   return reports.value.find((r) => r.period === activePeriod.value);
 });
 
-const filteredReports = computed(() => {
-  if (!filterPeriod.value) return reports.value;
-  return reports.value.filter((r) => r.period === filterPeriod.value);
+const sortedReports = computed(() => {
+  return [...reports.value].sort((a, b) => (b.period || "").localeCompare(a.period || ""));
 });
 
-const resetToActivePeriod = () => {
-  filterPeriod.value = activePeriod.value;
-  selectedMonth.value = activePeriod.value;
-};
+const monthOptions = computed(() => {
+  const options = [];
+  const base = activePeriod.value || currentPeriod();
+  const [baseYear, baseMonth] = base.split("-").map(Number);
+
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(baseYear, baseMonth - 1 - i, 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const val = `${y}-${m}`;
+    const label = periodLabel(val);
+    const isCurrent = val === activePeriod.value;
+    const hasReport = reports.value.some((r) => r.period === val);
+
+    options.push({
+      value: val,
+      label: isCurrent ? `${label} (Bulan Berjalan)` : label,
+      hasReport,
+    });
+  }
+  return options;
+});
 
 const statusClass = (status) => {
   if (status === "approved") return "badge-success";
@@ -301,18 +420,13 @@ const fetchData = async () => {
     } catch {
       activePeriod.value = currentPeriod();
     }
-    filterPeriod.value = activePeriod.value;
-    selectedMonth.value = activePeriod.value;
     notEligible.value = false;
     try {
       notEligible.value = !(await fetchMyEligibility(activePeriod.value));
     } catch {
       notEligible.value = false;
     }
-    if (notEligible.value) {
-      reports.value = [];
-      return;
-    }
+
     const res = await api.get("/ljp/reports");
     reports.value = Array.isArray(res.data) ? res.data : [];
     await Promise.all(reports.value.map(fetchCompleteness));
@@ -323,16 +437,43 @@ const fetchData = async () => {
   }
 };
 
-const openCurrent = async () => {
+const openPeriod = async (targetPeriodVal) => {
+  if (!targetPeriodVal) {
+    warning("Silakan pilih bulan yang ingin dibuka terlebih dahulu.");
+    return;
+  }
+
+  // Check if report already exists in current list
+  const existing = reports.value.find((r) => r.period === targetPeriodVal);
+  if (existing) {
+    router.push(`/dashboard/lpj/${existing.id}`);
+    return;
+  }
+
   opening.value = true;
   try {
-    const res = await api.post("/ljp/reports", { period: activePeriod.value });
-    router.push(`/dashboard/lpj/${res.data.id}`);
+    const res = await api.post("/ljp/reports", { period: targetPeriodVal });
+    success(`Dokumen LPJ ${periodLabel(targetPeriodVal)} berhasil dibuka!`);
+    if (res.data && res.data.id) {
+      if (!reports.value.some((r) => r.id === res.data.id)) {
+        reports.value.push(res.data);
+      }
+      router.push(`/dashboard/lpj/${res.data.id}`);
+    }
   } catch (error) {
-    loadError.value = error.response?.data?.error || "Gagal membuka LPJ bulan ini.";
+    const errMsg = error.response?.data?.error || `Gagal membuka LPJ periode ${periodLabel(targetPeriodVal)}. Pastikan Anda terdaftar sebagai peserta LPJ pada periode tersebut.`;
+    showError(errMsg);
   } finally {
     opening.value = false;
   }
+};
+
+const openCurrent = async () => {
+  if (activeReport.value) {
+    router.push(`/dashboard/lpj/${activeReport.value.id}`);
+    return;
+  }
+  await openPeriod(activePeriod.value);
 };
 
 onMounted(fetchData);
@@ -606,74 +747,6 @@ onMounted(fetchData);
   border: 1px solid var(--gray-200, #e5e7eb);
 }
 
-.archive-filter-box {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.filter-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--gray-700, #374151);
-  white-space: nowrap;
-}
-
-.period-input-compact {
-  padding: 7px 12px;
-  border: 1px solid var(--gray-300, #d1d5db);
-  border-radius: 8px;
-  font-size: 0.88rem;
-  outline: none;
-  background: #ffffff;
-  color: var(--gray-800, #1f2937);
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.period-input-compact:focus {
-  border-color: var(--primary, #2e7d32);
-  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.12);
-}
-
-.btn-filter-apply {
-  padding: 8px 16px;
-  background: var(--gray-800, #1f2937);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.btn-filter-apply:hover {
-  background: #111827;
-}
-
-.btn-reset-filter {
-  padding: 8px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-reset-filter:hover {
-  background: rgba(239, 68, 68, 0.15);
-}
-
 /* --- Empty State --- */
 .empty-state {
   display: flex;
@@ -943,6 +1016,137 @@ onMounted(fetchData);
   margin-top: 1rem;
 }
 
+/* --- Quick Month Opener in Toolbar --- */
+.toolbar-open-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-open-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700, #374151);
+  white-space: nowrap;
+}
+
+.period-month-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-300, #d1d5db);
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-800, #1f2937);
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.period-month-select:focus {
+  outline: none;
+  border-color: var(--primary, #2e7d32);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+.btn-toolbar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.84rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* --- Add / Buka Periode Lain Card --- */
+.add-period-card {
+  border: 2px dashed rgba(46, 125, 50, 0.35);
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.45) 0%, #ffffff 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.add-period-card:hover {
+  border-color: var(--primary, #2e7d32);
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.8) 0%, #ffffff 100%);
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.1);
+  transform: translateY(-3px);
+}
+
+.add-icon-badge {
+  background: rgba(46, 125, 50, 0.12) !important;
+  color: var(--primary, #2e7d32) !important;
+}
+
+.add-period-indicator {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gray-500, #6b7280);
+  margin-top: 2px;
+}
+
+.add-period-desc {
+  font-size: 0.85rem;
+  color: var(--gray-600, #4b5563);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.add-period-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.card-select-period {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-300, #d1d5db);
+  background: #ffffff;
+  font-size: 0.85rem;
+  color: var(--gray-800, #1f2937);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-select-period:focus {
+  outline: none;
+  border-color: var(--primary, #2e7d32);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+.btn-open-target-period {
+  background: var(--primary, #2e7d32) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #2e7d32) !important;
+}
+
+.btn-open-target-period:hover:not(:disabled) {
+  background: var(--primary-dark, #1b5e20) !important;
+  border-color: var(--primary-dark, #1b5e20) !important;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+}
+
+.btn-open-target-period:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* --- Mobile Responsive Tweaks --- */
 @media (max-width: 640px) {
   .lpj-toolbar {
@@ -951,26 +1155,16 @@ onMounted(fetchData);
     gap: 12px;
   }
 
-  .archive-filter-box {
+  .toolbar-open-period,
+  .toolbar-input-group {
     flex-direction: column;
     align-items: stretch;
     width: 100%;
   }
 
-  .filter-input-wrapper {
-    flex-direction: column;
-    align-items: stretch;
+  .period-month-select,
+  .btn-toolbar-action {
     width: 100%;
-  }
-
-  .period-input-compact {
-    width: 100%;
-  }
-
-  .btn-filter-apply,
-  .btn-reset-filter {
-    width: 100%;
-    text-align: center;
   }
 
   .btn-open-active {

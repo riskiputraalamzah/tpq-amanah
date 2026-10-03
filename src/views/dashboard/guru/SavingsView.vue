@@ -264,78 +264,78 @@
     </div><!-- /.books-grid -->
 
     <!-- Create/Edit Modal -->
-    <div v-if="showFormModal" class="modal-overlay" @click.self="closeFormModal">
-      <div class="modal glass-card">
-        <div class="modal-header">
-          <h3>{{ editingBook ? 'Edit Buku Tabungan' : 'Buat Buku Tabungan Baru' }}</h3>
-          <button class="close-btn" @click="closeFormModal">×</button>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Judul Buku *</label>
-          <input v-model="form.title" type="text" class="form-input" placeholder="cth: Tabungan Ramadhan 2026" maxlength="100" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Deskripsi (Opsional)</label>
-          <textarea v-model="form.description" class="form-input" rows="3"
-            placeholder="Catatan tambahan tentang buku tabungan ini..."></textarea>
-        </div>
-        <!-- Publish toggle hanya saat buat baru atau edit buku milik sendiri -->
-        <div class="form-group" v-if="!editingBook || editingBook.createdBy === authStore.user?.id">
-          <label class="publish-toggle-label">
-            <span class="ptl-text">
-              <strong>{{ form.isPublished ? '🌐 Dipublish' : '🔒 Pribadi' }}</strong>
-              <span>{{ form.isPublished ? 'Semua guru bisa melihat & menginput data' : 'Hanya Anda yang bisa melihat buku ini' }}</span>
-            </span>
-            <button
-              type="button"
-              class="toggle-switch"
-              :class="{ on: form.isPublished }"
-              @click="form.isPublished = !form.isPublished"
-            >
-              <span class="toggle-knob"></span>
+      <div v-if="showFormModal" class="modal-overlay" @click.self="closeFormModal">
+        <div class="modal glass-card">
+          <div class="modal-header">
+            <h3>{{ editingBook ? 'Edit Buku Tabungan' : 'Buat Buku Tabungan Baru' }}</h3>
+            <button class="close-btn" @click="closeFormModal">×</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Judul Buku *</label>
+            <input v-model="form.title" type="text" class="form-input" placeholder="cth: Tabungan Ramadhan 2026" maxlength="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deskripsi (Opsional)</label>
+            <textarea v-model="form.description" class="form-input" rows="3"
+              placeholder="Catatan tambahan tentang buku tabungan ini..."></textarea>
+          </div>
+          <!-- Publish toggle hanya saat buat baru atau edit buku milik sendiri -->
+          <div class="form-group" v-if="!editingBook || editingBook.createdBy === authStore.user?.id">
+            <label class="publish-toggle-label">
+              <span class="ptl-text">
+                <strong>{{ form.isPublished ? '🌐 Dipublish' : '🔒 Pribadi' }}</strong>
+                <span>{{ form.isPublished ? 'Semua guru bisa melihat & menginput data' : 'Hanya Anda yang bisa melihat buku ini' }}</span>
+              </span>
+              <button
+                type="button"
+                class="toggle-switch"
+                :class="{ on: form.isPublished }"
+                @click="form.isPublished = !form.isPublished"
+              >
+                <span class="toggle-knob"></span>
+              </button>
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="closeFormModal">Batal</button>
+            <button class="btn-save" @click="saveBook" :disabled="saving">
+              {{ saving ? 'Menyimpan...' : (editingBook ? 'Simpan Perubahan' : 'Buat Buku') }}
             </button>
-          </label>
+          </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="closeFormModal">Batal</button>
-          <button class="btn-save" @click="saveBook" :disabled="saving">
-            {{ saving ? 'Menyimpan...' : (editingBook ? 'Simpan Perubahan' : 'Buat Buku') }}
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Confirm Close Modal -->
-    <div v-if="showCloseModal" class="modal-overlay" @click.self="showCloseModal = false">
-      <div class="modal glass-card confirm-modal">
-        <div class="confirm-icon close-icon">🔒</div>
-        <h3>Tutup Buku Tabungan?</h3>
-        <p>Buku "<strong>{{ closingBook?.title }}</strong>" akan ditutup. Tidak ada transaksi baru yang bisa
-          ditambahkan, namun riwayat tetap tersimpan.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showCloseModal = false">Batal</button>
-          <button class="btn-close-book" @click="closeBook" :disabled="saving">
-            {{ saving ? 'Menutup...' : 'Ya, Tutup Buku' }}
-          </button>
+      <div v-if="showCloseModal" class="modal-overlay" @click.self="showCloseModal = false">
+        <div class="modal glass-card confirm-modal">
+          <div class="confirm-icon close-icon">🔒</div>
+          <h3>Tutup Buku Tabungan?</h3>
+          <p>Buku "<strong>{{ closingBook?.title }}</strong>" akan ditutup. Tidak ada transaksi baru yang bisa
+            ditambahkan, namun riwayat tetap tersimpan.</p>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="showCloseModal = false">Batal</button>
+            <button class="btn-close-book" @click="closeBook" :disabled="saving">
+              {{ saving ? 'Menutup...' : 'Ya, Tutup Buku' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
     <!-- Confirm Delete Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-      <div class="modal glass-card confirm-modal">
-        <div class="confirm-icon delete-icon">🗑️</div>
-        <h3>Hapus Buku Tabungan?</h3>
-        <p>Buku "<strong>{{ deletingBook?.title }}</strong>" akan dihapus permanen. Hanya buku yang belum memiliki
-          transaksi yang bisa dihapus.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="showDeleteModal = false">Batal</button>
-          <button class="btn-delete" @click="deleteBook" :disabled="saving">
-            {{ saving ? 'Menghapus...' : 'Ya, Hapus' }}
-          </button>
+      <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+        <div class="modal glass-card confirm-modal">
+          <div class="confirm-icon delete-icon">🗑️</div>
+          <h3>Hapus Buku Tabungan?</h3>
+          <p>Buku "<strong>{{ deletingBook?.title }}</strong>" akan dihapus permanen. Hanya buku yang belum memiliki
+            transaksi yang bisa dihapus.</p>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="showDeleteModal = false">Batal</button>
+            <button class="btn-delete" @click="deleteBook" :disabled="saving">
+              {{ saving ? 'Menghapus...' : 'Ya, Hapus' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 

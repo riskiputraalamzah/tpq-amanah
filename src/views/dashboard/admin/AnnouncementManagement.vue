@@ -173,66 +173,66 @@
     </div>
 
     <!-- Form Modal -->
-    <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
-      <div class="modal glass-card">
-        <div class="modal-header">
-          <h3>{{ editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru' }}</h3>
-          <button class="close-btn" @click="closeForm">×</button>
-        </div>
-
-        <div class="ai-draft-panel">
-          <input ref="aiFileInput" class="hidden-file-input" type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
-            @change="handleAiFileChange" />
-          <div>
-            <strong>Buat draft dari PDF/gambar</strong>
-            <small>Upload undangan atau gambar info, AI akan mengisi judul dan pesan. Admin tetap bisa edit sebelum disimpan.</small>
+      <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
+        <div class="modal glass-card">
+          <div class="modal-header">
+            <h3>{{ editingId ? 'Edit Pengumuman' : 'Buat Pengumuman Baru' }}</h3>
+            <button class="close-btn" @click="closeForm">×</button>
           </div>
-          <button class="btn-ai" :disabled="aiDrafting" @click="aiFileInput?.click()">
-            {{ aiDrafting ? 'Menganalisis...' : 'Upload File' }}
-          </button>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group full">
-            <label class="form-label">Judul *</label>
-            <input v-model="form.title" type="text" class="form-input" placeholder="cth: 🎉 Fitur Tabungan Tersedia!"
-              maxlength="100" />
-          </div>
-          <div class="form-group full">
-            <label class="form-label">Pesan *</label>
-            <textarea v-model="form.message" class="form-input" rows="3"
-              placeholder="Deskripsi singkat tentang pengumuman ini..."></textarea>
-          </div>
-          <div class="form-group full">
-            <label class="form-label">Mode Pengiriman</label>
-            <div class="channel-segment">
-              <button v-for="option in channelOptions" :key="option.value" type="button"
-                :class="{ active: form.deliveryChannel === option.value }" @click="setDeliveryChannel(option.value)">
-                <strong>{{ option.label }}</strong>
-                <small>{{ option.description }}</small>
-              </button>
+  
+          <div class="ai-draft-panel">
+            <input ref="aiFileInput" class="hidden-file-input" type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
+              @change="handleAiFileChange" />
+            <div>
+              <strong>Buat draft dari PDF/gambar</strong>
+              <small>Upload undangan atau gambar info, AI akan mengisi judul dan pesan. Admin tetap bisa edit sebelum disimpan.</small>
             </div>
+            <button class="btn-ai" :disabled="aiDrafting" @click="aiFileInput?.click()">
+              {{ aiDrafting ? 'Menganalisis...' : 'Upload File' }}
+            </button>
           </div>
-          <div class="form-group">
-            <label class="form-label">Tipe / Warna</label>
-            <select v-model="form.type" class="form-input">
-              <option value="info">ℹ️ Info (Biru)</option>
-              <option value="success">✅ Sukses (Hijau)</option>
-              <option value="warning">⚠️ Penting (Oranye)</option>
-            </select>
-          </div>
-          <div v-if="form.deliveryChannel !== 'wa'" class="form-group">
-            <label class="form-label">Target Pengguna</label>
-            <select v-model="form.targetRole" class="form-input">
-              <option value="all">Semua Pengguna</option>
-              <option value="guru">Guru Saja</option>
-              <option value="admin">Admin Saja</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Link Tujuan (Opsional)</label>
-            <input v-model="form.linkUrl" type="text" class="form-input" placeholder="cth: /dashboard/savings" />
-          </div>
+  
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">Judul *</label>
+              <input v-model="form.title" type="text" class="form-input" placeholder="cth: 🎉 Fitur Tabungan Tersedia!"
+                maxlength="100" />
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Pesan *</label>
+              <textarea v-model="form.message" class="form-input" rows="3"
+                placeholder="Deskripsi singkat tentang pengumuman ini..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Mode Pengiriman</label>
+              <div class="channel-segment">
+                <button v-for="option in channelOptions" :key="option.value" type="button"
+                  :class="{ active: form.deliveryChannel === option.value }" @click="setDeliveryChannel(option.value)">
+                  <strong>{{ option.label }}</strong>
+                  <small>{{ option.description }}</small>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tipe / Warna</label>
+              <select v-model="form.type" class="form-input">
+                <option value="info">ℹ️ Info (Biru)</option>
+                <option value="success">✅ Sukses (Hijau)</option>
+                <option value="warning">⚠️ Penting (Oranye)</option>
+              </select>
+            </div>
+            <div v-if="form.deliveryChannel !== 'wa'" class="form-group">
+              <label class="form-label">Target Pengguna</label>
+              <select v-model="form.targetRole" class="form-input">
+                <option value="all">Semua Pengguna</option>
+                <option value="guru">Guru Saja</option>
+                <option value="admin">Admin Saja</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Link Tujuan (Opsional)</label>
+              <input v-model="form.linkUrl" type="text" class="form-input" placeholder="cth: /dashboard/savings" />
+            </div>
           <div class="form-group">
             <label class="form-label">Label Tombol CTA (Opsional)</label>
             <input v-model="form.linkLabel" type="text" class="form-input" placeholder="cth: Coba Sekarang" />
@@ -359,18 +359,18 @@
     </div>
 
     <!-- Delete Confirm -->
-    <div v-if="deletingId" class="modal-overlay" @click.self="deletingId = null">
-      <div class="modal glass-card confirm-modal">
-        <div class="confirm-icon">🗑️</div>
-        <h3>Hapus Pengumuman?</h3>
-        <p>Pengumuman "<strong>{{ deletingTitle }}</strong>" akan dihapus permanen.</p>
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="deletingId = null">Batal</button>
-          <button class="btn-delete" @click="deleteAnn" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus'
-            }}</button>
+      <div v-if="deletingId" class="modal-overlay" @click.self="deletingId = null">
+        <div class="modal glass-card confirm-modal">
+          <div class="confirm-icon">🗑️</div>
+          <h3>Hapus Pengumuman?</h3>
+          <p>Pengumuman "<strong>{{ deletingTitle }}</strong>" akan dihapus permanen.</p>
+          <div class="modal-actions">
+            <button class="btn-cancel" @click="deletingId = null">Batal</button>
+            <button class="btn-delete" @click="deleteAnn" :disabled="saving">{{ saving ? 'Menghapus...' : 'Ya, Hapus'
+              }}</button>
+          </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
