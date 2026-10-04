@@ -36,10 +36,11 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['Plus Jakarta Sans', 'Inter', 'Poppins', 'system-ui', 'sans-serif'],
-                jakarta: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-                inter: ['Inter', 'system-ui', 'sans-serif'],
-                poppins: ['Poppins', 'system-ui', 'sans-serif'],
+                sans: ['"Google Sans"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+                'google-sans': ['"Google Sans"', 'sans-serif'],
+                jakarta: ['"Google Sans"', 'system-ui', 'sans-serif'],
+                inter: ['"Google Sans"', 'system-ui', 'sans-serif'],
+                poppins: ['"Google Sans"', 'system-ui', 'sans-serif'],
                 arabic: ['Amiri', 'serif'],
             },
             animation: {
