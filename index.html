@@ -82,13 +82,58 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "TPQ Amanah",
-        "alternateName": [
-          "TPQ Amanah Sidoarjo",
-          "Taman Pendidikan Al-Quran Amanah"
-        ],
-        "url": "https://tpq-amanah.vercel.app/"
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://tpq-amanah.vercel.app/#website",
+            "url": "https://tpq-amanah.vercel.app/",
+            "name": "TPQ Amanah",
+            "alternateName": [
+              "TPQ Amanah Sawotratap",
+              "Taman Pendidikan Al-Quran Amanah Sidoarjo"
+            ],
+            "description": "Lembaga pendidikan Al-Qur'an metode At-Tartil terpadu di Sawotratap, Gedangan, Sidoarjo."
+          },
+          {
+            "@type": ["EducationalOrganization", "LocalBusiness"],
+            "@id": "https://tpq-amanah.vercel.app/#organization",
+            "name": "TPQ Amanah Sawotratap",
+            "legalName": "Taman Pendidikan Al-Qur'an Amanah",
+            "url": "https://tpq-amanah.vercel.app/",
+            "logo": "https://tpq-amanah.vercel.app/logo.png",
+            "image": "https://tpq-amanah.vercel.app/logo.png",
+            "description": "Taman Pendidikan Al-Qur'an (TPQ) berbasis metode At-Tartil 6 Jilid, tahfidz Juz 'Amma, dan adab ibadah praktis ramah anak di Dusun Tratap, Sawotratap, Gedangan, Sidoarjo.",
+            "telephone": "+6289530397058",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Jl. Kertanegara No. 20, Dusun Tratap",
+              "addressLocality": "Sawotratap, Kec. Gedangan",
+              "addressRegion": "Jawa Timur",
+              "postalCode": "61256",
+              "addressCountry": "ID"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": -7.3688465,
+              "longitude": 112.7361663
+            },
+            "openingHoursSpecification": [
+              {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "15:30",
+                "closes": "19:30"
+              }
+            ],
+            "knowsAbout": [
+              "Metode At-Tartil 6 Jilid",
+              "Tahsin & Tajwid Al-Qur'an",
+              "Tahfidzul Qur'an Juz 30",
+              "Pendidikan Karakter & Adab Islami",
+              "Praktik Wudhu dan Shalat"
+            ]
+          }
+        ]
       }
     </script>
   </head>

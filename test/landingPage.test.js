@@ -96,8 +96,8 @@ test("HomeView contains structured Islamic sections and copywriting", () => {
 
 test("E-Kitab section links to authentic platform and loads cover assets", () => {
   assert.ok(
-    homeViewSrc.includes("https://at-tartil.riskiputraalamzah.my.id/"),
-    "E-Kitab must link directly to official platform https://at-tartil.riskiputraalamzah.my.id/"
+    homeViewSrc.includes("https://at-tartil.tpqamanahsawotratap.com/"),
+    "E-Kitab must link directly to official platform https://at-tartil.tpqamanahsawotratap.com/"
   );
   assert.ok(
     !homeViewSrc.includes("anyflip.com"),
