@@ -8,11 +8,14 @@
           <span v-if="dailyContext?.teacherAttendance?.status === 'hadir'" class="badge badge-present">
             ✓ Guru Hadir
           </span>
+          <span v-else-if="dailyContext?.teacherAttendance?.exists && dailyContext?.teacherAttendance?.status !== 'hadir'" class="badge" :class="['izin', 'sakit'].includes(dailyContext.teacherAttendance.status) ? 'badge-excused' : 'badge-absent'">
+            Presensi: {{ statusDisplayLabel(dailyContext.teacherAttendance.status) }}
+          </span>
           <span v-else-if="(dailyContext?.isBackfill || isBackfill) && dailyContext?.lpj?.eligible" class="badge badge-present">
             ✓ Hadir (Otomatis LPJ)
           </span>
-          <span v-else-if="dailyContext?.teacherAttendance?.exists" class="badge badge-absent">
-            {{ dailyContext.teacherAttendance.status }}
+          <span v-else class="badge badge-absent">
+            Belum Absen
           </span>
         </div>
         <p class="header-subtitle">
@@ -22,31 +25,41 @@
 
       <div class="header-right">
         <button v-if="isBackfill" type="button" class="btn btn-secondary btn-sm" @click="handleReturnToLpj">
-          {{ dailyContext?.lpj?.eligible ? '← Kembali ke LPJ' : '← Kembali ke KBM' }}
+          {{ dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : '← Kembali ke KBM' }}
         </button>
       </div>
     </header>
 
     <!-- History Backfill Banner -->
-    <div v-if="isBackfill" class="history-banner glass-card">
+    <div v-if="isBackfill" class="history-banner glass-card" :class="{ 'history-banner-done': isAllBackfillFilled }">
       <div class="history-banner-main">
-        <div class="history-icon">📜</div>
+        <div class="history-icon">{{ isAllBackfillFilled ? '🎉' : '📜' }}</div>
         <div class="history-content">
           <div class="history-badge-row">
-            <span class="history-badge">MODE LPJ RIWAYAT</span>
+            <span class="history-badge" :class="{ 'history-badge-done': isAllBackfillFilled }">
+              {{ isAllBackfillFilled ? 'LPJ SELESAI' : 'MODE LPJ RIWAYAT' }}
+            </span>
             <span v-if="backfillNav?.currentIndex" class="history-progress-badge">
               Hari ke-{{ backfillNav.currentIndex }} dari {{ backfillNav.totalDays }}
             </span>
             <span v-if="backfillNav && backfillNav.unfilledCount > 0" class="history-unfilled-badge">
               {{ backfillNav.unfilledCount }} hari belum terisi
             </span>
-            <span v-else-if="backfillNav && backfillNav.unfilledCount === 0" class="history-completed-badge">
+            <span v-else-if="isAllBackfillFilled" class="history-completed-badge">
               ✓ Semua Hari Terisi
             </span>
           </div>
-          <p>
+          <p v-if="isAllBackfillFilled" class="text-completed-info">
+            Alhamdulillah! Seluruh hari KBM untuk <strong>LPJ {{ formattedPeriodName }}</strong> sudah lengkap terisi. Silakan kembali ke LPJ untuk memeriksa dan mengajukan laporan Anda.
+          </p>
+          <p v-else>
             Anda sedang melengkapi data KBM untuk <strong>{{ formattedHeaderDate }}</strong> ({{ dailyContext?.lpj?.eligible ? `LPJ ${formattedPeriodName}` : `Periode ${formattedPeriodName}` }}).
           </p>
+          <div v-if="isAllBackfillFilled" class="mt-2">
+            <button type="button" class="btn btn-primary btn-sm btn-finish-banner" @click="handleReturnToLpj">
+              Lihat & Ajukan LPJ {{ formattedPeriodName }} →
+            </button>
+          </div>
         </div>
       </div>
 
@@ -88,8 +101,11 @@
         <router-link v-if="blockingError.actionLink" :to="blockingError.actionLink" class="btn btn-primary">
           {{ blockingError.actionLabel }}
         </router-link>
-        <button v-else type="button" class="btn btn-secondary" @click="handleReturnToLpj">
-          {{ dailyContext?.lpj?.eligible ? 'Kembali ke LPJ' : 'Kembali ke KBM' }}
+        <button v-if="dailyContext?.lpj?.eligible || isBackfill" type="button" class="btn btn-secondary" @click="handleReturnToLpj">
+          {{ formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ' }}
+        </button>
+        <button v-else-if="!blockingError.actionLink" type="button" class="btn btn-secondary" @click="handleReturnToLpj">
+          Kembali ke KBM
         </button>
       </div>
     </div>
@@ -502,9 +518,9 @@
           <p class="summary-subtitle">Periksa sebelum menyimpan</p>
 
           <ul class="summary-checklist">
-            <li class="check-item" :class="{ ok: ((dailyContext?.isBackfill || isBackfill) && dailyContext?.lpj?.eligible) || dailyContext?.teacherAttendance?.status === 'hadir' }">
-              <span class="check-icon">{{ (((dailyContext?.isBackfill || isBackfill) && dailyContext?.lpj?.eligible) || dailyContext?.teacherAttendance?.status === 'hadir') ? '✓' : '✗' }}</span>
-              <span>Guru Hadir ({{ ((dailyContext?.isBackfill || isBackfill) && dailyContext?.lpj?.eligible) ? 'Otomatis untuk LPJ' : (dailyContext?.teacherAttendance?.status || 'Belum Absen') }})</span>
+            <li class="check-item" :class="{ ok: isTeacherPresentForWorkspace }">
+              <span class="check-icon">{{ isTeacherPresentForWorkspace ? '✓' : '✗' }}</span>
+              <span>Guru Hadir ({{ teacherPresenceLabel }})</span>
             </li>
             <li class="check-item" :class="{ ok: selectedSlotId }">
               <span class="check-icon">{{ selectedSlotId ? '✓' : '○' }}</span>
@@ -562,9 +578,24 @@
           </div>
   
           <div class="modal-actions">
-            <!-- Backfill Next Day Option (Primary when in backfill mode) -->
+            <!-- Backfill All Complete State (Celebrate & Primary Action to LPJ) -->
+            <div v-if="isAllBackfillFilled" class="backfill-completed-hero">
+              <div class="completed-hero-badge">🎉 LPJ Siap Diajukan!</div>
+              <p class="completed-hero-text">
+                Alhamdulillah! Seluruh hari KBM bulan <strong>{{ formattedPeriodName }}</strong> sudah lengkap terisi.
+              </p>
+              <button 
+                type="button" 
+                class="btn btn-primary btn-finish-lpj w-full"
+                @click="handleReturnToLpj"
+              >
+                Lihat & Ajukan LPJ {{ formattedPeriodName }} →
+              </button>
+            </div>
+
+            <!-- Backfill Next Day Option (Primary when in backfill mode and has next day to fill) -->
             <button 
-              v-if="isBackfill && nextDateToFill" 
+              v-else-if="isBackfill && nextDateToFill" 
               type="button" 
               class="btn btn-primary btn-next-day w-full"
               @click="handleContinueNextDay"
@@ -580,29 +611,24 @@
               </div>
             </button>
 
-            <!-- Completed notice when all backfill days are done -->
-            <div v-else-if="isBackfill && backfillNav && backfillNav.unfilledCount === 0" class="backfill-completed-notice">
-              <span class="completed-icon">🎉</span>
-              <span>Alhamdulillah, seluruh hari KBM bulan ini sudah terisi!</span>
-            </div>
-
             <!-- Multi-Session: Add another session for another Jilid on this date -->
             <button 
               type="button" 
               class="btn w-full"
-              :class="(isBackfill && nextDateToFill) ? 'btn-secondary mt-2' : 'btn-primary'"
+              :class="isAllBackfillFilled ? 'btn-outline-secondary mt-2' : ((isBackfill && nextDateToFill) ? 'btn-secondary mt-2' : 'btn-primary')"
               @click="handleAddNewSession"
             >
               + Isi Jilid / Sesi Lain di Tanggal Ini
             </button>
 
-            <!-- Return to LPJ / Dashboard -->
+            <!-- Return to LPJ / Dashboard (Shown when not already covered by backfill-completed-hero) -->
             <button 
+              v-if="!isAllBackfillFilled"
               type="button" 
               class="btn btn-outline-secondary w-full mt-2" 
               @click="handleReturnToLpj"
             >
-              {{ dailyContext?.lpj?.eligible ? (isBackfill ? '← Kembali ke Tabel LPJ' : '← Kembali ke LPJ') : 'Kembali ke KBM' }}
+              {{ dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : 'Kembali ke KBM' }}
             </button>
           </div>
         </div>
@@ -684,6 +710,7 @@ const { success, error: showError, warning } = useToast();
 const targetDate = computed(() => (typeof route.query.date === 'string' ? route.query.date : getTodayWibString()));
 const isBackfill = computed(() => route.query.isBackfill === 'true');
 const reportId = computed(() => (typeof route.query.reportId === 'string' ? route.query.reportId : null));
+const effectiveReportId = computed(() => reportId.value || dailyContext.value?.lpj?.reportId || null);
 
 // State
 const loadingContext = ref(true);
@@ -822,9 +849,14 @@ const formattedPeriodName = computed(() => {
 // Backfill Navigation
 const backfillNav = computed(() => dailyContext.value?.backfillNavigation || null);
 
+const isAllBackfillFilled = computed(() => {
+  if (!isBackfill.value || !backfillNav.value) return false;
+  return backfillNav.value.isAllFilled === true || backfillNav.value.unfilledCount === 0;
+});
+
 const nextDateToFill = computed(() => {
-  if (!backfillNav.value) return null;
-  return backfillNav.value.nextUnfilledDate || backfillNav.value.nextDate || null;
+  if (!backfillNav.value || isAllBackfillFilled.value) return null;
+  return backfillNav.value.nextUnfilledDate || null;
 });
 
 function formatShortDate(dateStr) {
@@ -841,10 +873,12 @@ function formatShortDate(dateStr) {
 function handleNavigateDate(targetDateStr) {
   if (!targetDateStr) return;
   showSuccessModal.value = false;
+  const currentReportId = effectiveReportId.value;
   router.push({
     query: {
       ...route.query,
-      date: targetDateStr
+      date: targetDateStr,
+      ...(currentReportId ? { reportId: currentReportId } : {})
     }
   });
 }
@@ -928,12 +962,42 @@ const isAlreadySavedForCurrentSlot = computed(() => {
   return isLevelSavedInSelectedSlot(selectedLevelId.value);
 });
 
+function statusDisplayLabel(status) {
+  if (!status) return '-';
+  const s = String(status).toLowerCase();
+  if (s === 'hadir') return 'Hadir';
+  if (s === 'izin') return 'Izin';
+  if (s === 'sakit') return 'Sakit';
+  if (s === 'alpa' || s === 'alfa') return 'Alpa';
+  if (s === 'tidak_hadir') return 'Tidak Hadir';
+  return String(status);
+}
+
+const isTeacherPresentForWorkspace = computed(() => {
+  const isLpjBackfill = (dailyContext.value?.isBackfill || isBackfill.value) && dailyContext.value?.lpj?.eligible;
+  if (isLpjBackfill) {
+    return !dailyContext.value?.teacherAttendance?.exists || dailyContext.value?.teacherAttendance?.status === 'hadir';
+  }
+  return dailyContext.value?.teacherAttendance?.status === 'hadir';
+});
+
+const teacherPresenceLabel = computed(() => {
+  if (dailyContext.value?.teacherAttendance?.status === 'hadir') {
+    return 'Hadir';
+  }
+  if (dailyContext.value?.teacherAttendance?.exists) {
+    return statusDisplayLabel(dailyContext.value.teacherAttendance.status);
+  }
+  if ((dailyContext.value?.isBackfill || isBackfill.value) && dailyContext.value?.lpj?.eligible) {
+    return 'Otomatis untuk LPJ';
+  }
+  return 'Belum Absen';
+});
+
 // Submission Validation
 const canSubmit = computed(() => {
-  const isLpjBackfill = (dailyContext.value?.isBackfill || isBackfill.value) && dailyContext.value?.lpj?.eligible;
-  const teacherOk = isLpjBackfill || dailyContext.value?.teacherAttendance?.status === 'hadir';
   return (
-    teacherOk &&
+    isTeacherPresentForWorkspace.value &&
     !isAlreadySavedForCurrentSlot.value &&
     !!selectedSlotId.value &&
     !!selectedLevelId.value &&
@@ -991,6 +1055,22 @@ async function loadDailyContext(isAddingNewSession = false) {
     dailyContext.value = data;
 
     // Check blocking conditions
+    // 1. If teacher attendance explicitly exists and is not 'hadir' (e.g. izin, sakit, alpa)
+    if (data.teacherAttendance?.exists && data.teacherAttendance?.status !== 'hadir') {
+      const statusName = statusDisplayLabel(data.teacherAttendance.status);
+      const nextTargetDate = data.backfillNavigation?.nextUnfilledDate || data.backfillNavigation?.nextDate;
+      blockingError.value = {
+        icon: 'ℹ️',
+        title: `Status Kehadiran: ${statusName}`,
+        message: `Pada tanggal ini status kehadiran Anda tercatat sebagai "${statusName}". Anda tidak perlu mengisi data KBM pada hari ini.`,
+        actionLink: nextTargetDate
+          ? `/dashboard/kbm/daily-workspace?date=${nextTargetDate}&isBackfill=true${effectiveReportId.value ? `&reportId=${effectiveReportId.value}` : ''}`
+          : null,
+        actionLabel: nextTargetDate ? 'Lompat ke Hari Hadir Berikutnya →' : null
+      };
+      return;
+    }
+
     const isLpjBackfill = (data.isBackfill || isBackfill.value) && data.lpj?.eligible;
     if (!isLpjBackfill && (!data.teacherAttendance?.exists || data.teacherAttendance?.status !== 'hadir')) {
       blockingError.value = {
@@ -1160,10 +1240,9 @@ function handleReturnToLpj() {
     router.push('/dashboard/kbm');
     return;
   }
-  if (reportId.value) {
-    router.push(`/dashboard/lpj/${reportId.value}`);
-  } else if (isBackfill.value && dailyContext.value?.period) {
-    router.push(`/dashboard/lpj`);
+  const targetId = effectiveReportId.value;
+  if (targetId) {
+    router.push(`/dashboard/lpj/${targetId}`);
   } else {
     router.push('/dashboard/lpj');
   }
@@ -1259,6 +1338,11 @@ onMounted(async () => {
 .badge-absent {
   background: #fee2e2;
   color: #991b1b;
+}
+
+.badge-excused {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .badge-rec {
@@ -1411,6 +1495,42 @@ onMounted(async () => {
   font-size: 0.75rem;
   font-weight: 800;
   margin-right: 0.5rem;
+}
+
+.history-banner-done {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12) !important;
+}
+
+.history-badge-done {
+  background: #059669 !important;
+  color: white !important;
+}
+
+.text-completed-info {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #065f46 !important;
+  line-height: 1.5;
+}
+
+.btn-finish-banner {
+  background: #059669;
+  color: white;
+  border: none;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.btn-finish-banner:hover {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.35);
 }
 
 .history-content p {
@@ -2502,6 +2622,52 @@ onMounted(async () => {
   border-radius: 10px;
   margin-bottom: 0.75rem;
   text-align: left;
+}
+
+.backfill-completed-hero {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.completed-hero-badge {
+  display: inline-block;
+  background: #059669;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+}
+
+.completed-hero-text {
+  font-size: 0.85rem;
+  color: #14532d;
+  margin: 0 0 0.85rem 0;
+  line-height: 1.4;
+}
+
+.btn-finish-lpj {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-finish-lpj:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
 }
 
 .btn-outline-secondary {

@@ -95,7 +95,7 @@
             </div>
             <h3 class="text-sm font-bold text-slate-900 font-jakarta">Jurnal Mengajar</h3>
             <p class="text-xs text-slate-500 font-inter mt-1 leading-relaxed">
-              Buku Jurnal & Berita Acara KBM harian (1 hari per halaman, materi RPP, santri hadir/absen).
+              Buku Jurnal & Berita Acara KBM harian (format adaptif hemat kertas, materi RPP, santri hadir/absen).
             </p>
           </button>
 

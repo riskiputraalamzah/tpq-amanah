@@ -20,20 +20,22 @@ test("status labels follow draft-submitted-approved lifecycle", () => {
   assert.equal(lpj.statusLabel("approved"), "Disetujui");
 });
 
-test("missing attendance navigates to Absensi", () => {
+test("uncovered day navigates to daily-workspace backfill", () => {
   const action = lpj.resolveDayAction(
     { date: "2026-09-04", isCovered: false, statusClassification: "missing", note: "Tidak ada presensi kehadiran" },
     {},
   );
-  assert.equal(action.to, "/dashboard/attendance");
+  assert.equal(action.to, "/dashboard/kbm/daily-workspace?date=2026-09-04&isBackfill=true");
 });
 
-test("hadir without session navigates to KBM", () => {
+test("hadir without session navigates to daily-workspace backfill with reportId", () => {
   const action = lpj.resolveDayAction(
     { date: "2026-09-05", isCovered: false, statusClassification: "missing", note: "Hadir namun tidak ada jurnal KBM atau catatan Non-KBM" },
     {},
+    new Date(2026, 8, 12),
+    "rep_juli_2026"
   );
-  assert.equal(action.to, "/dashboard/kbm?date=2026-09-05");
+  assert.equal(action.to, "/dashboard/kbm/daily-workspace?date=2026-09-05&isBackfill=true&reportId=rep_juli_2026");
 });
 
 test("session without student attendance links to Absensi Santri", () => {
@@ -77,10 +79,10 @@ test("MonthlyLpjView responsive smoke: cards, LPJ wording, no local percentage",
   assert.match(src, /@media/);
   assert.match(src, /100%/);
   assert.ok(!src.includes("Math.round"), "percentage must come from backend");
-  assert.match(src, /Belum Ada Laporan/);
+  assert.match(src, /Belum Ada (Laporan|Dokumen LPJ)/);
   assert.match(src, /progressbar/);
   assert.match(src, /SkeletonLoader/);
-  assert.match(src, /Tampilkan/);
+  assert.match(src, /(Tampilkan|Buka LPJ)/);
 });
 
 test("LpjDetailView smoke: backend completeness, day actions, submit states", () => {
@@ -114,7 +116,7 @@ test("LPJ day KBM action preserves exact ISO date in route", () => {
     { date: "2026-09-05", isCovered: false, statusClassification: "missing", note: "Hadir namun tidak ada jurnal KBM atau catatan Non-KBM" },
     {},
   );
-  assert.equal(action.to, "/dashboard/kbm?date=2026-09-05");
+  assert.equal(action.to, "/dashboard/kbm/daily-workspace?date=2026-09-05&isBackfill=true");
   assert.ok(!action.to.includes("September"), "must pass ISO date, not display text");
 });
 
@@ -171,7 +173,7 @@ test("today and past KBM days stay enabled with date context", () => {
   const now = new Date(2026, 8, 12);
   const day = (date) => ({ date, isCovered: false, statusClassification: "missing", note: "Hadir namun tidak ada jurnal KBM atau catatan Non-KBM" });
   assert.equal(lpj.resolveDayAction(day("2026-09-12"), {}, now).kind, "link");
-  assert.equal(lpj.resolveDayAction(day("2026-09-11"), {}, now).to, "/dashboard/kbm?date=2026-09-11");
+  assert.equal(lpj.resolveDayAction(day("2026-09-11"), {}, now).to, "/dashboard/kbm/daily-workspace?date=2026-09-11&isBackfill=true");
 });
 
 test("Lihat Detail is primary green CTA", () => {

@@ -160,10 +160,10 @@
             <p class="text-muted">Tidak ada hari operasional pada periode ini.</p>
           </div>
           <ul v-else class="day-list">
-            <li v-for="day in days" :key="day.date" class="day-row" :class="day.isCovered ? 'day-covered' : 'day-missing'">
+            <li v-for="day in days" :key="day.date" class="day-row" :class="dayRowClass(day)">
               <div class="day-info">
                 <strong>{{ formatDay(day.date) }}</strong>
-                <span class="badge" :class="day.isCovered ? 'badge-success' : 'badge-warning'">
+                <span class="badge" :class="dayBadgeClass(day)">
                   {{ dayLabel(day) }}
                 </span>
                 <span class="day-note">{{ day.note }}</span>
@@ -181,7 +181,9 @@
                 </button>
                 <span class="day-reason">{{ dayAction(day).reason }}</span>
               </div>
-              <span v-else class="day-done">Lengkap</span>
+              <span v-else class="day-done" :class="{ 'day-done-permitted': day.statusClassification === 'permitted_absence' }">
+                Lengkap
+              </span>
             </li>
           </ul>
         </section>
@@ -260,6 +262,16 @@ const dayLabel = (day) => {
   return day.isCovered ? "Lengkap" : "Belum lengkap";
 };
 
+const dayRowClass = (day) => {
+  if (day.statusClassification === "permitted_absence") return "day-permitted";
+  return day.isCovered ? "day-covered" : "day-missing";
+};
+
+const dayBadgeClass = (day) => {
+  if (day.statusClassification === "permitted_absence") return "badge-permitted";
+  return day.isCovered ? "badge-success" : "badge-warning";
+};
+
 const formatDay = (dateStr) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr || ""));
   if (!m) return String(dateStr);
@@ -270,7 +282,7 @@ const formatDay = (dateStr) => {
   });
 };
 
-const dayAction = (day) => resolveDayAction(day, sessionsByDate.value);
+const dayAction = (day) => resolveDayAction(day, sessionsByDate.value, new Date(), reportId);
 
 const backLabel = () => {
   router.push(isAdmin.value ? "/dashboard/admin-lpj" : "/dashboard/lpj");
@@ -609,6 +621,11 @@ onMounted(fetchData);
   background: rgba(33, 150, 243, 0.1);
   color: #1565c0;
 }
+.badge-permitted {
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
 .admin-actions {
   display: flex;
   gap: var(--space-md);
@@ -659,6 +676,11 @@ onMounted(fetchData);
 .day-covered {
   border-left: 4px solid var(--success);
 }
+.day-permitted {
+  border-left: 4px solid #f59e0b;
+  background: #fffdf5;
+  border-color: #fef08a;
+}
 .day-info {
   display: flex;
   align-items: center;
@@ -678,6 +700,9 @@ onMounted(fetchData);
   font-weight: 600;
   color: #2e7d32;
   white-space: nowrap;
+}
+.day-done.day-done-permitted {
+  color: #b45309;
 }
 .btn-day {
   font-size: 0.85rem;

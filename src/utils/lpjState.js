@@ -29,7 +29,7 @@ function journalMissing(session) {
   return !material || String(material).trim().length === 0;
 }
 
-export function resolveDayAction(day, sessionsByDate, now = new Date()) {
+export function resolveDayAction(day, sessionsByDate, now = new Date(), reportId = null) {
   const sessions = (sessionsByDate && sessionsByDate[day.date]) || [];
   if (day.isCovered && day.statusClassification === "permitted_absence") {
     return { kind: "none", label: "Lengkap" };
@@ -38,7 +38,8 @@ export function resolveDayAction(day, sessionsByDate, now = new Date()) {
     if (isFutureDay(day.date, now)) {
       return { kind: "disabled", label: "KBM / Mengajar", reason: "Belum dapat diisi" };
     }
-    return { kind: "link", label: "Lengkapi KBM", to: `/dashboard/kbm/daily-workspace?date=${day.date}&isBackfill=true`, primary: true };
+    const reportParam = reportId ? `&reportId=${encodeURIComponent(reportId)}` : "";
+    return { kind: "link", label: "Lengkapi KBM", to: `/dashboard/kbm/daily-workspace?date=${day.date}&isBackfill=true${reportParam}`, primary: true };
   }
   const withoutAttendance = sessions.find(
     (s) => !Array.isArray(s.studentAttendances) || s.studentAttendances.length === 0,
