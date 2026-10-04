@@ -29,8 +29,28 @@ function journalMissing(session) {
   return !material || String(material).trim().length === 0;
 }
 
+export function isAbsenceStatus(classification, attendanceStatus = null, note = "") {
+  const cls = String(classification || "").toLowerCase();
+  const att = String(attendanceStatus || "").toLowerCase();
+  const nt = String(note || "").toLowerCase();
+
+  if (["permitted_absence", "unattended_absence", "unexcused_absence", "absence"].includes(cls)) {
+    return true;
+  }
+  if (["tidak_hadir", "izin", "sakit", "alfa", "alpa"].includes(att)) {
+    return true;
+  }
+  if (/status:\s*(tidak\s*hadir|izin|sakit|alpa|alfa)/i.test(nt)) {
+    return true;
+  }
+  return false;
+}
+
 export function resolveDayAction(day, sessionsByDate, now = new Date(), reportId = null) {
   const sessions = (sessionsByDate && sessionsByDate[day.date]) || [];
+  if (isAbsenceStatus(day.statusClassification, day.attendanceStatus, day.note)) {
+    return { kind: "none", label: "Lengkap" };
+  }
   if (day.isCovered && day.statusClassification === "permitted_absence") {
     return { kind: "none", label: "Lengkap" };
   }

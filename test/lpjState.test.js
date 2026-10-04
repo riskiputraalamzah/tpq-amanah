@@ -65,6 +65,20 @@ test("complete day and permitted absence need no action", () => {
     {},
   );
   assert.equal(izin.kind, "none");
+
+  const tidakHadir = lpj.resolveDayAction(
+    { date: "2026-08-13", isCovered: true, statusClassification: "unattended_absence", attendanceStatus: "tidak_hadir", note: "Administrasi lengkap (Status: Tidak Hadir)" },
+    {},
+  );
+  assert.equal(tidakHadir.kind, "none");
+  assert.equal(tidakHadir.label, "Lengkap");
+
+  const tidakHadirStale = lpj.resolveDayAction(
+    { date: "2026-08-14", isCovered: false, statusClassification: "missing", attendanceStatus: "tidak_hadir" },
+    {},
+  );
+  assert.equal(tidakHadirStale.kind, "none");
+  assert.equal(tidakHadirStale.label, "Lengkap");
 });
 
 test("incomplete message names missing day count", () => {

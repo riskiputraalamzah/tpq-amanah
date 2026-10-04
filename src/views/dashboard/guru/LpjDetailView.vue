@@ -181,7 +181,7 @@
                 </button>
                 <span class="day-reason">{{ dayAction(day).reason }}</span>
               </div>
-              <span v-else class="day-done" :class="{ 'day-done-permitted': day.statusClassification === 'permitted_absence' }">
+              <span v-else class="day-done" :class="{ 'day-done-permitted': isAbsenceDay(day) }">
                 Lengkap
               </span>
             </li>
@@ -254,8 +254,31 @@ const canSubmit = computed(
   () => report.value.status === "draft" && (completeness.value?.percentage ?? 0) === 100,
 );
 
+const isAbsenceDay = (day) => {
+  const att = String(day.attendanceStatus || "").toLowerCase();
+  const cls = String(day.statusClassification || "").toLowerCase();
+  const note = String(day.note || "").toLowerCase();
+  return (
+    ["tidak_hadir", "izin", "sakit", "alfa", "alpa"].includes(att) ||
+    ["permitted_absence", "unattended_absence", "unexcused_absence", "absence"].includes(cls) ||
+    /status:\s*(tidak\s*hadir|izin|sakit|alpa|alfa)/i.test(note)
+  );
+};
+
 const dayLabel = (day) => {
-  if (day.statusClassification === "permitted_absence") return "Izin / Sakit";
+  const att = String(day.attendanceStatus || "").toLowerCase();
+  const cls = String(day.statusClassification || "").toLowerCase();
+  const note = String(day.note || "").toLowerCase();
+
+  if (att === "tidak_hadir" || cls === "unattended_absence" || cls === "absence" || note.includes("status: tidak hadir")) {
+    return "Tidak Hadir";
+  }
+  if (att === "alfa" || att === "alpa" || cls === "unexcused_absence" || note.includes("status: alpa")) {
+    return "Alpa";
+  }
+  if (att === "izin" || att === "sakit" || cls === "permitted_absence" || note.includes("status: izin") || note.includes("status: sakit")) {
+    return "Izin / Sakit";
+  }
   if (day.statusClassification === "present_teaching") return "Hadir + KBM";
   if (day.statusClassification === "present_special") return "Hadir + Khusus";
   if (day.statusClassification === "present_non_kbm") return "Hadir + Non-KBM";
@@ -263,12 +286,12 @@ const dayLabel = (day) => {
 };
 
 const dayRowClass = (day) => {
-  if (day.statusClassification === "permitted_absence") return "day-permitted";
+  if (isAbsenceDay(day)) return "day-permitted";
   return day.isCovered ? "day-covered" : "day-missing";
 };
 
 const dayBadgeClass = (day) => {
-  if (day.statusClassification === "permitted_absence") return "badge-permitted";
+  if (isAbsenceDay(day)) return "badge-permitted";
   return day.isCovered ? "badge-success" : "badge-warning";
 };
 
@@ -306,7 +329,7 @@ const fetchData = async () => {
   try {
     const reportRes = await api.get(`/ljp/reports/${reportId}`);
     report.value = reportRes.data;
-    const compRes = await api.get(`/ljp/reports/${reportId}/completeness`);
+    const compRes = await api.get(`/ljp/reports/${reportId}/completeness?refresh=true`);
     completeness.value = compRes.data;
     const [year, month] = String(report.value.period || "").split("-").map(Number);
     if (year && month) {
