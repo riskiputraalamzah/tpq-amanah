@@ -29,10 +29,47 @@
 
     <!-- History Backfill Banner -->
     <div v-if="isBackfill" class="history-banner glass-card">
-      <div class="history-icon">📜</div>
-      <div class="history-content">
-        <span class="history-badge">RIWAYAT</span>
-        <p>Anda sedang melengkapi data KBM untuk <strong>{{ formattedHeaderDate }}</strong> ({{ dailyContext?.lpj?.eligible ? `LPJ ${formattedPeriodName}` : `Periode ${formattedPeriodName}` }}).</p>
+      <div class="history-banner-main">
+        <div class="history-icon">📜</div>
+        <div class="history-content">
+          <div class="history-badge-row">
+            <span class="history-badge">MODE LPJ RIWAYAT</span>
+            <span v-if="backfillNav?.currentIndex" class="history-progress-badge">
+              Hari ke-{{ backfillNav.currentIndex }} dari {{ backfillNav.totalDays }}
+            </span>
+            <span v-if="backfillNav && backfillNav.unfilledCount > 0" class="history-unfilled-badge">
+              {{ backfillNav.unfilledCount }} hari belum terisi
+            </span>
+            <span v-else-if="backfillNav && backfillNav.unfilledCount === 0" class="history-completed-badge">
+              ✓ Semua Hari Terisi
+            </span>
+          </div>
+          <p>
+            Anda sedang melengkapi data KBM untuk <strong>{{ formattedHeaderDate }}</strong> ({{ dailyContext?.lpj?.eligible ? `LPJ ${formattedPeriodName}` : `Periode ${formattedPeriodName}` }}).
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Stepper Navigation for Backfill Days -->
+      <div v-if="backfillNav" class="history-banner-stepper">
+        <button
+          type="button"
+          class="btn-step-day"
+          :disabled="!backfillNav.hasPrevDay"
+          title="Ke Hari KBM Sebelumnya"
+          @click="handleNavigateDate(backfillNav.prevDate)"
+        >
+          ← Hari Sebelumnya
+        </button>
+        <button
+          type="button"
+          class="btn-step-day"
+          :disabled="!backfillNav.hasNextDay"
+          title="Ke Hari KBM Berikutnya"
+          @click="handleNavigateDate(backfillNav.nextDate)"
+        >
+          Hari Berikutnya →
+        </button>
       </div>
     </div>
 
@@ -525,11 +562,47 @@
           </div>
   
           <div class="modal-actions">
-            <button type="button" class="btn btn-secondary w-full" @click="handleAddNewSession">
-              + Isi Jilid / Sesi Lainnya
+            <!-- Backfill Next Day Option (Primary when in backfill mode) -->
+            <button 
+              v-if="isBackfill && nextDateToFill" 
+              type="button" 
+              class="btn btn-primary btn-next-day w-full"
+              @click="handleContinueNextDay"
+            >
+              <div class="btn-next-day-content">
+                <span class="btn-next-day-title">➡️ Lanjut ke Hari Berikutnya</span>
+                <span class="btn-next-day-subtitle">
+                  {{ formatShortDate(nextDateToFill) }}
+                  <template v-if="backfillNav?.unfilledCount !== undefined">
+                    • Sisa {{ Math.max(0, backfillNav.unfilledCount) }} hari lagi
+                  </template>
+                </span>
+              </div>
             </button>
-            <button type="button" class="btn btn-primary w-full mt-2" @click="handleReturnToLpj">
-              {{ dailyContext?.lpj?.eligible ? (isBackfill ? 'Kembali ke LPJ Riwayat' : 'Kembali ke LPJ') : 'Kembali ke KBM' }}
+
+            <!-- Completed notice when all backfill days are done -->
+            <div v-else-if="isBackfill && backfillNav && backfillNav.unfilledCount === 0" class="backfill-completed-notice">
+              <span class="completed-icon">🎉</span>
+              <span>Alhamdulillah, seluruh hari KBM bulan ini sudah terisi!</span>
+            </div>
+
+            <!-- Multi-Session: Add another session for another Jilid on this date -->
+            <button 
+              type="button" 
+              class="btn w-full"
+              :class="(isBackfill && nextDateToFill) ? 'btn-secondary mt-2' : 'btn-primary'"
+              @click="handleAddNewSession"
+            >
+              + Isi Jilid / Sesi Lain di Tanggal Ini
+            </button>
+
+            <!-- Return to LPJ / Dashboard -->
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary w-full mt-2" 
+              @click="handleReturnToLpj"
+            >
+              {{ dailyContext?.lpj?.eligible ? (isBackfill ? '← Kembali ke Tabel LPJ' : '← Kembali ke LPJ') : 'Kembali ke KBM' }}
             </button>
           </div>
         </div>
@@ -598,7 +671,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
 import { useToast } from '@/composables/useToast';
@@ -607,10 +680,10 @@ const route = useRoute();
 const router = useRouter();
 const { success, error: showError, warning } = useToast();
 
-// Query Parameters
-const targetDate = route.query.date || getTodayWibString();
-const isBackfill = route.query.isBackfill === 'true' || false;
-const reportId = route.query.reportId || null;
+// Query Parameters (reactive to URL query changes)
+const targetDate = computed(() => (typeof route.query.date === 'string' ? route.query.date : getTodayWibString()));
+const isBackfill = computed(() => route.query.isBackfill === 'true');
+const reportId = computed(() => (typeof route.query.reportId === 'string' ? route.query.reportId : null));
 
 // State
 const loadingContext = ref(true);
@@ -725,8 +798,8 @@ function getTodayWibString() {
 
 // Formatted Strings
 const formattedHeaderDate = computed(() => {
-  if (!targetDate) return '';
-  const [y, m, d] = targetDate.split('-').map(Number);
+  if (!targetDate.value) return '';
+  const [y, m, d] = targetDate.value.split('-').map(Number);
   const dateObj = new Date(y, m - 1, d);
   return dateObj.toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -744,6 +817,58 @@ const formattedPeriodName = computed(() => {
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
   return `${monthNames[m - 1]} ${y}`;
+});
+
+// Backfill Navigation
+const backfillNav = computed(() => dailyContext.value?.backfillNavigation || null);
+
+const nextDateToFill = computed(() => {
+  if (!backfillNav.value) return null;
+  return backfillNav.value.nextUnfilledDate || backfillNav.value.nextDate || null;
+});
+
+function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  return dateObj.toLocaleDateString('id-ID', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short'
+  });
+}
+
+function handleNavigateDate(targetDateStr) {
+  if (!targetDateStr) return;
+  showSuccessModal.value = false;
+  router.push({
+    query: {
+      ...route.query,
+      date: targetDateStr
+    }
+  });
+}
+
+function handleContinueNextDay() {
+  if (nextDateToFill.value) {
+    handleNavigateDate(nextDateToFill.value);
+  }
+}
+
+watch(() => route.query.date, async (newDate, oldDate) => {
+  if (newDate && newDate !== oldDate) {
+    selectedLevelId.value = '';
+    roster.value = [];
+    inactiveSantri.value = [];
+    curriculum.value = null;
+    journalForm.value = {
+      material: '',
+      supportingMaterial: '',
+      notes: ''
+    };
+    showSuccessModal.value = false;
+    await loadDailyContext();
+  }
 });
 
 // Level Catalog Filter
@@ -805,7 +930,7 @@ const isAlreadySavedForCurrentSlot = computed(() => {
 
 // Submission Validation
 const canSubmit = computed(() => {
-  const isLpjBackfill = (dailyContext.value?.isBackfill || isBackfill) && dailyContext.value?.lpj?.eligible;
+  const isLpjBackfill = (dailyContext.value?.isBackfill || isBackfill.value) && dailyContext.value?.lpj?.eligible;
   const teacherOk = isLpjBackfill || dailyContext.value?.teacherAttendance?.status === 'hadir';
   return (
     teacherOk &&
@@ -861,12 +986,12 @@ async function loadDailyContext(isAddingNewSession = false) {
 
   try {
     const { data } = await api.get('/teaching_sessions/daily-context', {
-      params: { date: targetDate }
+      params: { date: targetDate.value }
     });
     dailyContext.value = data;
 
     // Check blocking conditions
-    const isLpjBackfill = (data.isBackfill || isBackfill) && data.lpj?.eligible;
+    const isLpjBackfill = (data.isBackfill || isBackfill.value) && data.lpj?.eligible;
     if (!isLpjBackfill && (!data.teacherAttendance?.exists || data.teacherAttendance?.status !== 'hadir')) {
       blockingError.value = {
         icon: '⚠️',
@@ -934,7 +1059,7 @@ async function loadLevelContext(levelId) {
   loadingLevelContext.value = true;
   try {
     const { data } = await api.get('/teaching_sessions/level-context', {
-      params: { date: targetDate, levelId }
+      params: { date: targetDate.value, levelId }
     });
 
     roster.value = (data.roster || []).map(s => ({
@@ -972,7 +1097,7 @@ async function submitKbm() {
   submitting.value = true;
   try {
     const payload = {
-      date: targetDate,
+      date: targetDate.value,
       type: 'teaching',
       classId: selectedLevelId.value,
       levelId: selectedLevelId.value,
@@ -990,6 +1115,17 @@ async function submitKbm() {
 
     await api.post('/teaching_sessions', payload);
     success('KBM berhasil disimpan.');
+
+    // Silently refresh daily-context so existingSessions and backfillNavigation update immediately
+    try {
+      const { data } = await api.get('/teaching_sessions/daily-context', {
+        params: { date: targetDate.value }
+      });
+      dailyContext.value = data;
+    } catch (silentErr) {
+      console.warn('Failed to silently refresh daily-context after save:', silentErr);
+    }
+
     showSuccessModal.value = true;
   } catch (err) {
     console.error('Failed to submit KBM:', err);
@@ -1024,9 +1160,9 @@ function handleReturnToLpj() {
     router.push('/dashboard/kbm');
     return;
   }
-  if (reportId) {
-    router.push(`/dashboard/lpj/${reportId}`);
-  } else if (isBackfill && dailyContext.value?.period) {
+  if (reportId.value) {
+    router.push(`/dashboard/lpj/${reportId.value}`);
+  } else if (isBackfill.value && dailyContext.value?.period) {
     router.push(`/dashboard/lpj`);
   } else {
     router.push('/dashboard/lpj');
@@ -1152,23 +1288,114 @@ onMounted(async () => {
 .history-banner {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fde68a;
   padding: 1rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 14px;
   margin-bottom: 1.5rem;
   box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.history-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.history-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.history-progress-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #bfdbfe;
+}
+
+.history-unfilled-badge {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.history-completed-badge {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid #a7f3d0;
+}
+
+.history-banner-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 @media (max-width: 640px) {
   .history-banner {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.65rem;
+    align-items: stretch;
+    gap: 0.85rem;
     padding: 0.85rem 1rem;
     margin-bottom: 1rem;
   }
+
+  .history-banner-stepper {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.btn-step-day {
+  background: white;
+  border: 1.5px solid #d97706;
+  color: #b45309;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.btn-step-day:hover:not(:disabled) {
+  background: #f59e0b;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+}
+
+.btn-step-day:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  background: #f3f4f6;
 }
 
 .history-icon {
@@ -2225,6 +2452,73 @@ onMounted(async () => {
   flex-direction: column;
   gap: 0.4rem;
   margin-bottom: 1.5rem;
+}
+
+.btn-next-day {
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+  color: white;
+  border: none;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(45, 106, 79, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-next-day:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(45, 106, 79, 0.4);
+}
+
+.btn-next-day-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.btn-next-day-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.btn-next-day-subtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.backfill-completed-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.75rem;
+  text-align: left;
+}
+
+.btn-outline-secondary {
+  background: white;
+  border: 1.5px solid var(--gray-300, #d1d5db);
+  color: var(--gray-700, #374151);
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--gray-50, #f9fafb);
+  border-color: var(--gray-400, #9ca3af);
+  color: var(--gray-900, #111827);
 }
 
 .spinner {
