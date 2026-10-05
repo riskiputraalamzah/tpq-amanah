@@ -573,6 +573,29 @@ function stripApiPrefix(url) {
 
 const downloadingPdf = ref(false);
 
+async function parseBlobErrorMessage(err, fallbackMsg) {
+  if (!err) return fallbackMsg;
+  if (err.response?.data instanceof Blob) {
+    try {
+      const text = await err.response.data.text();
+      try {
+        const json = JSON.parse(text);
+        if (json.error) return json.error;
+        if (json.message) return json.message;
+      } catch (_) {
+        if (text && text.trim().length > 0) return text;
+      }
+    } catch (_) {}
+  } else if (err.response?.data?.error) {
+    return err.response.data.error;
+  } else if (err.response?.data?.message) {
+    return err.response.data.message;
+  } else if (err.message) {
+    return err.message;
+  }
+  return fallbackMsg;
+}
+
 async function openPdfPreview() {
   if (!generatedResult.value?.previewUrl) return;
   try {
@@ -586,7 +609,8 @@ async function openPdfPreview() {
     window.open(objectUrl, "_blank");
   } catch (err) {
     console.error("Open PDF preview error:", err);
-    showError("Gagal membuka pratinjau PDF.");
+    const msg = await parseBlobErrorMessage(err, "Gagal membuka pratinjau PDF.");
+    showError(msg);
   } finally {
     downloadingPdf.value = false;
   }
@@ -612,7 +636,8 @@ async function downloadPdfFile() {
     success("Dokumen PDF berhasil diunduh.");
   } catch (err) {
     console.error("Download PDF error:", err);
-    showError("Gagal mengunduh dokumen PDF.");
+    const msg = await parseBlobErrorMessage(err, "Gagal mengunduh dokumen PDF.");
+    showError(msg);
   } finally {
     downloadingPdf.value = false;
   }
@@ -715,7 +740,8 @@ async function downloadPackageFile() {
     success("Paket LPJ ZIP berhasil diunduh.");
   } catch (err) {
     console.error("Download package error:", err);
-    showError("Gagal mengunduh paket LPJ ZIP.");
+    const msg = await parseBlobErrorMessage(err, "Gagal mengunduh paket LPJ ZIP.");
+    showError(msg);
   } finally {
     downloadingPackage.value = false;
   }
