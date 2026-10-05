@@ -5,7 +5,24 @@
         <h1>KBM / Mengajar</h1>
         <p>Catat dan pantau aktivitas belajar mengajar harian</p>
       </div>
+      <div v-if="isFromAttendance" class="header-action">
+        <router-link to="/dashboard/attendance" class="btn btn-secondary btn-sm btn-back-attendance">
+          ← Kembali ke Absensi
+        </router-link>
+      </div>
     </header>
+
+    <!-- Attendance Guidance Banner if redirected from attendance -->
+    <div v-if="isFromAttendance" class="attendance-guidance-banner glass-card">
+      <div class="banner-icon">📚</div>
+      <div class="banner-content">
+        <div class="banner-badge">FOKUS KBM HARI INI</div>
+        <h3>Kehadiran Guru: HADIR ({{ formattedToday }})</h3>
+        <p>
+          Silakan input sesi KBM hari ini, lalu lanjutkan dengan mengisi <strong>Absensi Santri</strong> dan <strong>Jurnal KBM</strong>.
+        </p>
+      </div>
+    </div>
 
     <div v-if="loadingInitial" class="loading-state glass-card">
       <div class="loading-spinner"></div>
@@ -62,24 +79,32 @@
 
           <form @submit.prevent="submitSession" class="kbm-form-inner">
             <div class="form-group">
-              <label>Tanggal KBM</label>
+              <div class="form-label-row">
+                <label>Tanggal KBM</label>
+                <span v-if="isFromAttendance" class="badge-locked-date">🔒 Sesuai Absensi Hari Ini</span>
+              </div>
               <input
                 type="date"
                 v-model="form.date"
-                :min="minDateString"
+                :min="isFromAttendance ? todayString : minDateString"
                 :max="todayString"
+                :disabled="isFromAttendance"
                 @change="validateEligibility"
                 class="form-input"
+                :class="{ 'input-locked': isFromAttendance }"
                 required
               />
-              <small class="help-text">
+              <small v-if="isFromAttendance" class="help-text help-text-locked">
+                📌 Mengisi KBM dari alur absensi hari ini ({{ formattedToday }}). Tanggal dikunci khusus untuk KBM hari berjalan.
+              </small>
+              <small v-else class="help-text">
                 Pilih tanggal hari ini atau backfill tanggal sebelumnya dalam bulan yang sama.
               </small>
             </div>
 
             <div class="form-group">
               <label>Jilid / Marhalah</label>
-              <select v-model="form.classId" class="form-input" required>
+              <select v-model="form.classId" @change="validateEligibility" class="form-input" required>
                 <option value="" disabled>Pilih Jilid / Marhalah</option>
                 <optgroup label="JILID">
                   <option v-for="c in jilidList" :key="c.id" :value="c.id">
@@ -361,6 +386,61 @@
         </div>
       </div>
     </template>
+
+    <!-- Modal Bimbingan Pasca Simpan KBM -->
+    <Teleport to="body">
+      <div v-if="showSessionCreatedModal" class="session-modal-overlay" @click.self="showSessionCreatedModal = false">
+        <div class="session-modal glass-card">
+          <div class="modal-icon-wrap">🎉</div>
+          <h2>Sesi KBM Berhasil Disimpan!</h2>
+          <p class="modal-desc">
+            Sesi <strong>{{ createdSessionInfo?.className }}</strong> ({{ createdSessionInfo?.slotName }}) telah berhasil disimpan.
+          </p>
+
+          <div class="modal-instruction-box">
+            <div class="instruction-header">
+              <span class="instruction-icon">📝</span>
+              <strong>Langkah Selanjutnya:</strong>
+            </div>
+            <p class="instruction-text">
+              Silakan lengkapi absensi kehadiran para santri dan materi jurnal mengajar untuk sesi ini.
+            </p>
+          </div>
+
+          <div class="modal-action-buttons">
+            <button
+              type="button"
+              class="btn btn-primary btn-action-flow"
+              @click="router.push(`/dashboard/kbm/${createdSessionInfo.id}/absensi`)"
+            >
+              📋 Isi Absensi Santri Sekarang →
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-action-flow"
+              @click="router.push(`/dashboard/kbm/${createdSessionInfo.id}/jurnal`)"
+            >
+              📖 Isi Jurnal KBM Sekarang →
+            </button>
+            <button
+              v-if="isFromAttendance"
+              type="button"
+              class="btn btn-outline-secondary btn-action-flow"
+              @click="router.push('/dashboard/attendance')"
+            >
+              ← Selesai & Kembali ke Absensi
+            </button>
+            <button
+              type="button"
+              class="btn btn-link btn-dismiss-modal"
+              @click="showSessionCreatedModal = false"
+            >
+              Tutup & Tambah Sesi Lain
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -392,6 +472,17 @@ const myAttendances = ref([]);
 const operationalCalendar = ref(null);
 const tpqProfile = ref(null);
 
+const isFromAttendance = computed(() => route.query.from === "attendance");
+
+const formattedToday = computed(() => {
+  return today.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+});
+
 const contextualDate = resolveKbmDateFromQuery(route.query.date);
 
 const viewedPeriod = () => {
@@ -401,7 +492,7 @@ const viewedPeriod = () => {
 };
 
 const form = ref({
-  date: contextualDate || todayString,
+  date: isFromAttendance.value ? todayString : (contextualDate || todayString),
   classId: "",
   sessionSlotId: "",
   isSubstitute: false,
@@ -410,6 +501,8 @@ const form = ref({
 
 const isEligible = ref(false);
 const eligibilityMessage = ref("");
+const showSessionCreatedModal = ref(false);
+const createdSessionInfo = ref(null);
 
 const jilidList = computed(() =>
   classes.value.filter((c) => String(c.id) >= "1" && String(c.id) <= "6"),
@@ -540,13 +633,31 @@ const submitSession = async () => {
       studentAttendances: [],
     };
 
-    await api.post("/teaching_sessions", payload);
+    const res = await api.post("/teaching_sessions", payload);
 
     // Refresh history
     const historyRes = await api.get("/teaching_sessions", {
       params: viewedPeriod(),
     });
     history.value = historyRes.data;
+
+    const createdId = res.data?.id;
+    const selectedClass = classes.value.find(
+      (c) => String(c.id) === String(form.value.classId),
+    );
+    const selectedSlot = sessionSlots.value.find(
+      (s) => s.id === form.value.sessionSlotId,
+    );
+
+    if (createdId) {
+      createdSessionInfo.value = {
+        id: createdId,
+        className: selectedClass?.name || `Jilid ${form.value.classId}`,
+        slotName: selectedSlot?.name || "Sesi KBM",
+        date: form.value.date,
+      };
+      showSessionCreatedModal.value = true;
+    }
 
     // Reset form
     form.value.classId = "";
@@ -1382,5 +1493,175 @@ onMounted(() => {
     border-radius: var(--radius-md, 8px);
     border: 1px dashed var(--gray-300, #cbd5e1);
   }
+}
+
+/* Attendance Flow Additions */
+.attendance-guidance-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(232, 245, 233, 0.95), rgba(200, 230, 201, 0.6));
+  border: 1px solid #81c784;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.attendance-guidance-banner .banner-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.attendance-guidance-banner .banner-content {
+  flex: 1;
+}
+
+.banner-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1b5e20;
+  background: #c8e6c9;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.03em;
+}
+
+.attendance-guidance-banner h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1b5e20;
+  margin: 0 0 0.25rem 0;
+}
+
+.attendance-guidance-banner p {
+  font-size: 0.88rem;
+  color: #2e7d32;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.form-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.badge-locked-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #c8e6c9;
+}
+
+.input-locked {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  cursor: not-allowed;
+  border-color: #cbd5e1 !important;
+}
+
+.help-text-locked {
+  color: #2e7d32 !important;
+  font-weight: 500;
+}
+
+.btn-back-attendance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Post-Session Created Modal */
+.session-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.session-modal {
+  max-width: 440px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.75rem;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-icon-wrap {
+  font-size: 2.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.session-modal h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.modal-desc {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 1.25rem;
+  line-height: 1.45;
+}
+
+.modal-instruction-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.instruction-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.instruction-text {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.modal-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.btn-action-flow {
+  width: 100%;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.btn-dismiss-modal {
+  color: #64748b;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  margin-top: 0.25rem;
 }
 </style>

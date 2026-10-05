@@ -709,6 +709,13 @@ const route = useRoute();
 const router = useRouter();
 const { success, error: showError, warning } = useToast();
 
+function getTodayWibString() {
+  const d = new Date();
+  const utcMs = d.getTime() + (d.getTimezoneOffset() * 60000);
+  const wibDate = new Date(utcMs + (7 * 60 * 60000));
+  return `${wibDate.getFullYear()}-${String(wibDate.getMonth() + 1).padStart(2, '0')}-${String(wibDate.getDate()).padStart(2, '0')}`;
+}
+
 // Query Parameters (reactive to URL query changes)
 const targetDate = computed(() => (typeof route.query.date === 'string' ? route.query.date : getTodayWibString()));
 const isBackfill = computed(() => route.query.isBackfill === 'true' && targetDate.value < getTodayWibString());
@@ -822,13 +829,6 @@ async function submitRename() {
   }
 }
 
-// Helper for local WIB date string
-function getTodayWibString() {
-  const d = new Date();
-  const utcMs = d.getTime() + (d.getTimezoneOffset() * 60000);
-  const wibDate = new Date(utcMs + (7 * 60 * 60000));
-  return `${wibDate.getFullYear()}-${String(wibDate.getMonth() + 1).padStart(2, '0')}-${String(wibDate.getDate()).padStart(2, '0')}`;
-}
 
 // Formatted Strings
 const formattedHeaderDate = computed(() => {

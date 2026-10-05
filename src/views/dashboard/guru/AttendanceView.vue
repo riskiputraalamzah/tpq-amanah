@@ -17,7 +17,8 @@
       <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
         <div class="holiday-alert-icon">🎉</div>
         <div class="holiday-alert-content">
-          <span class="holiday-alert-label">{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional' }}</span>
+          <span class="holiday-alert-label">{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional'
+          }}</span>
           <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
         </div>
       </div>
@@ -31,116 +32,205 @@
     </template>
 
     <!-- Today's Card - Prominent Design -->
+    <!-- Today's Card - Prominent Symmetrical Design -->
     <div class="today-card glass-card">
-      <div class="today-date-display">
-        <span class="day-name">{{ dayName }}</span>
-        <div class="date-number">{{ dateNumber }}</div>
-        <span class="month-year">{{ monthYear }}</span>
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-today">
+        <SkeletonLoader type="text" height="24px" width="180px" />
+        <SkeletonLoader type="text" height="40px" width="220px" />
+        <SkeletonLoader type="text" height="20px" width="140px" />
       </div>
 
-      <div class="today-content">
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-today">
-          <SkeletonLoader type="text" height="24px" width="180px" />
-          <SkeletonLoader type="text" height="40px" width="220px" />
-          <SkeletonLoader type="text" height="20px" width="140px" />
-        </div>
+      <!-- Attendance Recorded State -->
+      <div v-else-if="todayAttendance" class="today-attendance-recorded"
+        :class="{ 'holiday-override': todayHoliday.isHoliday }">
 
-        <div v-else-if="todayAttendance" class="attendance-done"
-          :class="{ 'holiday-override': todayHoliday.isHoliday }">
-          <div class="done-icon" v-if="!todayHoliday.isHoliday">✅</div>
-          <div class="done-icon" v-else>⚠️</div>
-          <h3 v-if="todayHoliday.isHoliday">Absen Masuk (Hari Libur)</h3>
-          <h3 v-else>Absensi Hari Ini Sudah Tercatat</h3>
-
-          <div class="status-display" :class="todayAttendance.status"
-            :style="todayHoliday.isHoliday ? 'background: rgba(255, 193, 7, 0.15); color: #e65100;' : ''">
-            {{ todayAttendance.status === 'hadir' ? 'HADIR' : 'TIDAK HADIR' }}
+        <!-- Top Row: Date Badge & Status Panel (Balanced & Symmetrical) -->
+        <div class="attendance-header-panel">
+          <div class="today-date-display">
+            <span class="day-name">{{ dayName }}</span>
+            <div class="date-number">{{ dateNumber }}</div>
+            <span class="month-year">{{ monthYear }}</span>
           </div>
 
-          <p v-if="todayHoliday.isHoliday" class="notes-text override-notice">
-            📌 Anda masuk pada hari libur, dan admin telah mengabsenkan anda.
-          </p>
-          <p v-if="todayAttendance.notes" class="notes-text">Catatan: {{ todayAttendance.notes }}</p>
-
-          <!-- KBM & Jurnal Guidance Box (Hanya tampil jika hadir) -->
-          <div v-if="todayAttendance.status === 'hadir'" class="kbm-guidance-box">
-            <div class="kbm-guidance-header">
-              <div class="kbm-guidance-icon">📚</div>
-              <div class="kbm-guidance-info">
-                <h4>Kegiatan Belajar Mengajar (KBM) Hari Ini</h4>
-                <p v-if="loadingTodayKbm" class="kbm-loading-text">
-                  Memeriksa status KBM hari ini...
+          <div class="att-status-card">
+            <div class="att-status-info">
+              <div class="status-badge-lg" :class="todayAttendance.status"
+                :style="todayHoliday.isHoliday ? 'background: rgba(255, 193, 7, 0.2); color: #b45309; border-color: rgba(245, 158, 11, 0.4);' : ''">
+                <span class="badge-icon">{{ todayAttendance.status === 'hadir' ? '✓' : '✗' }}</span>
+                <span class="badge-text">{{ todayAttendance.status === 'hadir' ? 'HADIR' : 'TIDAK HADIR' }}</span>
+              </div>
+              <div class="att-status-texts">
+                <h3 class="att-status-title">
+                  {{ todayHoliday.isHoliday ? 'Absen Masuk (Hari Libur)' : 'Absensi Hari Ini Sudah Tercatat' }}
+                </h3>
+                <p v-if="todayHoliday.isHoliday" class="att-notes-text override-notice-inline">
+                  📌 Anda masuk pada hari libur, dan admin telah mengabsenkan Anda.
                 </p>
-                <p v-else-if="todayKbmSessions.length === 0">
-                  Kehadiran Anda sudah tercatat! Silakan lanjutkan untuk mengisi absensi santri dan jurnal mengajar hari ini.
+                <p v-else-if="todayAttendance.notes" class="att-notes-text">
+                  Catatan: {{ todayAttendance.notes }}
                 </p>
-                <p v-else>
-                  Alhamdulillah, Anda sudah mengisi <strong>{{ todayKbmSessions.length }} sesi KBM</strong> hari ini.
+                <p v-else class="att-status-subtitle">
+                  Kehadiran Anda telah tersimpan dan sinkron dengan rekap bulanan.
                 </p>
               </div>
             </div>
 
-            <!-- List of today's already filled sessions if any -->
-            <div v-if="!loadingTodayKbm && todayKbmSessions.length > 0" class="today-sessions-pill-list">
-              <span v-for="s in todayKbmSessions" :key="s.id" class="today-session-pill">
-                ✓ {{ s.className || s.classId || 'Sesi' }} ({{ s.sessionSlotId === 'wave_2' ? 'Gel. 2' : 'Gel. 1' }})
-              </span>
+            <div class="att-status-actions" v-if="!todayHoliday.isHoliday">
+              <button class="btn btn-outline-secondary btn-sm btn-update-compact" @click="openUpdateModal">
+                ✏️ Ubah Status
+              </button>
             </div>
-
-            <div class="kbm-guidance-actions">
-              <router-link
-                :to="todayKbmWorkspaceUrl"
-                class="btn btn-primary btn-kbm-cta"
-              >
-                <span class="cta-icon">{{ todayKbmSessions.length === 0 ? '✍️' : '➕' }}</span>
-                <span>{{ todayKbmSessions.length === 0 ? 'Mulai Isi KBM & Jurnal Hari Ini →' : 'Buka / Tambah Sesi KBM Hari Ini →' }}</span>
-              </router-link>
-            </div>
-          </div>
-
-          <div class="mt-3">
-            <button v-if="!todayHoliday.isHoliday" class="btn btn-outline-secondary btn-sm btn-update" @click="openUpdateModal">
-              ✏️ Ubah Status Absensi
-            </button>
           </div>
         </div>
 
-        <div v-else-if="isWeekend" class="weekend-notice">
+        <!-- Bottom Section: KBM Guidance Box (Full Width & Symmetrical) -->
+        <div v-if="todayAttendance.status === 'hadir'" class="kbm-guidance-box">
+          <div class="kbm-guidance-header">
+            <div class="kbm-guidance-icon">📚</div>
+            <div class="kbm-guidance-info">
+              <h4>Kegiatan Belajar Mengajar (KBM) Hari Ini</h4>
+              <p v-if="loadingTodayKbm" class="kbm-loading-text">
+                Memeriksa status KBM hari ini...
+              </p>
+              <p v-else-if="todayKbmSessions.length === 0">
+                Kehadiran Anda sudah tercatat! Silakan lanjutkan untuk mengisi absensi santri dan jurnal mengajar hari
+                ini.
+              </p>
+              <p v-else>
+                Alhamdulillah, Anda sudah mengisi <strong>{{ todayKbmSessions.length }} sesi KBM</strong> hari ini:
+              </p>
+            </div>
+          </div>
+
+          <!-- List of today's already filled sessions with rich formatting -->
+          <div v-if="!loadingTodayKbm && todayKbmSessions.length > 0" class="today-sessions-list">
+            <div v-for="s in todayKbmSessions" :key="s.id" class="today-session-item">
+              <div class="session-item-badge">✓</div>
+              <div class="session-item-details">
+                <div class="session-item-header">
+                  <span class="session-item-class">{{ formatSessionClass(s) }}</span>
+                  <span class="session-item-slot-badge">{{ formatSessionSlot(s) }}</span>
+                </div>
+                <div class="session-item-sub">
+                  <span class="session-item-activity">
+                    {{ s.type === 'teaching' ? 'KBM Normal' : (s.activityName || 'Non-KBM') }}
+                  </span>
+                  <span v-if="s.meetingNumber" class="session-item-meeting">Pertemuan Ke-{{ s.meetingNumber }}</span>
+                  <span v-if="s.substituteFor" class="session-item-badal">Badal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kbm-guidance-actions">
+            <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-kbm-cta">
+              <span class="cta-icon">{{ todayKbmSessions.length === 0 ? '✍️' : '➕' }}</span>
+              <span style="font-size: 0.80rem;">
+                {{ todayKbmSessions.length === 0 ? `Mulai Isi KBM & Jurnal Hari Ini →` : `Buka / Tambah Sesi KBM Hari
+                Ini →`
+                }}
+              </span>
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Non-Hadir Information Box -->
+        <div v-else class="not-hadir-box">
+          <span class="not-hadir-icon">ℹ️</span>
+          <div>
+            <strong>Status: Tidak Hadir</strong>
+            <p>Anda tercatat tidak hadir hari ini. Tidak ada kewajiban mengisi absensi santri atau jurnal mengajar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekend State -->
+      <div v-else-if="isWeekend" class="today-panel-wrapper">
+        <div class="today-date-display">
+          <span class="day-name">{{ dayName }}</span>
+          <div class="date-number">{{ dateNumber }}</div>
+          <span class="month-year">{{ monthYear }}</span>
+        </div>
+        <div class="weekend-notice">
           <span class="weekend-icon">🏖️</span>
           <p>Hari ini adalah akhir pekan.<br />Absensi hanya untuk hari Senin - Jumat.</p>
         </div>
+      </div>
 
-        <div v-else-if="todayHoliday.isHoliday" class="holiday-notice">
+      <!-- Holiday State -->
+      <div v-else-if="todayHoliday.isHoliday" class="today-panel-wrapper">
+        <div class="today-date-display">
+          <span class="day-name">{{ dayName }}</span>
+          <div class="date-number">{{ dateNumber }}</div>
+          <span class="month-year">{{ monthYear }}</span>
+        </div>
+        <div class="holiday-notice">
           <span class="holiday-notice-icon">🎉</span>
           <h3>{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional' }}</h3>
           <p class="holiday-notice-name">{{ todayHoliday.holidayName }}</p>
           <p class="holiday-notice-text">Tidak ada absensi untuk hari libur.<br />Selamat beristirahat! 🙏</p>
         </div>
+      </div>
 
-        <div v-else class="attendance-form">
-          <h3>Pilih Status Kehadiran</h3>
+      <!-- Attendance Form (Belum Absen) -->
+      <div v-else class="today-panel-wrapper">
+        <div class="today-date-display">
+          <span class="day-name">{{ dayName }}</span>
+          <div class="date-number">{{ dateNumber }}</div>
+          <span class="month-year">{{ monthYear }}</span>
+        </div>
+
+        <div class="attendance-form">
+          <div class="attendance-form-header">
+            <h3 class="form-title">Pilih Status Kehadiran Hari Ini</h3>
+            <p class="form-subtitle">Silakan catat kehadiran Anda sebelum memulai sesi KBM dan absensi santri.</p>
+          </div>
+
           <div class="status-buttons">
-            <button class="status-btn hadir" :class="{ active: selectedStatus === 'hadir' }"
+            <button type="button" class="status-btn hadir" :class="{ active: selectedStatus === 'hadir' }"
               @click="selectedStatus = 'hadir'">
-              <span class="btn-icon">✓</span>
-              <span class="btn-text">HADIR</span>
+              <div class="status-btn-icon">✓</div>
+              <div class="status-btn-body">
+                <span class="btn-title">HADIR</span>
+                <span class="btn-desc">Siap mengajar & mengisi jurnal KBM</span>
+              </div>
             </button>
-            <button class="status-btn tidak-hadir" :class="{ active: selectedStatus === 'tidak_hadir' }"
+            <button type="button" class="status-btn tidak-hadir" :class="{ active: selectedStatus === 'tidak_hadir' }"
               @click="selectedStatus = 'tidak_hadir'">
-              <span class="btn-icon">✗</span>
-              <span class="btn-text">TIDAK HADIR</span>
+              <div class="status-btn-icon">✗</div>
+              <div class="status-btn-body">
+                <span class="btn-title">TIDAK HADIR</span>
+                <span class="btn-desc">Izin, sakit, atau berhalangan</span>
+              </div>
             </button>
           </div>
 
+          <!-- Dynamic Context Preview -->
+          <div v-if="selectedStatus === 'hadir'" class="status-context-preview hadir-preview">
+            <span class="context-icon">💡</span>
+            <span>Kehadiran Anda akan dicatat. Selanjutnya Anda dapat langsung mengisi absensi santri dan jurnal KBM
+              hari
+              ini.</span>
+          </div>
+          <div v-else-if="selectedStatus === 'tidak_hadir'" class="status-context-preview tidak-hadir-preview">
+            <span class="context-icon">ℹ️</span>
+            <span>Status tidak hadir akan dicatat pada rekap bulanan Anda. Tidak ada kewajiban mengisi sesi KBM hari
+              ini.</span>
+          </div>
+
           <div class="notes-input">
-            <label class="form-label">Catatan (Opsional)</label>
-            <input v-model="notes" type="text" class="form-input" placeholder="Tambahkan catatan jika perlu..." />
+            <label class="form-label">Catatan Kehadiran (Opsional)</label>
+            <input v-model="notes" type="text" class="form-input"
+              placeholder="Tambahkan catatan jika izin, sakit, atau ada keterangan..." />
           </div>
 
           <button class="btn btn-primary btn-submit" @click="submitAttendance"
             :disabled="!selectedStatus || submitting">
-            {{ submitting ? 'Menyimpan...' : 'Simpan Absensi' }}
+            <span v-if="submitting">Menyimpan Kehadiran...</span>
+            <span v-else-if="selectedStatus === 'hadir'">✓ Konfirmasi Hadir & Lanjut ke KBM →</span>
+            <span v-else-if="selectedStatus === 'tidak_hadir'">Simpan Status Tidak Hadir</span>
+            <span v-else>Pilih Status di Atas untuk Menyimpan</span>
           </button>
         </div>
       </div>
@@ -279,73 +369,74 @@
     </div>
 
     <!-- Update Modal -->
-      <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
-        <div class="modal glass-card">
-          <h3>Ubah Status Absensi</h3>
-          <p class="modal-date">{{ dayName }}, {{ dateNumber }} {{ monthYear }}</p>
-  
-          <div class="form-group">
-            <label class="form-label">Status Kehadiran</label>
-            <div class="status-buttons modal-status">
-              <button class="status-btn hadir" :class="{ active: updateForm.status === 'hadir' }"
-                @click="updateForm.status = 'hadir'">
-                <span class="btn-icon">✓</span>
-                <span class="btn-text">HADIR</span>
-              </button>
-              <button class="status-btn tidak-hadir" :class="{ active: updateForm.status === 'tidak_hadir' }"
-                @click="updateForm.status = 'tidak_hadir'">
-                <span class="btn-icon">✗</span>
-                <span class="btn-text">TIDAK HADIR</span>
-              </button>
-            </div>
-          </div>
-  
-          <div class="form-group">
-            <label class="form-label">Catatan (Opsional)</label>
-            <input v-model="updateForm.notes" type="text" class="form-input" placeholder="Tambahkan catatan..." />
-          </div>
-  
-          <div class="modal-actions">
-            <button class="btn btn-secondary" @click="closeUpdateModal">Batal</button>
-            <button class="btn btn-primary" @click="submitUpdate" :disabled="updating">
-              {{ updating ? 'Menyimpan...' : 'Simpan Perubahan' }}
+    <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
+      <div class="modal glass-card">
+        <h3>Ubah Status Absensi</h3>
+        <p class="modal-date">{{ dayName }}, {{ dateNumber }} {{ monthYear }}</p>
+
+        <div class="form-group">
+          <label class="form-label">Status Kehadiran</label>
+          <div class="status-buttons modal-status">
+            <button class="status-btn hadir" :class="{ active: updateForm.status === 'hadir' }"
+              @click="updateForm.status = 'hadir'">
+              <span class="btn-icon">✓</span>
+              <span class="btn-text">HADIR</span>
+            </button>
+            <button class="status-btn tidak-hadir" :class="{ active: updateForm.status === 'tidak_hadir' }"
+              @click="updateForm.status = 'tidak_hadir'">
+              <span class="btn-icon">✗</span>
+              <span class="btn-text">TIDAK HADIR</span>
             </button>
           </div>
         </div>
-    </div>
-  </div>
 
-  <!-- Modal Pasca Absen Hadir: Arahkan langsung ke KBM & Jurnal -->
-  <Teleport to="body">
-    <div v-if="showPostAttendanceModal" class="modal-overlay" @click.self="showPostAttendanceModal = false">
-      <div class="modal glass-card post-attendance-modal">
-        <div class="post-att-header text-center">
-          <div class="post-att-icon">🎉</div>
-          <h3 class="post-att-title">Alhamdulillah, Kehadiran Tercatat!</h3>
-          <p class="post-att-subtitle">
-            Status presensi Anda hari ini: <span class="badge-success-pill">HADIR</span>
-          </p>
+        <div class="form-group">
+          <label class="form-label">Catatan (Opsional)</label>
+          <input v-model="updateForm.notes" type="text" class="form-input" placeholder="Tambahkan catatan..." />
         </div>
 
-        <div class="post-att-card">
-          <div class="post-att-card-icon">📖</div>
-          <div class="post-att-card-content">
-            <strong>Lanjutkan Isi KBM & Jurnal Santri</strong>
-            <p>Mari lengkapi absensi santri jilid Anda dan materi jurnal pembelajaran yang diajarkan hari ini.</p>
-          </div>
-        </div>
-
-        <div class="post-att-actions">
-          <button type="button" class="btn btn-secondary" @click="showPostAttendanceModal = false">
-            Nanti Saja
+        <div class="modal-actions">
+          <button class="btn btn-secondary" @click="closeUpdateModal">Batal</button>
+          <button class="btn btn-primary" @click="submitUpdate" :disabled="updating">
+            {{ updating ? 'Menyimpan...' : 'Simpan Perubahan' }}
           </button>
-          <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-direct-kbm" @click="showPostAttendanceModal = false">
-            Isi KBM Sekarang →
-          </router-link>
         </div>
       </div>
     </div>
-  </Teleport>
+
+    <!-- Modal Pasca Absen Hadir: Arahkan langsung ke KBM & Jurnal -->
+    <Teleport to="body">
+      <div v-if="showPostAttendanceModal" class="modal-overlay" @click.self="showPostAttendanceModal = false">
+        <div class="modal glass-card post-attendance-modal">
+          <div class="post-att-header text-center">
+            <div class="post-att-icon">🎉</div>
+            <h3 class="post-att-title">Alhamdulillah, Kehadiran Tercatat!</h3>
+            <p class="post-att-subtitle">
+              Status presensi Anda hari ini: <span class="badge-success-pill">HADIR</span>
+            </p>
+          </div>
+
+          <div class="post-att-card">
+            <div class="post-att-card-icon">📖</div>
+            <div class="post-att-card-content">
+              <strong>Lanjutkan Isi KBM & Jurnal Santri</strong>
+              <p>Mari lengkapi absensi santri jilid Anda dan materi jurnal pembelajaran yang diajarkan hari ini.</p>
+            </div>
+          </div>
+
+          <div class="post-att-actions">
+            <button type="button" class="btn btn-secondary" @click="showPostAttendanceModal = false">
+              Nanti Saja
+            </button>
+            <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-direct-kbm"
+              @click="showPostAttendanceModal = false">
+              Isi KBM Sekarang →
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
 </template>
 
 <script setup>
@@ -380,6 +471,52 @@ const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1)
 const todayKbmSessions = ref([])
 const loadingTodayKbm = ref(false)
 const showPostAttendanceModal = ref(false)
+const sessionSlots = ref([])
+
+const fetchSessionSlots = async () => {
+  try {
+    const { data } = await api.get('/teaching_sessions/slots')
+    if (Array.isArray(data)) {
+      sessionSlots.value = data
+    }
+  } catch (e) {
+    // Non-blocking fallback
+  }
+}
+
+const formatSessionClass = (s) => {
+  if (!s) return '-'
+  if (s.className) return s.className
+  const id = String(s.classId || s.levelId || '')
+  if (id >= '1' && id <= '6') return `Jilid ${id}`
+  if (id === '7') return 'Marhalah Ula'
+  if (id === '8') return 'Marhalah Wustho'
+  if (id === '9') return 'Marhalah Ukhro'
+  return id ? `Kelas ${id}` : 'Sesi Mengajar'
+}
+
+const formatSessionSlot = (s) => {
+  if (!s) return '-'
+  // If session already has full slotName e.g. "Gelombang 2 / Malam (18:00 - 19:30)"
+  if (s.slotName && s.slotName.includes('(')) return s.slotName
+
+  const slotId = s.sessionSlotId || ''
+  const foundSlot = sessionSlots.value.find((x) => x.id === slotId)
+  if (foundSlot) {
+    const time = foundSlot.startTime && foundSlot.endTime ? ` (${foundSlot.startTime} - ${foundSlot.endTime})` : ''
+    return `${foundSlot.name}${time}`
+  }
+
+  const slotLower = String(slotId).toLowerCase()
+  if (slotLower.includes('2') || slotLower.includes('malam') || slotLower.includes('wave_2')) {
+    return 'Gelombang 2 / Malam (18:00 - 19:30)'
+  }
+  if (slotLower.includes('1') || slotLower.includes('sore') || slotLower.includes('wave_1')) {
+    return 'Gelombang 1 / Sore (15:00 - 16:30)'
+  }
+
+  return s.slotName || slotId || 'Gelombang 1 / Sore'
+}
 
 const todayDateString = computed(() => {
   const y = today.getFullYear()
@@ -388,7 +525,7 @@ const todayDateString = computed(() => {
   return `${y}-${m}-${d}`
 })
 
-const todayKbmWorkspaceUrl = computed(() => `/dashboard/kbm/daily-workspace?date=${todayDateString.value}&from=attendance`)
+const todayKbmWorkspaceUrl = computed(() => `/dashboard/kbm?date=${todayDateString.value}&from=attendance`)
 
 const fetchTodayKbm = async () => {
   if (!todayAttendance.value || todayAttendance.value.status !== 'hadir') {
@@ -867,9 +1004,10 @@ onMounted(async () => {
   await Promise.all([
     fetchCustomHolidays(),
     fetchDismissedHolidays(),
-    fetchCurrentMonthCustomHolidays()
+    fetchCurrentMonthCustomHolidays(),
+    fetchSessionSlots()
   ])
-  
+
   loadingHolidays.value = false
 
   // Fetch attendance
@@ -907,16 +1045,30 @@ onMounted(async () => {
 /* Today Card */
 .today-card {
   display: flex;
-  gap: var(--space-xl);
+  flex-direction: column;
   padding: var(--space-xl);
   margin-bottom: var(--space-2xl);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+}
+
+.today-panel-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xl);
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .today-card {
+    padding: var(--space-lg);
+  }
+
+  .today-panel-wrapper {
     flex-direction: column;
-    text-align: center;
+    gap: var(--space-lg);
   }
 }
 
@@ -925,17 +1077,29 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-lg) var(--space-2xl);
-  background: var(--primary-gradient);
+  padding: var(--space-xl) 20px;
+  background: linear-gradient(145deg, #059669 0%, #047857 60%, #065f46 100%);
   border-radius: var(--radius-xl);
   color: white;
-  min-width: 140px;
+  width: 140px;
+  flex-shrink: 0;
+  align-self: stretch;
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.22);
+}
+
+@media (max-width: 768px) {
+  .today-date-display {
+    width: 100%;
+    max-width: none;
+    padding: 16px 20px;
+  }
 }
 
 .day-name {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   opacity: 0.9;
 }
 
@@ -943,19 +1107,14 @@ onMounted(async () => {
   font-size: 3.5rem;
   font-weight: 800;
   line-height: 1;
-  margin: var(--space-sm) 0;
+  margin: 10px 0;
 }
 
 .month-year {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.today-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  font-size: 0.86rem;
+  font-weight: 600;
+  opacity: 0.95;
+  white-space: nowrap;
 }
 
 .loading-today {
@@ -967,6 +1126,8 @@ onMounted(async () => {
 }
 
 .weekend-notice {
+  flex: 1;
+  min-width: 0;
   text-align: center;
   padding: var(--space-xl);
   color: var(--gray-500);
@@ -980,6 +1141,8 @@ onMounted(async () => {
 
 /* Holiday Notice in Today Card */
 .holiday-notice {
+  flex: 1;
+  min-width: 0;
   text-align: center;
   padding: var(--space-xl);
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
@@ -1046,40 +1209,160 @@ onMounted(async () => {
   margin-top: var(--space-lg) !important;
 }
 
-.attendance-done {
-  text-align: center;
-  padding: var(--space-lg);
+.today-attendance-recorded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
 }
 
-.done-icon {
-  font-size: 3rem;
-  margin-bottom: var(--space-md);
+.attendance-header-panel {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-lg);
+  width: 100%;
 }
 
-.attendance-done h3 {
-  color: var(--primary-dark);
-  margin-bottom: var(--space-lg);
+@media (max-width: 768px) {
+  .attendance-header-panel {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
 }
 
-.status-display {
-  display: inline-block;
-  padding: var(--space-md) var(--space-2xl);
+.att-status-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 14px var(--space-xl);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.85));
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.att-status-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+  flex: 1;
+}
+
+.status-badge-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
   border-radius: var(--radius-full);
-  font-size: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.status-badge-lg.hadir {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+
+.status-badge-lg.tidak_hadir,
+.status-badge-lg.izin,
+.status-badge-lg.sakit {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+
+.att-status-texts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.att-status-title {
+  font-size: 1.12rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  color: var(--gray-800);
+  margin: 0;
+  line-height: 1.3;
 }
 
-.status-display.hadir {
-  background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+.att-status-subtitle {
+  font-size: 0.84rem;
+  color: var(--gray-500);
+  margin: 2px 0 0 0;
+  line-height: 1.4;
 }
 
-.status-display.izin,
-.status-display.sakit,
-.status-display.tidak_hadir {
-  background: rgba(244, 67, 54, 0.15);
-  color: #c62828;
+.att-notes-text {
+  font-size: 0.84rem;
+  color: var(--gray-600);
+  font-style: italic;
+  margin: 2px 0 0 0;
+}
+
+.override-notice-inline {
+  color: #d97706 !important;
+  font-weight: 600;
+}
+
+.att-status-actions {
+  flex-shrink: 0;
+}
+
+.btn-update-compact {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  background: white;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-update-compact:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--gray-900);
+}
+
+@media (max-width: 768px) {
+  .att-status-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .att-status-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .att-status-actions {
+    width: 100%;
+  }
+
+  .btn-update-compact {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .notes-text {
@@ -1088,76 +1371,167 @@ onMounted(async () => {
   font-style: italic;
 }
 
-.attendance-form h3 {
-  color: var(--primary-dark);
-  margin-bottom: var(--space-lg);
-  text-align: center;
+.attendance-form {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.attendance-form-header {
+  margin-bottom: 2px;
+}
+
+.attendance-form-header .form-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 4px 0;
+}
+
+.attendance-form-header .form-subtitle {
+  font-size: 0.88rem;
+  color: var(--gray-500);
+  margin: 0;
+  line-height: 1.4;
 }
 
 .status-buttons {
   display: flex;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  margin-top: 4px;
 }
 
 .status-btn {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: var(--space-lg);
+  gap: var(--space-md);
+  padding: 16px 20px;
   border-radius: var(--radius-xl);
-  border: 3px solid var(--gray-200);
+  border: 2px solid var(--gray-200);
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: left;
 }
 
 .status-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
 }
 
-.status-btn .btn-icon {
-  font-size: 2rem;
-  margin-bottom: var(--space-sm);
+.status-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 1.35rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.status-btn .btn-text {
-  font-weight: 600;
+.status-btn.hadir .status-btn-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-btn.tidak-hadir .status-btn-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-btn-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.status-btn .btn-title {
+  font-size: 1.05rem;
+  font-weight: 800;
   letter-spacing: 0.5px;
+  color: var(--gray-800);
+}
+
+.status-btn .btn-desc {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  margin-top: 2px;
+  line-height: 1.3;
 }
 
 .status-btn.hadir:hover,
 .status-btn.hadir.active {
-  border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.1);
+  border-color: #16a34a;
+  background: #f0fdf4;
 }
 
-.status-btn.hadir.active {
-  background: #4caf50;
+.status-btn.hadir.active .status-btn-icon {
+  background: #16a34a;
   color: white;
+}
+
+.status-btn.hadir.active .btn-title {
+  color: #15803d;
 }
 
 .status-btn.tidak-hadir:hover,
 .status-btn.tidak-hadir.active {
-  border-color: #f44336;
-  background: rgba(244, 67, 54, 0.1);
+  border-color: #dc2626;
+  background: #fef2f2;
 }
 
-.status-btn.tidak-hadir.active {
-  background: #f44336;
+.status-btn.tidak-hadir.active .status-btn-icon {
+  background: #dc2626;
   color: white;
 }
 
+.status-btn.tidak-hadir.active .btn-title {
+  color: #b91c1c;
+}
+
 .notes-input {
-  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.notes-input .form-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 0;
 }
 
 .btn-submit {
   width: 100%;
-  padding: var(--space-md) var(--space-xl);
-  font-size: 1rem;
+  padding: 12px var(--space-xl);
+  font-size: 0.90rem;
+  font-weight: 700;
+  border-radius: var(--radius-lg);
+  margin-top: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
+}
+
+@media (max-width: 768px) {
+  .status-buttons {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .status-btn {
+    padding: 12px 16px;
+  }
 }
 
 /* Recap Section */
@@ -2002,21 +2376,140 @@ onMounted(async () => {
   opacity: 0.8;
 }
 
-.today-sessions-pill-list {
+.today-sessions-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
-.today-session-pill {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  background: rgba(16, 185, 129, 0.15);
+.today-session-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 10px 14px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.06);
+}
+
+.session-item-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.session-item-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.session-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.session-item-class {
+  font-weight: 700;
+  font-size: 0.95rem;
   color: #065f46;
-  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.session-item-slot-badge {
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #047857;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid #a7f3d0;
+}
+
+.session-item-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #059669;
+}
+
+.session-item-meeting {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.75rem;
+  border: 1px solid #bae6fd;
+}
+
+.session-item-badal {
+  background: #fef3c7;
+  color: #b45309;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.75rem;
+  border: 1px solid #fde68a;
+}
+
+@media (max-width: 768px) {
+  .today-session-item {
+    align-items: flex-start;
+  }
+
+  .session-item-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.not-hadir-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-xl);
+  padding: var(--space-md) var(--space-lg);
+  margin-top: var(--space-sm);
+}
+
+.not-hadir-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.not-hadir-box strong {
+  color: #9a3412;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.not-hadir-box p {
+  color: #c2410c;
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.4;
 }
 
 .kbm-guidance-actions {
@@ -2117,5 +2610,9 @@ onMounted(async () => {
 .btn-direct-kbm {
   font-weight: 600;
   text-decoration: none;
+}
+
+.status-context-preview {
+  font-size: 0.80rem;
 }
 </style>
