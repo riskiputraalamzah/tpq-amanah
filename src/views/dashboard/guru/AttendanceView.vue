@@ -63,9 +63,47 @@
           </p>
           <p v-if="todayAttendance.notes" class="notes-text">Catatan: {{ todayAttendance.notes }}</p>
 
-          <button v-if="!todayHoliday.isHoliday" class="btn btn-secondary ms-2 btn-update" @click="openUpdateModal">
-            ✏️ Ubah Status
-          </button>
+          <!-- KBM & Jurnal Guidance Box (Hanya tampil jika hadir) -->
+          <div v-if="todayAttendance.status === 'hadir'" class="kbm-guidance-box">
+            <div class="kbm-guidance-header">
+              <div class="kbm-guidance-icon">📚</div>
+              <div class="kbm-guidance-info">
+                <h4>Kegiatan Belajar Mengajar (KBM) Hari Ini</h4>
+                <p v-if="loadingTodayKbm" class="kbm-loading-text">
+                  Memeriksa status KBM hari ini...
+                </p>
+                <p v-else-if="todayKbmSessions.length === 0">
+                  Kehadiran Anda sudah tercatat! Silakan lanjutkan untuk mengisi absensi santri dan jurnal mengajar hari ini.
+                </p>
+                <p v-else>
+                  Alhamdulillah, Anda sudah mengisi <strong>{{ todayKbmSessions.length }} sesi KBM</strong> hari ini.
+                </p>
+              </div>
+            </div>
+
+            <!-- List of today's already filled sessions if any -->
+            <div v-if="!loadingTodayKbm && todayKbmSessions.length > 0" class="today-sessions-pill-list">
+              <span v-for="s in todayKbmSessions" :key="s.id" class="today-session-pill">
+                ✓ {{ s.className || s.classId || 'Sesi' }} ({{ s.sessionSlotId === 'wave_2' ? 'Gel. 2' : 'Gel. 1' }})
+              </span>
+            </div>
+
+            <div class="kbm-guidance-actions">
+              <router-link
+                :to="todayKbmWorkspaceUrl"
+                class="btn btn-primary btn-kbm-cta"
+              >
+                <span class="cta-icon">{{ todayKbmSessions.length === 0 ? '✍️' : '➕' }}</span>
+                <span>{{ todayKbmSessions.length === 0 ? 'Mulai Isi KBM & Jurnal Hari Ini →' : 'Buka / Tambah Sesi KBM Hari Ini →' }}</span>
+              </router-link>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <button v-if="!todayHoliday.isHoliday" class="btn btn-outline-secondary btn-sm btn-update" @click="openUpdateModal">
+              ✏️ Ubah Status Absensi
+            </button>
+          </div>
         </div>
 
         <div v-else-if="isWeekend" class="weekend-notice">
@@ -276,6 +314,38 @@
         </div>
     </div>
   </div>
+
+  <!-- Modal Pasca Absen Hadir: Arahkan langsung ke KBM & Jurnal -->
+  <Teleport to="body">
+    <div v-if="showPostAttendanceModal" class="modal-overlay" @click.self="showPostAttendanceModal = false">
+      <div class="modal glass-card post-attendance-modal">
+        <div class="post-att-header text-center">
+          <div class="post-att-icon">🎉</div>
+          <h3 class="post-att-title">Alhamdulillah, Kehadiran Tercatat!</h3>
+          <p class="post-att-subtitle">
+            Status presensi Anda hari ini: <span class="badge-success-pill">HADIR</span>
+          </p>
+        </div>
+
+        <div class="post-att-card">
+          <div class="post-att-card-icon">📖</div>
+          <div class="post-att-card-content">
+            <strong>Lanjutkan Isi KBM & Jurnal Santri</strong>
+            <p>Mari lengkapi absensi santri jilid Anda dan materi jurnal pembelajaran yang diajarkan hari ini.</p>
+          </div>
+        </div>
+
+        <div class="post-att-actions">
+          <button type="button" class="btn btn-secondary" @click="showPostAttendanceModal = false">
+            Nanti Saja
+          </button>
+          <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-direct-kbm" @click="showPostAttendanceModal = false">
+            Isi KBM Sekarang →
+          </router-link>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -305,6 +375,39 @@ const loadingHolidays = ref(true)
 const todayAttendance = ref(null)
 const attendanceHistory = ref([])
 const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
+
+// Today KBM & Guidance state
+const todayKbmSessions = ref([])
+const loadingTodayKbm = ref(false)
+const showPostAttendanceModal = ref(false)
+
+const todayDateString = computed(() => {
+  const y = today.getFullYear()
+  const m = String(today.getMonth() + 1).padStart(2, '0')
+  const d = String(today.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+})
+
+const todayKbmWorkspaceUrl = computed(() => `/dashboard/kbm/daily-workspace?date=${todayDateString.value}&from=attendance`)
+
+const fetchTodayKbm = async () => {
+  if (!todayAttendance.value || todayAttendance.value.status !== 'hadir') {
+    todayKbmSessions.value = []
+    return
+  }
+  loadingTodayKbm.value = true
+  try {
+    const { data } = await api.get('/teaching_sessions', {
+      params: { date: todayDateString.value }
+    })
+    todayKbmSessions.value = Array.isArray(data) ? data : []
+  } catch (e) {
+    console.error('Fetch today KBM error:', e)
+    todayKbmSessions.value = []
+  } finally {
+    loadingTodayKbm.value = false
+  }
+}
 
 // Update modal state
 const showUpdateModal = ref(false)
@@ -665,6 +768,12 @@ const fetchAttendance = async () => {
         d.getMonth() === todayMonth &&
         d.getDate() === todayDate
     }) || null
+
+    if (todayAttendance.value && todayAttendance.value.status === 'hadir') {
+      fetchTodayKbm()
+    } else {
+      todayKbmSessions.value = []
+    }
   } catch (e) {
     console.log('Fetch error')
   } finally {
@@ -676,7 +785,7 @@ const submitAttendance = async () => {
   if (!selectedStatus.value) return
   submitting.value = true
   try {
-    const status = selectedStatus.value === 'hadir' ? 'hadir' : 'izin'
+    const status = selectedStatus.value === 'hadir' ? 'hadir' : 'tidak_hadir'
     const { data } = await api.post('/attendance', {
       date: today.toISOString(),
       status,
@@ -691,6 +800,13 @@ const submitAttendance = async () => {
     }
     attendanceHistory.value.unshift(todayAttendance.value)
     success('Absensi berhasil disimpan')
+
+    if (status === 'hadir') {
+      await fetchTodayKbm()
+      showPostAttendanceModal.value = true
+    } else {
+      todayKbmSessions.value = []
+    }
   } catch (e) {
     showError(e.response?.data?.error || 'Gagal menyimpan absensi')
   } finally {
@@ -728,6 +844,12 @@ const submitUpdate = async () => {
     if (idx !== -1) {
       attendanceHistory.value[idx].status = updateForm.value.status
       attendanceHistory.value[idx].notes = updateForm.value.notes
+    }
+
+    if (updateForm.value.status === 'hadir') {
+      fetchTodayKbm()
+    } else {
+      todayKbmSessions.value = []
     }
 
     success('Absensi berhasil diperbarui')
@@ -1836,5 +1958,164 @@ onMounted(async () => {
   .cell-status {
     font-size: 8px;
   }
+}
+
+/* KBM Guidance Box in Today Attendance Card */
+.kbm-guidance-box {
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(240, 253, 244, 0.8));
+  border: 1.5px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  margin-top: var(--space-lg);
+  text-align: left;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.08);
+}
+
+.kbm-guidance-header {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+}
+
+.kbm-guidance-icon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.kbm-guidance-info h4 {
+  color: #065f46;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.kbm-guidance-info p {
+  color: #047857;
+  font-size: 0.88rem;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.kbm-loading-text {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.today-sessions-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.today-session-pill {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.kbm-guidance-actions {
+  margin-top: var(--space-md);
+}
+
+.btn-kbm-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-kbm-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+
+/* Post-Attendance Modal */
+.post-attendance-modal {
+  max-width: 440px;
+  width: 90%;
+  padding: var(--space-xl);
+  border-radius: var(--radius-2xl);
+  background: white;
+}
+
+.post-att-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-sm);
+}
+
+.post-att-title {
+  color: var(--primary-dark);
+  font-size: 1.3rem;
+  margin-bottom: 6px;
+}
+
+.post-att-subtitle {
+  color: var(--gray-600);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-lg);
+}
+
+.badge-success-pill {
+  background: #2e7d32;
+  color: white;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.post-att-card {
+  display: flex;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.post-att-card-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.post-att-card-content strong {
+  display: block;
+  color: #166534;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.post-att-card-content p {
+  color: #15803d;
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.post-att-actions {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: flex-end;
+}
+
+.btn-direct-kbm {
+  font-weight: 600;
+  text-decoration: none;
 }
 </style>

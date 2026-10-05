@@ -27,6 +27,9 @@
         <button v-if="isBackfill" type="button" class="btn btn-secondary btn-sm" @click="handleReturnToLpj">
           {{ dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : '← Kembali ke KBM' }}
         </button>
+        <button v-else type="button" class="btn btn-secondary btn-sm" @click="handleReturnDaily">
+          ← Kembali ke Absensi
+        </button>
       </div>
     </header>
 
@@ -101,11 +104,11 @@
         <router-link v-if="blockingError.actionLink" :to="blockingError.actionLink" class="btn btn-primary">
           {{ blockingError.actionLabel }}
         </router-link>
-        <button v-if="dailyContext?.lpj?.eligible || isBackfill" type="button" class="btn btn-secondary" @click="handleReturnToLpj">
+        <button v-if="isBackfill && (dailyContext?.lpj?.eligible || reportId)" type="button" class="btn btn-secondary" @click="handleReturnToLpj">
           {{ formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ' }}
         </button>
-        <button v-else-if="!blockingError.actionLink" type="button" class="btn btn-secondary" @click="handleReturnToLpj">
-          Kembali ke KBM
+        <button v-else-if="!blockingError.actionLink" type="button" class="btn btn-secondary" @click="handleReturnDaily">
+          ← Kembali ke Absensi
         </button>
       </div>
     </div>
@@ -621,14 +624,14 @@
               + Isi Jilid / Sesi Lain di Tanggal Ini
             </button>
 
-            <!-- Return to LPJ / Dashboard (Shown when not already covered by backfill-completed-hero) -->
+            <!-- Return to LPJ / Attendance -->
             <button 
               v-if="!isAllBackfillFilled"
               type="button" 
               class="btn btn-outline-secondary w-full mt-2" 
-              @click="handleReturnToLpj"
+              @click="isBackfill ? handleReturnToLpj() : handleReturnDaily()"
             >
-              {{ dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : 'Kembali ke KBM' }}
+              {{ isBackfill ? (dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : 'Kembali ke KBM') : '← Selesai & Kembali ke Absensi' }}
             </button>
           </div>
         </div>
@@ -708,9 +711,13 @@ const { success, error: showError, warning } = useToast();
 
 // Query Parameters (reactive to URL query changes)
 const targetDate = computed(() => (typeof route.query.date === 'string' ? route.query.date : getTodayWibString()));
-const isBackfill = computed(() => route.query.isBackfill === 'true');
+const isBackfill = computed(() => route.query.isBackfill === 'true' && targetDate.value < getTodayWibString());
 const reportId = computed(() => (typeof route.query.reportId === 'string' ? route.query.reportId : null));
 const effectiveReportId = computed(() => reportId.value || dailyContext.value?.lpj?.reportId || null);
+
+function handleReturnDaily() {
+  router.push('/dashboard/attendance');
+}
 
 // State
 const loadingContext = ref(true);
