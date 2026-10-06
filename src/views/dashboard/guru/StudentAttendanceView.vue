@@ -79,7 +79,7 @@
               <strong class="context-val">{{ levelName }}</strong>
             </div>
             <div class="context-item">
-              <span class="context-label">Sesi / Gelombang</span>
+              <span class="context-label">Sesi Pembelajaran</span>
               <strong class="context-val">{{ slotName }}</strong>
             </div>
             <div class="context-item">
@@ -525,6 +525,7 @@ import {
   applyAllPresent,
   saveButtonLabel,
 } from "@/utils/studentAttendanceState";
+import { resolveSessionSlotFullName } from "@/utils/sessionSlot";
 
 const { success, error: showError, warning } = useToast();
 
@@ -609,8 +610,7 @@ const levelName = computed(() => {
 });
 
 const slotName = computed(() => {
-  const slot = sessionSlots.value.find((s) => s.id === session.value.sessionSlotId);
-  return slot ? `${slot.name} (${slot.startTime} - ${slot.endTime})` : session.value.sessionSlotId || "-";
+  return resolveSessionSlotFullName(session.value?.sessionSlotId, sessionSlots.value);
 });
 
 const activityName = computed(() => {

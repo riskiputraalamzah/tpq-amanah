@@ -60,7 +60,7 @@
         <span class="crumb-sep">&rarr;</span>
         <span class="crumb-item">{{ levelName }}</span>
         <span class="crumb-sep">&rarr;</span>
-        <span class="crumb-item">{{ slotName }}</span>
+        <span class="crumb-item">{{ slotSimpleName }}</span>
         <span class="crumb-sep">&rarr;</span>
         <span class="crumb-item">{{ formatDate(session.date) }}</span>
         <span class="crumb-sep">&rarr;</span>
@@ -91,7 +91,7 @@
               <strong class="context-val">{{ levelName }}</strong>
             </div>
             <div class="context-item">
-              <span class="context-label">Sesi / Gelombang</span>
+              <span class="context-label">Sesi Pembelajaran</span>
               <strong class="context-val">{{ slotName }}</strong>
             </div>
             <div class="context-item">
@@ -308,6 +308,10 @@ import {
   journalSaveButtonLabel,
   isJournalFilled,
 } from "@/utils/journalState";
+import {
+  resolveSessionSlotName,
+  resolveSessionSlotFullName,
+} from "@/utils/sessionSlot";
 
 const { success, error: showError, warning } = useToast();
 
@@ -342,9 +346,12 @@ const levelName = computed(() => {
   return found ? found.name : session.value.className || "-";
 });
 
+const slotSimpleName = computed(() => {
+  return resolveSessionSlotName(session.value?.sessionSlotId, sessionSlots.value);
+});
+
 const slotName = computed(() => {
-  const slot = sessionSlots.value.find((s) => s.id === session.value.sessionSlotId);
-  return slot ? `${slot.name} (${slot.startTime} - ${slot.endTime})` : session.value.sessionSlotId || "-";
+  return resolveSessionSlotFullName(session.value?.sessionSlotId, sessionSlots.value);
 });
 
 const isSpecial = computed(() => session.value.type === "special_non_kbm");

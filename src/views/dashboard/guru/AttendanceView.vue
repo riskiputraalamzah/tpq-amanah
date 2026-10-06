@@ -445,6 +445,7 @@ import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
 import { fetchHolidays, isTodayHoliday, isTomorrowHoliday, getHolidaysForMonth } from '@/services/holidayService'
+import { resolveSessionSlotFullName } from '@/utils/sessionSlot'
 
 const { success, error: showError } = useToast()
 
@@ -486,36 +487,19 @@ const fetchSessionSlots = async () => {
 
 const formatSessionClass = (s) => {
   if (!s) return '-'
-  if (s.className) return s.className
+  if (s.className) {
+    if (s.className.toLowerCase().includes('marhalah')) return 'Marhalah'
+    return s.className
+  }
   const id = String(s.classId || s.levelId || '')
   if (id >= '1' && id <= '6') return `Jilid ${id}`
-  if (id === '7') return 'Marhalah Ula'
-  if (id === '8') return 'Marhalah Wustho'
-  if (id === '9') return 'Marhalah Ukhro'
+  if (['7', '8', '9'].includes(id) || id.toLowerCase().includes('marhalah')) return 'Marhalah'
   return id ? `Kelas ${id}` : 'Sesi Mengajar'
 }
 
 const formatSessionSlot = (s) => {
   if (!s) return '-'
-  // If session already has full slotName e.g. "Gelombang 2 / Malam (18:00 - 19:30)"
-  if (s.slotName && s.slotName.includes('(')) return s.slotName
-
-  const slotId = s.sessionSlotId || ''
-  const foundSlot = sessionSlots.value.find((x) => x.id === slotId)
-  if (foundSlot) {
-    const time = foundSlot.startTime && foundSlot.endTime ? ` (${foundSlot.startTime} - ${foundSlot.endTime})` : ''
-    return `${foundSlot.name}${time}`
-  }
-
-  const slotLower = String(slotId).toLowerCase()
-  if (slotLower.includes('2') || slotLower.includes('malam') || slotLower.includes('wave_2')) {
-    return 'Gelombang 2 / Malam (18:00 - 19:30)'
-  }
-  if (slotLower.includes('1') || slotLower.includes('sore') || slotLower.includes('wave_1')) {
-    return 'Gelombang 1 / Sore (15:00 - 16:30)'
-  }
-
-  return s.slotName || slotId || 'Gelombang 1 / Sore'
+  return resolveSessionSlotFullName(s.sessionSlotId || s.slotId || s.slotName, sessionSlots.value)
 }
 
 const todayDateString = computed(() => {

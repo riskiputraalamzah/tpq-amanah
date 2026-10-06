@@ -120,7 +120,7 @@
             </div>
 
             <div class="form-group">
-              <label>Sesi / Gelombang</label>
+              <label>Sesi Pembelajaran</label>
               <select
                 v-model="form.sessionSlotId"
                 class="form-input"
@@ -451,6 +451,10 @@ import { useRoute, useRouter } from "vue-router";
 import { resolveKbmDateFromQuery } from "@/utils/lpjState";
 import { useAuthStore } from "@/stores/auth";
 import { summarizeSessionWorkflow } from "@/utils/journalState";
+import {
+  resolveSessionSlotName,
+  resolveSessionSlotTime,
+} from "@/utils/sessionSlot";
 const router = useRouter();
 const route = useRoute();
 
@@ -593,7 +597,7 @@ const validateEligibility = () => {
 
   if (existing) {
     eligibilityMessage.value =
-      "Anda sudah memiliki sesi mengajar pada gelombang ini di tanggal tersebut.";
+      "Anda sudah memiliki sesi mengajar pada sesi ini di tanggal tersebut.";
     return;
   }
 
@@ -653,7 +657,7 @@ const submitSession = async () => {
       createdSessionInfo.value = {
         id: createdId,
         className: selectedClass?.name || `Jilid ${form.value.classId}`,
-        slotName: selectedSlot?.name || "Sesi KBM",
+        slotName: resolveSessionSlotName(form.value.sessionSlotId, sessionSlots.value),
         date: form.value.date,
       };
       showSessionCreatedModal.value = true;
@@ -683,8 +687,7 @@ const formatDate = (val) => {
 };
 
 const getSessionName = (id) => {
-  const slot = sessionSlots.value.find((s) => s.id === id);
-  return slot ? slot.name : id;
+  return resolveSessionSlotName(id, sessionSlots.value);
 };
 
 const getLevelName = (session) => {
@@ -720,8 +723,7 @@ const goJournal = (sessionId) => {
 };
 
 const getSessionTime = (id) => {
-  const slot = sessionSlots.value.find((s) => s.id === id);
-  return slot && slot.startTime && slot.endTime ? `${slot.startTime} - ${slot.endTime}` : "";
+  return resolveSessionSlotTime(id, sessionSlots.value);
 };
 
 const historyFilter = ref("all");

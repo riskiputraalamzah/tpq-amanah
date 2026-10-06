@@ -760,7 +760,7 @@
                         <strong>{{ resetPreviewData.sessions.length }} Sesi KBM di teaching_sessions:</strong>
                         <div class="text-xs text-gray-600 mt-1">
                           <span v-for="s in resetPreviewData.sessions" :key="s.id" class="badge-session mr-1">
-                            {{ s.className }} ({{ s.slotId || 'Gelombang' }}) — {{ s.activityName }}
+                            {{ s.className }} ({{ s.slotName || (String(s.slotId).includes('2') || String(s.slotId).includes('malam') ? 'Sesi Malam' : 'Sesi Sore') }}) — {{ s.activityName }}
                           </span>
                         </div>
                       </div>
