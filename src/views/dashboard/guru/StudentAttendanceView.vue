@@ -50,8 +50,13 @@
     </div>
 
     <div v-else-if="loadError" class="glass-card">
-      <div class="alert alert-error">{{ loadError }}</div>
-      <p class="mt-2">Pilih sesi dari Riwayat KBM lalu tekan "Isi Absensi Santri".</p>
+      <div class="alert alert-warning">
+        <strong>⚠️ Informasi:</strong> {{ loadError }}
+      </div>
+      <p class="mt-2 text-muted">Guru yang berstatus tidak hadir tidak perlu mengisi absensi santri untuk tanggal tersebut.</p>
+      <button type="button" class="btn btn-primary mt-3" @click="router.push('/dashboard/kbm')">
+        ← Kembali ke Riwayat KBM
+      </button>
     </div>
 
     <template v-else>
@@ -573,8 +578,8 @@ const openRenameModal = (row) => {
   }, 100);
 };
 
-const closeRenameModal = () => {
-  if (renamingLoading.value) return;
+const closeRenameModal = (force = false) => {
+  if (renamingLoading.value && !force) return;
   renamingSantri.value = null;
   renameFormName.value = "";
   renameError.value = "";
@@ -582,17 +587,31 @@ const closeRenameModal = () => {
 
 const submitRename = async () => {
   if (!renamingSantri.value || !renameFormName.value.trim() || renamingLoading.value) return;
+  const targetId = renamingSantri.value.santriId || renamingSantri.value.id;
+  const newName = renameFormName.value.trim();
+
   renamingLoading.value = true;
   renameError.value = "";
   try {
-    const res = await api.patch(`/santri/${renamingSantri.value.id}/name`, {
-      name: renameFormName.value.trim(),
+    const res = await api.patch(`/santri/${targetId}/name`, {
+      name: newName,
     });
-    const updatedName = res.data.name || renameFormName.value.trim();
-    renamingSantri.value.name = updatedName;
+    const updatedName = res.data?.name || res.data?.santri?.name || newName;
+    
+    // Update local roster
+    const foundRoster = roster.value.find((r) => r.id === targetId || r.santriId === targetId);
+    if (foundRoster) {
+      foundRoster.name = updatedName;
+    }
+    if (renamingSantri.value) {
+      renamingSantri.value.name = updatedName;
+    }
+
     dirty.value = true;
     success(`✅ Nama santri berhasil diubah menjadi "${updatedName}"!`);
-    closeRenameModal();
+
+    renamingLoading.value = false;
+    closeRenameModal(true);
   } catch (err) {
     renameError.value = err.response?.data?.error || "Gagal mengubah nama santri.";
   } finally {

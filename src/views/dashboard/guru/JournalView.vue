@@ -50,8 +50,13 @@
     </div>
 
     <div v-else-if="loadError" class="glass-card">
-      <div class="alert alert-error">{{ loadError }}</div>
-      <p class="mt-2">Pilih sesi dari Riwayat KBM lalu tekan "Jurnal".</p>
+      <div class="alert alert-warning">
+        <strong>⚠️ Informasi:</strong> {{ loadError }}
+      </div>
+      <p class="mt-2 text-muted">Guru yang berstatus tidak hadir tidak perlu mengisi jurnal untuk tanggal tersebut.</p>
+      <button type="button" class="btn btn-primary mt-3" @click="router.push('/dashboard/kbm')">
+        ← Kembali ke Riwayat KBM
+      </button>
     </div>
 
     <template v-else>

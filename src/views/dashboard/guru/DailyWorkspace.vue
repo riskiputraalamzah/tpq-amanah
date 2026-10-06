@@ -802,8 +802,8 @@ function openRenameModal(santri) {
   }, 100);
 }
 
-function closeRenameModal() {
-  if (renamingLoading.value) return;
+function closeRenameModal(force = false) {
+  if (renamingLoading.value && !force) return;
   renamingSantri.value = null;
   renameFormName.value = '';
   renameError.value = '';
@@ -811,17 +811,27 @@ function closeRenameModal() {
 
 async function submitRename() {
   if (!renamingSantri.value || !renameFormName.value.trim() || renamingLoading.value) return;
+  const santriId = renamingSantri.value.santriId || renamingSantri.value.id;
+  const newName = renameFormName.value.trim();
+
   renamingLoading.value = true;
   renameError.value = '';
   try {
-    const santriId = renamingSantri.value.santriId || renamingSantri.value.id;
     const res = await api.patch(`/santri/${santriId}/name`, {
-      name: renameFormName.value.trim()
+      name: newName
     });
-    const updatedName = res.data?.name || res.data?.santri?.name || renameFormName.value.trim();
-    renamingSantri.value.name = updatedName;
+    const updatedName = res.data?.name || res.data?.santri?.name || newName;
+    if (renamingSantri.value) {
+      renamingSantri.value.name = updatedName;
+    }
+    // Update in roster if exists
+    if (roster.value && Array.isArray(roster.value)) {
+      const found = roster.value.find((r) => (r.santriId || r.id) === santriId);
+      if (found) found.name = updatedName;
+    }
     success(`✅ Nama santri berhasil diubah menjadi "${updatedName}"!`);
-    closeRenameModal();
+    renamingLoading.value = false;
+    closeRenameModal(true);
   } catch (err) {
     renameError.value = err.response?.data?.error || 'Gagal mengubah nama santri.';
   } finally {
