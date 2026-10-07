@@ -12,7 +12,8 @@
     </div>
 
     <div v-else>
-      <section class="glass-card">
+      <!-- Form Tambah Santri (Hanya untuk Admin) -->
+      <section v-if="adminMode" class="glass-card">
         <h2>Tambah Santri</h2>
         <form class="add-form" @submit.prevent="addSantri">
           <div class="form-group">
@@ -43,6 +44,19 @@
           {{ formMessage }}
         </div>
       </section>
+
+      <!-- Info Banner Ramah untuk Guru -->
+      <div v-else class="info-note-card glass-card">
+        <div class="info-note-content">
+          <span class="info-icon">💡</span>
+          <div>
+            <h3 class="info-title">Pusat Data Santri</h3>
+            <p class="info-desc">
+              Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat oleh <strong>Admin TPQ</strong>. Anda dapat melihat daftar santri serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui tombol <strong>Ubah Nama</strong> di bawah.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <section class="glass-card">
         <div class="roster-toolbar">
@@ -135,6 +149,8 @@
                       class="form-input editing-name-input"
                       placeholder="Nama santri..."
                       required
+                      @keyup.enter="saveSantri(row)"
+                      @keyup.esc="cancelEdit"
                     />
                   </template>
                   <template v-else>
@@ -507,7 +523,7 @@ onMounted(fetchData);
 }
 @media (min-width: 768px) {
   .filters {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2fr 1.2fr 1fr;
   }
 }
 .roster-toolbar h2 {
@@ -708,5 +724,41 @@ onMounted(fetchData);
 }
 .btn-ghost:hover {
   background: var(--gray-100);
+}
+.info-note-card {
+  padding: 16px 20px;
+  margin-bottom: var(--space-xl);
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid rgba(134, 239, 172, 0.5);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
+}
+.info-note-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.info-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 10px;
+  background: rgba(34, 197, 94, 0.12);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.info-title {
+  margin: 0 0 3px 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+.info-desc {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--gray-700);
+}
+.editing-name-input {
+  min-width: 140px;
+  max-width: 260px;
 }
 </style>
