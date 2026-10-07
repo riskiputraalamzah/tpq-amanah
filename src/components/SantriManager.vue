@@ -52,7 +52,9 @@
           <div>
             <h3 class="info-title">Pusat Data Santri</h3>
             <p class="info-desc">
-              Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat oleh <strong>Admin TPQ</strong>. Anda dapat melihat daftar santri serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui tombol <strong>Ubah Nama</strong> di bawah.
+              Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat oleh <strong>Admin TPQ</strong>. Anda
+              dapat melihat daftar santri serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui tombol
+              <strong>Ubah Nama</strong> di bawah.
             </p>
           </div>
         </div>
@@ -91,30 +93,19 @@
                 </div>
               </div>
               <p class="modal-text">
-                Santri ini memiliki catatan riwayat di sistem. Apakah data ini data uji coba (test) yang ingin dibersihkan sepenuhnya, atau santri yang ingin dinonaktifkan?
+                Santri ini memiliki catatan riwayat di sistem. Apakah data ini data uji coba (test) yang ingin
+                dibersihkan sepenuhnya, atau santri yang ingin dinonaktifkan?
               </p>
               <div class="modal-action-buttons">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  :disabled="saving"
-                  @click="softDeleteSantri(conflictSantri)"
-                >
+                <button type="button" class="btn btn-secondary" :disabled="saving"
+                  @click="softDeleteSantri(conflictSantri)">
                   📁 Nonaktifkan Saja (Soft Delete)
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  :disabled="saving"
-                  @click="removeSantri(conflictSantri, true)"
-                >
+                <button type="button" class="btn btn-danger" :disabled="saving"
+                  @click="removeSantri(conflictSantri, true)">
                   🗑️ Hapus Permanen &amp; Bersihkan Riwayat Test
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-ghost"
-                  @click="conflictSantri = null"
-                >
+                <button type="button" class="btn btn-ghost" @click="conflictSantri = null">
                   Batal
                 </button>
               </div>
@@ -143,15 +134,8 @@
                 <td>{{ index + 1 }}</td>
                 <td>
                   <template v-if="editingId === row.id">
-                    <input
-                      v-model="editingName"
-                      type="text"
-                      class="form-input editing-name-input"
-                      placeholder="Nama santri..."
-                      required
-                      @keyup.enter="saveSantri(row)"
-                      @keyup.esc="cancelEdit"
-                    />
+                    <input v-model="editingName" type="text" class="form-input editing-name-input"
+                      placeholder="Nama santri..." required @keyup.enter="saveSantri(row)" @keyup.esc="cancelEdit" />
                   </template>
                   <template v-else>
                     {{ row.name }}
@@ -203,12 +187,8 @@
                   <button v-else-if="canEdit(row)" type="button" class="action-link" @click="startEdit(row)">
                     {{ adminMode ? "Ubah" : "Ubah Nama" }}
                   </button>
-                  <button
-                    v-if="adminMode && editingId !== row.id"
-                    type="button"
-                    class="action-link danger"
-                    @click="removeSantri(row)"
-                  >
+                  <button v-if="adminMode && editingId !== row.id" type="button" class="action-link danger"
+                    @click="removeSantri(row)">
                     Hapus
                   </button>
                 </td>
@@ -456,24 +436,29 @@ onMounted(fetchData);
 .santri-view {
   padding-top: 60px;
 }
+
 @media (min-width: 1024px) {
   .santri-view {
     padding-top: 0;
   }
 }
+
 .page-header {
   margin-bottom: var(--space-xl);
 }
+
 .page-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--primary-dark);
   margin-bottom: 4px;
 }
+
 .page-header p {
   font-size: 0.95rem;
   color: var(--gray-600);
 }
+
 .glass-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -483,6 +468,7 @@ onMounted(fetchData);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   margin-bottom: var(--space-xl);
 }
+
 .glass-card h2 {
   font-size: 1.2rem;
   color: var(--primary-dark);
@@ -490,24 +476,28 @@ onMounted(fetchData);
   padding-bottom: var(--space-sm);
   border-bottom: 1px solid var(--gray-200);
 }
+
 .add-form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-md);
+  gap: 1.5rem !important;
 }
+
 @media (min-width: 768px) {
   .add-form {
     grid-template-columns: 2fr 1fr auto;
     align-items: end;
   }
 }
+
 .form-group label {
   display: block;
   font-weight: 600;
-  margin-bottom: 6px;
+
   color: var(--gray-700);
   font-size: 0.9rem;
 }
+
 .form-input {
   width: 100%;
   padding: 10px 12px;
@@ -515,32 +505,39 @@ onMounted(fetchData);
   border-radius: var(--radius-md);
   font-size: 0.95rem;
 }
+
 .filters {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
 }
+
 @media (min-width: 768px) {
   .filters {
     grid-template-columns: 2fr 1.2fr 1fr;
   }
 }
+
 .roster-toolbar h2 {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
 }
+
 .status-select {
   max-width: 220px;
 }
+
 .table-responsive {
   overflow-x: auto;
 }
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .data-table th,
 .data-table td {
   padding: 12px;
@@ -548,11 +545,13 @@ onMounted(fetchData);
   border-bottom: 1px solid var(--gray-200);
   font-size: 0.9rem;
 }
+
 .data-table th {
   font-weight: 600;
   color: var(--gray-700);
   background: var(--gray-50);
 }
+
 .btn {
   padding: 12px 20px;
   border: none;
@@ -561,14 +560,17 @@ onMounted(fetchData);
   cursor: pointer;
   white-space: nowrap;
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
 .btn-primary {
   background: var(--primary);
   color: white;
 }
+
 .action-link {
   background: none;
   border: none;
@@ -579,15 +581,19 @@ onMounted(fetchData);
   padding: 4px 8px 4px 0;
   white-space: nowrap;
 }
+
 .action-link:hover {
   text-decoration: underline;
 }
+
 .action-link.danger {
   color: #c62828;
 }
+
 .action-link.muted {
   color: var(--gray-500);
 }
+
 .alert {
   padding: 10px 14px;
   border-radius: var(--radius-md);
@@ -595,21 +601,25 @@ onMounted(fetchData);
   font-size: 0.85rem;
   font-weight: 500;
 }
+
 .alert-success {
   background: rgba(76, 175, 80, 0.1);
   color: #2e7d32;
   border: 1px solid rgba(76, 175, 80, 0.2);
 }
+
 .alert-error {
   background: rgba(244, 67, 54, 0.1);
   color: #c62828;
   border: 1px solid rgba(244, 67, 54, 0.2);
 }
+
 .alert-warning {
   background: rgba(255, 152, 0, 0.1);
   color: #ef6c00;
   border: 1px solid rgba(255, 152, 0, 0.2);
 }
+
 .badge {
   display: inline-block;
   padding: 3px 10px;
@@ -618,21 +628,25 @@ onMounted(fetchData);
   font-weight: 600;
   text-align: center;
 }
+
 .badge-success {
   background: rgba(46, 125, 50, 0.12);
   color: #2e7d32;
   border: 1px solid rgba(46, 125, 50, 0.25);
 }
+
 .badge-warning {
   background: rgba(239, 108, 0, 0.12);
   color: #e65100;
   border: 1px solid rgba(239, 108, 0, 0.25);
 }
+
 .badge-info {
   background: rgba(2, 136, 209, 0.12);
   color: #0277bd;
   border: 1px solid rgba(2, 136, 209, 0.25);
 }
+
 .conflict-modal-card {
   max-width: 520px;
   width: 92%;
@@ -642,12 +656,14 @@ onMounted(fetchData);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .modal-header-danger {
   display: flex;
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
 }
+
 .modal-danger-icon {
   font-size: 2.2rem;
   background: #fef3c7;
@@ -660,28 +676,33 @@ onMounted(fetchData);
   justify-content: center;
   flex-shrink: 0;
 }
+
 .modal-title {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
   color: #92400e;
 }
+
 .modal-subtitle {
   margin: 4px 0 0 0;
   font-size: 0.95rem;
   color: #4b5563;
 }
+
 .modal-text {
   font-size: 0.95rem;
   line-height: 1.5;
   color: #4b5563;
   margin-bottom: 24px;
 }
+
 .modal-action-buttons {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
+
 @media (min-width: 640px) {
   .modal-action-buttons {
     flex-direction: row;
@@ -689,42 +710,52 @@ onMounted(fetchData);
     flex-wrap: wrap;
   }
 }
+
 @keyframes modalScaleIn {
   from {
     opacity: 0;
     transform: scale(0.92) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
 }
+
 .btn-sm {
   padding: 6px 14px;
   font-size: 0.82rem;
 }
+
 .btn-secondary {
   background: var(--gray-200);
   color: var(--gray-800);
 }
+
 .btn-secondary:hover {
   background: var(--gray-300);
 }
+
 .btn-danger {
   background: #d32f2f;
   color: white;
 }
+
 .btn-danger:hover {
   background: #b71c1c;
 }
+
 .btn-ghost {
   background: transparent;
   color: var(--gray-600);
   border: 1px solid var(--gray-300);
 }
+
 .btn-ghost:hover {
   background: var(--gray-100);
 }
+
 .info-note-card {
   padding: 16px 20px;
   margin-bottom: var(--space-xl);
@@ -732,11 +763,13 @@ onMounted(fetchData);
   border: 1px solid rgba(134, 239, 172, 0.5);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
 }
+
 .info-note-content {
   display: flex;
   align-items: center;
   gap: 14px;
 }
+
 .info-icon {
   font-size: 1.4rem;
   line-height: 1;
@@ -745,18 +778,21 @@ onMounted(fetchData);
   border-radius: var(--radius-md);
   flex-shrink: 0;
 }
+
 .info-title {
   margin: 0 0 3px 0;
   font-size: 0.98rem;
   font-weight: 700;
   color: var(--primary-dark);
 }
+
 .info-desc {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.45;
   color: var(--gray-700);
 }
+
 .editing-name-input {
   min-width: 140px;
   max-width: 260px;
