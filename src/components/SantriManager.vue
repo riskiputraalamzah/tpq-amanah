@@ -18,19 +18,32 @@
         <form class="add-form" @submit.prevent="addSantri">
           <div class="form-group">
             <label>Nama Santri</label>
-            <input v-model="newName" class="form-input" placeholder="Nama lengkap santri" required />
+            <input
+              v-model="newName"
+              class="form-input"
+              placeholder="Nama lengkap santri"
+              required
+            />
           </div>
           <div class="form-group">
             <label>Jilid / Marhalah</label>
             <select v-model="newLevel" class="form-input">
               <option value="">Belum ditentukan</option>
               <optgroup label="JILID">
-                <option v-for="c in jilidList" :key="c.id" :value="String(c.id)">
+                <option
+                  v-for="c in jilidList"
+                  :key="c.id"
+                  :value="String(c.id)"
+                >
                   {{ c.name }}
                 </option>
               </optgroup>
               <optgroup label="MARHALAH" v-if="marhalahList.length > 0">
-                <option v-for="c in marhalahList" :key="c.id" :value="String(c.id)">
+                <option
+                  v-for="c in marhalahList"
+                  :key="c.id"
+                  :value="String(c.id)"
+                >
                   {{ c.name }}
                 </option>
               </optgroup>
@@ -40,7 +53,11 @@
             {{ adding ? "Menambahkan..." : "Tambah Santri" }}
           </button>
         </form>
-        <div v-if="formMessage" class="alert" :class="formOk ? 'alert-success' : 'alert-error'">
+        <div
+          v-if="formMessage"
+          class="alert"
+          :class="formOk ? 'alert-success' : 'alert-error'"
+        >
           {{ formMessage }}
         </div>
       </section>
@@ -48,15 +65,23 @@
       <!-- Info Banner Ramah untuk Guru -->
       <div v-else class="info-note-card glass-card">
         <div class="info-note-content">
-          <span class="info-icon">💡</span>
-          <div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin-bottom: 10px;
+            "
+          >
+            <span class="info-icon">💡</span>
             <h3 class="info-title">Pusat Data Santri</h3>
-            <p class="info-desc">
-              Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat oleh <strong>Admin TPQ</strong>. Anda
-              dapat melihat daftar santri serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui tombol
-              <strong>Ubah Nama</strong> di bawah.
-            </p>
           </div>
+          <p class="info-desc">
+            Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat
+            oleh <strong>Admin TPQ</strong>. Anda dapat melihat daftar santri
+            serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui
+            tombol <strong>Ubah Nama</strong> di bawah.
+          </p>
         </div>
       </div>
 
@@ -65,7 +90,11 @@
           <h2>Daftar Santri ({{ filtered.length }})</h2>
         </div>
         <div class="filters">
-          <input v-model="search" class="form-input" placeholder="Cari nama santri..." />
+          <input
+            v-model="search"
+            class="form-input"
+            placeholder="Cari nama santri..."
+          />
           <select v-model="levelFilter" class="form-input filter-select">
             <option value="">Semua Jilid / Marhalah</option>
             <option value="__none">Belum ditentukan</option>
@@ -83,29 +112,50 @@
 
         <!-- Conflict Modal (Fixed Viewport Center via Teleport to body) -->
         <Teleport to="body">
-          <div v-if="conflictSantri" class="modal-overlay" @click.self="conflictSantri = null">
+          <div
+            v-if="conflictSantri"
+            class="modal-overlay"
+            @click.self="conflictSantri = null"
+          >
             <div class="modal glass-card conflict-modal-card">
               <div class="modal-header-danger">
                 <span class="modal-danger-icon">⚠️</span>
                 <div>
-                  <h3 class="modal-title">Santri Memiliki Riwayat KBM / Absensi</h3>
-                  <p class="modal-subtitle">Santri: <strong>{{ conflictSantri.name }}</strong></p>
+                  <h3 class="modal-title">
+                    Santri Memiliki Riwayat KBM / Absensi
+                  </h3>
+                  <p class="modal-subtitle">
+                    Santri: <strong>{{ conflictSantri.name }}</strong>
+                  </p>
                 </div>
               </div>
               <p class="modal-text">
-                Santri ini memiliki catatan riwayat di sistem. Apakah data ini data uji coba (test) yang ingin
-                dibersihkan sepenuhnya, atau santri yang ingin dinonaktifkan?
+                Santri ini memiliki catatan riwayat di sistem. Apakah data ini
+                data uji coba (test) yang ingin dibersihkan sepenuhnya, atau
+                santri yang ingin dinonaktifkan?
               </p>
               <div class="modal-action-buttons">
-                <button type="button" class="btn btn-secondary" :disabled="saving"
-                  @click="softDeleteSantri(conflictSantri)">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  :disabled="saving"
+                  @click="softDeleteSantri(conflictSantri)"
+                >
                   📁 Nonaktifkan Saja (Soft Delete)
                 </button>
-                <button type="button" class="btn btn-danger" :disabled="saving"
-                  @click="removeSantri(conflictSantri, true)">
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  :disabled="saving"
+                  @click="removeSantri(conflictSantri, true)"
+                >
                   🗑️ Hapus Permanen &amp; Bersihkan Riwayat Test
                 </button>
-                <button type="button" class="btn btn-ghost" @click="conflictSantri = null">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  @click="conflictSantri = null"
+                >
                   Batal
                 </button>
               </div>
@@ -134,8 +184,15 @@
                 <td>{{ index + 1 }}</td>
                 <td>
                   <template v-if="editingId === row.id">
-                    <input v-model="editingName" type="text" class="form-input editing-name-input"
-                      placeholder="Nama santri..." required @keyup.enter="saveSantri(row)" @keyup.esc="cancelEdit" />
+                    <input
+                      v-model="editingName"
+                      type="text"
+                      class="form-input editing-name-input"
+                      placeholder="Nama santri..."
+                      required
+                      @keyup.enter="saveSantri(row)"
+                      @keyup.esc="cancelEdit"
+                    />
                   </template>
                   <template v-else>
                     {{ row.name }}
@@ -143,15 +200,26 @@
                 </td>
                 <td>
                   <template v-if="editingId === row.id && adminMode">
-                    <select v-model="editingLevel" class="form-input status-select">
+                    <select
+                      v-model="editingLevel"
+                      class="form-input status-select"
+                    >
                       <option value="">Belum ditentukan</option>
                       <optgroup label="JILID">
-                        <option v-for="c in jilidList" :key="c.id" :value="String(c.id)">
+                        <option
+                          v-for="c in jilidList"
+                          :key="c.id"
+                          :value="String(c.id)"
+                        >
                           {{ c.name }}
                         </option>
                       </optgroup>
                       <optgroup label="MARHALAH" v-if="marhalahList.length > 0">
-                        <option v-for="c in marhalahList" :key="c.id" :value="String(c.id)">
+                        <option
+                          v-for="c in marhalahList"
+                          :key="c.id"
+                          :value="String(c.id)"
+                        >
                           {{ c.name }}
                         </option>
                       </optgroup>
@@ -163,7 +231,10 @@
                 </td>
                 <td>
                   <template v-if="editingId === row.id && adminMode">
-                    <select v-model="editingStatus" class="form-input status-select">
+                    <select
+                      v-model="editingStatus"
+                      class="form-input status-select"
+                    >
                       <option value="aktif">Aktif</option>
                       <option value="nonaktif">Nonaktif</option>
                       <option value="lulus">Lulus</option>
@@ -177,18 +248,36 @@
                 </td>
                 <td>
                   <template v-if="editingId === row.id">
-                    <button type="button" class="action-link" :disabled="saving" @click="saveSantri(row)">
+                    <button
+                      type="button"
+                      class="action-link"
+                      :disabled="saving"
+                      @click="saveSantri(row)"
+                    >
                       {{ saving ? "Menyimpan..." : "Simpan" }}
                     </button>
-                    <button type="button" class="action-link muted" @click="cancelEdit">
+                    <button
+                      type="button"
+                      class="action-link muted"
+                      @click="cancelEdit"
+                    >
                       Batal
                     </button>
                   </template>
-                  <button v-else-if="canEdit(row)" type="button" class="action-link" @click="startEdit(row)">
+                  <button
+                    v-else-if="canEdit(row)"
+                    type="button"
+                    class="action-link"
+                    @click="startEdit(row)"
+                  >
                     {{ adminMode ? "Ubah" : "Ubah Nama" }}
                   </button>
-                  <button v-if="adminMode && editingId !== row.id" type="button" class="action-link danger"
-                    @click="removeSantri(row)">
+                  <button
+                    v-if="adminMode && editingId !== row.id"
+                    type="button"
+                    class="action-link danger"
+                    @click="removeSantri(row)"
+                  >
                     Hapus
                   </button>
                 </td>
@@ -212,7 +301,10 @@ const { confirm } = useConfirm();
 
 const props = defineProps({
   title: { type: String, default: "Kelola Santri" },
-  subtitle: { type: String, default: "Lihat, tambah, dan tetapkan Jilid / Marhalah santri" },
+  subtitle: {
+    type: String,
+    default: "Lihat, tambah, dan tetapkan Jilid / Marhalah santri",
+  },
   adminMode: { type: Boolean, default: false },
 });
 
@@ -256,12 +348,15 @@ const statusBadgeClass = (status) => {
 
 const removeSantri = async (row, force = false) => {
   if (!force) {
-    const ok = await confirm(`Apakah Anda yakin ingin menghapus santri "${row.name}"?`, {
-      title: "Hapus Santri",
-      type: "danger",
-      confirmText: "Ya, Hapus",
-      cancelText: "Batal",
-    });
+    const ok = await confirm(
+      `Apakah Anda yakin ingin menghapus santri "${row.name}"?`,
+      {
+        title: "Hapus Santri",
+        type: "danger",
+        confirmText: "Ya, Hapus",
+        cancelText: "Batal",
+      },
+    );
     if (!ok) return;
   }
   listError.value = "";
@@ -300,10 +395,14 @@ const softDeleteSantri = async (row) => {
 };
 
 const jilidList = computed(() =>
-  classes.value.filter((c) => ["1", "2", "3", "4", "5", "6"].includes(String(c.id))),
+  classes.value.filter((c) =>
+    ["1", "2", "3", "4", "5", "6"].includes(String(c.id)),
+  ),
 );
 const marhalahList = computed(() =>
-  classes.value.filter((c) => !["1", "2", "3", "4", "5", "6"].includes(String(c.id))),
+  classes.value.filter(
+    (c) => !["1", "2", "3", "4", "5", "6"].includes(String(c.id)),
+  ),
 );
 
 const levelName = (classId) => {
@@ -315,7 +414,13 @@ const levelName = (classId) => {
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase();
   return santri.value.filter((row) => {
-    if (q && !String(row.name || "").toLowerCase().includes(q)) return false;
+    if (
+      q &&
+      !String(row.name || "")
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
     if (levelFilter.value === "__none") {
       if (row.currentClassId) return false;
     } else if (levelFilter.value) {
@@ -340,7 +445,8 @@ const fetchData = async () => {
     santri.value = santriRes.data;
     classes.value = classesRes.data;
   } catch (error) {
-    listError.value = error.response?.data?.error || "Gagal memuat data santri.";
+    listError.value =
+      error.response?.data?.error || "Gagal memuat data santri.";
   } finally {
     loading.value = false;
   }
@@ -421,7 +527,8 @@ const saveSantri = async (row) => {
     editingStatus.value = "aktif";
     success(`Data santri "${row.name}" berhasil diperbarui.`);
   } catch (error) {
-    const msg = error.response?.data?.error || "Gagal menyimpan perubahan santri.";
+    const msg =
+      error.response?.data?.error || "Gagal menyimpan perubahan santri.";
     listError.value = msg;
     showError(msg);
   } finally {
@@ -759,16 +866,20 @@ onMounted(fetchData);
 .info-note-card {
   padding: 16px 20px;
   margin-bottom: var(--space-xl);
-  background: linear-gradient(135deg, rgba(240, 253, 244, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(240, 253, 244, 0.95) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
   border: 1px solid rgba(134, 239, 172, 0.5);
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
 }
 
-.info-note-content {
+/* .info-note-content {
   display: flex;
-  align-items: center;
+  align-items: start;
   gap: 14px;
-}
+} */
 
 .info-icon {
   font-size: 1.4rem;
