@@ -16,6 +16,15 @@
           <p class="mt-1 text-gray-500">Masuk untuk mengakses dashboard</p>
         </div>
 
+        <!-- Notice if coming from quick attendance account switch -->
+        <div
+          v-if="route.query.notice === 'switched_account'"
+          class="p-3 mb-4 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2"
+        >
+          <span>ℹ️</span>
+          <span>Anda telah logout dari sesi sebelumnya. Silakan login dengan akun yang sesuai.</span>
+        </div>
+
         <!-- Tabs -->
         <div class="flex p-1 mb-6 bg-gray-100 rounded-xl">
           <button

@@ -3,12 +3,14 @@
     <section class="quick-card">
       <img :src="logoUrl" alt="TPQ AMANAH" class="mx-auto quick-logo" />
 
+      <!-- Loading State -->
       <div v-if="state === 'loading'" class="state-block">
         <div class="spinner"></div>
         <h1>Memproses Absensi</h1>
         <p>Mohon tunggu sebentar.</p>
       </div>
 
+      <!-- Success State -->
       <div v-else-if="state === 'success'" class="state-block success">
         <div class="status-icon">✓</div>
         <h1>{{ resultTitle }}</h1>
@@ -16,76 +18,210 @@
           Link test WA berhasil diproses. Tidak ada absensi yang dicatat.
         </p>
         <p v-else>
-          Absensi {{ details?.guruName || "guru" }} tercatat sebagai
-          <strong>{{ resultStatusLabel }}</strong
-          >.
+          Absensi {{ targetGuruName }} tercatat sebagai
+          <strong>{{ resultStatusLabel }}</strong>.
         </p>
-        <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-          <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
-            Mengalihkan ke Daily Workspace...
-          </p>
-          <router-link class="primary-btn" :to="workspaceLink">
-            Buka Daily Workspace →
-          </router-link>
-          <router-link class="secondary-link" :to="dashboardLink">
-            Buka Dashboard
-          </router-link>
+
+        <!-- Sesi Mismatch Notice (Jika akun login berbeda / admin) -->
+        <div v-if="isMismatch" class="mismatch-banner" :class="{ 'admin-mismatch': isMismatchAdmin }">
+          <div class="mismatch-header">
+            <span class="mismatch-icon">{{ isMismatchAdmin ? '🛡️' : '⚠️' }}</span>
+            <span class="mismatch-badge">
+              {{ isMismatchAdmin ? 'Sesi Admin Terdeteksi' : 'Sesi Akun Berbeda Terdeteksi' }}
+            </span>
+          </div>
+
+          <div class="mismatch-body">
+            <p v-if="isMismatchAdmin" class="mismatch-text">
+              Anda saat ini sedang login sebagai <strong>Admin ({{ loggedInName }})</strong>, sedangkan link absensi WhatsApp ini adalah milik <strong>{{ targetGuruName }}</strong>.
+            </p>
+            <p v-else class="mismatch-text">
+              Perangkat ini sedang login dengan akun <strong>{{ loggedInName }}</strong>{{ loggedInUsername ? ` (@${loggedInUsername})` : '' }}, sedangkan link absensi ini adalah milik <strong>{{ targetGuruName }}</strong>.
+            </p>
+
+            <div class="mismatch-note">
+              <span class="check-mark">✓</span>
+              <span>Absensi tetap tercatat untuk <strong>{{ targetGuruName }}</strong> (bukan untuk akun {{ loggedInName }}).</span>
+            </div>
+
+            <p v-if="isMismatchAdmin" class="mismatch-subtext">
+              Pengalihan otomatis dinonaktifkan agar Anda tetap berada pada sesi Admin Anda.
+            </p>
+            <p v-else class="mismatch-subtext">
+              Jika perangkat ini milik <strong>{{ targetGuruName }}</strong>, disarankan untuk logout dari akun {{ loggedInName }} agar data KBM & absensi santri tidak tertukar.
+            </p>
+          </div>
+
+          <div class="mismatch-actions">
+            <button
+              v-if="!isMismatchAdmin"
+              type="button"
+              class="logout-action-btn"
+              :disabled="loggingOut"
+              @click="handleLogout"
+            >
+              {{ loggingOut ? "Memproses..." : `Ganti Akun (Logout dari ${loggedInName})` }}
+            </button>
+            <router-link
+              v-if="isMismatchAdmin"
+              class="admin-rekap-btn"
+              to="/dashboard/admin/attendance"
+            >
+              Lihat Rekap Absensi Guru (Admin) →
+            </router-link>
+            <router-link class="secondary-btn" :to="dashboardLink">
+              {{ isMismatchAdmin ? "Buka Dashboard Admin" : `Tetap Buka Dashboard (${loggedInName})` }}
+            </router-link>
+            <button
+              v-if="isMismatchAdmin"
+              type="button"
+              class="text-link-btn"
+              :disabled="loggingOut"
+              @click="handleLogout"
+            >
+              {{ loggingOut ? "Memproses..." : "Logout dari Admin" }}
+            </button>
+          </div>
         </div>
-        <router-link v-else class="primary-btn" :to="dashboardLink">
-          Buka Dashboard
-        </router-link>
+
+        <!-- Normal Actions (Tidak ada mismatch) -->
+        <template v-else>
+          <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
+              Mengalihkan ke Daily Workspace...
+            </p>
+            <router-link class="primary-btn" :to="workspaceLink">
+              Buka Daily Workspace →
+            </router-link>
+            <router-link class="secondary-link" :to="dashboardLink">
+              Buka Dashboard
+            </router-link>
+          </div>
+          <div v-else class="actions">
+            <router-link class="primary-btn" :to="dashboardLink">
+              Buka Dashboard
+            </router-link>
+          </div>
+        </template>
       </div>
 
+      <!-- Already Recorded State -->
       <div v-else-if="state === 'already'" class="state-block success">
         <div class="status-icon">✓</div>
         <h1>Absensi Sudah Tercatat</h1>
         <p>
-          Status hari ini sudah
+          Status hari ini untuk {{ targetGuruName }} sudah
           <strong>{{
             details?.existingAttendance?.statusLabel ||
             details?.requestedStatusLabel
-          }}</strong
-          >.
+          }}</strong>.
         </p>
-        <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
-          <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
-            Mengalihkan ke Daily Workspace...
-          </p>
-          <router-link class="primary-btn" :to="workspaceLink">
-            Buka Daily Workspace →
-          </router-link>
-          <router-link class="secondary-link" :to="dashboardLink">
-            Buka Dashboard
-          </router-link>
+
+        <!-- Sesi Mismatch Notice -->
+        <div v-if="isMismatch" class="mismatch-banner" :class="{ 'admin-mismatch': isMismatchAdmin }">
+          <div class="mismatch-header">
+            <span class="mismatch-icon">{{ isMismatchAdmin ? '🛡️' : '⚠️' }}</span>
+            <span class="mismatch-badge">
+              {{ isMismatchAdmin ? 'Sesi Admin Terdeteksi' : 'Sesi Akun Berbeda Terdeteksi' }}
+            </span>
+          </div>
+
+          <div class="mismatch-body">
+            <p v-if="isMismatchAdmin" class="mismatch-text">
+              Anda saat ini sedang login sebagai <strong>Admin ({{ loggedInName }})</strong>, sedangkan link absensi ini milik <strong>{{ targetGuruName }}</strong>.
+            </p>
+            <p v-else class="mismatch-text">
+              Browser ini sedang login dengan akun <strong>{{ loggedInName }}</strong>{{ loggedInUsername ? ` (@${loggedInUsername})` : '' }}, sedangkan link ini milik <strong>{{ targetGuruName }}</strong>.
+            </p>
+
+            <div class="mismatch-note">
+              <span class="check-mark">✓</span>
+              <span>Data absensi tercatat untuk <strong>{{ targetGuruName }}</strong>, bukan untuk akun yang sedang login.</span>
+            </div>
+          </div>
+
+          <div class="mismatch-actions">
+            <button
+              v-if="!isMismatchAdmin"
+              type="button"
+              class="logout-action-btn"
+              :disabled="loggingOut"
+              @click="handleLogout"
+            >
+              {{ loggingOut ? "Memproses..." : `Ganti Akun (Logout dari ${loggedInName})` }}
+            </button>
+            <router-link
+              v-if="isMismatchAdmin"
+              class="admin-rekap-btn"
+              to="/dashboard/admin/attendance"
+            >
+              Lihat Rekap Absensi Guru (Admin) →
+            </router-link>
+            <router-link class="secondary-btn" :to="dashboardLink">
+              {{ isMismatchAdmin ? "Buka Dashboard Admin" : `Tetap Buka Dashboard (${loggedInName})` }}
+            </router-link>
+          </div>
         </div>
-        <router-link v-else class="secondary-link" :to="dashboardLink">
-          Buka Dashboard
-        </router-link>
+
+        <!-- Normal Actions (Tidak ada mismatch) -->
+        <template v-else>
+          <div v-if="isEligibleHadir" class="actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <p v-if="redirecting" style="color: #059669; font-size: 0.875rem; font-weight: 500; margin: 0;">
+              Mengalihkan ke Daily Workspace...
+            </p>
+            <router-link class="primary-btn" :to="workspaceLink">
+              Buka Daily Workspace →
+            </router-link>
+            <router-link class="secondary-link" :to="dashboardLink">
+              Buka Dashboard
+            </router-link>
+          </div>
+          <div v-else class="actions">
+            <router-link class="secondary-link" :to="dashboardLink">
+              Buka Dashboard
+            </router-link>
+          </div>
+        </template>
       </div>
 
+      <!-- Conflict State -->
       <div v-else-if="state === 'conflict'" class="state-block warning">
         <div class="status-icon">!</div>
         <h1>Absensi Sudah Ada</h1>
-        <p>
-          Status saat ini
-          <strong>{{ details?.existingAttendance?.statusLabel }}</strong
-          >. Ubah menjadi <strong>{{ details?.requestedStatusLabel }}</strong
-          >?
+
+        <!-- Mismatch warning for conflict -->
+        <div v-if="isMismatch" class="mismatch-banner conflict-mismatch" :class="{ 'admin-mismatch': isMismatchAdmin }">
+          <div class="mismatch-header">
+            <span class="mismatch-icon">{{ isMismatchAdmin ? '🛡️' : '⚠️' }}</span>
+            <span class="mismatch-badge">
+              {{ isMismatchAdmin ? 'Konfirmasi Akun Admin' : 'Peringatan: Akun Tidak Sesuai' }}
+            </span>
+          </div>
+          <p class="mismatch-text">
+            Anda sedang login sebagai <strong>{{ loggedInName }}</strong> ({{ loggedInRoleLabel }}), namun konfirmasi ini akan mengubah absensi milik <strong>{{ targetGuruName }}</strong> dari <strong>{{ details?.existingAttendance?.statusLabel }}</strong> menjadi <strong>{{ details?.requestedStatusLabel }}</strong>.
+          </p>
+        </div>
+
+        <p v-else>
+          Status {{ targetGuruName }} saat ini
+          <strong>{{ details?.existingAttendance?.statusLabel }}</strong>. Ubah menjadi <strong>{{ details?.requestedStatusLabel }}</strong>?
         </p>
+
         <div class="actions">
           <button
             class="primary-btn"
             :disabled="submitting"
             @click="confirmUpdate"
           >
-            {{ submitting ? "Mengubah..." : "Ya, Ubah Status" }}
+            {{ submitting ? "Mengubah..." : `Ya, Ubah Status ${targetGuruName}` }}
           </button>
           <router-link class="ghost-btn" :to="dashboardLink">
-            Cek Dashboard
+            {{ isMismatchAdmin ? "Batal / Dashboard Admin" : "Cek Dashboard" }}
           </router-link>
         </div>
       </div>
 
+      <!-- Expired State -->
       <div v-else-if="state === 'expired'" class="state-block expired">
         <div class="status-icon">×</div>
         <h1>Link Sudah Expired</h1>
@@ -95,6 +231,7 @@
         </router-link>
       </div>
 
+      <!-- Error State -->
       <div v-else class="state-block expired">
         <div class="status-icon">×</div>
         <h1>Link Tidak Bisa Dipakai</h1>
@@ -111,17 +248,91 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
+import { useAuthStore } from "@/stores/auth";
 import logoUrl from "../assets/logo.png";
 
 const route = useRoute();
 const router = useRouter();
-const dashboardLink = "/dashboard/attendance";
+const authStore = useAuthStore();
+
+const dashboardLink = computed(() => {
+  if (authStore.user?.role === "admin") {
+    return "/dashboard";
+  }
+  return "/dashboard/attendance";
+});
+
 const state = ref("loading");
 const details = ref(null);
 const result = ref(null);
 const errorMessage = ref("Link absensi tidak valid atau sudah tidak tersedia.");
 const submitting = ref(false);
 const redirecting = ref(false);
+const loggingOut = ref(false);
+
+const targetGuruId = computed(() => {
+  return details.value?.guruId || result.value?.guruId || null;
+});
+
+const targetGuruName = computed(() => {
+  return details.value?.guruName || result.value?.guruName || "Guru";
+});
+
+const sessionMismatch = computed(() => {
+  if (details.value?.sessionAudit?.isMismatch || result.value?.sessionAudit?.isMismatch) {
+    return details.value?.sessionAudit || result.value?.sessionAudit;
+  }
+
+  if (!authStore.isAuthenticated || !authStore.user) {
+    return null;
+  }
+
+  const currentId = authStore.user.id || authStore.user.uid;
+  const targetId = targetGuruId.value;
+
+  if (targetId && currentId && currentId !== targetId) {
+    const role = authStore.user.role || "user";
+    const name = authStore.user.displayName || authStore.user.name || authStore.user.username || "Pengguna";
+    const username = authStore.user.username || "";
+
+    return {
+      isMismatch: true,
+      loggedInUser: {
+        uid: currentId,
+        displayName: name,
+        username,
+        role,
+      },
+      targetGuru: {
+        id: targetId,
+        name: targetGuruName.value,
+      },
+    };
+  }
+
+  return null;
+});
+
+const isMismatch = computed(() => Boolean(sessionMismatch.value?.isMismatch));
+
+const isMismatchAdmin = computed(() => {
+  return isMismatch.value && (sessionMismatch.value?.loggedInUser?.role === "admin" || authStore.user?.role === "admin");
+});
+
+const loggedInName = computed(() => {
+  return sessionMismatch.value?.loggedInUser?.displayName || authStore.user?.displayName || "Pengguna";
+});
+
+const loggedInUsername = computed(() => {
+  return sessionMismatch.value?.loggedInUser?.username || authStore.user?.username || "";
+});
+
+const loggedInRoleLabel = computed(() => {
+  const role = sessionMismatch.value?.loggedInUser?.role || authStore.user?.role || "user";
+  if (role === "admin") return "Admin";
+  if (role === "guru") return "Guru";
+  return role.toUpperCase();
+});
 
 const resultTitle = computed(() => {
   if (result.value?.action === "test") return "Test Link Berhasil";
@@ -154,6 +365,13 @@ const workspaceLink = computed(() => {
 });
 
 function triggerAutoRedirectIfEligible(payload) {
+  // If there is an active session mismatch (e.g. Admin or Teacher B clicked Teacher A's link),
+  // NEVER auto-redirect! Keep them on screen so they clearly see the account notice.
+  if (isMismatch.value) {
+    redirecting.value = false;
+    return false;
+  }
+
   const eligible = payload?.lpjEligible ?? details.value?.lpjEligible;
   const status = payload?.status || details.value?.existingAttendance?.status || details.value?.requestedStatus;
 
@@ -266,7 +484,27 @@ async function confirmUpdate() {
   }
 }
 
+async function handleLogout() {
+  loggingOut.value = true;
+  try {
+    await authStore.logout();
+    router.push({ path: "/login", query: { notice: "switched_account" } });
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    loggingOut.value = false;
+  }
+}
+
 onMounted(async () => {
+  if (!authStore.authChecked) {
+    try {
+      await authStore.checkAuth();
+    } catch (err) {
+      // Non-fatal if auth check fails
+    }
+  }
+
   try {
     const { data } = await api.get(`/attendance/quick/${route.params.code}`);
     details.value = data;
@@ -300,10 +538,10 @@ onMounted(async () => {
 }
 
 .quick-card {
-  width: min(100%, 440px);
+  width: min(100%, 460px);
   padding: 32px 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 24px 70px rgba(27, 94, 32, 0.16);
   text-align: center;
 }
@@ -407,6 +645,185 @@ onMounted(async () => {
   color: #1f6b2b;
   border: 1px solid #2e7d32;
   background: #fff;
+}
+
+/* --- Mismatch Banner Styles --- */
+.mismatch-banner {
+  width: 100%;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1.5px solid #f59e0b;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.mismatch-banner.admin-mismatch {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+.conflict-mismatch {
+  margin-bottom: 12px;
+}
+
+.mismatch-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mismatch-icon {
+  font-size: 20px;
+}
+
+.mismatch-badge {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #b45309;
+}
+
+.admin-mismatch .mismatch-badge {
+  color: #047857;
+}
+
+.mismatch-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mismatch-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #78350f;
+  margin: 0;
+}
+
+.admin-mismatch .mismatch-text {
+  color: #065f46;
+}
+
+.mismatch-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #166534;
+  font-weight: 500;
+}
+
+.check-mark {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.mismatch-subtext {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #92400e;
+  margin: 0;
+}
+
+.admin-mismatch .mismatch-subtext {
+  color: #047857;
+}
+
+.mismatch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.logout-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  background: #d97706;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.logout-action-btn:hover {
+  background: #b45309;
+}
+
+.logout-action-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-rekap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  background: #059669;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.admin-rekap-btn:hover {
+  background: #047857;
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.secondary-btn:hover {
+  background: #f9fafb;
+}
+
+.text-link-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+  text-decoration: underline;
+  text-align: center;
+}
+
+.text-link-btn:hover {
+  color: #b91c1c;
 }
 
 @keyframes spin {

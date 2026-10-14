@@ -361,29 +361,91 @@
             <strong>Catatan:</strong> {{ selectedCalendarAttendance.notes }}
           </p>
           <p v-else-if="!getHolidayForDate(selectedCalendarDate)" class="popup-notes empty">Tidak ada catatan</p>
+
+          <!-- Action buttons for existing attendance -->
+          <div class="popup-actions">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-primary w-full"
+              @click="openEditForCalendarDay(selectedCalendarDate)"
+            >
+              ✏️ Ubah Status Absensi
+            </button>
+            <router-link
+              v-if="selectedCalendarAttendance.status === 'hadir'"
+              :to="getKbmWorkspaceUrlForDay(selectedCalendarDate)"
+              class="btn btn-sm btn-primary w-full popup-kbm-link"
+              @click="selectedCalendarDate = null"
+            >
+              📚 Buka KBM Tanggal Ini →
+            </router-link>
+          </div>
         </div>
+
         <div class="popup-content" v-else>
-          <p class="popup-notes empty">Tidak ada data absensi</p>
+          <!-- Weekend notice -->
+          <div v-if="isWeekendDay(selectedCalendarDate)" class="popup-weekend-box">
+            <span class="popup-weekend-icon">🏖️</span>
+            <div>
+              <strong>Akhir Pekan (Sabtu / Minggu)</strong>
+              <p>Presensi TPQ hanya berlaku untuk hari kerja aktif (Senin - Jumat).</p>
+            </div>
+          </div>
+
+          <!-- Future month notice -->
+          <div v-else-if="isFutureMonthSelection()" class="popup-future-box">
+            <span class="popup-future-icon">⚠️</span>
+            <div>
+              <strong>Bulan Mendatang</strong>
+              <p>Tidak dapat mengisi presensi untuk bulan yang akan datang.</p>
+            </div>
+          </div>
+
+          <!-- Empty weekday - Can create attendance -->
+          <div v-else class="popup-empty-action-box">
+            <p class="popup-notes empty">Belum ada data absensi untuk tanggal ini.</p>
+            <div class="popup-actions">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary w-full"
+                @click="openCreateForCalendarDay(selectedCalendarDate)"
+              >
+                ➕ Isi Absensi Tanggal Ini
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Update Modal -->
+    <!-- Update / Create Attendance Modal -->
     <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
       <div class="modal glass-card">
-        <h3>Ubah Status Absensi</h3>
-        <p class="modal-date">{{ dayName }}, {{ dateNumber }} {{ monthYear }}</p>
+        <h3>{{ updateForm.mode === 'create' ? '➕ Catat Kehadiran Guru' : '✏️ Ubah Status Absensi' }}</h3>
+        <p class="modal-date">{{ updateForm.dateFormatted }}</p>
+
+        <div v-if="!updateForm.isToday" class="modal-date-alert">
+          <span>🗓️ Mengisi absensi untuk tanggal yang dipilih pada kalender.</span>
+        </div>
 
         <div class="form-group">
           <label class="form-label">Status Kehadiran</label>
           <div class="status-buttons modal-status">
-            <button class="status-btn hadir" :class="{ active: updateForm.status === 'hadir' }"
-              @click="updateForm.status = 'hadir'">
+            <button
+              type="button"
+              class="status-btn hadir"
+              :class="{ active: updateForm.status === 'hadir' }"
+              @click="updateForm.status = 'hadir'"
+            >
               <span class="btn-icon">✓</span>
               <span class="btn-text">HADIR</span>
             </button>
-            <button class="status-btn tidak-hadir" :class="{ active: updateForm.status === 'tidak_hadir' }"
-              @click="updateForm.status = 'tidak_hadir'">
+            <button
+              type="button"
+              class="status-btn tidak-hadir"
+              :class="{ active: updateForm.status === 'tidak_hadir' }"
+              @click="updateForm.status = 'tidak_hadir'"
+            >
               <span class="btn-icon">✗</span>
               <span class="btn-text">TIDAK HADIR</span>
             </button>
@@ -392,13 +454,20 @@
 
         <div class="form-group">
           <label class="form-label">Catatan (Opsional)</label>
-          <input v-model="updateForm.notes" type="text" class="form-input" placeholder="Tambahkan catatan..." />
+          <input
+            v-model="updateForm.notes"
+            type="text"
+            class="form-input"
+            placeholder="Tambahkan catatan (izin, sakit, atau lainnya)..."
+          />
         </div>
 
         <div class="modal-actions">
-          <button class="btn btn-secondary" @click="closeUpdateModal">Batal</button>
-          <button class="btn btn-primary" @click="submitUpdate" :disabled="updating">
-            {{ updating ? 'Menyimpan...' : 'Simpan Perubahan' }}
+          <button type="button" class="btn btn-secondary" @click="closeUpdateModal" :disabled="updating">
+            Batal
+          </button>
+          <button type="button" class="btn btn-primary" @click="submitUpdate" :disabled="updating">
+            {{ updating ? 'Menyimpan...' : (updateForm.mode === 'create' ? 'Simpan Absensi' : 'Simpan Perubahan') }}
           </button>
         </div>
       </div>
@@ -533,7 +602,16 @@ const fetchTodayKbm = async () => {
 // Update modal state
 const showUpdateModal = ref(false)
 const updating = ref(false)
-const updateForm = ref({ status: '', notes: '' })
+const updateForm = ref({
+  mode: 'update',
+  date: null,
+  dateStr: '',
+  dateFormatted: '',
+  status: '',
+  notes: '',
+  attendanceId: null,
+  isToday: false
+})
 
 // Calendar state
 const calendarMonth = ref(today.getMonth())
@@ -935,10 +1013,98 @@ const submitAttendance = async () => {
   }
 }
 
+// Calendar attendance creation & editing helpers
+const getDateObjectForCalendarDay = (day) => {
+  return new Date(calendarYear.value, calendarMonth.value, day, 12, 0, 0)
+}
+
+const getDateStringForCalendarDay = (day) => {
+  const y = calendarYear.value
+  const m = String(calendarMonth.value + 1).padStart(2, '0')
+  const d = String(day).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+const isWeekendDay = (day) => {
+  if (!day) return false
+  const d = new Date(calendarYear.value, calendarMonth.value, day).getDay()
+  return d === 0 || d === 6 // 0: Minggu, 6: Sabtu
+}
+
+const isFutureMonthSelection = () => {
+  const nowY = today.getFullYear()
+  const nowM = today.getMonth()
+  return calendarYear.value > nowY || (calendarYear.value === nowY && calendarMonth.value > nowM)
+}
+
+const canCreateAttendanceForDay = (day) => {
+  if (!day) return false
+  if (isFutureMonthSelection()) return false
+  if (isWeekendDay(day)) return false
+  return true
+}
+
+const getKbmWorkspaceUrlForDay = (day) => {
+  return `/dashboard/kbm?date=${getDateStringForCalendarDay(day)}&from=attendance`
+}
+
 const openUpdateModal = () => {
+  if (!todayAttendance.value) return
   updateForm.value = {
+    mode: 'update',
+    date: today,
+    dateStr: todayDateString.value,
+    dateFormatted: `${dayName.value}, ${dateNumber.value} ${monthYear.value}`,
     status: todayAttendance.value.status === 'hadir' ? 'hadir' : 'tidak_hadir',
-    notes: todayAttendance.value.notes || ''
+    notes: todayAttendance.value.notes || '',
+    attendanceId: todayAttendance.value.id,
+    isToday: true
+  }
+  showUpdateModal.value = true
+}
+
+const openCreateForCalendarDay = (day) => {
+  if (!canCreateAttendanceForDay(day)) {
+    if (isFutureMonthSelection()) {
+      showError('Tidak dapat mengisi absensi untuk bulan yang akan datang')
+    } else if (isWeekendDay(day)) {
+      showError('Absensi hanya dapat dilakukan pada hari kerja (Senin - Jumat)')
+    }
+    return
+  }
+  const isToday = calendarYear.value === today.getFullYear() &&
+                  calendarMonth.value === today.getMonth() &&
+                  day === today.getDate()
+
+  updateForm.value = {
+    mode: 'create',
+    date: getDateObjectForCalendarDay(day),
+    dateStr: getDateStringForCalendarDay(day),
+    dateFormatted: formatCalendarDate(day),
+    status: 'hadir',
+    notes: '',
+    attendanceId: null,
+    isToday
+  }
+  showUpdateModal.value = true
+}
+
+const openEditForCalendarDay = (day) => {
+  const att = getAttendanceForDate(day)
+  if (!att) return
+  const isToday = calendarYear.value === today.getFullYear() &&
+                  calendarMonth.value === today.getMonth() &&
+                  day === today.getDate()
+
+  updateForm.value = {
+    mode: 'update',
+    date: getDateObjectForCalendarDay(day),
+    dateStr: getDateStringForCalendarDay(day),
+    dateFormatted: formatCalendarDate(day),
+    status: att.status === 'hadir' ? 'hadir' : 'tidak_hadir',
+    notes: att.notes || '',
+    attendanceId: att.id,
+    isToday
   }
   showUpdateModal.value = true
 }
@@ -949,34 +1115,53 @@ const closeUpdateModal = () => {
 
 const submitUpdate = async () => {
   if (!updateForm.value.status) return
+
+  if (isFutureMonthSelection()) {
+    showError('Tidak dapat mengisi absensi untuk bulan yang akan datang')
+    return
+  }
+
   updating.value = true
   try {
-    await api.put(`/attendance/${todayAttendance.value.id}`, {
-      status: updateForm.value.status,
-      notes: updateForm.value.notes
-    })
+    if (updateForm.value.mode === 'create') {
+      await api.post('/attendance', {
+        date: updateForm.value.dateStr || updateForm.value.date.toISOString(),
+        status: updateForm.value.status,
+        notes: updateForm.value.notes
+      })
 
-    // Update local state
-    todayAttendance.value.status = updateForm.value.status
-    todayAttendance.value.notes = updateForm.value.notes
+      success('Absensi berhasil disimpan')
+      await fetchAttendance()
 
-    // Update in history list too
-    const idx = attendanceHistory.value.findIndex(a => a.id === todayAttendance.value.id)
-    if (idx !== -1) {
-      attendanceHistory.value[idx].status = updateForm.value.status
-      attendanceHistory.value[idx].notes = updateForm.value.notes
-    }
-
-    if (updateForm.value.status === 'hadir') {
-      fetchTodayKbm()
+      if (updateForm.value.isToday) {
+        if (updateForm.value.status === 'hadir') {
+          await fetchTodayKbm()
+          showPostAttendanceModal.value = true
+        } else {
+          todayKbmSessions.value = []
+        }
+      }
     } else {
-      todayKbmSessions.value = []
+      await api.put(`/attendance/${updateForm.value.attendanceId}`, {
+        status: updateForm.value.status,
+        notes: updateForm.value.notes
+      })
+
+      success('Absensi berhasil diperbarui')
+      await fetchAttendance()
+
+      if (updateForm.value.isToday) {
+        if (updateForm.value.status === 'hadir') {
+          await fetchTodayKbm()
+        } else {
+          todayKbmSessions.value = []
+        }
+      }
     }
 
-    success('Absensi berhasil diperbarui')
     closeUpdateModal()
   } catch (e) {
-    showError(e.response?.data?.error || 'Gagal memperbarui absensi')
+    showError(e.response?.data?.error || 'Gagal menyimpan absensi')
   } finally {
     updating.value = false
   }
@@ -2241,6 +2426,103 @@ onMounted(async () => {
 
 .popup-checkin-time-header .checkin-icon {
   font-size: 0.9rem;
+}
+
+/* Popup Actions & Enhanced Date State Styles */
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+}
+
+.popup-kbm-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.popup-weekend-box,
+.popup-future-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-xs);
+}
+
+.popup-weekend-box {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed rgba(217, 119, 6, 0.4);
+  color: #92400e;
+}
+
+.popup-weekend-box strong,
+.popup-future-box strong {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 2px;
+}
+
+.popup-weekend-box p,
+.popup-future-box p {
+  margin: 0;
+  line-height: 1.35;
+  font-size: 0.8rem;
+}
+
+.popup-future-box {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px dashed rgba(220, 38, 38, 0.4);
+  color: #991b1b;
+}
+
+.popup-weekend-icon,
+.popup-future-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.popup-empty-action-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.modal-date-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-md);
+  color: #1d4ed8;
+  font-size: 0.82rem;
+  margin-bottom: var(--space-md);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.w-full {
+  width: 100%;
 }
 
 @media (max-width: 640px) {
