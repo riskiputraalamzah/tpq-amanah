@@ -21,7 +21,8 @@
             <span class="book-badge" :class="book.status">{{
               book.status === "active" ? "Aktif" : "Ditutup"
             }}</span>
-            <span v-if="book.isPublished" class="badge-shared">🌐 Bersama</span>
+            <span v-if="book.isPublished" class="badge-shared" title="Buku ini dapat diakses publik tanpa login">🌐 Publik</span>
+            <span v-else class="badge-private" title="Hanya Anda dan Admin yang dapat mengakses buku ini">🔒 Pribadi</span>
           </div>
           <p v-if="book.description">{{ book.description }}</p>
           <p class="book-meta">
@@ -30,6 +31,28 @@
           </p>
         </div>
         <div v-if="book" class="header-actions">
+          <button
+            class="share-trigger-btn"
+            type="button"
+            @click="openShareModal"
+            title="Bagikan Tautan Publik Buku Tabungan"
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            Bagikan
+          </button>
           <button
             class="print-trigger-btn"
             type="button"
@@ -72,6 +95,29 @@
             </button>
             <div v-if="showBookMenu" class="book-action-dropdown">
               <button
+                class="bad-item"
+                @click="
+                  openShareModal();
+                  showBookMenu = false;
+                "
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Bagikan Tautan Publik
+              </button>
+              <button
                 v-if="!authStore.isAdmin"
                 class="bad-item"
                 :class="{ active: book.isPublished }"
@@ -95,7 +141,7 @@
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
                 {{
-                  book.isPublished ? "Jadikan Pribadi" : "Publish ke Guru Lain"
+                  book.isPublished ? "Jadikan Pribadi" : "Jadikan Publik (Dapat Diakses Umum)"
                 }}
               </button>
               <button
@@ -1227,6 +1273,100 @@
         </div>
       </div>
     </div>
+
+    <!-- Share Public Modal -->
+    <div
+      v-if="showShareModal"
+      class="modal-overlay"
+      @click.self="showShareModal = false"
+    >
+      <div class="modal glass-card share-modal">
+        <div class="modal-header">
+          <div class="share-header-title">
+            <span class="share-header-icon">🌐</span>
+            <h3>Bagikan Tautan Publik</h3>
+          </div>
+          <button class="close-btn" @click="showShareModal = false">&times;</button>
+        </div>
+
+        <div class="share-modal-body">
+          <div v-if="!book.isPublished" class="share-warning-box">
+            <div class="share-warning-icon">🔒</div>
+            <div class="share-warning-text">
+              <strong>Buku Masih Berstatus Pribadi</strong>
+              <p>
+                Buku ini saat ini privat sehingga publik/wali santri belum bisa membuka tautan. Jadikan publik agar dapat dibagikan.
+              </p>
+              <button
+                type="button"
+                class="btn-enable-publish"
+                :disabled="saving"
+                @click="enablePublishAndShare"
+              >
+                {{ saving ? "Mengaktifkan..." : "🌐 Jadikan Publik Sekarang" }}
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="share-success-box">
+            <div class="share-status-pill">
+              <span class="pulse-dot"></span>
+              <span>Status: Publik (Dapat Diakses Siapa Saja Tanpa Login)</span>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.85rem;">
+              <label class="form-label">Tautan Web Publik:</label>
+              <div class="copy-input-group">
+                <input
+                  type="text"
+                  readonly
+                  :value="publicShareUrl"
+                  class="form-input copy-input"
+                />
+                <button
+                  type="button"
+                  class="btn-copy"
+                  @click="copyPublicUrl"
+                >
+                  {{ copiedShareLink ? "✓ Tersalin" : "Salin" }}
+                </button>
+              </div>
+            </div>
+
+            <div class="share-actions-grid">
+              <a
+                :href="whatsappShareUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-wa-share"
+              >
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                <span>Bagikan ke WhatsApp</span>
+              </a>
+
+              <a
+                :href="publicShareUrl"
+                target="_blank"
+                class="btn-preview-public"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                <span>Pratinjau Publik ↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 1.25rem;">
+          <button class="btn-cancel" @click="showShareModal = false">Tutup</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1274,6 +1414,53 @@ const bookEditForm = ref({ title: "", description: "" });
 const showPrintModal = ref(false);
 const printGeneratedAt = ref(new Date());
 const generatingPdf = ref(false);
+
+// Share Modal State
+const showShareModal = ref(false);
+const copiedShareLink = ref(false);
+
+const publicShareUrl = computed(() => {
+  return `${window.location.origin}/tabungan/${bookId}`;
+});
+
+const whatsappShareUrl = computed(() => {
+  const title = book.value?.title || "Buku Tabungan";
+  const balance = formatLedgerCurrency(totalBalance.value || 0);
+  const text = `Assalamu'alaikum Warahmatullahi Wabarakatuh.\n\nBerikut tautan transparansi pembukuan & tabungan TPQ AMANAH:\n📖 *${title}*\n💰 Saldo Saat Ini: *${balance}*\n\nSilakan pantau riwayat dan rincian transaksi selengkapnya pada tautan resmi berikut:\n👉 ${publicShareUrl.value}\n\nJazakumullah khairan katsiran.`;
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+});
+
+const openShareModal = () => {
+  copiedShareLink.value = false;
+  showShareModal.value = true;
+};
+
+const copyPublicUrl = async () => {
+  try {
+    await navigator.clipboard.writeText(publicShareUrl.value);
+    copiedShareLink.value = true;
+    success("Tautan publik berhasil disalin ke clipboard!");
+    setTimeout(() => {
+      copiedShareLink.value = false;
+    }, 2500);
+  } catch (e) {
+    showError("Gagal menyalin tautan");
+  }
+};
+
+const enablePublishAndShare = async () => {
+  saving.value = true;
+  try {
+    await api.put(`/savings/books/${bookId}`, { isPublished: true });
+    if (book.value) book.value.isPublished = true;
+    success("Status buku berhasil diubah ke Publik! Siapa saja kini dapat melihatnya tanpa login.");
+  } catch (e) {
+    console.error("Enable publish error:", e);
+    showError("Gagal mengubah status buku menjadi publik");
+  } finally {
+    saving.value = false;
+  }
+};
 
 const canManageBook = computed(() => {
   if (!book.value) return false;
@@ -2429,6 +2616,193 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: var(--space-sm);
   flex-shrink: 0;
+}
+
+.share-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 40px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(27, 94, 32, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(27, 94, 32, 0.2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.share-trigger-btn:hover {
+  background: rgba(27, 94, 32, 0.15);
+  transform: translateY(-1px);
+}
+
+.badge-private {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  white-space: nowrap;
+}
+
+.share-modal {
+  max-width: 480px;
+  width: 90%;
+  padding: var(--space-xl);
+}
+
+.share-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-header-icon {
+  font-size: 1.25rem;
+}
+
+.share-modal-body {
+  margin-top: var(--space-md);
+}
+
+.share-warning-box {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-xl);
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.share-warning-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.share-warning-text p {
+  margin: 4px 0 10px 0;
+  color: #78350f;
+  line-height: 1.4;
+  font-size: 0.8rem;
+}
+
+.btn-enable-publish {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-enable-publish:hover {
+  background: var(--primary-dark);
+}
+
+.share-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2e7d32;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
+}
+
+.copy-input-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.copy-input {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  background: #f8fafc;
+}
+
+.btn-copy {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-copy:hover {
+  background: var(--primary-dark);
+}
+
+.share-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: var(--space-md);
+}
+
+.btn-wa-share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: #25d366;
+  color: white;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-wa-share:hover {
+  background: #20ba59;
+}
+
+.btn-preview-public {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  background: #f1f5f9;
+  color: #334155;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-preview-public:hover {
+  background: #e2e8f0;
 }
 
 .print-trigger-btn {
@@ -3613,6 +3987,7 @@ onBeforeUnmount(() => {
     margin-left: 0;
   }
 
+  .share-trigger-btn,
   .print-trigger-btn {
     flex: 1;
   }

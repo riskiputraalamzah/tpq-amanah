@@ -19,6 +19,19 @@ const routes = [
     component: () => import("../views/QuickAttendanceView.vue"),
   },
   {
+    path: "/tabungan/:bookId",
+    name: "PublicSavings",
+    component: () => import("../views/PublicSavingsView.vue"),
+  },
+  {
+    path: "/p/tabungan/:bookId",
+    redirect: (to) => `/tabungan/${to.params.bookId}`,
+  },
+  {
+    path: "/savings/public/:bookId",
+    redirect: (to) => `/tabungan/${to.params.bookId}`,
+  },
+  {
     path: "/dashboard",
     name: "Dashboard",
     component: () => import("../views/dashboard/DashboardLayout.vue"),

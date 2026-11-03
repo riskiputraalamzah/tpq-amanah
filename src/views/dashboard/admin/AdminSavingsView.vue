@@ -142,7 +142,8 @@
             <span class="book-badge" :class="book.status">
               {{ book.status === 'active' ? 'Aktif' : 'Ditutup' }}
             </span>
-            <span v-if="book.isPublished" class="book-shared-pill">🌐 Bersama</span>
+            <span v-if="book.isPublished" class="book-shared-pill" title="Dapat diakses publik tanpa login">🌐 Publik</span>
+            <span v-else class="book-private-pill" title="Buku berstatus pribadi">🔒 Pribadi</span>
           </div>
         </div>
 
@@ -669,6 +670,16 @@ onMounted(async () => {
   border-radius: var(--radius-full);
   background: rgba(33, 150, 243, 0.12);
   color: #1565c0;
+  white-space: nowrap;
+}
+
+.book-private-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
   white-space: nowrap;
 }
 
