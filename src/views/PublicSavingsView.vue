@@ -1,29 +1,29 @@
 <template>
-  <div class="public-savings-page min-h-screen bg-[#fafaf9] text-slate-800 font-sans selection:bg-emerald-600 selection:text-white">
+  <div class="public-savings-page min-h-screen bg-[#fafaf9] dark:bg-[#0c1411] text-slate-800 dark:text-slate-100 font-sans selection:bg-emerald-600 selection:text-white transition-colors duration-200">
     <!-- Top Bar Navigation (Public Header) -->
-    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-900/10 shadow-sm transition-all duration-300">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0f1b16]/95 backdrop-blur-md border-b border-emerald-900/10 dark:border-emerald-800/30 shadow-sm transition-all duration-300">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
         <!-- Logo & Branding -->
-        <router-link to="/" class="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-lg">
-          <img :src="logoUrl" alt="TPQ AMANAH" class="w-10 h-10 object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105" />
-          <div class="flex flex-col">
-            <span class="font-bold text-base sm:text-lg text-emerald-900 tracking-tight leading-tight">
+        <router-link to="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-lg">
+          <img :src="logoUrl" alt="TPQ AMANAH" class="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-sm shrink-0 transition-transform duration-300 group-hover:scale-105" />
+          <div class="flex flex-col shrink-0 min-w-0">
+            <span class="font-extrabold text-base sm:text-lg text-emerald-950 dark:text-emerald-100 tracking-tight leading-tight whitespace-nowrap">
               TPQ AMANAH
             </span>
-            <span class="text-[11px] font-medium text-emerald-700 hidden xs:inline-block">
+            <span class="text-[10px] sm:text-[11px] font-medium text-emerald-700 dark:text-emerald-400 hidden xs:inline-block whitespace-nowrap">
               Portal Transparansi Kas & Tabungan
             </span>
           </div>
         </router-link>
 
         <!-- Right Header Actions -->
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <!-- Refresh Button -->
           <button
             type="button"
             @click="refreshData"
             :disabled="loading"
-            class="p-2 sm:px-3 sm:py-1.5 rounded-lg text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition-all text-xs font-semibold flex items-center gap-1.5"
+            class="w-9 h-9 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-[#1c352b] border border-slate-200 dark:border-emerald-800/50 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0"
             title="Muat ulang data terbaru"
           >
             <svg
@@ -47,9 +47,9 @@
             v-if="book"
             type="button"
             @click="openShareModal"
-            class="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/60 transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="18" cy="5" r="3" />
               <circle cx="6" cy="12" r="3" />
               <circle cx="18" cy="19" r="3" />
@@ -59,14 +59,14 @@
             <span>Bagikan</span>
           </button>
 
-          <!-- Print / PDF Button -->
+          <!-- Print / PDF Button (Desktop only) -->
           <button
             v-if="book"
             type="button"
             @click="openPrintModal"
-            class="px-3 py-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 transition-all text-xs font-semibold hidden md:flex items-center gap-1.5 shadow-sm"
+            class="px-3 py-1.5 rounded-xl bg-white dark:bg-[#14261f] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1c352b] border border-slate-300 dark:border-emerald-800/50 transition-all text-xs font-semibold hidden md:flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="6 9 6 2 18 2 18 9" />
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
               <rect x="6" y="14" width="12" height="8" />
@@ -78,7 +78,7 @@
           <router-link
             v-if="authStore.isAuthenticated"
             :to="`/dashboard/savings/${bookId}`"
-            class="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white transition-all text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap"
             title="Kelola buku ini di Dashboard"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -92,7 +92,7 @@
           <router-link
             v-else
             to="/login"
-            class="px-3 py-1.5 rounded-lg text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 transition-all text-xs font-semibold"
+            class="px-2.5 sm:px-3 py-1.5 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-[#1c352b] border border-slate-200 dark:border-emerald-800/50 transition-all text-xs font-semibold shrink-0 whitespace-nowrap"
           >
             Login Guru
           </router-link>
@@ -101,79 +101,86 @@
     </header>
 
     <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8">
       <!-- 1. LOADING SKELETON -->
       <div v-if="loading && !book" class="space-y-6 animate-pulse">
-        <div class="h-44 bg-slate-200/80 rounded-3xl"></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="h-28 bg-slate-200/80 rounded-2xl"></div>
-          <div class="h-28 bg-slate-200/80 rounded-2xl"></div>
-          <div class="h-28 bg-slate-200/80 rounded-2xl"></div>
-          <div class="h-28 bg-slate-200/80 rounded-2xl"></div>
+        <div class="h-44 bg-slate-200/80 dark:bg-[#14261f] rounded-3xl"></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div class="h-28 bg-slate-200/80 dark:bg-[#14261f] rounded-2xl"></div>
+          <div class="h-28 bg-slate-200/80 dark:bg-[#14261f] rounded-2xl"></div>
+          <div class="h-28 bg-slate-200/80 dark:bg-[#14261f] rounded-2xl"></div>
+          <div class="h-28 bg-slate-200/80 dark:bg-[#14261f] rounded-2xl"></div>
         </div>
-        <div class="h-96 bg-slate-200/80 rounded-2xl"></div>
+        <div class="h-96 bg-slate-200/80 dark:bg-[#14261f] rounded-2xl"></div>
       </div>
 
       <!-- 2. ERROR STATE: BUKU PRIVAT (403) -->
-      <div v-else-if="bookAccessError && bookAccessError.code === 'SAVINGS_BOOK_PRIVATE'" class="max-w-xl mx-auto my-12 text-center p-8 bg-white border border-amber-200 rounded-3xl shadow-xl shadow-amber-900/5">
-        <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 text-3xl shadow-inner">
+      <div v-else-if="bookAccessError && bookAccessError.code === 'SAVINGS_BOOK_PRIVATE'" class="max-w-xl mx-auto my-10 sm:my-12 text-center p-6 sm:p-8 bg-white dark:bg-[#13231d] border border-amber-200 dark:border-amber-800/40 rounded-3xl shadow-xl shadow-amber-950/5">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 text-3xl shadow-inner">
           🔒
         </div>
-        <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-3">
+        <span class="inline-block px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-3">
           Akses Terbatas
         </span>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-3 tracking-tight">
+        <h1 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
           Buku Tabungan Bersifat Pribadi
         </h1>
-        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+        <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
           Buku catatan keuangan ini diatur ke mode <strong>Pribadi</strong> oleh pengelolanya dan belum dibuka untuk akses publik atau wali santri.
         </p>
-        <div v-if="bookAccessError.ownerName" class="p-3.5 mb-6 bg-slate-50 rounded-xl border border-slate-200/80 text-xs sm:text-sm text-slate-700">
-          <span class="text-slate-500">Pengelola Buku:</span>
-          <strong class="ml-1.5 text-slate-900">{{ bookAccessError.ownerName }}</strong>
+        <div v-if="bookAccessError.ownerName" class="p-3 mb-6 bg-slate-50 dark:bg-[#0c1411] rounded-xl border border-slate-200/80 dark:border-emerald-900/40 text-xs text-slate-700 dark:text-slate-300">
+          <span class="text-slate-500 dark:text-slate-400">Pengelola Buku:</span>
+          <strong class="ml-1.5 text-slate-900 dark:text-white">{{ bookAccessError.ownerName }}</strong>
         </div>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
           <router-link
             to="/"
-            class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold transition-all text-center"
+            class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#14261f] hover:bg-slate-200 dark:hover:bg-[#1c352b] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all text-center border border-slate-200/60 dark:border-emerald-800/40"
           >
             ← Kembali ke Beranda
           </router-link>
           <router-link
             v-if="!authStore.isAuthenticated"
             to="/login"
-            class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold transition-all shadow-md shadow-emerald-700/20 text-center"
+            class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-700/20 text-center"
           >
             Login Guru / Pengurus
           </router-link>
           <router-link
             v-else
             to="/dashboard/savings"
-            class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold transition-all shadow-md shadow-emerald-700/20 text-center"
+            class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-all shadow-md shadow-emerald-700/20 text-center"
           >
             Buka Tabungan Saya
           </router-link>
         </div>
       </div>
 
-      <!-- 3. ERROR STATE: BUKU TIDAK DITEMUKAN (404 / OTHER) -->
-      <div v-else-if="bookAccessError" class="max-w-xl mx-auto my-12 text-center p-8 bg-white border border-rose-200 rounded-3xl shadow-xl shadow-rose-900/5">
-        <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 text-3xl shadow-inner">
+      <!-- 3. ERROR STATE: BUKU TIDAK DITEMUKAN / JARINGAN (404 / OTHER) -->
+      <div v-else-if="bookAccessError" class="max-w-xl mx-auto my-10 sm:my-12 text-center p-6 sm:p-8 bg-white dark:bg-[#13231d] border border-rose-200 dark:border-rose-900/40 rounded-3xl shadow-xl shadow-rose-950/5">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center text-rose-600 dark:text-rose-400 text-3xl shadow-inner">
           🔍
         </div>
-        <span class="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-xs font-bold uppercase tracking-wider mb-3">
-          Tidak Ditemukan
+        <span class="inline-block px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 text-xs font-bold uppercase tracking-wider mb-3">
+          {{ bookAccessError.code === 'NOT_FOUND' ? 'Tidak Ditemukan' : 'Gangguan Koneksi' }}
         </span>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-3 tracking-tight">
+        <h1 class="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-3 tracking-tight">
           {{ bookAccessError.title || 'Buku Tabungan Tidak Ditemukan' }}
         </h1>
-        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+        <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
           {{ bookAccessError.message || 'Pastikan tautan yang Anda buka sudah tepat atau hubungi pengurus TPQ Amanah.' }}
         </p>
-        <div class="flex gap-3 justify-center">
+        <div class="flex flex-col sm:flex-row gap-2.5 justify-center">
+          <button
+            type="button"
+            @click="refreshData"
+            class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#14261f] hover:bg-slate-200 dark:hover:bg-[#1c352b] text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold transition-all text-center border border-slate-200 dark:border-emerald-800/50"
+          >
+            ↻ Coba Lagi
+          </button>
           <router-link
             to="/"
-            class="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold transition-all shadow-md text-center"
+            class="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm font-bold transition-all shadow-md text-center"
           >
             Kembali ke Beranda
           </router-link>
@@ -181,22 +188,22 @@
       </div>
 
       <!-- 4. ACTIVE PUBLIC CONTENT -->
-      <div v-else-if="book" class="space-y-6">
+      <div v-else-if="book" class="space-y-5 sm:space-y-6">
         <!-- Toast Feedback -->
         <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-2">
-          <div v-if="toastMessage" class="fixed bottom-6 right-6 z-50 px-4 py-3 bg-slate-900 text-white text-xs sm:text-sm font-medium rounded-xl shadow-2xl flex items-center gap-2 border border-slate-700">
+          <div v-if="toastMessage" class="fixed bottom-6 right-6 z-50 px-4 py-3 bg-slate-900 dark:bg-[#0c1411] text-white text-xs sm:text-sm font-medium rounded-xl shadow-2xl flex items-center gap-2 border border-slate-700 dark:border-emerald-800">
             <span class="text-emerald-400">✓</span>
             <span>{{ toastMessage }}</span>
           </div>
         </Transition>
 
         <!-- A. HERO BOOK HEADER CARD -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#043324] via-[#064e3b] to-[#022c1f] text-white p-6 sm:p-8 shadow-xl shadow-emerald-950/20 border border-emerald-600/20">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#043324] via-[#064e3b] to-[#022c1f] text-white p-5 sm:p-8 shadow-xl shadow-emerald-950/20 border border-emerald-600/30">
           <!-- Background Geometric Ambient Glow -->
           <div class="absolute -top-16 -right-16 w-64 h-64 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none"></div>
           <div class="absolute -bottom-16 -left-16 w-64 h-64 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
 
-          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
             <div class="space-y-3 max-w-3xl">
               <!-- Badges Row -->
               <div class="flex flex-wrap items-center gap-2">
@@ -217,12 +224,12 @@
               </h1>
 
               <!-- Description -->
-              <p v-if="book.description" class="text-emerald-100/90 text-sm sm:text-base leading-relaxed">
+              <p v-if="book.description" class="text-emerald-100/90 text-xs sm:text-sm lg:text-base leading-relaxed">
                 {{ book.description }}
               </p>
 
               <!-- Meta Info -->
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-emerald-200/80 pt-1">
+              <div class="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-emerald-200/90 pt-1">
                 <div class="flex items-center gap-1.5">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -246,11 +253,11 @@
             </div>
 
             <!-- Quick Action CTA Group -->
-            <div class="flex flex-wrap sm:flex-nowrap md:flex-col gap-2 shrink-0">
+            <div class="flex flex-row md:flex-col gap-2 shrink-0">
               <button
                 type="button"
                 @click="openShareModal"
-                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-md shadow-amber-950/20 hover:-translate-y-0.5 active:translate-y-0"
+                class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-md shadow-amber-950/20 active:scale-95"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <circle cx="18" cy="5" r="3" />
@@ -265,7 +272,7 @@
               <button
                 type="button"
                 @click="openPrintModal"
-                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition-all"
+                class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition-all active:scale-95"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 6 2 18 2 18 9" />
@@ -281,7 +288,7 @@
         <!-- B. METRIC STATS ROW (5 RESPONSIVE CARDS) -->
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           <!-- 1. Saldo Terhimpun (Full width on 2-col mobile) -->
-          <div class="col-span-2 sm:col-span-2 lg:col-span-2 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 rounded-2xl p-4 sm:p-5 text-white shadow-lg shadow-emerald-900/10 flex flex-col justify-between relative overflow-hidden">
+          <div class="col-span-2 sm:col-span-2 lg:col-span-2 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 rounded-2xl p-4 sm:p-5 text-white shadow-lg shadow-emerald-950/20 flex flex-col justify-between relative overflow-hidden">
             <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
             <div class="flex items-center justify-between gap-2 mb-2">
               <span class="text-xs sm:text-sm font-semibold text-emerald-100 flex items-center gap-1.5">
@@ -293,7 +300,7 @@
                 Saldo Bersih Terhimpun
               </span>
               <span class="px-2 py-0.5 rounded-full bg-white/20 text-emerald-100 text-[10px] font-bold uppercase">
-                Kas Saat Ini
+                KAS SAAT INI
               </span>
             </div>
             <div class="mt-1">
@@ -307,155 +314,177 @@
           </div>
 
           <!-- 2. Total Pemasukan -->
-          <div class="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 mb-2">
-              <span class="text-xs font-semibold text-slate-600">Total Pemasukan</span>
-              <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
+          <div class="bg-white dark:bg-[#13231d] rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/40 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+              <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Total Pemasukan</span>
+              <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
                 ↓
               </div>
             </div>
             <div>
-              <div class="text-lg sm:text-xl font-bold text-emerald-700 tracking-tight">
+              <div class="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 +Rp {{ formatCurrency(book.totalIncome) }}
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Seluruh uang masuk</p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Seluruh uang masuk</p>
             </div>
           </div>
 
           <!-- 3. Total Pengeluaran -->
-          <div class="bg-white rounded-2xl p-4 border border-rose-100 shadow-sm flex flex-col justify-between">
-            <div class="flex items-center justify-between text-slate-500 mb-2">
-              <span class="text-xs font-semibold text-slate-600">Total Pengeluaran</span>
-              <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
+          <div class="bg-white dark:bg-[#13231d] rounded-2xl p-4 border border-rose-100 dark:border-rose-950/40 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
+              <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Total Pengeluaran</span>
+              <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-xs">
                 ↑
               </div>
             </div>
             <div>
-              <div class="text-lg sm:text-xl font-bold text-rose-600 tracking-tight">
+              <div class="text-lg sm:text-xl font-bold text-rose-600 dark:text-rose-400 tracking-tight">
                 -Rp {{ formatCurrency(book.totalExpense) }}
               </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">Biaya & operasional</p>
+              <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Biaya & operasional</p>
             </div>
           </div>
 
           <!-- 4. Anggota & Transaksi (Combined or Individual) -->
-          <div class="col-span-2 sm:col-span-2 md:col-span-4 lg:col-span-1 bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex lg:flex-col justify-around lg:justify-between">
+          <div class="col-span-2 sm:col-span-2 md:col-span-4 lg:col-span-1 bg-white dark:bg-[#13231d] rounded-2xl p-4 border border-slate-200/80 dark:border-emerald-900/40 shadow-sm flex lg:flex-col justify-around lg:justify-between">
             <div>
-              <div class="text-xs font-semibold text-slate-500 mb-1">Total Anggota</div>
-              <div class="text-lg sm:text-xl font-bold text-slate-800">
-                {{ summary.length }} <span class="text-xs font-normal text-slate-500">Santri</span>
+              <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Anggota</div>
+              <div class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
+                {{ summary.length }} <span class="text-xs font-normal text-slate-500 dark:text-slate-400">Santri</span>
               </div>
             </div>
-            <div class="border-l lg:border-l-0 lg:border-t border-slate-100 pl-4 lg:pl-0 lg:pt-2">
-              <div class="text-xs font-semibold text-slate-500 mb-1">Total Transaksi</div>
-              <div class="text-lg sm:text-xl font-bold text-slate-800">
-                {{ transactions.length }} <span class="text-xs font-normal text-slate-500">Catatan</span>
+            <div class="border-l lg:border-l-0 lg:border-t border-slate-100 dark:border-emerald-900/30 pl-4 lg:pl-0 lg:pt-2">
+              <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Transaksi</div>
+              <div class="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">
+                {{ transactions.length }} <span class="text-xs font-normal text-slate-500 dark:text-slate-400">Catatan</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- C. NAVIGATION TABS (SEGMENTED CONTROL) -->
-        <div class="bg-white rounded-2xl p-1.5 border border-slate-200/80 shadow-sm flex items-center gap-1 sticky top-16 z-30 backdrop-blur-md bg-white/95">
+        <!-- C. NAVIGATION TABS (BALANCED 3 TABS WITH DARK-MODE AWARE BADGES) -->
+        <div class="bg-white dark:bg-[#13231d] rounded-2xl p-1.5 border border-slate-200/80 dark:border-emerald-900/40 shadow-sm flex items-center gap-1 sticky top-16 z-30 backdrop-blur-md bg-white/95 dark:bg-[#13231d]/95">
+          <!-- Tab 1: Transaksi -->
           <button
             type="button"
             @click="activeTab = 'transactions'"
-            class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200"
-            :class="activeTab === 'transactions' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
+            class="flex-1 min-w-0 py-2.5 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200"
+            :class="activeTab === 'transactions' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1a3028]'"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="2" width="6" height="4" rx="1" />
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
               <line x1="9" y1="12" x2="15" y2="12" />
               <line x1="9" y1="16" x2="15" y2="16" />
             </svg>
-            <span>Riwayat Transaksi</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[11px]" :class="activeTab === 'transactions' ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-100 text-slate-600'">
+            <span class="truncate">
+              <span class="inline sm:hidden">Transaksi</span>
+              <span class="hidden sm:inline">Riwayat Transaksi</span>
+            </span>
+            <span
+              class="tab-badge px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 border"
+              :class="activeTab === 'transactions'
+                ? 'tab-badge-active bg-emerald-800 text-emerald-100 border-emerald-600/40'
+                : 'bg-slate-100 text-slate-700 border-slate-200/70 dark:bg-[#0c1411] dark:text-emerald-300 dark:border-emerald-800/50'"
+            >
               {{ filteredTransactions.length }}
             </span>
           </button>
 
+          <!-- Tab 2: Santri -->
           <button
             type="button"
             @click="activeTab = 'members'"
-            class="flex-1 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200"
-            :class="activeTab === 'members' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
+            class="flex-1 min-w-0 py-2.5 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200"
+            :class="activeTab === 'members' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1a3028]'"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <span>Rekap Santri</span>
-            <span class="px-1.5 py-0.5 rounded-full text-[11px]" :class="activeTab === 'members' ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-100 text-slate-600'">
+            <span class="truncate">
+              <span class="inline sm:hidden">Santri</span>
+              <span class="hidden sm:inline">Rekap Santri</span>
+            </span>
+            <span
+              class="tab-badge px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 border"
+              :class="activeTab === 'members'
+                ? 'tab-badge-active bg-emerald-800 text-emerald-100 border-emerald-600/40'
+                : 'bg-slate-100 text-slate-700 border-slate-200/70 dark:bg-[#0c1411] dark:text-emerald-300 dark:border-emerald-800/50'"
+            >
               {{ filteredSummary.length }}
             </span>
           </button>
 
+          <!-- Tab 3: Info & Panduan -->
           <button
             type="button"
             @click="activeTab = 'info'"
-            class="py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200"
-            :class="activeTab === 'info' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
+            class="flex-1 min-w-0 py-2.5 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200"
+            :class="activeTab === 'info' ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1a3028]'"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="16" x2="12" y2="12" />
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
-            <span class="hidden sm:inline">Info & Panduan</span>
+            <span class="truncate">
+              <span class="inline sm:hidden">Info</span>
+              <span class="hidden sm:inline">Info & Panduan</span>
+            </span>
           </button>
         </div>
 
         <!-- D. TAB CONTENT: TRANSACTIONS -->
         <div v-if="activeTab === 'transactions'" class="space-y-4">
           <!-- Active Filter Banner (When clicked from santri tab) -->
-          <div v-if="selectedSantriFilter" class="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 text-sm">
-            <div class="flex items-center gap-2 text-emerald-900 font-medium">
-              <span class="text-base">👤</span>
-              <span>Menampilkan transaksi khusus santri: <strong class="font-bold underline">{{ selectedSantriFilter }}</strong></span>
+          <div v-if="selectedSantriFilter" class="p-3 sm:p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl flex items-center justify-between gap-3 text-xs sm:text-sm">
+            <div class="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-medium min-w-0">
+              <span class="text-base shrink-0">👤</span>
+              <span class="truncate">Khusus santri: <strong class="font-bold underline">{{ selectedSantriFilter }}</strong></span>
             </div>
             <button
               type="button"
               @click="clearSantriFilter"
-              class="px-2.5 py-1 bg-white border border-emerald-300 text-emerald-800 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-all"
+              class="px-2.5 py-1 bg-white dark:bg-[#14261f] border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 rounded-lg text-xs font-bold hover:bg-emerald-100 dark:hover:bg-[#1c352b] transition-all shrink-0"
             >
               ✕ Tampilkan Semua
             </button>
           </div>
 
           <!-- Filter & Search Controls -->
-          <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+          <div class="bg-white dark:bg-[#13231d] rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-emerald-900/40 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
             <!-- Search Field -->
             <div class="relative flex-1">
-              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
                 v-model="searchQuery"
                 type="text"
-                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all"
+                class="w-full pl-10 pr-8 py-2 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-[#0c1411] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all"
                 placeholder="Cari nama santri, keterangan, atau catatan..."
               />
               <button
                 v-if="searchQuery"
                 type="button"
                 @click="searchQuery = ''"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1"
               >
                 ✕
               </button>
             </div>
 
             <!-- Segmented Type Filter -->
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+            <div class="flex items-center gap-1 bg-slate-100 dark:bg-[#0c1411] p-1 rounded-xl self-start sm:self-auto border border-slate-200/60 dark:border-emerald-900/40">
               <button
                 type="button"
                 @click="filterType = 'all'"
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                :class="filterType === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                :class="filterType === 'all' ? 'bg-white dark:bg-[#1a3028] text-slate-900 dark:text-emerald-200 shadow-sm border border-slate-200/50 dark:border-emerald-800/40' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
               >
                 Semua
               </button>
@@ -463,7 +492,7 @@
                 type="button"
                 @click="filterType = 'income'"
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
-                :class="filterType === 'income' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-emerald-50'"
+                :class="filterType === 'income' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#14261f]'"
               >
                 <span>+</span> Pemasukan
               </button>
@@ -471,7 +500,7 @@
                 type="button"
                 @click="filterType = 'expense'"
                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
-                :class="filterType === 'expense' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 hover:bg-rose-50'"
+                :class="filterType === 'expense' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'"
               >
                 <span>-</span> Pengeluaran
               </button>
@@ -479,19 +508,19 @@
           </div>
 
           <!-- Empty State -->
-          <div v-if="filteredTransactions.length === 0" class="bg-white rounded-3xl p-10 text-center border border-slate-200/80 shadow-sm">
-            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 text-2xl">
+          <div v-if="filteredTransactions.length === 0" class="bg-white dark:bg-[#13231d] rounded-3xl p-8 sm:p-10 text-center border border-slate-200/80 dark:border-emerald-900/40 shadow-sm">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 rounded-2xl bg-slate-50 dark:bg-[#0c1411] flex items-center justify-center text-slate-400 text-2xl">
               📂
             </div>
-            <h3 class="text-base font-bold text-slate-800 mb-1">Tidak Ada Transaksi</h3>
-            <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">Tidak Ada Transaksi</h3>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {{ searchQuery || filterType !== 'all' || selectedSantriFilter ? 'Tidak ada transaksi yang cocok dengan filter atau kata kunci Anda.' : 'Belum ada catatan transaksi pada buku tabungan ini.' }}
             </p>
             <button
               v-if="searchQuery || filterType !== 'all' || selectedSantriFilter"
               type="button"
               @click="resetAllFilters"
-              class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all"
+              class="mt-4 px-4 py-2 bg-slate-100 dark:bg-[#14261f] hover:bg-slate-200 dark:hover:bg-[#1c352b] text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all border border-slate-200/60 dark:border-emerald-800/40"
             >
               Reset Filter
             </button>
@@ -502,28 +531,26 @@
             <div
               v-for="tx in paginatedTransactions"
               :key="tx.id"
-              class="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm flex items-start justify-between gap-3"
+              class="p-3.5 bg-white dark:bg-[#13231d] rounded-2xl border border-slate-200/80 dark:border-emerald-900/40 shadow-sm flex items-start justify-between gap-3"
             >
               <div class="flex items-start gap-3 min-w-0">
                 <div
-                  class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-bold text-sm"
-                  :class="isIncome(tx) ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'"
+                  class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center font-bold text-xs"
+                  :class="isIncome(tx) ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50'"
                 >
                   {{ isIncome(tx) ? '↓' : '↑' }}
                 </div>
                 <div class="min-w-0">
-                  <div class="flex items-center gap-2">
-                    <h4 class="font-bold text-slate-900 text-sm truncate">
-                      {{ tx.santriName || tx.description || 'Tanpa Keterangan' }}
-                    </h4>
-                  </div>
-                  <p v-if="tx.notes" class="text-xs text-slate-500 italic mt-0.5 line-clamp-2">
+                  <h4 class="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm truncate">
+                    {{ tx.santriName || tx.description || 'Tanpa Keterangan' }}
+                  </h4>
+                  <p v-if="tx.notes" class="text-xs text-slate-500 dark:text-slate-400 italic mt-0.5 line-clamp-2">
                     "{{ tx.notes }}"
                   </p>
-                  <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-1">
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 mt-1">
                     <span>{{ formatDate(tx.date || tx.createdAt) }}</span>
                     <span>&bull;</span>
-                    <span class="capitalize font-medium" :class="isIncome(tx) ? 'text-emerald-700' : 'text-rose-600'">
+                    <span class="capitalize font-medium" :class="isIncome(tx) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
                       {{ isIncome(tx) ? 'Pemasukan' : 'Pengeluaran' }}
                     </span>
                   </div>
@@ -533,8 +560,8 @@
               <!-- Amount -->
               <div class="text-right shrink-0">
                 <span
-                  class="font-extrabold text-sm block"
-                  :class="isIncome(tx) ? 'text-emerald-700' : 'text-rose-600'"
+                  class="font-extrabold text-xs sm:text-sm block"
+                  :class="isIncome(tx) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
                 >
                   {{ isIncome(tx) ? '+' : '-' }}Rp {{ formatCurrency(tx.amount) }}
                 </span>
@@ -543,10 +570,10 @@
           </div>
 
           <!-- DESKTOP TABLE VIEW (Screens >= 640px) -->
-          <div class="hidden sm:block bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="hidden sm:block bg-white dark:bg-[#13231d] rounded-2xl border border-slate-200/80 dark:border-emerald-900/40 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                <thead class="bg-slate-50/80 dark:bg-[#0c1411] border-b border-slate-200/80 dark:border-emerald-900/40 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                   <tr>
                     <th class="py-3 px-4 w-28">Tanggal</th>
                     <th class="py-3 px-4 w-24">Jenis</th>
@@ -555,30 +582,30 @@
                     <th class="py-3 px-4 text-right w-36">Nominal</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 font-normal">
+                <tbody class="divide-y divide-slate-100 dark:divide-emerald-900/30 font-normal">
                   <tr
                     v-for="tx in paginatedTransactions"
                     :key="tx.id"
-                    class="hover:bg-slate-50/80 transition-colors"
+                    class="hover:bg-slate-50/80 dark:hover:bg-[#182c24] transition-colors"
                   >
-                    <td class="py-3 px-4 text-xs text-slate-500 whitespace-nowrap">
+                    <td class="py-3 px-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {{ formatDate(tx.date || tx.createdAt) }}
                     </td>
                     <td class="py-3 px-4 whitespace-nowrap">
                       <span
                         class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold"
-                        :class="isIncome(tx) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                        :class="isIncome(tx) ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50'"
                       >
                         {{ isIncome(tx) ? 'Pemasukan' : 'Pengeluaran' }}
                       </span>
                     </td>
-                    <td class="py-3 px-4 font-semibold text-slate-800">
+                    <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100">
                       {{ tx.santriName || tx.description || '-' }}
                     </td>
-                    <td class="py-3 px-4 text-xs text-slate-500">
+                    <td class="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">
                       {{ tx.notes || '-' }}
                     </td>
-                    <td class="py-3 px-4 text-right font-bold whitespace-nowrap" :class="isIncome(tx) ? 'text-emerald-700' : 'text-rose-600'">
+                    <td class="py-3 px-4 text-right font-bold whitespace-nowrap" :class="isIncome(tx) ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
                       {{ isIncome(tx) ? '+' : '-' }}Rp {{ formatCurrency(tx.amount) }}
                     </td>
                   </tr>
@@ -589,7 +616,7 @@
 
           <!-- Pagination Bar -->
           <div v-if="totalPages > 1" class="flex items-center justify-between pt-2">
-            <span class="text-xs text-slate-500">
+            <span class="text-xs text-slate-500 dark:text-slate-400">
               Menampilkan {{ pageStart + 1 }}-{{ Math.min(pageEnd, filteredTransactions.length) }} dari {{ filteredTransactions.length }} transaksi
             </span>
             <div class="flex items-center gap-1.5">
@@ -597,18 +624,18 @@
                 type="button"
                 @click="currentPage--"
                 :disabled="currentPage === 1"
-                class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-emerald-900/50 bg-white dark:bg-[#13231d] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1a3028] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ← Sebelumnya
               </button>
-              <span class="px-2 text-xs font-bold text-slate-700">
+              <span class="px-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                 Hal {{ currentPage }} / {{ totalPages }}
               </span>
               <button
                 type="button"
                 @click="currentPage++"
                 :disabled="currentPage === totalPages"
-                class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-emerald-900/50 bg-white dark:bg-[#13231d] text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1a3028] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Selanjutnya →
               </button>
@@ -619,25 +646,25 @@
         <!-- E. TAB CONTENT: MEMBERS REKAP -->
         <div v-else-if="activeTab === 'members'" class="space-y-4">
           <!-- Member Search & Sort -->
-          <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div class="bg-white dark:bg-[#13231d] rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-emerald-900/40 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
             <div class="relative flex-1">
-              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
                 v-model="memberSearchQuery"
                 type="text"
-                class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all"
+                class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-[#0c1411] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all"
                 placeholder="Cari nama santri..."
               />
             </div>
 
             <div class="flex items-center gap-2 text-xs">
-              <span class="text-slate-500 font-medium">Urutkan:</span>
+              <span class="text-slate-500 dark:text-slate-400 font-medium">Urutkan:</span>
               <select
                 v-model="memberSortOrder"
-                class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                class="bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               >
                 <option value="name_asc">Nama (A - Z)</option>
                 <option value="balance_desc">Saldo Terbanyak</option>
@@ -647,48 +674,48 @@
           </div>
 
           <!-- Empty Members -->
-          <div v-if="filteredSummary.length === 0" class="bg-white rounded-3xl p-10 text-center border border-slate-200/80 shadow-sm">
-            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 text-2xl">
+          <div v-if="filteredSummary.length === 0" class="bg-white dark:bg-[#13231d] rounded-3xl p-8 sm:p-10 text-center border border-slate-200/80 dark:border-emerald-900/40 shadow-sm">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 rounded-2xl bg-slate-50 dark:bg-[#0c1411] flex items-center justify-center text-slate-400 text-2xl">
               👥
             </div>
-            <h3 class="text-base font-bold text-slate-800 mb-1">Tidak Ada Data Santri</h3>
-            <p class="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1">Tidak Ada Data Santri</h3>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               {{ memberSearchQuery ? 'Nama santri tidak ditemukan dengan kata kunci tersebut.' : 'Belum ada anggota santri yang mencatat setoran tabungan di buku ini.' }}
             </p>
           </div>
 
           <!-- Members Grid (Card per Santri) -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
             <div
               v-for="santri in filteredSummary"
               :key="santri.santriId"
-              class="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between"
+              class="p-4 bg-white dark:bg-[#13231d] rounded-2xl border border-slate-200/80 dark:border-emerald-900/40 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div class="flex items-start gap-3 mb-3">
-                <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm shrink-0 shadow-inner">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center font-bold text-sm shrink-0 shadow-inner">
                   {{ getInitials(santri.santriName) }}
                 </div>
                 <div class="min-w-0 flex-1">
-                  <h4 class="font-bold text-slate-900 text-sm leading-tight truncate">
+                  <h4 class="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm leading-tight truncate">
                     {{ santri.santriName }}
                   </h4>
-                  <p class="text-xs text-slate-400 mt-0.5">
+                  <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                     {{ santri.transactionCount }}x setoran tercatat
                   </p>
                 </div>
               </div>
 
-              <div class="pt-3 border-t border-slate-100 flex items-end justify-between">
+              <div class="pt-3 border-t border-slate-100 dark:border-emerald-900/30 flex items-end justify-between">
                 <div>
-                  <span class="text-[11px] text-slate-400 uppercase tracking-wider block font-semibold">Total Tabungan</span>
-                  <span class="text-base font-extrabold text-emerald-700">
+                  <span class="text-[10px] sm:text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wider block font-semibold">Total Tabungan</span>
+                  <span class="text-sm sm:text-base font-extrabold text-emerald-700 dark:text-emerald-400">
                     Rp {{ formatCurrency(santri.balance) }}
                   </span>
                 </div>
                 <button
                   type="button"
                   @click="filterTransactionsBySantri(santri.santriName)"
-                  class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all flex items-center gap-1"
+                  class="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50 text-xs font-bold transition-all flex items-center gap-1"
                   title="Lihat riwayat transaksi santri ini"
                 >
                   <span>Riwayat</span>
@@ -701,54 +728,54 @@
 
         <!-- F. TAB CONTENT: INFO & TRANSPARANSI -->
         <div v-else-if="activeTab === 'info'" class="space-y-4">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
+          <div class="bg-white dark:bg-[#13231d] rounded-3xl p-5 sm:p-8 border border-slate-200/80 dark:border-emerald-900/40 shadow-sm space-y-6">
             <div>
-              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+              <span class="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
                 Tentang Buku Ini
               </span>
-              <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
+              <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-2">
                 {{ book.title }}
               </h2>
-              <p class="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
+              <p class="text-slate-600 dark:text-slate-300 text-xs sm:text-sm sm:text-base mt-2 leading-relaxed">
                 {{ book.description || 'Buku ini digunakan sebagai sarana transparansi pencatatan kas, iuran, dan tabungan santri TPQ AMANAH.' }}
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-4 border-t border-slate-100 dark:border-emerald-900/30">
+              <div class="p-4 bg-slate-50 dark:bg-[#0c1411] rounded-2xl border border-slate-100 dark:border-emerald-900/30">
                 <div class="text-2xl mb-2">🕌</div>
-                <h4 class="font-bold text-slate-900 text-sm">Prinsip Amanah</h4>
-                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                <h4 class="font-bold text-slate-900 dark:text-slate-100 text-sm">Prinsip Amanah</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Setiap rupiah yang masuk dan keluar dicatat secara jujur dan transparan untuk menjaga kepercayaan wali santri dan masyarakat.
                 </p>
               </div>
 
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div class="p-4 bg-slate-50 dark:bg-[#0c1411] rounded-2xl border border-slate-100 dark:border-emerald-900/30">
                 <div class="text-2xl mb-2">⚡</div>
-                <h4 class="font-bold text-slate-900 text-sm">Real-time & Akurat</h4>
-                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                <h4 class="font-bold text-slate-900 dark:text-slate-100 text-sm">Real-time & Akurat</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Data yang tampil pada halaman publik ini bersumber langsung dari sistem pembukuan resmi guru dan pengurus TPQ Amanah.
                 </p>
               </div>
 
-              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div class="p-4 bg-slate-50 dark:bg-[#0c1411] rounded-2xl border border-slate-100 dark:border-emerald-900/30">
                 <div class="text-2xl mb-2">📞</div>
-                <h4 class="font-bold text-slate-900 text-sm">Pusat Bantuan</h4>
-                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                <h4 class="font-bold text-slate-900 dark:text-slate-100 text-sm">Pusat Bantuan</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                   Jika terdapat kekeliruan nominal atau pertanyaan terkait tabungan ananda, silakan hubungi pengurus atau guru kelas.
                 </p>
               </div>
             </div>
 
             <!-- WhatsApp Help Center -->
-            <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-50 to-emerald-100/60 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-50 to-emerald-100/60 dark:from-emerald-950/50 dark:to-[#0f2a20] rounded-2xl border border-emerald-200 dark:border-emerald-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
                   💬
                 </div>
                 <div>
-                  <h4 class="font-bold text-emerald-950 text-sm">Perlu konfirmasi atau bantuan tabungan?</h4>
-                  <p class="text-xs text-emerald-800">Hubungi layanan pengurus TPQ Amanah via WhatsApp.</p>
+                  <h4 class="font-bold text-emerald-950 dark:text-emerald-100 text-sm">Perlu konfirmasi atau bantuan tabungan?</h4>
+                  <p class="text-xs text-emerald-800 dark:text-emerald-300">Hubungi layanan pengurus TPQ Amanah via WhatsApp.</p>
                 </div>
               </div>
               <a
@@ -766,30 +793,30 @@
     </main>
 
     <!-- SHARE MODAL -->
-    <div v-if="showShareModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" @click.self="showShareModal = false">
-      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+    <div v-if="showShareModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4" @click.self="showShareModal = false">
+      <div class="bg-white dark:bg-[#13231d] rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-emerald-900/50 space-y-5 animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
               🌐
             </div>
             <div>
-              <h3 class="font-bold text-slate-900 text-base">Bagikan Tautan Publik</h3>
-              <p class="text-xs text-slate-500">Siapa saja bisa membuka tanpa perlu login</p>
+              <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">Bagikan Tautan Publik</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Siapa saja bisa membuka tanpa perlu login</p>
             </div>
           </div>
-          <button @click="showShareModal = false" class="text-slate-400 hover:text-slate-600 p-1 text-lg">✕</button>
+          <button @click="showShareModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-lg">✕</button>
         </div>
 
         <!-- URL Box -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Tautan Web</label>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Tautan Web</label>
           <div class="flex items-center gap-2">
             <input
               type="text"
               readonly
               :value="publicShareUrl"
-              class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 select-all font-mono"
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs text-slate-800 dark:text-slate-200 select-all font-mono"
             />
             <button
               type="button"
@@ -802,7 +829,7 @@
         </div>
 
         <!-- WhatsApp Quick Share -->
-        <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
+        <div class="pt-2 border-t border-slate-100 dark:border-emerald-900/30 flex flex-col gap-2">
           <a
             :href="whatsappShareUrl"
             target="_blank"
@@ -819,7 +846,7 @@
             v-if="canUseNativeShare"
             type="button"
             @click="triggerNativeShare"
-            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+            class="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-[#14261f] hover:bg-slate-200 dark:hover:bg-[#1c352b] text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all border border-slate-200/60 dark:border-emerald-800/40"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="18" cy="5" r="3" />
@@ -835,19 +862,19 @@
     </div>
 
     <!-- PRINT / EXPORT PDF MODAL -->
-    <div v-if="showPrintModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" @click.self="showPrintModal = false">
-      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+    <div v-if="showPrintModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4" @click.self="showPrintModal = false">
+      <div class="bg-white dark:bg-[#13231d] rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-emerald-900/50 space-y-5 animate-in fade-in zoom-in-95 duration-200">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold">
               📄
             </div>
             <div>
-              <h3 class="font-bold text-slate-900 text-base">Unduh Laporan PDF</h3>
-              <p class="text-xs text-slate-500">Pilih rentang data laporan yang ingin dicetak</p>
+              <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">Unduh Laporan PDF</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Pilih rentang data laporan yang ingin dicetak</p>
             </div>
           </div>
-          <button @click="showPrintModal = false" class="text-slate-400 hover:text-slate-600 p-1 text-lg">✕</button>
+          <button @click="showPrintModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-lg">✕</button>
         </div>
 
         <div class="grid grid-cols-3 gap-2">
@@ -855,7 +882,7 @@
             type="button"
             @click="printMode = 'month'"
             class="p-2.5 rounded-xl border text-xs font-bold text-center transition-all"
-            :class="printMode === 'month' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+            :class="printMode === 'month' ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-slate-50 dark:bg-[#0c1411] border-slate-200 dark:border-emerald-900/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1a3028]'"
           >
             Bulan Ini
           </button>
@@ -863,7 +890,7 @@
             type="button"
             @click="printMode = 'range'"
             class="p-2.5 rounded-xl border text-xs font-bold text-center transition-all"
-            :class="printMode === 'range' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+            :class="printMode === 'range' ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-slate-50 dark:bg-[#0c1411] border-slate-200 dark:border-emerald-900/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1a3028]'"
           >
             Rentang
           </button>
@@ -871,7 +898,7 @@
             type="button"
             @click="printMode = 'all'"
             class="p-2.5 rounded-xl border text-xs font-bold text-center transition-all"
-            :class="printMode === 'all' ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'"
+            :class="printMode === 'all' ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300' : 'bg-slate-50 dark:bg-[#0c1411] border-slate-200 dark:border-emerald-900/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1a3028]'"
           >
             Semua
           </button>
@@ -879,39 +906,39 @@
 
         <!-- Month Picker -->
         <div v-if="printMode === 'month'" class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Pilih Bulan</label>
+          <label class="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Pilih Bulan</label>
           <input
             v-model="printMonth"
             type="month"
-            class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <!-- Range Pickers -->
         <div v-else-if="printMode === 'range'" class="grid grid-cols-2 gap-3">
           <div class="space-y-1">
-            <label class="text-xs font-bold text-slate-600">Dari Tanggal</label>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Dari Tanggal</label>
             <input
               v-model="printStartDate"
               type="date"
-              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div class="space-y-1">
-            <label class="text-xs font-bold text-slate-600">Sampai Tanggal</label>
+            <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Sampai Tanggal</label>
             <input
               v-model="printEndDate"
               type="date"
-              class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-[#0c1411] border border-slate-200 dark:border-emerald-900/50 rounded-xl text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
 
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+        <div class="pt-2 border-t border-slate-100 dark:border-emerald-900/30 flex items-center justify-end gap-2">
           <button
             type="button"
             @click="showPrintModal = false"
-            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+            class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#14261f] hover:bg-slate-200 dark:hover:bg-[#1c352b] text-slate-700 dark:text-slate-200 text-xs font-bold transition-all border border-slate-200/60 dark:border-emerald-800/40"
           >
             Batal
           </button>
@@ -1035,7 +1062,6 @@ const fetchBookData = async (isManualRefresh = false) => {
   }
 
   try {
-    // Gunakan endpoint overview efisien
     const res = await api.get(`/savings/public/books/${bookId.value}/overview`, {
       headers: isManualRefresh ? { 'Cache-Control': 'no-cache' } : {},
     });
@@ -1100,30 +1126,31 @@ const resetAllFilters = () => {
 };
 
 const filteredTransactions = computed(() => {
-  return transactions.value.filter((tx) => {
-    // Filter Santri
-    if (selectedSantriFilter.value) {
-      if ((tx.santriName || '') !== selectedSantriFilter.value) return false;
-    }
+  let list = [...transactions.value];
 
-    // Filter Tipe
-    if (filterType.value === 'income' && !isIncome(tx)) return false;
-    if (filterType.value === 'expense' && isIncome(tx)) return false;
+  if (selectedSantriFilter.value) {
+    list = list.filter((tx) => (tx.santriName || '') === selectedSantriFilter.value);
+  }
 
-    // Search Query
-    if (searchQuery.value.trim()) {
-      const q = searchQuery.value.toLowerCase();
+  if (filterType.value === 'income') {
+    list = list.filter((tx) => isIncome(tx));
+  } else if (filterType.value === 'expense') {
+    list = list.filter((tx) => !isIncome(tx));
+  }
+
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase().trim();
+    list = list.filter((tx) => {
       const name = (tx.santriName || '').toLowerCase();
       const desc = (tx.description || '').toLowerCase();
       const notes = (tx.notes || '').toLowerCase();
       return name.includes(q) || desc.includes(q) || notes.includes(q);
-    }
+    });
+  }
 
-    return true;
-  });
+  return list;
 });
 
-// Pagination
 const totalPages = computed(() => {
   return Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1;
 });
@@ -1145,25 +1172,25 @@ const filteredSummary = computed(() => {
   let list = [...summary.value];
 
   if (memberSearchQuery.value.trim()) {
-    const q = memberSearchQuery.value.toLowerCase();
-    list = list.filter((s) => (s.santriName || '').toLowerCase().includes(q));
+    const q = memberSearchQuery.value.toLowerCase().trim();
+    list = list.filter((item) => (item.santriName || '').toLowerCase().includes(q));
   }
 
-  if (memberSortOrder.value === 'balance_desc') {
+  if (memberSortOrder.value === 'name_asc') {
+    list.sort((a, b) => (a.santriName || '').localeCompare(b.santriName || ''));
+  } else if (memberSortOrder.value === 'balance_desc') {
     list.sort((a, b) => (b.balance || 0) - (a.balance || 0));
   } else if (memberSortOrder.value === 'count_desc') {
     list.sort((a, b) => (b.transactionCount || 0) - (a.transactionCount || 0));
-  } else {
-    list.sort((a, b) => (a.santriName || '').localeCompare(b.santriName || ''));
   }
 
   return list;
 });
 
-// Share Actions
+// Modal Actions
 const openShareModal = () => {
-  copiedLink.value = false;
   showShareModal.value = true;
+  copiedLink.value = false;
 };
 
 const copyShareLink = async () => {
@@ -1175,21 +1202,24 @@ const copyShareLink = async () => {
       copiedLink.value = false;
     }, 2500);
   } catch (err) {
-    console.error('Copy failed:', err);
+    console.error('Clipboard copy failed:', err);
+    showToast('Tautan dapat disalin manual dari kolom teks');
   }
 };
 
 const triggerNativeShare = async () => {
-  if (!navigator.share) return;
-  try {
-    await navigator.share({
-      title: book.value?.title || 'Buku Tabungan TPQ Amanah',
-      text: `Pantau pembukuan dan tabungan santri ${book.value?.title} di TPQ Amanah:`,
-      url: publicShareUrl.value,
-    });
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error('Share error:', err);
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Tabungan & Kas - ${book.value?.title || 'TPQ Amanah'}`,
+        text: `Pantau transparansi pembukuan ${book.value?.title || 'TPQ Amanah'}:`,
+        url: publicShareUrl.value,
+      });
+      showToast('Berbagi berhasil dibuka!');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Native share error:', err);
+      }
     }
   }
 };
@@ -1215,7 +1245,6 @@ const generatePdf = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const marginX = 14;
 
-    // Filter transactions according to printMode
     let txList = [...transactions.value];
     let rangeLabel = 'Semua Waktu';
 
@@ -1238,10 +1267,8 @@ const generatePdf = () => {
       });
     }
 
-    // Sort ascending for ledger statement
     txList.sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt));
 
-    // Header Title
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(4, 51, 36);
@@ -1255,12 +1282,10 @@ const generatePdf = () => {
     doc.setTextColor(100);
     doc.text(`Waktu Cetak: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, 29, { align: 'center' });
 
-    // Green Divider Line
     doc.setDrawColor(4, 51, 36);
     doc.setLineWidth(0.5);
     doc.line(marginX, 33, pageWidth - marginX, 33);
 
-    // Meta Table
     autoTable(doc, {
       startY: 37,
       body: [
@@ -1278,7 +1303,6 @@ const generatePdf = () => {
       },
     });
 
-    // Ledger Rows
     const tableBody = txList.map((tx, idx) => {
       const isInc = isIncome(tx);
       return [
@@ -1323,7 +1347,6 @@ const generatePdf = () => {
       },
     });
 
-    // Page Numbers
     const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -1337,7 +1360,6 @@ const generatePdf = () => {
       );
     }
 
-    // Save File
     const filename = `tabungan-${book.value.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`;
     doc.save(filename);
     showToast('Laporan PDF berhasil diunduh!');
@@ -1356,8 +1378,32 @@ onMounted(() => {
 </script>
 
 <style scoped>
+:root {
+  color-scheme: light dark;
+}
+
 .public-savings-page {
   -webkit-font-smoothing: antialiased;
 }
-</style>
 
+/* Hardened Dark Mode Badges & Inversion Protections */
+@media (prefers-color-scheme: dark) {
+  .public-savings-page {
+    background-color: #0c1411 !important;
+    color: #f1f5f9 !important;
+  }
+
+  /* Prevent forced stark white badges in dark mode */
+  .tab-badge {
+    background-color: #0f241c !important;
+    color: #6ee7b7 !important;
+    border-color: rgba(5, 150, 105, 0.4) !important;
+  }
+
+  .tab-badge-active {
+    background-color: #064e3b !important;
+    color: #ecfdf5 !important;
+    border-color: #10b981 !important;
+  }
+}
+</style>
