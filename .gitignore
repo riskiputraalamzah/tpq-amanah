@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Original scans of official documents. They contain personal data and must never be committed
+# or deployed. The landing page uses the redacted web copies in public/legalitas instead.
+/public/sertif/

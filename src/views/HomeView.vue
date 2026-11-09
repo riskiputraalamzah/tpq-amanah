@@ -881,6 +881,11 @@
     </section>
 
     <!-- ================================================================= -->
+    <!-- 8b. LEGALITAS (HIDDEN UNLESS ADMIN ENABLES IT)                    -->
+    <!-- ================================================================= -->
+    <LegalDocuments />
+
+    <!-- ================================================================= -->
     <!-- 9. JADWAL & SESI MENGAJI (CLEAR DUAL SESSION COMPARISON)          -->
     <!-- ================================================================= -->
     <section id="jadwal" class="py-20 lg:py-28 bg-[#fafaf9] scroll-mt-28">
@@ -1302,6 +1307,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Lenis from 'lenis'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
+import LegalDocuments from '@/components/LegalDocuments.vue'
 import api from '@/services/api'
 
 // Google Form Official Registration Link
@@ -1526,9 +1532,10 @@ const fetchTeachers = async () => {
 
 const fetchContent = async () => {
   try {
-    const { data } = await api.get('/content/about')
-    if (data) {
-      aboutContent.value = { ...aboutContent.value, ...data }
+    // One request serves every landing page section, and it does not 404 before the first save.
+    const { data } = await api.get('/content')
+    if (data?.about) {
+      aboutContent.value = { ...aboutContent.value, ...data.about }
     }
   } catch {
     // Fallback to defaultAbout
