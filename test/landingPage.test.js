@@ -138,6 +138,25 @@ test("HomeView has mobile-friendly responsive layout and floating CTA", () => {
   );
 });
 
+test("HomeView has no duplicate static element ids", () => {
+  const ids = [...homeViewSrc.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
+  const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+  assert.deepEqual(duplicates, [], `Duplicate ids break anchor links: ${duplicates.join(", ")}`);
+});
+
+test("Floating CTA hides where the same actions are already on screen", () => {
+  assert.ok(homeViewSrc.includes("showFloatingCta"), "Floating CTA visibility is controlled");
+  for (const target of ["heroRef", "registrationRef", "contactRef", "footerRef"]) {
+    assert.ok(homeViewSrc.includes(`ref="${target}"`), `${target} is observed`);
+  }
+});
+
+test("Contact numbers are tappable and FAQ exposes its state to assistive tech", () => {
+  assert.ok(homeViewSrc.includes("'tel:' + contactElla.tel"), "Ustadzah Ella number is a tel: link");
+  assert.ok(homeViewSrc.includes("'tel:' + contactRiski.tel"), "Ustadz Riski number is a tel: link");
+  assert.ok(homeViewSrc.includes(':aria-expanded="activeFaq === index"'), "FAQ buttons expose aria-expanded");
+});
+
 test("WebP files exist in public folder and have small footprint (< 200KB each)", () => {
   const publicDir = path.join(here, "../public");
   const heroWebp = path.join(publicDir, "hero-blended-1.webp");

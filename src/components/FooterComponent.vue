@@ -29,15 +29,15 @@
         <!-- Links (3 cols) -->
         <div class="lg:col-span-3">
           <h4 class="font-bold text-base mb-4 text-white">Navigasi Utama</h4>
-          <ul class="space-y-2.5 text-sm">
-            <li><a href="#beranda" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Beranda</a></li>
-            <li><a href="#pendaftaran" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Pendaftaran Santri Baru</a></li>
-            <li><a href="#keunggulan" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Keunggulan Lembaga</a></li>
-            <li><a href="#program" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Kurikulum 6 Jilid</a></li>
-            <li><a href="#at-tartil" class="text-emerald-100/80 hover:text-amber-300 transition-colors">E-Kitab Digital At-Tartil</a></li>
-            <li><a href="#jadwal" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Jadwal Sesi Mengaji</a></li>
-            <li><a href="#pengajar" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Dewan Asatidz</a></li>
-            <li><a href="#kontak" class="text-emerald-100/80 hover:text-amber-300 transition-colors">Kontak &amp; Lokasi</a></li>
+          <ul class="space-y-0 lg:space-y-0.5 text-sm">
+            <li><a href="#beranda" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Beranda</a></li>
+            <li><a href="#pendaftaran" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Pendaftaran Santri Baru</a></li>
+            <li><a href="#keunggulan" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Keunggulan Lembaga</a></li>
+            <li><a href="#program" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Kurikulum 6 Jilid</a></li>
+            <li><a href="#at-tartil" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">E-Kitab Digital At-Tartil</a></li>
+            <li><a href="#jadwal" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Jadwal Sesi Mengaji</a></li>
+            <li><a href="#pengajar" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Dewan Asatidz</a></li>
+            <li><a href="#kontak" class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors">Kontak &amp; Lokasi</a></li>
           </ul>
         </div>
 
@@ -65,11 +65,11 @@
             
             <div class="pt-2 flex flex-wrap gap-2 text-xs">
               <a href="https://wa.me/6289530397058" target="_blank" rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white font-medium border border-emerald-600/60 transition-colors">
+                class="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm font-medium border border-emerald-600/60 transition-colors">
                 <span>WA Ustadzah Ella (0895-3039-7058)</span>
               </a>
               <a href="https://wa.me/6282233361877" target="_blank" rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white font-medium border border-emerald-600/60 transition-colors">
+                class="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm font-medium border border-emerald-600/60 transition-colors">
                 <span>WA Ustadz Riski (0822-3336-1877)</span>
               </a>
             </div>

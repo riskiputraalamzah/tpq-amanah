@@ -42,8 +42,8 @@
           </nav>
 
           <!-- Mobile Menu Button -->
-          <button @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="lg:hidden p-2 rounded-xl transition-all duration-300"
+          <button type="button" @click="isMobileMenuOpen = !isMobileMenuOpen" :aria-expanded="isMobileMenuOpen" aria-label="Menu navigasi"
+            class="lg:hidden p-2.5 rounded-xl transition-all duration-300"
             :class="isScrolled ? 'bg-primary-50 text-primary-600' : 'bg-white/20 text-white'">
             <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -60,7 +60,7 @@
         enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-150 ease-in"
         leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-4">
         <div v-if="isMobileMenuOpen"
-          class="lg:hidden mt-3 bg-white/95 backdrop-blur-xl shadow-xl border-t border-gray-100"
+          class="lg:hidden mt-3 bg-white/95 backdrop-blur-xl shadow-xl border-t border-gray-100 max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain"
           :class="isScrolled ? 'rounded-xl mx-2' : 'rounded-b-2xl'">
           <nav class="px-4 py-6 space-y-2">
             <a v-for="link in navLinks" :key="link.href" :href="link.href"

@@ -8,7 +8,7 @@
     <!-- ================================================================= -->
     <!-- 1. HERO SECTION (MAJESTIC, LUMINOUS & ORGANIC)                    -->
     <!-- ================================================================= -->
-    <section id="beranda"
+    <section id="beranda" ref="heroRef"
       class="relative bg-gradient-to-b from-[#03291d] via-[#053d2c] to-[#03261a] text-white pt-32 pb-20 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28 overflow-hidden">
       <!-- Islamic Arabesque Geometric Texture -->
       <div class="absolute inset-0 islamic-pattern opacity-[0.05] pointer-events-none"></div>
@@ -26,7 +26,7 @@
             <!-- Sacred Pill Badge -->
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-emerald-100 text-xs sm:text-sm font-medium mb-5 backdrop-blur-md shadow-sm">
               <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span>Penerimaan Santri Baru • TPQ Amanah</span>
+              <span>Penerimaan Santri Baru • Sawotratap, Sidoarjo</span>
             </div>
 
             <!-- Bismillah Calligraphy -->
@@ -35,22 +35,22 @@
             </p>
 
             <!-- Main Proportional Headline -->
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.2] mb-5">
-              Mencetak Generasi Qur'ani <br class="hidden sm:inline" />
-              <span class="text-amber-300">yang Berakhlak Mulia</span>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.2] mb-5 text-balance">
+              Belajar Al-Qur'an dengan Tartil <br class="hidden sm:inline" />
+              <span class="text-amber-300">di TPQ Amanah Sawotratap</span>
             </h1>
 
             <!-- Balanced Subtitle -->
-            <p class="text-sm sm:text-base lg:text-lg text-emerald-100/90 leading-relaxed max-w-xl mb-8 font-normal">
-              Bimbingan membaca dan menghafal Al-Qur'an terpadu kurikulum <strong class="text-white font-semibold">Metode At-Tartil 6 Jilid</strong>. Diasuh oleh asatidz bersanad yang telaten, sabar, dan ramah anak di Sawotratap, Sidoarjo.
+            <p class="text-base lg:text-lg text-emerald-100/90 leading-relaxed max-w-xl mb-8 font-normal">
+              Anak usia 4 tahun sampai SMP belajar membaca Al-Qur'an dengan <strong class="text-white font-semibold">Metode At-Tartil 6 Jilid</strong>. Bacaan setiap anak disimak satu per satu oleh ustadz dan ustadzah yang sabar. Kelas Senin sampai Jumat, pilih sesi sore atau ba'da Maghrib.
             </p>
 
             <!-- Dual Action CTAs -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-10">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto mb-3">
               <!-- Primary: Google Form Registration -->
               <a :href="googleFormUrl" target="_blank" rel="noopener noreferrer"
                 class="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-sm sm:text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 rounded-xl shadow-[0_10px_25px_-5px_rgba(251,191,36,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(251,191,36,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
-                <span>Daftar Santri Baru (Google Form)</span>
+                <span>Daftar Santri Baru</span>
                 <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 shrink-0" fill="none"
                   stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -64,15 +64,17 @@
                   <path
                     d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                   </svg>
-                <span>Konsultasi WhatsApp</span>
+                <span>Tanya via WhatsApp</span>
               </a>
             </div>
+
+            <p class="text-sm text-emerald-200/85 mb-8 text-center lg:text-left">Isi formulir sekitar 3 menit dari HP. Tanpa biaya formulir.</p>
 
             <!-- 3 Grounded High-Trust Stat Indicators (Symmetric & Proportional) -->
             <div class="w-full max-w-lg pt-6 border-t border-white/15 grid grid-cols-3 gap-3 sm:gap-6 text-center lg:text-left">
               <div>
                 <div class="text-xl sm:text-2xl font-extrabold text-amber-300 tracking-tight">6 Jilid</div>
-                <div class="text-xs text-emerald-200/85 font-medium mt-0.5">At-Tartil Terstandar</div>
+                <div class="text-xs text-emerald-200/85 font-medium mt-0.5">Metode At-Tartil</div>
               </div>
               <div class="border-x border-white/15 px-2 sm:px-4">
                 <div class="text-xl sm:text-2xl font-extrabold text-amber-300 tracking-tight">2 Sesi</div>
@@ -103,7 +105,7 @@
                 <p class="text-xs text-amber-200/95 font-medium italic leading-snug">
                   "Sebaik-baik kalian adalah yang mempelajari Al-Qur'an dan mengajarkannya."
                 </p>
-                <p class="text-[10px] text-emerald-300/80 mt-0.5 font-normal">(HR. Bukhari No. 5027)</p>
+                <p class="text-xs text-emerald-300/80 mt-0.5 font-normal">(HR. Bukhari No. 5027)</p>
               </div>
 
             </div>
@@ -123,7 +125,8 @@
     <!-- ================================================================= -->
     <!-- 2. EEAT TRUST HIGHLIGHT BAR (INSTITUTIONAL INTEGRITY)             -->
     <!-- ================================================================= -->
-    <section id="keunggulan" class="bg-white border-b border-slate-200/80 py-8 sm:py-10 shadow-xs relative z-20">
+    <section aria-labelledby="ringkasan-keunggulan" class="bg-white border-b border-slate-200/80 py-8 sm:py-10 shadow-xs relative z-20">
+      <h2 id="ringkasan-keunggulan" class="sr-only">Ringkasan keunggulan TPQ Amanah</h2>
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           
@@ -134,8 +137,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Metode 6 Jilid Terpadu</h3>
-              <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">Tahap belajar makhraj &amp; tajwid terstruktur rapi.</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Belajar Bertahap, 6 Jilid</h3>
+              <p class="text-sm text-slate-600 mt-1 leading-relaxed">Dari mengenal huruf hijaiyah sampai siap membaca mushaf, satu jilid demi satu jilid.</p>
             </div>
           </div>
 
@@ -146,8 +149,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Asatidz Telaten &amp; Ramah</h3>
-              <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">Pendekatan ramah anak tanpa kekerasan verbal.</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Guru yang Sabar</h3>
+              <p class="text-sm text-slate-600 mt-1 leading-relaxed">Anak dibimbing tanpa bentakan dan tanpa tes yang menegangkan.</p>
             </div>
           </div>
 
@@ -158,8 +161,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Buku Prestasi &amp; E-Kitab</h3>
-              <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">Capaian santri tercatat dan terpantau orang tua.</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Perkembangan Bisa Dipantau</h3>
+              <p class="text-sm text-slate-600 mt-1 leading-relaxed">Capaian bacaan dicatat di Buku Prestasi, dan E-Kitab bisa dibuka di rumah.</p>
             </div>
           </div>
 
@@ -171,8 +174,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Pusat Belajar Kondusif</h3>
-              <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">Jl. Kertanegara 20, Sawotratap, Gedangan.</p>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">Mudah Dikunjungi</h3>
+              <p class="text-sm text-slate-600 mt-1 leading-relaxed">Jl. Kertanegara No. 20, Sawotratap, Gedangan, Sidoarjo.</p>
             </div>
           </div>
 
@@ -183,7 +186,7 @@
     <!-- ================================================================= -->
     <!-- 3. SECTION PENDAFTARAN SANTRI BARU (CLEAN, FRICTIONLESS)          -->
     <!-- ================================================================= -->
-    <section id="pendaftaran" class="py-20 lg:py-28 bg-[#fafaf9] scroll-mt-28 relative">
+    <section id="pendaftaran" ref="registrationRef" class="py-20 lg:py-28 bg-[#fafaf9] scroll-mt-28 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Section Header -->
@@ -196,7 +199,7 @@
             Alur Pendaftaran Calon Santri &amp; Santriwati
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Pendaftaran santri baru dapat diselesaikan secara mudah dari rumah melalui <strong class="text-slate-900 font-semibold">Formulir Google Form Resmi</strong> atau berkonsultasi langsung via WhatsApp dengan asatidz koordinator.
+            Pendaftaran bisa diselesaikan dari rumah lewat <strong class="text-slate-900 font-semibold">Formulir Google Form resmi</strong>, lalu dikonfirmasi lewat WhatsApp. Tidak ada tes yang menggugurkan: calon santri hanya ditempatkan di jilid yang sesuai dengan kesiapannya.
           </p>
         </div>
 
@@ -205,109 +208,73 @@
           <!-- Left: 3-Step Clear Journey (Col 7) -->
           <div class="lg:col-span-7 bg-white rounded-3xl p-7 sm:p-10 border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div>
-              <div class="flex items-center justify-between pb-6 mb-7 border-b border-slate-100">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-6 mb-7 border-b border-slate-100">
                 <div>
                   <h3 class="font-bold text-xl sm:text-2xl text-slate-900">3 Langkah Mudah Mendaftar</h3>
-                  <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Panduan pendaftaran santri baru TPQ Amanah</p>
+                  <p class="text-sm text-slate-500 mt-0.5">Dari rumah, tanpa antre</p>
                 </div>
-                <span class="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200">
-                  Estimasi 3 Menit
+                <span class="self-start sm:self-auto whitespace-nowrap text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                  Estimasi 3 menit
                 </span>
               </div>
 
               <!-- Steps List -->
-              <div class="space-y-7">
+              <ol class="space-y-8">
                 <!-- Step 1 -->
-                <div class="flex items-start gap-4 sm:gap-5 relative">
-                  <div class="flex flex-col items-center shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-700/20 ring-4 ring-emerald-50">
-                      1
-                    </div>
-                    <div class="w-0.5 bg-slate-200 h-14 mt-2"></div>
-                  </div>
-                  <div class="flex-1 pt-0.5">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                        Langkah Pertama
-                      </span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">
-                      Mengisi Formulir Online (Google Form)
-                    </h4>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-2.5">
-                      Lengkapi data identitas calon santri dan orang tua/wali melalui formulir resmi Google Form TPQ Amanah. Praktis dan dapat diakses dari smartphone.
-                    </p>
-                    <a :href="googleFormUrl" target="_blank" rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-4 decoration-emerald-300 hover:decoration-emerald-700 transition-colors">
-                      <span>Buka Formulir Google Form Pendaftaran ↗</span>
-                    </a>
-                  </div>
-                </div>
+                <li class="relative pl-14 sm:pl-16">
+                  <span class="absolute left-0 top-0 w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-700/20 ring-4 ring-emerald-50" aria-hidden="true">1</span>
+                  <span class="absolute left-5 top-12 -bottom-8 w-0.5 -translate-x-1/2 bg-slate-200" aria-hidden="true"></span>
+                  <p class="text-xs font-bold text-emerald-800 mb-1">Langkah pertama</p>
+                  <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">Isi formulir online</h4>
+                  <p class="text-slate-600 text-sm leading-relaxed mb-1">
+                    Lengkapi data calon santri dan orang tua/wali di Google Form resmi TPQ Amanah. Bisa dibuka langsung dari HP.
+                  </p>
+                  <a :href="googleFormUrl" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center min-h-11 text-sm font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-4 decoration-emerald-300 hover:decoration-emerald-700 transition-colors">
+                    Buka formulir pendaftaran ↗
+                  </a>
+                </li>
 
                 <!-- Step 2 -->
-                <div class="flex items-start gap-4 sm:gap-5 relative">
-                  <div class="flex flex-col items-center shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow-md shadow-amber-500/20 ring-4 ring-amber-50">
-                      2
-                    </div>
-                    <div class="w-0.5 bg-slate-200 h-14 mt-2"></div>
+                <li class="relative pl-14 sm:pl-16">
+                  <span class="absolute left-0 top-0 w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow-md shadow-amber-500/20 ring-4 ring-amber-50" aria-hidden="true">2</span>
+                  <span class="absolute left-5 top-12 -bottom-8 w-0.5 -translate-x-1/2 bg-slate-200" aria-hidden="true"></span>
+                  <p class="text-xs font-bold text-amber-800 mb-1">Langkah kedua</p>
+                  <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">Konfirmasi lewat WhatsApp &amp; pilih sesi</h4>
+                  <p class="text-slate-600 text-sm leading-relaxed mb-3">
+                    Kirim nama santri ke koordinator agar kuota kelas dan jadwal tercatat. Pilihan sesi: Sesi Sore pukul 15:30 atau Sesi Malam pukul 18:00.
+                  </p>
+                  <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                    <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
+                      class="inline-flex items-center justify-center min-h-11 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-sm font-semibold border border-emerald-200 transition-colors">
+                      <span>WA Ustadzah Ella <span class="whitespace-nowrap">({{ contactElla.phone }}) ↗</span></span>
+                    </a>
+                    <a :href="contactRiski.waLink" target="_blank" rel="noopener noreferrer"
+                      class="inline-flex items-center justify-center min-h-11 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold border border-slate-200 transition-colors">
+                      <span>WA Ustadz Riski <span class="whitespace-nowrap">({{ contactRiski.phone }}) ↗</span></span>
+                    </a>
                   </div>
-                  <div class="flex-1 pt-0.5">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-[11px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60">
-                        Langkah Kedua
-                      </span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">
-                      Konfirmasi WhatsApp &amp; Pemilihan Sesi
-                    </h4>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-2.5">
-                      Kirimkan konfirmasi nama santri via WhatsApp ke koordinator kami untuk pencatatan kuota kelas dan penyesuaian jadwal (Sesi Sore 15:30 atau Sesi Malam 18:00).
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                      <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold border border-emerald-200 transition-colors">
-                        <span>WA Ustadzah Ella ({{ contactElla.phone }}) ↗</span>
-                      </a>
-                      <a :href="contactRiski.waLink" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 transition-colors">
-                        <span>WA Ustadz Riski ({{ contactRiski.phone }}) ↗</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                </li>
 
                 <!-- Step 3 -->
-                <div class="flex items-start gap-4 sm:gap-5">
-                  <div class="flex flex-col items-center shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-md ring-4 ring-slate-100">
-                      3
-                    </div>
-                  </div>
-                  <div class="flex-1 pt-0.5">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                        Langkah Ketiga
-                      </span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">
-                      Pemetaan Jilid Ramah Anak &amp; Masuk Kelas
-                    </h4>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                      Calon santri diajak berbincang santai untuk penempatan jilid At-Tartil yang tepat (Jilid 1-6). Tanpa tes yang menegangkan, suasana dibuat nyaman dan ceria sejak hari pertama.
-                    </p>
-                  </div>
-                </div>
-              </div>
+                <li class="relative pl-14 sm:pl-16">
+                  <span class="absolute left-0 top-0 w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-md ring-4 ring-slate-100" aria-hidden="true">3</span>
+                  <p class="text-xs font-bold text-slate-700 mb-1">Langkah ketiga</p>
+                  <h4 class="font-bold text-slate-900 text-base sm:text-lg mb-1">Penempatan jilid yang santai, lalu mulai belajar</h4>
+                  <p class="text-slate-600 text-sm leading-relaxed">
+                    Calon santri diajak berbincang santai untuk menentukan jilid At-Tartil yang tepat (Jilid 1 sampai 6). Tidak ada tes yang menegangkan, suasana dibuat nyaman dan ceria sejak hari pertama.
+                  </p>
+                </li>
+              </ol>
             </div>
 
             <!-- Bottom Note -->
-            <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+            <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
               <span class="font-medium text-emerald-800 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Penerimaan Terbuka untuk Usia 4 Tahun s/d SMP
+                Terbuka untuk usia 4 tahun sampai SMP
               </span>
-              <span>Terbuka Setiap Hari Kerja</span>
+              <span>Kelas berjalan Senin sampai Jumat</span>
             </div>
           </div>
 
@@ -317,8 +284,8 @@
             <div class="absolute inset-0 islamic-pattern opacity-[0.08] pointer-events-none"></div>
 
             <div class="relative z-10">
-              <div class="flex items-center justify-between gap-2 mb-5">
-                <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300 bg-white/10 px-3.5 py-1 rounded-full border border-white/15">
+              <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-5">
+                <span class="inline-flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-amber-300 bg-white/10 px-3.5 py-1 rounded-full border border-white/15">
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   Pendaftaran Dibuka
                 </span>
@@ -329,26 +296,26 @@
                 Daftar Mandiri via Formulir Online Resmi
               </h3>
               <p class="text-emerald-100/85 text-sm leading-relaxed mb-6 font-normal">
-                Daftarkan putra-putri Anda tanpa antre secara aman melalui lembar formulir Google Form pendaftaran TPQ Amanah.
+                Daftarkan putra-putri Anda dari rumah, tanpa antre, lewat Formulir Google Form resmi TPQ Amanah.
               </p>
 
               <!-- 4 Feature Badges -->
               <div class="grid grid-cols-2 gap-3 mb-6">
                 <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
                   <p class="text-xs font-bold text-white mb-0.5">100% Praktis</p>
-                  <p class="text-[11px] text-emerald-200/80">Cukup isi 3 menit dari HP</p>
+                  <p class="text-xs text-emerald-200/80">Cukup isi 3 menit dari HP</p>
                 </div>
                 <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
                   <p class="text-xs font-bold text-white mb-0.5">Metode At-Tartil</p>
-                  <p class="text-[11px] text-emerald-200/80">Kurikulum 6 Jilid terarah</p>
+                  <p class="text-xs text-emerald-200/80">Kurikulum 6 Jilid terarah</p>
                 </div>
                 <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
                   <p class="text-xs font-bold text-white mb-0.5">2 Pilihan Sesi</p>
-                  <p class="text-[11px] text-emerald-200/80">Sore (15:30) &amp; Malam (18:00)</p>
+                  <p class="text-xs text-emerald-200/80">Sore (15:30) &amp; Malam (18:00)</p>
                 </div>
                 <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
                   <p class="text-xs font-bold text-white mb-0.5">Bebas Biaya Form</p>
-                  <p class="text-[11px] text-emerald-200/80">Tanpa pungutan formulir awal</p>
+                  <p class="text-xs text-emerald-200/80">Tanpa pungutan formulir awal</p>
                 </div>
               </div>
             </div>
@@ -365,17 +332,17 @@
               </a>
 
               <div class="bg-white/10 rounded-xl p-3 border border-white/15">
-                <div class="flex items-center justify-between text-xs mb-2">
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-xs mb-2.5">
                   <span class="text-white/80">Butuh bantuan pendaftaran?</span>
                   <span class="text-amber-300 font-bold">Asatidz Pendamping</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-center">
                   <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
-                    class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-emerald-500/30 text-white font-bold text-xs border border-white/15 transition-colors">
+                    class="py-3 px-2 rounded-lg bg-white/10 hover:bg-emerald-500/30 text-white font-bold text-sm border border-white/15 transition-colors">
                     WA Ustadzah Ella
                   </a>
                   <a :href="contactRiski.waLink" target="_blank" rel="noopener noreferrer"
-                    class="py-1.5 px-2 rounded-lg bg-white/10 hover:bg-emerald-500/30 text-white font-bold text-xs border border-white/15 transition-colors">
+                    class="py-3 px-2 rounded-lg bg-white/10 hover:bg-emerald-500/30 text-white font-bold text-sm border border-white/15 transition-colors">
                     WA Ustadz Riski
                   </a>
                 </div>
@@ -403,7 +370,7 @@
             Mengapa Mempercayakan Buah Hati di TPQ AMANAH?
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Kami mengintegrasikan kurikulum teruji, keteladanan akhlak para asatidz, dan lingkungan ramah anak agar setiap santri bertumbuh mencintai kalamullah secara alami.
+            Orang tua biasanya ingin tahu tiga hal: bagaimana anak belajar, siapa yang membimbing, dan bagaimana perkembangannya bisa dipantau. Inilah yang kami kerjakan di setiap pertemuan.
           </p>
         </div>
 
@@ -420,11 +387,11 @@
               </div>
               <h3 class="font-bold text-lg text-slate-900 mb-2">Metode At-Tartil 6 Jilid</h3>
               <p class="text-slate-600 text-sm leading-relaxed">
-                Pembelajaran berjenjang dari makharijul huruf dasar, tajwid aplikatif, hingga bacaan tartil Al-Qur'an secara sistematis dan mudah dicerna anak.
+                Anak belajar bertahap: mulai dari huruf hijaiyah dan makhraj, kaidah tajwid, sampai membaca Al-Qur'an dengan tartil. Santri ditempatkan sesuai kesiapan membaca, bukan hanya usia.
               </p>
             </div>
             <div class="mt-6 pt-4 border-t border-slate-200/80 text-xs font-semibold text-emerald-800 flex items-center gap-1">
-              <span>Kurikulum Terstandar</span> &rarr;
+              <span>Kurikulum At-Tartil</span>
             </div>
           </div>
 
@@ -439,11 +406,11 @@
               </div>
               <h3 class="font-bold text-lg text-slate-900 mb-2">Pendidik Sabar &amp; Penuh Kasih</h3>
               <p class="text-slate-600 text-sm leading-relaxed">
-                Asatidz berpengalaman yang telaten mendampingi tiap santri sesuai karakternya, menggunakan pendekatan positif tanpa bentakan.
+                Ustadz dan ustadzah mendampingi tiap santri sesuai karakternya dengan pendekatan positif, tanpa bentakan.
               </p>
             </div>
             <div class="mt-6 pt-4 border-t border-slate-200/80 text-xs font-semibold text-amber-800 flex items-center gap-1">
-              <span>Bimbingan Hati ke Hati</span> &rarr;
+              <span>Bimbingan Hati ke Hati</span>
             </div>
           </div>
 
@@ -458,11 +425,11 @@
               </div>
               <h3 class="font-bold text-lg text-slate-900 mb-2">Adab &amp; Praktik Ibadah</h3>
               <p class="text-slate-600 text-sm leading-relaxed">
-                Pembiasaan tata cara wudhu yang sah, gerakan shalat tertib, hafalan doa harian, serta adab santun kepada orang tua dan guru.
+                Santri dibiasakan berwudhu dan shalat dengan tertib, menghafal doa harian, serta bersikap santun kepada orang tua dan guru.
               </p>
             </div>
             <div class="mt-6 pt-4 border-t border-slate-200/80 text-xs font-semibold text-rose-800 flex items-center gap-1">
-              <span>Akhlakul Karimah</span> &rarr;
+              <span>Akhlakul Karimah</span>
             </div>
           </div>
 
@@ -477,11 +444,11 @@
               </div>
               <h3 class="font-bold text-lg text-slate-900 mb-2">Transparan &amp; Digital Terpadu</h3>
               <p class="text-slate-600 text-sm leading-relaxed">
-                Kemajuan bacaan dicatat di Buku Prestasi Santri, didukung akses E-Kitab digital resmi yang dapat dibaca di rumah kapan saja.
+                Setiap selesai sesi, capaian bacaan dicatat di Buku Prestasi Santri. Di rumah, orang tua bisa menyimak materi lewat E-Kitab digital.
               </p>
             </div>
             <div class="mt-6 pt-4 border-t border-slate-200/80 text-xs font-semibold text-sky-800 flex items-center gap-1">
-              <span>Amanah &amp; Terukur</span> &rarr;
+              <span>Amanah &amp; Terukur</span>
             </div>
           </div>
 
@@ -504,7 +471,7 @@
             Tahapan Kurikulum 6 Jilid At-Tartil
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Metode pembelajaran Al-Qur'an teruji yang disusun secara berjenjang dari pengenalan abjad hijaiyah hingga fasih membaca Al-Qur'an 30 Juz.
+            Enam jilid disusun berjenjang: dari mengenal huruf hijaiyah sampai siap membaca mushaf Al-Qur'an dengan tartil. Tiap jilid punya target yang jelas, jadi orang tua tahu apa yang sedang dipelajari anak.
           </p>
         </div>
 
@@ -525,7 +492,7 @@
                 Mengenal dan melafalkan huruf hijaiyah alif sampai ya' dengan tepat sesuai makharijul huruf serta pelafalan harakat fathah secara tegas dan tidak tergesa-gesa.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Fasih membedakan bentuk &amp; bunyi huruf tunggal
             </div>
           </div>
@@ -544,7 +511,7 @@
                 Memahami perubahan bentuk huruf saat berada di awal, tengah, dan akhir kata serta melafalkan harakat kasrah (-i) dan dhammah (-u) secara presisi.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Lancar membaca 3-4 huruf yang bersambung
             </div>
           </div>
@@ -563,7 +530,7 @@
                 Menanamkan kepekaan ritme panjang-pendek bacaan (2 harakat) dengan bantuan alif, ya' sukun, dan wawu sukun, menghindari kesalahan memanjangkan bacaan pendek.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Konsistensi ayunan ketukan 2 harakat
             </div>
           </div>
@@ -582,7 +549,7 @@
                 Membaca tanda tanwin (an, in, un), mematikan huruf (sukun), serta memantulkan 5 huruf qolqolah (ba, jim, dal, tha, qaf) dengan pantulan jernih.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Penguasaan huruf mati &amp; qolqolah sempurna
             </div>
           </div>
@@ -601,7 +568,7 @@
                 Menerapkan hukum bacaan tasydid, idgham bighunnah/bilaghunnah, ikhfa', dan iqlab secara alami melalui ketukan lagu tartil tanpa beban hafalan rumus rumit.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Kesempurnaan dengung (ghunnah) 2 harakat
             </div>
           </div>
@@ -613,14 +580,14 @@
                 <span class="px-3 py-1 rounded-xl bg-purple-100 text-purple-900 text-xs font-extrabold">
                   Jilid 6
                 </span>
-                <span class="text-xs text-slate-600">Al-Qur'an Ready</span>
+                <span class="text-xs text-slate-600">Menuju Mushaf</span>
               </div>
               <h3 class="font-bold text-slate-900 text-lg mb-2">Tanda Waqaf &amp; Ayat Gharibah</h3>
               <p class="text-slate-600 text-sm leading-relaxed">
                 Mengenal cara berhenti (waqaf), hukum mad wajib/jaiz, bacaan khusus (gharib), dan transisi membaca Al-Qur'an mushaf standar dengan tartil.
               </p>
             </div>
-            <div class="mt-5 pt-3.5 border-t border-slate-100 text-xs text-slate-500 font-medium">
+            <div class="mt-5 pt-3.5 border-t border-slate-100 text-sm text-slate-600 font-medium">
               Target: Siap masuk Al-Qur'an besar &amp; tahfidz
             </div>
           </div>
@@ -679,14 +646,14 @@
             E-Kitab Digital At-Tartil 6 Jilid
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Materi buku pegangan At-Tartil Jilid 1 sampai 6 dapat diakses secara digital. Memudahkan orang tua mendampingi ananda mengulang bacaan di rumah kapan saja.
+            Buku At-Tartil Jilid 1 sampai 6 bisa dibuka lewat HP atau komputer. Orang tua dapat membuka halaman yang sama dengan yang dipelajari anak di TPQ, lalu mengulang bacaan bersama di rumah. Halamannya dibalik seperti buku sungguhan dan bisa diperbesar.
           </p>
         </div>
 
         <!-- 3D Luxury Bookshelf -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 sm:gap-6">
           <div v-for="book in tartilBooks" :key="book.jilid"
-            class="group bg-[#fafaf9] rounded-3xl p-5 border border-slate-200/90 hover:border-emerald-500 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 text-center flex flex-col justify-between">
+            class="group bg-[#fafaf9] rounded-3xl p-4 sm:p-5 border border-slate-200/90 hover:border-emerald-500 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 text-center flex flex-col justify-between">
             <div>
               <!-- 3D Book Cover -->
               <div class="at-tartil-book mx-auto mb-4 max-w-[130px]">
@@ -698,13 +665,13 @@
               </div>
 
               <h3 class="font-bold text-base text-slate-900 mb-0.5">Jilid {{ book.jilid }}</h3>
-              <p class="text-xs text-slate-500 leading-snug">{{ book.desc }}</p>
+              <p class="text-sm text-slate-600 leading-snug">{{ book.desc }}</p>
             </div>
 
             <a :href="`https://at-tartil.tpqamanahsawotratap.com/?jilid=${book.jilid}`" target="_blank" rel="noopener noreferrer"
               :aria-label="`Buka E-Kitab At-Tartil Jilid ${book.jilid}`"
-              class="mt-4 py-2 px-3 bg-white group-hover:bg-emerald-700 group-hover:text-white text-emerald-800 text-xs font-bold rounded-xl border border-slate-200 group-hover:border-emerald-700 transition-all flex items-center justify-center gap-1 shadow-xs">
-              <span>Buka E-Kitab</span> &rarr;
+              class="mt-4 min-h-11 px-3 bg-white group-hover:bg-emerald-700 group-hover:text-white text-emerald-800 text-sm font-bold rounded-xl border border-slate-200 group-hover:border-emerald-700 transition-all flex items-center justify-center gap-1 shadow-xs">
+              <span>Baca Jilid {{ book.jilid }}</span> &rarr;
             </a>
           </div>
         </div>
@@ -716,7 +683,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <span>Buka Web Reader At-Tartil (Digital Platform) ↗</span>
+            <span>Buka Semua Kitab At-Tartil ↗</span>
           </a>
         </div>
 
@@ -806,7 +773,7 @@
             Dedikasi Dakwah &amp; Pendidikan di Sawotratap
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Berawal dari cita-cita luhur menyebarkan syiar kalam ilahi di Dusun Tratap, TPQ AMANAH terus istiqamah membina tunas bangsa agar kokoh dalam iman dan berakhlak mulia.
+            TPQ Amanah berdiri di Dusun Tratap, Sawotratap, dengan satu tujuan: membantu anak-anak belajar membaca Al-Qur'an dengan benar dan tumbuh berakhlak mulia.
           </p>
         </div>
 
@@ -832,7 +799,7 @@
                   {{ aboutContent.history || defaultAbout }}
                 </p>
                 <p>
-                  Dengan bimbingan asatidz yang bersertifikat dan berakhlakul karimah, TPQ Amanah Sawotratap tidak hanya berfokus pada ketepatan pelafalan huruf (fashahah), namun juga menanamkan kecintaan mendalam terhadap nilai-nilai Al-Qur'an ke dalam sanubari santri sejak usia dini.
+                  Di TPQ Amanah, ketepatan pelafalan huruf (fashahah) dan makhraj dilatih di setiap pertemuan. Di samping itu, santri dikenalkan pada adab, doa harian, dan rasa cinta kepada Al-Qur'an sejak usia dini.
                 </p>
               </div>
             </div>
@@ -949,7 +916,7 @@
               </div>
 
               <h3 class="text-2xl font-bold text-slate-900 mb-1.5">Sesi Sore</h3>
-              <p class="text-xs text-slate-500 mb-6">Direkomendasikan untuk santri usia dini (PAUD/TK) &amp; siswa SD Kelas 1-4</p>
+              <p class="text-sm text-slate-600 mb-6">Direkomendasikan untuk santri usia dini (PAUD/TK) &amp; siswa SD Kelas 1-4</p>
 
               <div class="space-y-3.5 mb-6">
                 <div class="flex items-center gap-3 bg-amber-50/70 p-4 rounded-2xl border border-amber-200/60">
@@ -967,7 +934,7 @@
               </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 text-xs text-amber-900 font-medium">
+            <div class="pt-4 border-t border-slate-100 text-sm text-amber-900 font-medium">
               Suasana ceria, segar, dan bersahabat sebelum waktu maghrib tiba.
             </div>
           </div>
@@ -988,7 +955,7 @@
               </div>
 
               <h3 class="text-2xl font-bold text-slate-900 mb-1.5">Sesi Malam</h3>
-              <p class="text-xs text-slate-500 mb-6">Ideal untuk santri yang sekolah full-day, kelas lanjutan &amp; tahfidz</p>
+              <p class="text-sm text-slate-600 mb-6">Ideal untuk santri yang sekolah full-day, kelas lanjutan &amp; tahfidz</p>
 
               <div class="space-y-3.5 mb-6">
                 <div class="flex items-center gap-3 bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/60">
@@ -1006,13 +973,20 @@
               </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 text-xs text-emerald-900 font-medium">
+            <div class="pt-4 border-t border-slate-100 text-sm text-emerald-900 font-medium">
               Suasana lebih hening, khusyuk, dan fokus untuk pendalaman ayat Al-Qur'an.
             </div>
           </div>
 
         </div>
 
+      
+        <p class="mt-8 text-center text-sm sm:text-base text-slate-600">
+          Belum yakin memilih sesi?
+          <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
+            class="font-bold text-emerald-700 underline underline-offset-4 decoration-emerald-300 hover:decoration-emerald-700">Tanyakan ke koordinator</a>,
+          kami bantu menyesuaikan dengan jadwal sekolah anak.
+        </p>
       </div>
     </section>
 
@@ -1030,7 +1004,12 @@
             Ustadz &amp; Ustadzah Pembimbing
           </h2>
           <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Guru-guru yang amanah, berakhlak mulia, dan mendedikasikan ilmu serta perhatian penuh untuk membimbing santri dengan keteladanan.
+            Kenali siapa yang mendampingi anak Anda di kelas. Setiap ustadz dan ustadzah memegang peran sesuai tingkat belajar santri.
+          </p>
+          <p class="mt-3 text-sm sm:text-base text-slate-600">
+            Ingin tahu latar belakang atau pengalaman pengajar lebih jauh?
+            <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
+              class="font-bold text-emerald-700 underline underline-offset-4 decoration-emerald-300 hover:decoration-emerald-700">Tanyakan langsung lewat WhatsApp</a>.
           </p>
         </div>
 
@@ -1064,10 +1043,6 @@
               <p class="text-slate-600 text-sm leading-relaxed">
                 {{ teacher.bio }}
               </p>
-            </div>
-
-            <div class="mt-6 pt-3.5 border-t border-slate-200 text-xs text-slate-500 font-medium">
-              Dedikasi Mengajar Al-Qur'an
             </div>
           </div>
         </div>
@@ -1123,7 +1098,7 @@
     <!-- ================================================================= -->
     <!-- 12. FAQ SECTION (PERTANYAAN UMUM & TRANSPARANSI)                 -->
     <!-- ================================================================= -->
-    <section class="py-20 lg:py-28 bg-white border-y border-slate-200/80 scroll-mt-28">
+    <section id="faq" class="py-20 lg:py-28 bg-white border-y border-slate-200/80 scroll-mt-28">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div class="text-center mb-14">
@@ -1143,7 +1118,7 @@
             class="bg-[#fafaf9] rounded-2xl border border-slate-200/80 overflow-hidden transition-all">
             <button type="button"
               class="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 font-bold text-slate-900 text-base hover:text-emerald-700 transition-colors"
-              @click="toggleFaq(index)">
+              :aria-expanded="activeFaq === index" :aria-controls="'faq-panel-' + index" @click="toggleFaq(index)">
               <span>{{ faq.q }}</span>
               <span
                 class="w-7 h-7 rounded-full bg-slate-200/70 flex items-center justify-center shrink-0 text-slate-600 transition-transform duration-200"
@@ -1154,8 +1129,8 @@
               </span>
             </button>
 
-            <div v-show="activeFaq === index"
-              class="px-5 sm:px-6 pb-6 text-slate-600 text-sm leading-relaxed border-t border-slate-200/70 pt-4">
+            <div v-show="activeFaq === index" :id="'faq-panel-' + index" role="region"
+              class="px-5 sm:px-6 pb-6 text-slate-600 text-[15px] leading-relaxed border-t border-slate-200/70 pt-4">
               {{ faq.a }}
             </div>
           </div>
@@ -1167,7 +1142,7 @@
     <!-- ================================================================= -->
     <!-- 13. KONTAK & LOKASI PETA (PHYSICAL GROUNDING & ACCESSIBILITY)      -->
     <!-- ================================================================= -->
-    <section id="kontak" class="py-20 lg:py-28 bg-[#fafaf9] scroll-mt-28">
+    <section id="kontak" ref="contactRef" class="py-20 lg:py-28 bg-[#fafaf9] scroll-mt-28">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div class="text-center max-w-3xl mx-auto mb-16">
@@ -1198,11 +1173,9 @@
                 </div>
                 <h3 class="font-bold text-slate-900 text-base mb-0.5">Ustadzah Ella</h3>
                 <p class="text-xs text-slate-500 mb-2">Koordinator Pendaftaran</p>
-                <p class="text-slate-700 text-xs font-semibold mb-3">
-                  {{ contactElla.phone }}
-                </p>
+                <p class="mb-1"><a :href="'tel:' + contactElla.tel" class="inline-flex items-center min-h-11 text-slate-700 text-sm font-semibold hover:text-emerald-700">{{ contactElla.phone }}</a></p>
                 <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline">
+                  class="inline-flex items-center gap-1.5 min-h-11 text-sm font-bold text-emerald-700 hover:underline">
                   <span>Chat WhatsApp</span> &rarr;
                 </a>
               </div>
@@ -1217,11 +1190,9 @@
                 </div>
                 <h3 class="font-bold text-slate-900 text-base mb-0.5">Ustadz Riski</h3>
                 <p class="text-xs text-slate-500 mb-2">Kepala Lembaga TPQ</p>
-                <p class="text-slate-700 text-xs font-semibold mb-3">
-                  {{ contactRiski.phone }}
-                </p>
+                <p class="mb-1"><a :href="'tel:' + contactRiski.tel" class="inline-flex items-center min-h-11 text-slate-700 text-sm font-semibold hover:text-emerald-700">{{ contactRiski.phone }}</a></p>
                 <a :href="contactRiski.waLink" target="_blank" rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline">
+                  class="inline-flex items-center gap-1.5 min-h-11 text-sm font-bold text-emerald-700 hover:underline">
                   <span>Chat WhatsApp</span> &rarr;
                 </a>
               </div>
@@ -1242,9 +1213,13 @@
                 <p class="text-slate-600 text-sm leading-relaxed">
                   Jl. Kertanegara No. 20, Dusun Tratap, Sawotratap, Kec. Gedangan, Kabupaten Sidoarjo, Jawa Timur 61256
                 </p>
-                <p class="text-xs text-slate-500 mt-2 font-medium">
+                <p class="text-sm text-slate-500 mt-2 font-medium">
                   Patokan: Dekat perbatasan Waru - Sawotratap, akses mudah dan lingkungan aman untuk anak.
                 </p>
+                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=-7.3688465,112.7361663" target="_blank" rel="noopener noreferrer"
+                  class="mt-3 inline-flex items-center gap-2 min-h-11 px-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-sm font-bold border border-emerald-200 transition-colors">
+                  <span>Petunjuk Arah di Google Maps ↗</span>
+                </a>
               </div>
             </div>
 
@@ -1255,7 +1230,7 @@
                 <p class="text-xs text-emerald-100/80 mt-0.5">Daftarkan santri baru kapan saja melalui Google Form</p>
               </div>
               <a :href="googleFormUrl" target="_blank" rel="noopener noreferrer"
-                class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl font-bold text-xs whitespace-nowrap shadow-sm transition">
+                class="w-full sm:w-auto text-center px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl font-bold text-sm whitespace-nowrap shadow-sm transition">
                 Buka Form ↗
               </a>
             </div>
@@ -1291,31 +1266,34 @@
     <!-- FLOATING REGISTRATION ACTION (MOBILE ONLY)                        -->
     <!-- ================================================================= -->
     <aside aria-label="Aksi Cepat Pendaftaran"
-      class="fixed bottom-5 right-5 z-40 lg:hidden flex flex-col gap-2 items-end">
+      class="fixed bottom-5 right-5 z-40 lg:hidden flex flex-row items-center gap-2 transition-all duration-300"
+      :class="showFloatingCta ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 invisible'">
       <!-- Floating Google Form CTA -->
       <a :href="googleFormUrl" target="_blank" rel="noopener noreferrer"
-        class="flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-xs font-bold border border-white/60"
+        class="flex items-center gap-2 px-4 min-h-11 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all text-sm font-bold border border-white/60"
         title="Daftar via Google Form">
         <svg class="w-4 h-4 text-slate-950 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span>Daftar Google Form</span>
+        <span>Daftar Santri Baru</span>
       </a>
 
       <!-- Floating WhatsApp CTA -->
       <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer"
-        class="flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full shadow-lg shadow-emerald-700/30 hover:scale-105 active:scale-95 transition-all text-xs font-bold border border-white/30"
+        class="flex items-center justify-center w-11 min-h-11 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full shadow-lg shadow-emerald-700/30 hover:scale-105 active:scale-95 transition-all border border-white/30"
         title="Tanya Pendaftaran via WhatsApp">
-        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
-        <span>Tanya WA</span>
+        <span class="sr-only">Tanya pendaftaran via WhatsApp</span>
       </a>
     </aside>
 
-    <FooterComponent />
+    <div ref="footerRef">
+      <FooterComponent />
+    </div>
   </div>
 </template>
 
@@ -1333,12 +1311,14 @@ const googleFormUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSeWnJ4biVA-l842X
 const contactElla = {
   name: 'Ustadzah Ella',
   phone: '0895-3039-7058',
+  tel: '+6289530397058',
   waLink: 'https://wa.me/6289530397058?text=Assalamu%27alaikum%20Ustadzah%20Ella%2C%20saya%20ingin%20bertanya%20informasi%20pendaftaran%20santri%20baru%20TPQ%20Amanah'
 }
 
 const contactRiski = {
   name: 'Ustadz Riski',
   phone: '0822-3336-1877',
+  tel: '+6282233361877',
   waLink: 'https://wa.me/6282233361877?text=Assalamu%27alaikum%20Ustadz%20Riski%2C%20saya%20ingin%20bertanya%20informasi%20pendaftaran%20santri%20baru%20TPQ%20Amanah'
 }
 
@@ -1347,6 +1327,15 @@ const mapSrc = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d699.481800
 
 // Lazy loading for Google Maps
 const mapRef = ref(null)
+
+// The floating buttons only appear where the same actions are not already on screen.
+const heroRef = ref(null)
+const registrationRef = ref(null)
+const contactRef = ref(null)
+const footerRef = ref(null)
+const showFloatingCta = ref(false)
+const ctaTargetsInView = new Set()
+let ctaObserver = null
 const isMapVisible = ref(false)
 let mapObserver = null
 
@@ -1449,27 +1438,31 @@ const toggleFaq = (index) => {
 const faqs = [
   {
     q: 'Berapa usia minimal anak untuk mendaftar di TPQ Amanah?',
-    a: 'Pendaftaran terbuka mulai usia 4 tahun (jenjang PAUD/TK) hingga tingkat SD/MI dan SMP. Santri baru akan dikelompokkan sesuai usia dan kemampuan membaca awal.',
+    a: 'Mulai usia 4 tahun (jenjang PAUD/TK) sampai tingkat SD/MI dan SMP. Santri baru dikelompokkan sesuai usia dan kemampuan membaca awalnya.',
   },
   {
-    q: 'Bagaimana jika anak belum mengenal huruf hijaiyah sama sekali?',
-    a: 'Tidak perlu khawatir, asatidz kami akan membimbing dengan sabar dari tingkat paling dasar (Jilid 1) menggunakan metode At-Tartil yang ramah anak dan tanpa tekanan.',
+    q: 'Anak saya belum mengenal huruf hijaiyah. Apakah bisa mendaftar?',
+    a: 'Bisa. Anak mulai dari Jilid 1 dan dibimbing pelan-pelan dengan metode At-Tartil, tanpa tekanan.',
   },
   {
     q: 'Apakah ada tes seleksi yang menggugurkan calon santri?',
-    a: 'Tidak ada tes seleksi gugur. Kami hanya melakukan asesmen penempatan (placement) santai dan bersahabat agar santri ditempatkan pada jilid yang sesuai dengan kesiapan membacanya.',
+    a: 'Tidak ada. Kami hanya melakukan penempatan jilid secara santai dan bersahabat, supaya anak belajar di jilid yang sesuai dengan kesiapan membacanya.',
   },
   {
-    q: 'Berapa pilihan waktu mengaji yang tersedia?',
-    a: 'Tersedia dua sesi belajar setiap hari Senin hingga Jumat: Sesi Sore (15:30 - 17:00 WIB, Ba\'da Ashar) dan Sesi Malam (18:00 - 19:30 WIB, Ba\'da Maghrib).',
+    q: 'Kapan jadwal mengaji, dan sesi mana yang cocok untuk anak saya?',
+    a: 'Kelas berjalan Senin sampai Jumat dalam dua sesi: Sesi Sore pukul 15:30 - 17:00 WIB (ba\'da Ashar) dan Sesi Malam pukul 18:00 - 19:30 WIB (ba\'da Maghrib). Sesi Sore direkomendasikan untuk usia dini dan SD kelas 1-4. Sesi Malam cocok untuk anak yang sekolah seharian, kelas lanjutan, dan tahfidz.',
   },
   {
-    q: 'Bagaimana cara orang tua memantau perkembangan mengaji ananda?',
-    a: 'Setiap santri dibekali Buku Prestasi Santri yang diparaf oleh asatidz setiap selesai sesi mengaji. Selain itu, orang tua dapat menyimak materi melalui E-Kitab digital resmi.',
+    q: 'Bagaimana orang tua memantau perkembangan mengaji anak?',
+    a: 'Setiap santri memiliki Buku Prestasi Santri yang diparaf ustadz atau ustadzah setiap selesai sesi, sehingga orang tua bisa melihat halaman capaian anak. Materi juga dapat disimak ulang di rumah lewat E-Kitab digital.',
   },
   {
-    q: 'Bagaimana cara mendaftar calon santri baru?',
-    a: 'Orang tua dapat langsung mengisi Formulir Pendaftaran Google Form melalui tombol di website ini, atau menghubungi Ustadzah Ella (0895-3039-7058) dan Ustadz Riski (0822-3336-1877).',
+    q: 'Bagaimana cara mendaftar?',
+    a: 'Isi Formulir Pendaftaran Google Form lewat tombol "Daftar Santri Baru" di halaman ini, lalu konfirmasi nama santri ke Ustadzah Ella (0895-3039-7058) atau Ustadz Riski (0822-3336-1877) lewat WhatsApp.',
+  },
+  {
+    q: 'Bolehkah saya melihat lokasi TPQ dulu sebelum mendaftar?',
+    a: 'Boleh. Hubungi koordinator lewat WhatsApp untuk mengatur kunjungan. Alamat lengkap dan peta ada di bagian Kontak & Lokasi.',
   }
 ]
 
@@ -1568,6 +1561,17 @@ onMounted(() => {
   fetchTeachers()
   fetchContent()
 
+  ctaObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) ctaTargetsInView.add(entry.target)
+      else ctaTargetsInView.delete(entry.target)
+    })
+    showFloatingCta.value = ctaTargetsInView.size === 0
+  })
+  ;[heroRef, registrationRef, contactRef, footerRef].forEach((target) => {
+    if (target.value) ctaObserver.observe(target.value)
+  })
+
   // Setup IntersectionObserver for lazy loading Google Maps
   if (mapRef.value) {
     mapObserver = new IntersectionObserver((entries) => {
@@ -1625,6 +1629,7 @@ onUnmounted(() => {
     lenis = null
   }
   mapObserver?.disconnect()
+  ctaObserver?.disconnect()
 })
 </script>
 
