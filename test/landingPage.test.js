@@ -157,6 +157,14 @@ test("Contact numbers are tappable and FAQ exposes its state to assistive tech",
   assert.ok(homeViewSrc.includes(':aria-expanded="activeFaq === index"'), "FAQ buttons expose aria-expanded");
 });
 
+test("Official registration number matches the Tanda Daftar LPQ, in hero and footer", () => {
+  const footerSrc = fs.readFileSync(path.join(here, "../src/components/FooterComponent.vue"), "utf8");
+  const legalSrc = fs.readFileSync(path.join(here, "../src/data/legalDocuments.js"), "utf8");
+  assert.ok(homeViewSrc.includes("NSQ 411235151939"), "Hero shows the NSQ");
+  assert.ok(footerSrc.includes("NSQ 411235151939"), "Footer shows the NSQ");
+  assert.ok(legalSrc.includes("NSQ 411235151939"), "Document data carries the same NSQ");
+});
+
 test("WebP files exist in public folder and have small footprint (< 200KB each)", () => {
   const publicDir = path.join(here, "../public");
   const heroWebp = path.join(publicDir, "hero-blended-1.webp");
