@@ -7,9 +7,7 @@
       </div>
     </header>
 
-    <div v-if="loading" class="glass-card">
-      <p>Memuat data santri...</p>
-    </div>
+    <PageSkeleton v-if="loading" :rows="8" label="Memuat data santri" />
 
     <div v-else>
       <!-- Form Tambah Santri (Hanya untuk Admin) -->
@@ -293,6 +291,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import api from "@/services/api";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useToast, useConfirm } from "@/composables/useToast";
 

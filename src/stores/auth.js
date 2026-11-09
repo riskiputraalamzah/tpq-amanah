@@ -1,6 +1,41 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import api from '../services/api'
+import { ref, computed, watch } from 'vue'
+import api, { clearApiCache } from '../services/api'
+
+const CACHED_USER_KEY = 'tpq_user'
+const SESSION_INVALID_STATUSES = [401, 403, 404]
+
+function readCachedUser() {
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHED_USER_KEY))
+        return cached?.role ? cached : null
+    } catch {
+        return null
+    }
+}
+
+// Only what is needed to render the app before the session is re-verified.
+function writeCachedUser(user) {
+    try {
+        if (!user) {
+            localStorage.removeItem(CACHED_USER_KEY)
+            return
+        }
+        const { id, uid, username, displayName, role, permissions, photoURL } = user
+        localStorage.setItem(CACHED_USER_KEY, JSON.stringify({
+            id,
+            uid,
+            username,
+            displayName,
+            role,
+            permissions,
+            // Uploaded photos can be large data URLs that would overflow localStorage.
+            photoURL: photoURL?.startsWith?.('data:') ? null : photoURL
+        }))
+    } catch {
+        // Storage unavailable: the session is simply verified over the network instead.
+    }
+}
 
 // Firebase config
 const firebaseConfig = {
@@ -30,12 +65,21 @@ async function getFirebase() {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    const user = ref(null)
+    const token = ref(localStorage.getItem('tpq_token') || null)
+    const user = ref(token.value ? readCachedUser() : null)
     const firebaseUser = ref(null)
     const loading = ref(false)
     const error = ref(null)
-    const authChecked = ref(false)
-    const token = ref(localStorage.getItem('tpq_token') || null)
+    // A cached user lets the first page render immediately; revalidateSession confirms it afterwards.
+    const authChecked = ref(!!user.value)
+    let sessionVerified = false
+    let authCheckInFlight = null
+
+    if (token.value) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+    }
+
+    watch(user, writeCachedUser, { flush: 'sync' })
 
     const isAuthenticated = computed(() => !!user.value)
     const isAdmin = computed(() => user.value?.role === 'admin')
@@ -54,16 +98,55 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    // Confirms a cached session in the background. Returns false only when the server rejected it,
+    // or null when there is nothing to confirm.
+    function revalidateSession() {
+        if (sessionVerified || !token.value || !user.value) return null
+        sessionVerified = true
+        const verifiedToken = token.value
+        return api.get('/auth/verify', { cache: false })
+            .then(({ data }) => {
+                if (token.value === verifiedToken) user.value = data
+                return true
+            })
+            .catch((err) => {
+                if (token.value !== verifiedToken) return true
+                if (SESSION_INVALID_STATUSES.includes(err.response?.status)) {
+                    setToken(null)
+                    user.value = null
+                    return false
+                }
+                // Offline or server hiccup: keep the session and let the next load verify it.
+                sessionVerified = false
+                return true
+            })
+    }
+
     // Check auth on app load
-    async function checkAuth() {
+    function checkAuth() {
+        if (!authCheckInFlight) {
+            authCheckInFlight = runAuthCheck().finally(() => {
+                authCheckInFlight = null
+            })
+        }
+        return authCheckInFlight
+    }
+
+    async function runAuthCheck() {
         if (token.value) {
             api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
             try {
-                const { data } = await api.get('/auth/verify')
+                const { data } = await api.get('/auth/verify', { cache: false })
                 user.value = data
                 authChecked.value = true
+                sessionVerified = true
                 return
             } catch (err) {
+                if (!SESSION_INVALID_STATUSES.includes(err.response?.status)) {
+                    // Network or server trouble must not log the user out; the next load retries.
+                    authChecked.value = true
+                    return
+                }
                 console.log('Token expired, clearing...')
                 setToken(null)
             }
@@ -101,6 +184,8 @@ export const useAuthStore = defineStore('auth', () => {
             const { data } = await api.post('/auth/login', { username, password })
             setToken(data.token)
             user.value = data.user
+            authChecked.value = true
+            sessionVerified = true
             return { success: true }
         } catch (err) {
             const message = err.response?.data?.error || 'Login gagal'
@@ -125,6 +210,7 @@ export const useAuthStore = defineStore('auth', () => {
             const { data } = await api.get('/users/me')
             user.value = data
             firebaseUser.value = result.user
+            authChecked.value = true
             return { success: true }
         } catch (err) {
             console.error('Login error:', err)
@@ -146,6 +232,8 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null
         firebaseUser.value = null
         setToken(null)
+        sessionVerified = false
+        clearApiCache()
     }
 
     async function refreshToken() {
@@ -167,6 +255,7 @@ export const useAuthStore = defineStore('auth', () => {
         isGuru,
         isSantri,
         checkAuth,
+        revalidateSession,
         loginWithCredentials,
         loginWithGoogle,
         logout,

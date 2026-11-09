@@ -4,7 +4,9 @@
       <div>
         <router-link to="/dashboard/admin-grading" class="back-link">← Kembali ke Daftar Periode</router-link>
         <div class="header-title-row">
-          <h1>{{ period?.name || 'Loading...' }}</h1>
+          <h1 v-if="period">{{ period.name }}</h1>
+          <SkeletonLoader v-else-if="loading" type="custom" width="240px" height="2rem" />
+          <h1 v-else>Periode tidak ditemukan</h1>
           <span v-if="period" class="status-badge" :class="period.status">{{ period.status === 'archived' ? 'Diarsipkan' : 'Aktif' }}</span>
         </div>
         <p v-if="period" class="period-info">

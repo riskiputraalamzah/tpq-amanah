@@ -961,9 +961,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import api, { clearApiCache } from '@/services/api';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import logoUrl from '@/assets/logo.png';
+import logoUrl from '@/assets/logo-sm.png';
+import { loadPdfLibs } from '@/utils/pdf';
+import { prefetchWhenIdle } from '@/utils/prefetch';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -1236,11 +1236,12 @@ const openPrintModal = () => {
   showPrintModal.value = true;
 };
 
-const generatePdf = () => {
+const generatePdf = async () => {
   if (generatingPdf.value || !book.value) return;
   generatingPdf.value = true;
 
   try {
+    const { jsPDF, autoTable } = await loadPdfLibs();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const marginX = 14;
@@ -1374,6 +1375,7 @@ const generatePdf = () => {
 
 onMounted(() => {
   fetchBookData();
+  prefetchWhenIdle([loadPdfLibs]);
 });
 </script>
 

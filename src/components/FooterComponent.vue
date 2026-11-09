@@ -92,5 +92,5 @@
 </template>
 
 <script setup>
-const logoUrl = new URL('@/assets/logo.png', import.meta.url).href
+const logoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
 </script>

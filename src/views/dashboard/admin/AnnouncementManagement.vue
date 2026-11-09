@@ -17,10 +17,7 @@
     </header>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-state glass-card">
-      <div class="spinner"></div>
-      <span>Memuat pengumuman...</span>
-    </div>
+    <PageSkeleton v-if="loading" label="Memuat pengumuman" />
 
     <!-- Empty -->
     <div v-else-if="announcements.length === 0" class="empty-state glass-card">
@@ -377,6 +374,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
+import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
 
 const { success, error: showError } = useToast()
@@ -462,21 +460,26 @@ const getInitials = (name) => {
 
 const fetchAll = async () => {
   loading.value = true
-  try {
-    const announcementsResponse = await api.get('/announcements')
-    announcements.value = announcementsResponse.data
-  } catch (e) {
-    showError('Gagal memuat pengumuman')
-  } finally {
-    loading.value = false
-  }
+  const loadAnnouncements = api.get('/announcements')
+    .then((response) => {
+      announcements.value = response.data
+    })
+    .catch(() => {
+      showError('Gagal memuat pengumuman')
+    })
+    .finally(() => {
+      loading.value = false
+    })
 
-  try {
-    const teachersResponse = await api.get('/users?role=guru')
-    waTargetTeachers.value = Array.isArray(teachersResponse.data) ? teachersResponse.data : []
-  } catch (e) {
-    waTargetTeachers.value = []
-  }
+  const loadTeachers = api.get('/users?role=guru')
+    .then((response) => {
+      waTargetTeachers.value = Array.isArray(response.data) ? response.data : []
+    })
+    .catch(() => {
+      waTargetTeachers.value = []
+    })
+
+  await Promise.all([loadAnnouncements, loadTeachers])
 }
 
 const openCreate = () => {
@@ -939,24 +942,6 @@ onMounted(async () => {
 .page-header p {
   color: var(--gray-600);
   margin-top: 2px;
-}
-
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-lg);
-  padding: var(--space-3xl);
-  color: var(--gray-500);
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {

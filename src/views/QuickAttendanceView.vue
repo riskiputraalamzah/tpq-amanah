@@ -249,7 +249,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
 import { useAuthStore } from "@/stores/auth";
-import logoUrl from "../assets/logo.png";
+import logoUrl from "../assets/logo-sm.png";
 
 const route = useRoute();
 const router = useRouter();

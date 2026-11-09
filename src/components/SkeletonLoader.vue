@@ -20,7 +20,7 @@ const props = defineProps({
   type: {
     type: String,
     default: 'text',
-    validator: (v) => ['text', 'title', 'avatar', 'card', 'paragraph', 'custom'].includes(v)
+    validator: (v) => ['text', 'title', 'avatar', 'card', 'paragraph', 'rect', 'custom'].includes(v)
   },
   width: {
     type: String,

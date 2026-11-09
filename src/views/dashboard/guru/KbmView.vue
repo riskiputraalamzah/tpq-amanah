@@ -49,10 +49,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loadingInitial" class="loading-state glass-card">
-      <div class="loading-spinner"></div>
-      <p>Memuat data KBM &amp; sesi pembelajaran...</p>
-    </div>
+    <PageSkeleton v-if="loadingInitial" :stats="4" :rows="6" label="Memuat data KBM dan sesi pembelajaran" />
 
     <template v-else>
       <!-- Quick Metrics Summary (Responsive 4-Cards Grid) -->
@@ -519,6 +516,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import api from "@/services/api";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useRoute, useRouter } from "vue-router";
 import { resolveKbmDateFromQuery } from "@/utils/lpjState";
 import { useAuthStore } from "@/stores/auth";
@@ -649,7 +647,7 @@ const fetchInitialData = async () => {
     const periodObj = viewedPeriod();
     const periodStr = `${periodObj.year}-${String(periodObj.month).padStart(2, "0")}`;
 
-    const [classesRes, slotsRes, calendarRes, historyRes, attRes, profileRes] =
+    const [classesRes, slotsRes, calendarRes, historyRes, attRes, profileRes, lpjRes, teachersRes] =
       await Promise.all([
         api.get("/classes"),
         api.get("/teaching_sessions/slots"),
@@ -661,6 +659,9 @@ const fetchInitialData = async () => {
           params: periodObj,
         }),
         api.get("/settings/tpq-profile"),
+        // Optional data: a failure here must not block the rest of the page
+        api.get("/ljp/reports", { params: { period: periodStr } }).catch(() => null),
+        api.get("/users/teachers/public").catch(() => null),
       ]);
 
     classes.value = classesRes.data || [];
@@ -674,25 +675,12 @@ const fetchInitialData = async () => {
       minDateString.value = `${tpqProfile.value.activeOperationalPeriod}-01`;
     }
 
-    try {
-      const lpjRes = await api.get("/ljp/reports", { params: { period: periodStr } });
-      if (Array.isArray(lpjRes.data) && lpjRes.data.length > 0) {
-        currentLpjReport.value = lpjRes.data[0];
-      } else {
-        currentLpjReport.value = null;
-      }
-    } catch {
-      currentLpjReport.value = null;
-    }
-
-    try {
-      const teachersRes = await api.get("/users/teachers/public");
-      teachers.value = (teachersRes.data || []).filter(
-        (t) => t.id !== authStore.user?.id,
-      );
-    } catch {
-      teachers.value = [];
-    }
+    currentLpjReport.value = Array.isArray(lpjRes?.data) && lpjRes.data.length > 0
+      ? lpjRes.data[0]
+      : null;
+    teachers.value = (teachersRes?.data || []).filter(
+      (t) => t.id !== authStore.user?.id,
+    );
   } catch (error) {
     console.error("Failed to load initial data", error);
     showError("Gagal memuat data KBM.");
@@ -2206,25 +2194,6 @@ onMounted(() => {
 }
 
 /* Loading & Spinners */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 16px;
-  gap: 12px;
-  color: var(--gray-600);
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(46, 125, 50, 0.15);
-  border-top-color: #2e7d32;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
 .inline-spinner {
   display: inline-block;
   width: 14px;

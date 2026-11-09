@@ -129,7 +129,7 @@ import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
 
-const defaultLogoUrl = new URL('@/assets/logo.png', import.meta.url).href
+const defaultLogoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
 const { success, error: showError, warning } = useToast()
 
 const loading = ref(true)

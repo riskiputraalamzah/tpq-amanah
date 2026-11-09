@@ -239,9 +239,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-state">
-      <div class="spinner"></div>
-    </div>
+    <PageSkeleton v-if="loading" :stats="4" :rows="8" label="Memuat buku tabungan" />
 
     <template v-else-if="bookAccessError">
       <section class="book-unavailable glass-card">
@@ -1374,10 +1372,11 @@
 import { ref, computed, onBeforeUnmount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
+import PageSkeleton from "@/components/PageSkeleton.vue";
+import { loadPdfLibs } from "@/utils/pdf";
+import { prefetchWhenIdle } from "@/utils/prefetch";
 import { useToast } from "@/composables/useToast";
 import { useAuthStore } from "@/stores/auth";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const route = useRoute();
 const router = useRouter();
@@ -1842,13 +1841,17 @@ const fetchAll = async () => {
   loading.value = true;
   bookAccessError.value = null;
   try {
-    const bookRes = await api.get(`/savings/books/${bookId}`);
-    book.value = bookRes.data;
-
-    const [txRes, sumRes] = await Promise.all([
+    const results = await Promise.allSettled([
+      api.get(`/savings/books/${bookId}`),
       api.get(`/savings/books/${bookId}/transactions`),
       api.get(`/savings/books/${bookId}/summary`),
     ]);
+    // The book request carries the detailed access error, so it must win over the other two.
+    const failed = results.find((result) => result.status === "rejected");
+    if (failed) throw failed.reason;
+
+    const [bookRes, txRes, sumRes] = results.map((result) => result.value);
+    book.value = bookRes.data;
     transactions.value = txRes.data;
     summary.value = sumRes.data;
 
@@ -2219,7 +2222,7 @@ const addPdfPageNumbers = (doc) => {
   }
 };
 
-const printLedger = () => {
+const printLedger = async () => {
   if (!canPrintLedger.value) {
     showError("Periode laporan belum valid");
     return;
@@ -2228,6 +2231,7 @@ const printLedger = () => {
 
   generatingPdf.value = true;
   try {
+    const { jsPDF, autoTable } = await loadPdfLibs();
     printGeneratedAt.value = new Date();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -2490,6 +2494,7 @@ const closeBookMenu = () => {
 
 onMounted(() => {
   fetchAll();
+  prefetchWhenIdle([loadPdfLibs]);
   document.addEventListener("click", closeBookMenu);
 });
 
@@ -2916,28 +2921,7 @@ onBeforeUnmount(() => {
   margin: 4px 0;
 }
 
-/* Loading & Unavailable States */
-.loading-state {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-3xl);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+/* Unavailable State */
 .book-unavailable {
   max-width: 760px;
   margin: var(--space-3xl) auto;

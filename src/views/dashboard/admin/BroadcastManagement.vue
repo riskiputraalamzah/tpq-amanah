@@ -17,10 +17,7 @@
     </header>
 
     <!-- Loading -->
-    <div v-if="loading" class="loading-state glass-card">
-      <div class="spinner"></div>
-      <span>Memuat data broadcast...</span>
-    </div>
+    <PageSkeleton v-if="loading" label="Memuat data broadcast" />
 
     <!-- Empty -->
     <div v-else-if="broadcasts.length === 0" class="empty-state glass-card">
@@ -257,6 +254,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
+import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
 
 const { success, error: showError } = useToast()
@@ -620,7 +618,6 @@ onMounted(() => {
   margin: var(--space-md) auto 0;
 }
 
-.loading-state,
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -629,16 +626,6 @@ onMounted(() => {
   padding: var(--space-xxl) var(--space-lg);
   text-align: center;
   min-height: 250px;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(18, 140, 126, 0.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: var(--space-md);
 }
 
 @keyframes spin {

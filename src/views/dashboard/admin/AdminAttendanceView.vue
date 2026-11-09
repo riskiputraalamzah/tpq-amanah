@@ -586,9 +586,7 @@
         <div class="modal glass-card quick-settings-modal">
         <h3>🔗 Pengaturan Link Absensi WA</h3>
 
-        <div v-if="quickSettingsLoading" class="quick-settings-loading">
-          Memuat pengaturan...
-        </div>
+        <PageSkeleton v-if="quickSettingsLoading" variant="inline" :rows="3" label="Memuat pengaturan" />
 
         <template v-else>
           <div class="settings-info-box">
@@ -738,10 +736,7 @@
 
             <!-- Preview Data Section -->
             <div class="preview-section mt-3">
-              <div v-if="resetPreviewLoading" class="preview-loading">
-                <div class="spinner-sm"></div>
-                <span>Memeriksa data di tanggal ini...</span>
-              </div>
+              <PageSkeleton v-if="resetPreviewLoading" variant="inline" :rows="3" label="Memeriksa data di tanggal ini" />
 
               <div v-else-if="!resetPreviewData" class="preview-hint">
                 Pilih guru dan tanggal untuk memeriksa data sesi dan absensi.
@@ -860,8 +855,9 @@ import {
   isTomorrowHoliday,
   getHolidaysForMonth,
 } from "@/services/holidayService";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { loadPdfLibs } from "@/utils/pdf";
+import { prefetchWhenIdle } from "@/utils/prefetch";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const { success, error: showError, warning } = useToast();
@@ -1459,21 +1455,20 @@ const fetchData = async () => {
     currentMonth.value = month - 1;
     currentYear.value = year;
 
-    holidays.value = await fetchHolidays(year);
+    const [holidayList, { data: guruData }, { data: attData }] = await Promise.all([
+      fetchHolidays(year),
+      api.get("/users?role=guru"),
+      api.get("/attendance", { params: { month, year } }),
+      // Custom and dismissed holidays for the selected month
+      fetchCustomHolidays(),
+      fetchDismissedHolidays(),
+    ]);
 
-    // Fetch custom holidays and dismissed holidays for the selected month
-    await fetchCustomHolidays();
-    await fetchDismissedHolidays();
-
-    const { data: guruData } = await api.get("/users?role=guru");
+    holidays.value = holidayList;
     teachers.value = guruData.sort((a, b) =>
       a.displayName.localeCompare(b.displayName),
     );
     assignTeacherColors(teachers.value);
-
-    const { data: attData } = await api.get("/attendance", {
-      params: { month, year },
-    });
     attendanceData.value = (attData || []).filter(a => a.type !== 'student_attendance');
   } catch (e) {
     console.error("Fetch error:", e);
@@ -1668,7 +1663,7 @@ const saveQuickSettings = async () => {
 };
 
 // Export to PDF
-const exportToPDF = () => {
+const exportToPDF = async () => {
   dropdownOpen.value = false;
 
   if (teachersWithStats.value.length === 0) {
@@ -1679,6 +1674,7 @@ const exportToPDF = () => {
   exporting.value = true;
 
   try {
+    const { jsPDF, autoTable } = await loadPdfLibs();
     const doc = new jsPDF();
     const [year, monthNum] = selectedMonth.value.split("-").map(Number);
     const monthName = monthNames[monthNum - 1];
@@ -2042,6 +2038,7 @@ const deleteHoliday = async (id) => {
 
 onMounted(async () => {
   document.addEventListener("click", closeDropdownOnClickOutside);
+  prefetchWhenIdle([loadPdfLibs]);
 
   loadingHolidays.value = true;
   await fetchData();
@@ -2923,12 +2920,6 @@ onUnmounted(() => {
 
 .quick-settings-modal {
   max-width: 520px;
-}
-
-.quick-settings-loading {
-  padding: var(--space-lg);
-  color: var(--gray-600);
-  text-align: center;
 }
 
 .settings-info-box,
@@ -3943,24 +3934,6 @@ onUnmounted(() => {
   background: #f9fafb;
   border: 1px solid var(--gray-200, #e5e7eb);
   padding: 1rem;
-}
-
-.preview-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--gray-600, #4b5563);
-  font-size: 0.9rem;
-  padding: 0.5rem;
-}
-
-.spinner-sm {
-  width: 20px;
-  height: 20px;
-  border: 2.5px solid var(--gray-300, #d1d5db);
-  border-top-color: #dc2626;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 .preview-hint {

@@ -90,10 +90,7 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loadingContext" class="state-card glass-card text-center py-12">
-      <div class="spinner mx-auto mb-4"></div>
-      <p class="text-gray-600 font-medium">Memuat konteks KBM harian...</p>
-    </div>
+    <PageSkeleton v-if="loadingContext" variant="form" :rows="4" label="Memuat konteks KBM harian" />
 
     <!-- Error / Blocking State -->
     <div v-else-if="blockingError" class="state-card glass-card text-center py-10">
@@ -310,10 +307,7 @@
           </div>
 
           <!-- Roster List -->
-          <div v-if="loadingLevelContext" class="py-6 text-center">
-            <div class="spinner mx-auto mb-2"></div>
-            <p class="text-gray-500 text-sm">Memuat roster santri...</p>
-          </div>
+          <PageSkeleton v-if="loadingLevelContext" variant="inline" :rows="6" class="py-4" label="Memuat roster santri" />
 
           <div v-else-if="filteredRoster.length === 0" class="py-6 text-center text-gray-500">
             <p v-if="searchQuery">Tidak ada santri dengan nama "{{ searchQuery }}"</p>
@@ -703,6 +697,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
+import PageSkeleton from '@/components/PageSkeleton.vue';
 import { useToast } from '@/composables/useToast';
 
 const route = useRoute();
@@ -2702,19 +2697,6 @@ onMounted(async () => {
   background: var(--gray-50, #f9fafb);
   border-color: var(--gray-400, #9ca3af);
   color: var(--gray-900, #111827);
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3.5px solid var(--gray-200, #e5e7eb);
-  border-top-color: var(--primary, #2d6a4f);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
 }
 
 /* --- Rename Santri Button & Modal --- */

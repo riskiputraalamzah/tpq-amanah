@@ -339,8 +339,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { loadPdfLibs } from '@/utils/pdf'
 import { useToast } from '@/composables/useToast'
 import { resolveLpjPeriod, fetchMyEligibility } from '@/utils/lpjEligibility'
 
@@ -398,59 +397,69 @@ const parseDate = (val) => {
   return isNaN(d.getTime()) ? null : d
 }
 
+const fetchUserStats = async () => {
+  const { data: users } = await api.get('/users')
+  stats.value.totalUsers = users.length
+  stats.value.totalGuru = users.filter(u => u.role === 'guru').length
+  stats.value.totalSantri = users.filter(u => u.role === 'santri').length
+}
+
+const fetchMyAttendanceStats = async () => {
+  const { data: attendance } = await api.get('/attendance/me', {
+    params: {
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear()
+    }
+  })
+  const uniqueDays = new Map()
+  const myAtt = (attendance || []).filter(a => a.type !== 'student_attendance')
+  myAtt.forEach(a => {
+    const d = parseDate(a.date)
+    if (d && !isNaN(d.getTime())) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      if (!uniqueDays.has(key) || a.status === 'hadir') {
+        uniqueDays.set(key, a)
+      }
+    }
+  })
+  const uniqueList = uniqueDays.size > 0 ? Array.from(uniqueDays.values()) : myAtt
+  stats.value.attendanceThisMonth = uniqueList.filter(a => a.status === 'hadir').length
+}
+
+const fetchPeriodStats = async () => {
+  const { data: periods } = await api.get('/grading/periods')
+  stats.value.activePeriods = periods.filter(p => p.status === 'active').length
+}
+
+// Pre-fetch export data if user has permission (so the download starts immediately on click)
+const prepareExport = async () => {
+  const today = new Date()
+  const year = today.getFullYear()
+
+  try {
+    const [attResponse, teachersResponse] = await Promise.all([
+      api.get('/attendance', { params: { month: today.getMonth() + 1, year } }),
+      api.get('/users', { params: { role: 'guru' } }),
+      loadPdfLibs()
+    ])
+
+    exportData.value.attendance = (attResponse.data || []).filter(a => a.type !== 'student_attendance')
+    exportData.value.teachers = teachersResponse.data
+  } catch (err) {
+    console.error('Failed to pre-fetch export data:', err)
+  }
+}
+
 const fetchStats = async () => {
   loading.value = true
   try {
-    if (isAdmin.value) {
-      const { data: users } = await api.get('/users')
-      stats.value.totalUsers = users.length
-      stats.value.totalGuru = users.filter(u => u.role === 'guru').length
-      stats.value.totalSantri = users.filter(u => u.role === 'santri').length
-    }
-
-    if (isGuru.value || isAdmin.value) {
-      const { data: attendance } = await api.get('/attendance/me', {
-        params: {
-          month: new Date().getMonth() + 1,
-          year: new Date().getFullYear()
-        }
-      })
-      const uniqueDays = new Map()
-      const myAtt = (attendance || []).filter(a => a.type !== 'student_attendance')
-      myAtt.forEach(a => {
-        const d = parseDate(a.date)
-        if (d && !isNaN(d.getTime())) {
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-          if (!uniqueDays.has(key) || a.status === 'hadir') {
-            uniqueDays.set(key, a)
-          }
-        }
-      })
-      const uniqueList = uniqueDays.size > 0 ? Array.from(uniqueDays.values()) : myAtt
-      stats.value.attendanceThisMonth = uniqueList.filter(a => a.status === 'hadir').length
-
-      const { data: periods } = await api.get('/grading/periods')
-      stats.value.activePeriods = periods.filter(p => p.status === 'active').length
-
-      // Pre-fetch export data if user has permission (to allow sync download)
-      if (hasPermission('export-pdf')) {
-        const today = new Date()
-        const year = today.getFullYear()
-
-        try {
-          // Parallel fetch for export data
-          const [attResponse, teachersResponse] = await Promise.all([
-            api.get('/attendance', { params: { month: today.getMonth() + 1, year } }),
-            api.get('/users', { params: { role: 'guru' } })
-          ])
-
-          exportData.value.attendance = (attResponse.data || []).filter(a => a.type !== 'student_attendance')
-          exportData.value.teachers = teachersResponse.data
-        } catch (err) {
-          console.error('Failed to pre-fetch export data:', err)
-        }
-      }
-    }
+    const isStaff = isGuru.value || isAdmin.value
+    await Promise.all([
+      isAdmin.value && fetchUserStats(),
+      isStaff && fetchMyAttendanceStats(),
+      isStaff && fetchPeriodStats(),
+      isStaff && hasPermission('export-pdf') && prepareExport()
+    ])
   } catch (error) {
     console.log('Stats fetch error (API may not be running):', error)
   } finally {
@@ -482,8 +491,8 @@ const exportStats = computed(() => {
   })
 })
 
-// Export PDF - directly download (Synchronous for consistency)
-const handleExportPDF = () => {
+// Export PDF - directly download
+const handleExportPDF = async () => {
   if (exportStats.value.length === 0) {
     showError('Data belum siap atau kosong. Silakan refresh.')
     return
@@ -491,6 +500,7 @@ const handleExportPDF = () => {
 
   exporting.value = true
   try {
+    const { jsPDF, autoTable } = await loadPdfLibs()
     const today = new Date()
     const monthName = monthNames[today.getMonth()]
     const year = today.getFullYear()
@@ -570,22 +580,17 @@ const handleExportPDF = () => {
   }
 }
 
-onMounted(async () => {
-  await fetchStats()
-  if (isGuru.value) {
-    await checkLpjEligibility()
-  }
-})
+const loadDashboard = () => Promise.all([fetchStats(), checkLpjEligibility()])
 
-// React to permission and user changes
-watch(() => user.value, async (newVal) => {
-  if (newVal) {
-    await fetchStats()
-    if (isGuru.value) {
-      await checkLpjEligibility()
-    }
+onMounted(loadDashboard)
+
+// Only role and permissions change what this page loads; profile refreshes must not reload it.
+watch(
+  () => `${user.value?.role}|${user.value?.permissions?.features?.join(',') ?? ''}`,
+  () => {
+    if (user.value) loadDashboard()
   }
-}, { deep: true })
+)
 </script>
 
 <style scoped>

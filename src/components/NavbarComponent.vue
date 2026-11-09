@@ -98,7 +98,7 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 
-const logoUrl = new URL('@/assets/logo.png', import.meta.url).href
+const logoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
 
 const isScrolled = ref(false)
 const isMobileMenuOpen = ref(false)

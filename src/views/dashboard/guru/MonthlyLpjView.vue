@@ -412,24 +412,23 @@ const fetchData = async () => {
   loading.value = true;
   loadError.value = "";
   try {
-    try {
-      const profileRes = await api.get("/settings/tpq-profile");
-      if (profileRes.data?.activeOperationalPeriod) {
-        activePeriod.value = profileRes.data.activeOperationalPeriod;
-      }
-    } catch {
+    const [profileRes, res] = await Promise.all([
+      api.get("/settings/tpq-profile").catch(() => null),
+      api.get("/ljp/reports"),
+    ]);
+
+    if (!profileRes) {
       activePeriod.value = currentPeriod();
-    }
-    notEligible.value = false;
-    try {
-      notEligible.value = !(await fetchMyEligibility(activePeriod.value));
-    } catch {
-      notEligible.value = false;
+    } else if (profileRes.data?.activeOperationalPeriod) {
+      activePeriod.value = profileRes.data.activeOperationalPeriod;
     }
 
-    const res = await api.get("/ljp/reports");
     reports.value = Array.isArray(res.data) ? res.data : [];
-    await Promise.all(reports.value.map(fetchCompleteness));
+    const [isNotEligible] = await Promise.all([
+      fetchMyEligibility(activePeriod.value).then((eligible) => !eligible).catch(() => false),
+      Promise.all(reports.value.map(fetchCompleteness)),
+    ]);
+    notEligible.value = isNotEligible;
   } catch (error) {
     loadError.value = error.response?.data?.error || "Gagal memuat laporan LPJ.";
   } finally {

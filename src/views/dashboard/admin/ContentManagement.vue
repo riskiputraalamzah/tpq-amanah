@@ -17,7 +17,9 @@
       </button>
     </div>
 
-    <div class="content-form glass-card">
+    <PageSkeleton v-if="loading" variant="form" :rows="3" label="Memuat konten" />
+
+    <div v-else class="content-form glass-card">
       <!-- Hero Section -->
       <div v-if="activeTab === 'hero'" class="form-section">
         <h3>Section Hero</h3>
@@ -85,6 +87,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/services/api'
+import PageSkeleton from '@/components/PageSkeleton.vue'
 
 const tabs = [
   { id: 'hero', label: 'Hero' },
@@ -94,6 +97,7 @@ const tabs = [
 
 const activeTab = ref('hero')
 const saving = ref(false)
+const loading = ref(true)
 
 const content = ref({
   hero: {
@@ -122,6 +126,8 @@ const fetchContent = async () => {
     if (data.contact) content.value.contact = { ...content.value.contact, ...data.contact }
   } catch (error) {
     console.log('Using default content')
+  } finally {
+    loading.value = false
   }
 }
 

@@ -399,15 +399,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { prefetchWhenIdle } from "@/utils/prefetch";
 
-const logoUrl = new URL("@/assets/logo.png", import.meta.url).href;
+const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+
+// The dashboard is the next page after logging in, so have it ready.
+onMounted(() => {
+  prefetchWhenIdle([
+    () => import("@/views/dashboard/DashboardLayout.vue"),
+    () => import("@/views/dashboard/DashboardHome.vue"),
+  ]);
+});
 
 const activeTab = ref("credentials");
 const username = ref("");

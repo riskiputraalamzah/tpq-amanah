@@ -289,11 +289,14 @@
     <!-- Main Content -->
     <main class="dashboard-main">
       <div class="dashboard-content">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" :key="$route.path" />
-          </transition>
-        </router-view>
+        <PageSkeleton v-if="routeLoading" :stats="3" :rows="6" />
+        <div v-show="!routeLoading">
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" :key="$route.path" />
+            </transition>
+          </router-view>
+        </div>
       </div>
     </main>
 
@@ -389,15 +392,17 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useAnnouncementStore } from "@/stores/announcements";
 import AnnouncementBanner from "@/components/AnnouncementBanner.vue";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
 import { resolveLpjPeriod, fetchMyEligibility } from "@/utils/lpjEligibility";
+import { prefetchDashboardRoutes } from "@/utils/prefetch";
 
-const logoUrl = new URL("@/assets/logo.png", import.meta.url).href;
+const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
 const router = useRouter();
 const route = useRoute();
@@ -480,11 +485,40 @@ watch(
   }
 );
 
+// Shows a skeleton only when a page's code is still downloading; short waits stay invisible.
+const ROUTE_SKELETON_DELAY_MS = 80;
+const routeLoading = ref(false);
+let routeLoadingTimer = null;
+
+const stopRouteLoading = () => {
+  clearTimeout(routeLoadingTimer);
+  routeLoading.value = false;
+};
+
+const removeBeforeEach = router.beforeEach((to, from) => {
+  if (to.path !== from.path && to.path.startsWith("/dashboard")) {
+    clearTimeout(routeLoadingTimer);
+    routeLoadingTimer = setTimeout(() => {
+      routeLoading.value = true;
+    }, ROUTE_SKELETON_DELAY_MS);
+  }
+});
+const removeAfterEach = router.afterEach(stopRouteLoading);
+const removeOnError = router.onError(stopRouteLoading);
+
+onBeforeUnmount(() => {
+  stopRouteLoading();
+  removeBeforeEach();
+  removeAfterEach();
+  removeOnError();
+});
+
 onMounted(() => {
   if (authStore.isAuthenticated && !announcementStore.fetched) {
     announcementStore.fetchActive();
     refreshLpjEligibility();
   }
+  prefetchDashboardRoutes(router, authStore.user?.role);
 });
 </script>
 
@@ -732,14 +766,12 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
+/* Transitions: enter only, so the old page never delays the new one */
+.fade-enter-active {
+  transition: opacity 0.12s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fade-enter-from {
   opacity: 0;
 }
 

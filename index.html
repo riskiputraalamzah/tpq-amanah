@@ -12,6 +12,8 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Amiri:wght@400;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
 
     <!-- Primary Meta Tags -->
@@ -37,8 +39,8 @@
     <meta name="robots" content="index, follow" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="icon" type="image/png" href="/logo-sm.png" />
+    <link rel="apple-touch-icon" href="/logo-sm.png" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -181,8 +183,10 @@
         >
           <!-- Logo Image -->
           <img
-            src="/logo.png"
+            src="/logo-sm.png"
             alt="TPQ Amanah Logo"
+            width="100"
+            height="100"
             style="
               width: 100px;
               height: 100px;
@@ -220,27 +224,32 @@
             </p>
           </div>
 
-          <!-- Loading Spinner -->
+          <!-- Loading Shimmer -->
           <div
             style="
-              width: 40px;
-              height: 40px;
-              border: 3px solid rgba(255, 255, 255, 0.2);
-              border-top: 3px solid #ffd54f;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
+              width: 160px;
+              height: 8px;
+              border-radius: 999px;
+              background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                rgba(255, 213, 79, 0.85) 50%,
+                rgba(255, 255, 255, 0.15) 75%
+              );
+              background-size: 200% 100%;
+              animation: shimmer 1.2s ease-in-out infinite;
             "
           ></div>
         </div>
       </div>
 
       <style>
-        @keyframes spin {
+        @keyframes shimmer {
           0% {
-            transform: rotate(0deg);
+            background-position: 200% 0;
           }
           100% {
-            transform: rotate(360deg);
+            background-position: -200% 0;
           }
         }
         @keyframes pulse {

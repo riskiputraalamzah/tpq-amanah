@@ -701,7 +701,8 @@
               <p class="text-xs text-slate-500 leading-snug">{{ book.desc }}</p>
             </div>
 
-            <a href="https://at-tartil.tpqamanahsawotratap.com/" target="_blank" rel="noopener noreferrer"
+            <a :href="`https://at-tartil.tpqamanahsawotratap.com/?jilid=${book.jilid}`" target="_blank" rel="noopener noreferrer"
+              :aria-label="`Buka E-Kitab At-Tartil Jilid ${book.jilid}`"
               class="mt-4 py-2 px-3 bg-white group-hover:bg-emerald-700 group-hover:text-white text-emerald-800 text-xs font-bold rounded-xl border border-slate-200 group-hover:border-emerald-700 transition-all flex items-center justify-center gap-1 shadow-xs">
               <span>Buka E-Kitab</span> &rarr;
             </a>

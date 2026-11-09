@@ -4,6 +4,26 @@ import axios from 'axios'
 const cache = new Map()
 const inFlightRequests = new Map()
 
+// Reference data that no write in this app can change, so it survives cache invalidation.
+const MUTATION_SAFE_URLS = [
+  '/classes',
+  '/teaching_sessions/slots',
+  '/holidays/national',
+  '/settings/operational-calendar'
+]
+
+function invalidateAfterMutation() {
+  for (const key of cache.keys()) {
+    if (!MUTATION_SAFE_URLS.some((url) => key.startsWith(url))) {
+      cache.delete(key)
+    }
+  }
+}
+
+function isMutation(method = '') {
+  return ['post', 'put', 'patch', 'delete'].includes(method.toLowerCase())
+}
+
 // Helper to determine TTL based on endpoint nature
 function getCacheTtl(url = '') {
   // Static / configuration data (5 minutes)
@@ -65,8 +85,8 @@ api.interceptors.request.use((config) => {
   const method = config.method?.toLowerCase()
 
   // Invalidate cache on data mutation
-  if (['post', 'put', 'patch', 'delete'].includes(method)) {
-    clearApiCache()
+  if (isMutation(method)) {
+    invalidateAfterMutation()
     return config
   }
 
@@ -130,7 +150,13 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // A read that raced the write may have re-cached pre-write data; drop it now the write is done.
+    if (isMutation(response.config?.method)) {
+      invalidateAfterMutation()
+    }
+    return response
+  },
   async (error) => {
     if (error.response?.status === 401) {
       // Clear cache on authentication errors

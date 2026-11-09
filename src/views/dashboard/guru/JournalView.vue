@@ -44,10 +44,7 @@
       </button>
     </nav>
 
-    <div v-if="loading" class="glass-card loading-state">
-      <div class="loading-spinner"></div>
-      <p>Memuat jurnal sesi...</p>
-    </div>
+    <PageSkeleton v-if="loading" variant="form" :rows="3" label="Memuat jurnal sesi" />
 
     <div v-else-if="loadError" class="glass-card">
       <div class="alert alert-warning">
@@ -305,6 +302,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useToast } from "@/composables/useToast";
 import { formatSessionDateID, formatTimeID } from "@/utils/studentAttendanceState";
 import {
@@ -1159,24 +1157,6 @@ onMounted(fetchData);
 
 .mt-4 {
   margin-top: var(--space-xl);
-}
-
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  gap: 12px;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(46, 125, 50, 0.2);
-  border-top-color: #1b5e20;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
 }
 
 /* --- Mobile Responsiveness --- */

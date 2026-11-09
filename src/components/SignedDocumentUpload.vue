@@ -10,7 +10,7 @@
         <option value="student-attendance">Absensi Santri</option>
       </select>
     </div>
-    <div v-if="loading" class="text-muted">Memuat versi...</div>
+    <SkeletonLoader v-if="loading" type="text" width="220px" />
     <div v-else-if="listError" class="alert alert-error">{{ listError }}</div>
     <div v-else class="text-muted signed-status" data-testid="signed-status">
       <span v-if="current">Versi saat ini: V{{ current.version }} ({{ current.originalFilename }})</span>
@@ -31,6 +31,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import api from "@/services/api";
+import SkeletonLoader from "@/components/SkeletonLoader.vue";
 
 const props = defineProps({ reportId: { type: String, required: true } });
 

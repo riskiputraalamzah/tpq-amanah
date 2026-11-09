@@ -90,9 +90,7 @@
             <div class="kbm-guidance-icon">📚</div>
             <div class="kbm-guidance-info">
               <h4>Kegiatan Belajar Mengajar (KBM) Hari Ini</h4>
-              <p v-if="loadingTodayKbm" class="kbm-loading-text">
-                Memeriksa status KBM hari ini...
-              </p>
+              <SkeletonLoader v-if="loadingTodayKbm" type="text" width="70%" />
               <p v-else-if="todayKbmSessions.length === 0">
                 Kehadiran Anda sudah tercatat! Silakan lanjutkan untuk mengisi absensi santri dan jurnal mengajar hari
                 ini.
@@ -900,12 +898,13 @@ const showCalendarDetail = (date) => {
 }
 
 const refreshCalendarData = async () => {
-  holidays.value = await fetchHolidays(calendarYear.value)
-  await Promise.all([
+  const [holidayList] = await Promise.all([
+    fetchHolidays(calendarYear.value),
     fetchCustomHolidays(),
     fetchDismissedHolidays(),
     fetchAttendance()
   ])
+  holidays.value = holidayList
 }
 
 const prevMonth = () => {
@@ -1169,18 +1168,19 @@ const submitUpdate = async () => {
 
 onMounted(async () => {
   loadingHolidays.value = true
-  holidays.value = await fetchHolidays(calendarYear.value)
-  await Promise.all([
+  const attendanceLoaded = fetchAttendance()
+  const [holidayList] = await Promise.all([
+    fetchHolidays(calendarYear.value),
     fetchCustomHolidays(),
     fetchDismissedHolidays(),
     fetchCurrentMonthCustomHolidays(),
     fetchSessionSlots()
   ])
 
+  holidays.value = holidayList
   loadingHolidays.value = false
 
-  // Fetch attendance
-  await fetchAttendance()
+  await attendanceLoaded
 })
 </script>
 
@@ -2635,11 +2635,6 @@ onMounted(async () => {
   font-size: 0.88rem;
   margin: 0;
   line-height: 1.45;
-}
-
-.kbm-loading-text {
-  font-style: italic;
-  opacity: 0.8;
 }
 
 .today-sessions-list {

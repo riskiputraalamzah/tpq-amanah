@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 
 import HomeView from "../views/HomeView.vue";
+import { useAuthStore } from "../stores/auth";
 
 const routes = [
   {
@@ -253,14 +254,47 @@ function getSafeRedirect(redirect, fallback = "/dashboard") {
   return redirect;
 }
 
+let deferredAuthCheckScheduled = false;
+
+// Public pages must not wait for the Firebase SDK, so signed-in visitors are detected after first paint.
+function scheduleDeferredAuthCheck(authStore) {
+  if (deferredAuthCheckScheduled) return;
+  deferredAuthCheckScheduled = true;
+  setTimeout(async () => {
+    if (authStore.authChecked) return;
+    await authStore.checkAuth();
+    const current = router.currentRoute.value;
+    if (current.name === "Login" && authStore.isAuthenticated) {
+      router.replace(getSafeRedirect(current.query.redirect));
+    }
+  }, 1500);
+}
+
+function revalidateCachedSession(authStore) {
+  const pending = authStore.revalidateSession();
+  if (!pending) return;
+  pending.then(async (stillValid) => {
+    if (stillValid) return;
+    await router.isReady();
+    const current = router.currentRoute.value;
+    if (current.meta.requiresAuth) {
+      router.replace({ name: "Login", query: { redirect: current.fullPath } });
+    }
+  });
+}
+
 // Navigation guards
 router.beforeEach(async (to, from, next) => {
-  const { useAuthStore } = await import("../stores/auth");
   const authStore = useAuthStore();
 
-  // Wait for auth to be checked
   if (!authStore.authChecked) {
-    await authStore.checkAuth();
+    if (to.meta.requiresAuth || authStore.token) {
+      await authStore.checkAuth();
+    } else {
+      scheduleDeferredAuthCheck(authStore);
+    }
+  } else {
+    revalidateCachedSession(authStore);
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
@@ -291,6 +325,15 @@ router.beforeEach(async (to, from, next) => {
   } else {
     next();
   }
+});
+
+// After a new deploy, chunks referenced by an already-open tab no longer exist.
+router.onError((error, to) => {
+  if (!/dynamically imported module|Importing a module script failed/i.test(error?.message || "")) return;
+  const reloadKey = `tpq_chunk_reload:${to.fullPath}`;
+  if (sessionStorage.getItem(reloadKey)) return;
+  sessionStorage.setItem(reloadKey, "1");
+  window.location.assign(to.fullPath);
 });
 
 export default router;

@@ -912,26 +912,26 @@ const fetchData = async () => {
     const reportRes = await api.get(`/ljp/reports/${reportId}`);
     report.value = reportRes.data;
 
-    const compRes = await api.get(`/ljp/reports/${reportId}/completeness?refresh=true`);
+    const [year, month] = String(report.value.period || "").split("-").map(Number);
+    const hasPeriod = Boolean(year && month);
+    const params = { month, year };
+    const isAdminView = isAdmin.value && report.value.guruId;
+    if (isAdminView) params.guruId = report.value.guruId;
+
+    const [compRes, usersRes, sessRes, attRes] = await Promise.all([
+      api.get(`/ljp/reports/${reportId}/completeness?refresh=true`),
+      hasPeriod && isAdminView
+        ? api.get("/users", { params: { role: "guru" } }).catch(() => null)
+        : null,
+      hasPeriod ? api.get("/teaching_sessions", { params }) : null,
+      hasPeriod ? api.get(isAdmin.value ? "/attendance" : "/attendance/me", { params }) : null,
+    ]);
     completeness.value = compRes.data;
 
-    const [year, month] = String(report.value.period || "").split("-").map(Number);
-    if (year && month) {
-      const params = { month, year };
-      if (isAdmin.value && report.value.guruId) {
-        params.guruId = report.value.guruId;
-        try {
-          const usersRes = await api.get("/users", { params: { role: "guru" } });
-          teachers.value = Array.isArray(usersRes.data) ? usersRes.data : [];
-        } catch {
-          teachers.value = [];
-        }
+    if (hasPeriod) {
+      if (isAdminView) {
+        teachers.value = Array.isArray(usersRes?.data) ? usersRes.data : [];
       }
-
-      const [sessRes, attRes] = await Promise.all([
-        api.get("/teaching_sessions", { params }),
-        api.get(isAdmin.value ? "/attendance" : "/attendance/me", { params }),
-      ]);
 
       const groupedSess = {};
       for (const s of sessRes.data || []) {

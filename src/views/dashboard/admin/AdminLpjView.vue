@@ -200,13 +200,7 @@
       </div>
 
       <!-- Loading or Teacher Chips Grid -->
-      <div v-if="eligLoading" class="py-8 text-center text-sm text-slate-400 font-inter">
-        <svg class="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-        </svg>
-        Memuat peserta...
-      </div>
+      <PageSkeleton v-if="eligLoading" variant="inline" :rows="4" class="mt-5" label="Memuat peserta" />
 
       <div v-else class="mt-5">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 elig-list">
@@ -655,6 +649,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/services/api";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
+import PageSkeleton from "@/components/PageSkeleton.vue";
 import { currentPeriod, periodLabel, statusLabel } from "@/utils/lpjState";
 
 const router = useRouter();
@@ -979,25 +974,22 @@ const fetchData = async () => {
   loadError.value = "";
   actionMessage.value = "";
   try {
-    try {
-      const profileRes = await api.get("/settings/tpq-profile");
-      if (profileRes.data?.activeOperationalPeriod) {
-        activePeriod.value = profileRes.data.activeOperationalPeriod;
-        if (!periodTouched.value) {
-          period.value = profileRes.data.activeOperationalPeriod;
-          selectedMonth.value = profileRes.data.activeOperationalPeriod;
-          selectedAssignPeriod.value = profileRes.data.activeOperationalPeriod;
-        }
-      }
-    } catch {
-      // Fallback to current period
-    }
-
-    const [reportsRes, teachersRes, eligRes] = await Promise.all([
+    const [profileRes, reportsRes, teachersRes, eligRes] = await Promise.all([
+      // Optional: falls back to the current period
+      api.get("/settings/tpq-profile").catch(() => null),
       api.get("/ljp/reports", { params: { period: "all" } }),
       api.get("/users", { params: { role: "guru" } }).catch(() => ({ data: [] })),
       api.get("/ljp/eligibility").catch(() => ({ data: [] })),
     ]);
+
+    if (profileRes?.data?.activeOperationalPeriod) {
+      activePeriod.value = profileRes.data.activeOperationalPeriod;
+      if (!periodTouched.value) {
+        period.value = profileRes.data.activeOperationalPeriod;
+        selectedMonth.value = profileRes.data.activeOperationalPeriod;
+        selectedAssignPeriod.value = profileRes.data.activeOperationalPeriod;
+      }
+    }
 
     reports.value = Array.isArray(reportsRes.data) ? reportsRes.data : [];
     const teacherList = Array.isArray(teachersRes.data)
