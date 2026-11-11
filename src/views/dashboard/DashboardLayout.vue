@@ -105,6 +105,15 @@
             </svg>
             Rekap Absensi
           </router-link>
+          <router-link to="/dashboard/kbm-monitor" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/kbm-monitor') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              <polyline points="9 10 11 12 15 8" />
+            </svg>
+            Monitor KBM
+          </router-link>
           <router-link to="/dashboard/admin-grading" class="sidebar-link"
             :class="{ active: isActive('/dashboard/admin-grading') }" @click="closeSidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -51,6 +51,13 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "kbm-monitor",
+        name: "KbmMonitor",
+        component: () =>
+          import("../views/dashboard/admin/KbmMonitorView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "wa-reminders",
         name: "WaReminders",
         component: () =>
