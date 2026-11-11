@@ -144,33 +144,16 @@
             </div>
 
             <form @submit.prevent="submitSession" class="kbm-form-inner">
-              <!-- Tanggal KBM -->
+              <!-- Sesi Pembelajaran -->
               <div class="form-group">
-                <div class="form-label-row">
-                  <label for="input-kbm-date">Tanggal KBM</label>
-                  <div class="date-quick-helpers" v-if="!isFromAttendance && !isPeriodLocked">
-                    <button type="button" class="quick-date-btn" :class="{ active: form.date === todayString }"
-                      @click="setDateToday">
-                      Hari Ini
-                    </button>
-                    <button type="button" class="quick-date-btn" :class="{ active: form.date === yesterdayString }"
-                      @click="setDateYesterday">
-                      Kemarin
-                    </button>
-                  </div>
-                  <span v-if="isFromAttendance" class="badge-locked-date">🔒 Sesuai Absensi</span>
-                </div>
-
-                <input id="input-kbm-date" type="date" v-model="form.date"
-                  :min="isFromAttendance ? todayString : minDateString" :max="todayString"
-                  :disabled="isFromAttendance || isPeriodLocked" @change="validateEligibility" class="form-input"
-                  :class="{ 'input-locked': isFromAttendance || isPeriodLocked }" required />
-                <small v-if="isFromAttendance" class="help-text help-text-locked">
-                  📌 Mengisi KBM dari alur absensi hari ini ({{ formattedToday }}).
-                </small>
-                <small v-else class="help-text">
-                  Pilih hari ini atau tanggal sebelumnya dalam periode aktif.
-                </small>
+                <label for="input-kbm-slot">Sesi Pembelajaran</label>
+                <select id="input-kbm-slot" v-model="form.sessionSlotId" class="form-input"
+                  @change="validateEligibility" :disabled="isPeriodLocked" required>
+                  <option value="" disabled>Pilih Sesi Pembelajaran</option>
+                  <option v-for="s in sessionSlots" :key="s.id" :value="s.id">
+                    {{ s.name }} ({{ s.startTime }} - {{ s.endTime }})
+                  </option>
+                </select>
               </div>
 
               <!-- Pilih Jilid / Kelas -->
@@ -185,16 +168,30 @@
                 </select>
               </div>
 
-              <!-- Sesi Pembelajaran -->
+              <!-- Tanggal KBM -->
               <div class="form-group">
-                <label for="input-kbm-slot">Sesi Pembelajaran</label>
-                <select id="input-kbm-slot" v-model="form.sessionSlotId" class="form-input"
-                  @change="validateEligibility" :disabled="isPeriodLocked" required>
-                  <option value="" disabled>Pilih Sesi Pembelajaran</option>
-                  <option v-for="s in sessionSlots" :key="s.id" :value="s.id">
-                    {{ s.name }} ({{ s.startTime }} - {{ s.endTime }})
-                  </option>
-                </select>
+                <div class="form-label-row">
+                  <label :for="useCalendar ? undefined : 'input-kbm-date'" id="kbm-date-label">Tanggal KBM</label>
+                  <span v-if="isFromAttendance" class="badge-locked-date">🔒 Sesuai Absensi</span>
+                </div>
+
+                <KbmDatePicker v-if="useCalendar" :calendar="kbmCalendar" :model-value="form.date"
+                  :slot-id="form.sessionSlotId" :class-id="form.classId" :min-date="minDateString" :max-date="todayString"
+                  @update:model-value="pickDate" @open-session="openExistingSession" />
+                <input v-else id="input-kbm-date" type="date" v-model="form.date"
+                  :min="isFromAttendance ? todayString : minDateString" :max="todayString"
+                  :disabled="isFromAttendance || isPeriodLocked" @change="validateEligibility" class="form-input"
+                  :class="{ 'input-locked': isFromAttendance || isPeriodLocked }" required />
+
+                <small v-if="isFromAttendance" class="help-text help-text-locked">
+                  📌 Mengisi KBM dari alur absensi hari ini ({{ formattedToday }}).
+                </small>
+                <small v-else-if="useCalendar && form.date" class="help-text">
+                  Terpilih: <strong>{{ formatContextualDate(form.date) }}</strong>
+                </small>
+                <small v-else class="help-text">
+                  Pilih hari ini atau tanggal sebelumnya dalam periode aktif.
+                </small>
               </div>
 
               <!-- Guru Badal Checkbox -->
@@ -235,6 +232,10 @@
                     class="alert-link-action">
                     Absen Masuk Sekarang →
                   </router-link>
+                  <button v-if="eligibilityExistingSessionId" type="button" class="alert-link-action alert-link-button"
+                    @click="openExistingSession(eligibilityExistingSessionId)">
+                    Buka KBM ini →
+                  </button>
                 </div>
               </div>
 
@@ -517,6 +518,8 @@
 import { ref, computed, onMounted } from "vue";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
+import KbmDatePicker from "@/components/KbmDatePicker.vue";
+import { findDay, normalizeLevel } from "@/utils/kbmCalendar";
 import { useRoute, useRouter } from "vue-router";
 import { resolveKbmDateFromQuery } from "@/utils/lpjState";
 import { useAuthStore } from "@/stores/auth";
@@ -535,13 +538,6 @@ const { success: showSuccess, error: showError } = useToast();
 const today = new Date();
 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-const getYesterdayString = () => {
-  const y = new Date(today);
-  y.setDate(y.getDate() - 1);
-  return `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`;
-};
-const yesterdayString = getYesterdayString();
-
 const minDateString = ref(
   `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`,
 );
@@ -556,6 +552,8 @@ const myAttendances = ref([]);
 const operationalCalendar = ref(null);
 const tpqProfile = ref(null);
 const currentLpjReport = ref(null);
+// Month view (teaching days, holidays, attendance, existing KBM per sesi + jilid) from the backend.
+const kbmCalendar = ref(null);
 
 // Filters
 const historyFilter = ref("all");
@@ -601,6 +599,7 @@ const form = ref({
 const isEligible = ref(false);
 const eligibilityMessage = ref("");
 const eligibilityRequiresAttendance = ref(false);
+const eligibilityExistingSessionId = ref(null);
 const showSessionCreatedModal = ref(false);
 const createdSessionInfo = ref(null);
 
@@ -618,15 +617,33 @@ const lockedStatusText = computed(() => {
   return "Terkunci";
 });
 
-const setDateToday = () => {
-  if (isFromAttendance.value || isPeriodLocked.value) return;
-  form.value.date = todayString;
+// The calendar replaces the native date input, except when the date is fixed (from attendance / locked period)
+// or the calendar could not be loaded.
+const useCalendar = computed(() => !!kbmCalendar.value && !isFromAttendance.value && !isPeriodLocked.value);
+
+const loadCalendar = async () => {
+  try {
+    const { data } = await api.get("/teaching_sessions/calendar");
+    kbmCalendar.value = data;
+  } catch {
+    kbmCalendar.value = null;
+  }
+};
+
+const pickDate = (date) => {
+  form.value.date = date;
   validateEligibility();
 };
 
-const setDateYesterday = () => {
+const openExistingSession = (sessionId) => {
+  const session = history.value.find((s) => s.id === sessionId);
+  const next = session && workflowOf(session).attFilled ? "jurnal" : "absensi";
+  router.push(`/dashboard/kbm/${sessionId}/${next}`);
+};
+
+const setDateToday = () => {
   if (isFromAttendance.value || isPeriodLocked.value) return;
-  form.value.date = yesterdayString;
+  form.value.date = todayString;
   validateEligibility();
 };
 
@@ -647,7 +664,7 @@ const fetchInitialData = async () => {
     const periodObj = viewedPeriod();
     const periodStr = `${periodObj.year}-${String(periodObj.month).padStart(2, "0")}`;
 
-    const [classesRes, slotsRes, calendarRes, historyRes, attRes, profileRes, lpjRes, teachersRes] =
+    const [classesRes, slotsRes, calendarRes, historyRes, attRes, profileRes, lpjRes, teachersRes, kbmCalendarRes] =
       await Promise.all([
         api.get("/classes"),
         api.get("/teaching_sessions/slots"),
@@ -662,6 +679,7 @@ const fetchInitialData = async () => {
         // Optional data: a failure here must not block the rest of the page
         api.get("/ljp/reports", { params: { period: periodStr } }).catch(() => null),
         api.get("/users/teachers/public").catch(() => null),
+        api.get("/teaching_sessions/calendar").catch(() => null),
       ]);
 
     classes.value = classesRes.data || [];
@@ -681,6 +699,8 @@ const fetchInitialData = async () => {
     teachers.value = (teachersRes?.data || []).filter(
       (t) => t.id !== authStore.user?.id,
     );
+    kbmCalendar.value = kbmCalendarRes?.data || null;
+    preselectFromLastSession();
   } catch (error) {
     console.error("Failed to load initial data", error);
     showError("Gagal memuat data KBM.");
@@ -690,17 +710,33 @@ const fetchInitialData = async () => {
   }
 };
 
+// Most teachers always teach the same sesi and jilid: start from their latest KBM.
+const preselectFromLastSession = () => {
+  if (form.value.sessionSlotId && form.value.classId) return;
+  const latest = [...history.value]
+    .filter((s) => s.type === "teaching")
+    .sort((a, b) => (b.date?._seconds || 0) - (a.date?._seconds || 0))[0];
+  if (!latest) return;
+  if (!form.value.sessionSlotId && sessionSlots.value.some((slot) => slot.id === latest.sessionSlotId)) {
+    form.value.sessionSlotId = latest.sessionSlotId;
+  }
+  const level = normalizeLevel(latest.levelId || latest.classId);
+  const match = classes.value.find((c) => normalizeLevel(c.id) === level);
+  if (!form.value.classId && match) form.value.classId = match.id;
+};
+
 const validateEligibility = () => {
   isEligible.value = false;
   eligibilityMessage.value = "";
   eligibilityRequiresAttendance.value = false;
+  eligibilityExistingSessionId.value = null;
 
   if (isPeriodLocked.value) {
     eligibilityMessage.value = `Periode ini berstatus ${lockedStatusText.value}. Sesi tidak dapat diubah.`;
     return;
   }
 
-  if (!form.value.date || !form.value.sessionSlotId) return;
+  if (!form.value.date || !form.value.sessionSlotId || !form.value.classId) return;
 
   const selectedDate = new Date(form.value.date);
 
@@ -723,7 +759,15 @@ const validateEligibility = () => {
     }
   }
 
-  // Check if session already exists for this guru on this date and slot
+  // Holidays (national / yayasan), same rule as the WhatsApp night recap
+  const calendarDay = findDay(kbmCalendar.value, form.value.date);
+  if (calendarDay?.kind === "holiday") {
+    eligibilityMessage.value = `Tanggal ini libur (${calendarDay.holidayName || "Libur"}).`;
+    return;
+  }
+
+  // One KBM per sesi + jilid per date. A second jilid in the same sesi is allowed.
+  const selectedLevel = normalizeLevel(form.value.classId);
   const existing = history.value.find((s) => {
     let sDateStr = "";
     if (s.date?._seconds) {
@@ -736,13 +780,16 @@ const validateEligibility = () => {
     }
     return (
       sDateStr === form.value.date &&
-      s.sessionSlotId === form.value.sessionSlotId
+      s.sessionSlotId === form.value.sessionSlotId &&
+      normalizeLevel(s.levelId || s.classId) === selectedLevel
     );
   });
 
   if (existing) {
+    const className = classes.value.find((c) => String(c.id) === String(form.value.classId))?.name || "Jilid ini";
     eligibilityMessage.value =
-      "Anda sudah memiliki sesi mengajar pada sesi ini di tanggal tersebut.";
+      `KBM ${className} ${getSessionName(form.value.sessionSlotId)} pada tanggal ini sudah diisi.`;
+    eligibilityExistingSessionId.value = existing.id;
     return;
   }
 
@@ -793,10 +840,11 @@ const submitSession = async () => {
 
     const res = await api.post("/teaching_sessions", payload);
 
-    // Refresh history
-    const historyRes = await api.get("/teaching_sessions", {
-      params: viewedPeriod(),
-    });
+    // Refresh history and the calendar
+    const [historyRes] = await Promise.all([
+      api.get("/teaching_sessions", { params: viewedPeriod() }),
+      loadCalendar(),
+    ]);
     history.value = historyRes.data || [];
 
     const createdId = res.data?.id;
@@ -963,10 +1011,11 @@ const confirmDeleteSession = async () => {
     showSuccess("Sesi KBM berhasil dihapus.");
     closeDeleteModal();
 
-    // Refresh history
-    const historyRes = await api.get("/teaching_sessions", {
-      params: viewedPeriod(),
-    });
+    // Refresh history and the calendar
+    const [historyRes] = await Promise.all([
+      api.get("/teaching_sessions", { params: viewedPeriod() }),
+      loadCalendar(),
+    ]);
     history.value = historyRes.data || [];
     validateEligibility();
   } catch (error) {
@@ -1387,31 +1436,13 @@ onMounted(() => {
   margin: 0;
 }
 
-.date-quick-helpers {
-  display: flex;
-  gap: 4px;
-}
-
-.quick-date-btn {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 5px;
+.alert-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.quick-date-btn:hover {
-  background: #e2e8f0;
-}
-
-.quick-date-btn.active {
-  background: var(--primary, #2e7d32);
-  color: #ffffff;
-  border-color: var(--primary, #2e7d32);
+  text-align: left;
 }
 
 .badge-locked-date {
