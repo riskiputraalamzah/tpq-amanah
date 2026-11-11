@@ -51,6 +51,13 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "lpj-insentif",
+        name: "LpjInsentif",
+        component: () =>
+          import("../views/dashboard/admin/LpjInsentifView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "kbm-monitor",
         name: "KbmMonitor",
         component: () =>

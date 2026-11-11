@@ -124,26 +124,16 @@
             </svg>
             Kelola Penilaian
           </router-link>
-          <router-link to="/dashboard/admin-lpj" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-lpj') }" @click="closeSidebar">
+          <router-link to="/dashboard/lpj-insentif" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/lpj-insentif') || isActive('/dashboard/admin-lpj') || isActive('/dashboard/admin-documents') }"
+            @click="closeSidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
-            LPJ Guru
-          </router-link>
-          <router-link to="/dashboard/admin-documents" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-documents') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-            Dokumen LPJ
+            LPJ Insentif
           </router-link>
 
           <!-- Layanan & Informasi -->
@@ -239,16 +229,6 @@
               <line x1="16" y1="17" x2="8" y2="17" />
             </svg>
             Penilaian
-          </router-link>
-          <router-link v-if="lpjEligible" to="/dashboard/lpj" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/lpj') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            LPJ Bulanan
           </router-link>
 
           <!-- Layanan Santri -->
@@ -441,7 +421,6 @@ import { useAnnouncementStore } from "@/stores/announcements";
 import AnnouncementBanner from "@/components/AnnouncementBanner.vue";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
-import { resolveLpjPeriod, fetchMyEligibility } from "@/utils/lpjEligibility";
 import { prefetchDashboardRoutes } from "@/utils/prefetch";
 import { useTpqIdentity } from "@/composables/useTpqIdentity";
 
@@ -471,17 +450,6 @@ const { tpqIdentity, loadTpqIdentity } = useTpqIdentity();
 
 const isSidebarOpen = ref(false);
 const showProfileMenu = ref(false);
-const lpjEligible = ref(false);
-
-const refreshLpjEligibility = async () => {
-  if (!isGuru.value) return;
-  try {
-    const isCurrentEligible = await fetchMyEligibility(await resolveLpjPeriod());
-    lpjEligible.value = !!isCurrentEligible;
-  } catch {
-    lpjEligible.value = false;
-  }
-};
 
 
 // Check if current route matches or starts with the given path
@@ -561,7 +529,6 @@ onBeforeUnmount(() => {
 onMounted(() => {
   if (authStore.isAuthenticated && !announcementStore.fetched) {
     announcementStore.fetchActive();
-    refreshLpjEligibility();
   }
   prefetchDashboardRoutes(router, authStore.user?.role);
   if (authStore.isAuthenticated) loadTpqIdentity();
