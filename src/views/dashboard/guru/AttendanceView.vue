@@ -508,6 +508,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
@@ -533,7 +534,17 @@ const loading = ref(true)
 const loadingHolidays = ref(true)
 const todayAttendance = ref(null)
 const attendanceHistory = ref([])
-const selectedMonth = ref(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`)
+const route = useRoute()
+// ?month=YYYY-MM (links from the LPJ checklist) opens that month, between January 2026 and the current month.
+const monthIndex = (year, month) => year * 12 + month
+const requestedMonth = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(String(route.query.month || ''))
+const currentMonthIndex = monthIndex(today.getFullYear(), today.getMonth())
+const startMonthIndex = (() => {
+  if (!requestedMonth) return currentMonthIndex
+  const index = monthIndex(Number(requestedMonth[1]), Number(requestedMonth[2]) - 1)
+  return index >= monthIndex(2026, 0) && index <= currentMonthIndex ? index : currentMonthIndex
+})()
+const selectedMonth = ref(`${Math.floor(startMonthIndex / 12)}-${String((startMonthIndex % 12) + 1).padStart(2, '0')}`)
 
 // Today KBM & Guidance state
 const todayKbmSessions = ref([])
@@ -612,8 +623,8 @@ const updateForm = ref({
 })
 
 // Calendar state
-const calendarMonth = ref(today.getMonth())
-const calendarYear = ref(today.getFullYear())
+const calendarMonth = ref(startMonthIndex % 12)
+const calendarYear = ref(Math.floor(startMonthIndex / 12))
 const calendarMonthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const calendarDayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
 const selectedCalendarDate = ref(null)

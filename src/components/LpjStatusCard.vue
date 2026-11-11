@@ -10,7 +10,7 @@
     </p>
 
     <template v-else>
-      <p class="intro">Admin sedang menyiapkan LPJ. Mohon lengkapi yang berikut ini:</p>
+      <p class="intro">Admin sedang menyiapkan LPJ. Mohon lengkapi yang berikut ini (ketuk bulannya untuk langsung membuka):</p>
       <ul class="todo">
         <li v-if="status.missingProfile.length">
           <div class="text">
@@ -19,21 +19,30 @@
           </div>
           <router-link to="/dashboard/profile" class="btn">Lengkapi Profil</router-link>
         </li>
-        <li v-if="status.gaps.missingAttendance.length">
+        <li v-if="attendanceMonths.length">
           <div class="text">
             <strong>Belum absen {{ status.gaps.missingAttendance.length }} hari</strong>
-            <span>{{ dates(status.gaps.missingAttendance) }}</span>
+            <div class="months">
+              <router-link v-for="m in attendanceMonths" :key="m.period" :to="attendanceLink(m.period)" class="month-chip">
+                {{ m.label }} · {{ m.count }} hari
+              </router-link>
+            </div>
           </div>
-          <router-link to="/dashboard/attendance" class="btn">Isi Absensi</router-link>
+          <router-link :to="attendanceLink(attendanceMonths[0].period)" class="btn">Isi Absensi</router-link>
         </li>
-        <li v-if="kbmDates.length">
+        <li v-if="kbmMonths.length">
           <div class="text">
             <strong>KBM belum dibuat / belum lengkap {{ kbmDates.length }} hari</strong>
-            <span>{{ dates(kbmDates) }}</span>
+            <div class="months">
+              <router-link v-for="m in kbmMonths" :key="m.period" :to="kbmLink(m.first)" class="month-chip">
+                {{ m.label }} · {{ m.count }} hari
+              </router-link>
+            </div>
           </div>
-          <router-link to="/dashboard/kbm" class="btn">Buka KBM</router-link>
+          <router-link :to="kbmLink(kbmMonths[0].first)" class="btn">Buka KBM</router-link>
         </li>
       </ul>
+      <p v-if="attendanceMonths.length && kbmMonths.length" class="tip">Isi absensi dulu, lalu KBM di tanggal yang sama.</p>
     </template>
   </section>
 </template>
@@ -41,27 +50,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-const MAX_SHOWN = 6
+import { groupByMonth, kbmGapDates, kbmLink, attendanceLink } from '@/utils/lpjChecklist'
 
 // Loaded after the rest of the dashboard and never blocks it; shows nothing for teachers not in an LPJ.
 const status = ref(null)
 
-const kbmDates = computed(() => {
-  const gaps = status.value?.gaps
-  if (!gaps) return []
-  return [...new Set([...gaps.missingKbm, ...gaps.incompleteKbm.map((i) => i.date)])].sort()
-})
-
-const shortDate = (date) => {
-  const [, m, d] = date.split('-').map(Number)
-  return `${d} ${MONTHS[m - 1]}`
-}
-const dates = (list) => {
-  const shown = list.slice(0, MAX_SHOWN).map(shortDate).join(', ')
-  return list.length > MAX_SHOWN ? `${shown}, +${list.length - MAX_SHOWN} lainnya` : shown
-}
+const kbmDates = computed(() => kbmGapDates(status.value?.gaps))
+const kbmMonths = computed(() => groupByMonth(kbmDates.value))
+const attendanceMonths = computed(() => groupByMonth(status.value?.gaps?.missingAttendance || []))
 
 onMounted(async () => {
   try {
@@ -143,7 +139,7 @@ onMounted(async () => {
 .text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   min-width: 0;
   flex: 1 1 220px;
 }
@@ -157,6 +153,37 @@ onMounted(async () => {
   font-size: 0.82rem;
   color: var(--gray-700);
   overflow-wrap: anywhere;
+}
+
+.months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.month-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #fcd34d;
+  background: #fff;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.month-chip:hover {
+  border-color: #d97706;
+}
+
+.month-chip:focus-visible,
+.btn:focus-visible {
+  outline: 3px solid var(--primary-300, #81c784);
+  outline-offset: 2px;
 }
 
 .btn {
@@ -174,8 +201,9 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.btn:focus-visible {
-  outline: 3px solid var(--primary-300, #81c784);
-  outline-offset: 2px;
+.tip {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--gray-600);
 }
 </style>

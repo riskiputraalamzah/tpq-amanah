@@ -176,8 +176,8 @@
                 </div>
 
                 <KbmDatePicker v-if="useCalendar" :calendar="kbmCalendar" :model-value="form.date"
-                  :slot-id="form.sessionSlotId" :class-id="form.classId" :min-date="minDateString" :max-date="todayString"
-                  @update:model-value="pickDate" @open-session="openExistingSession" />
+                  :slot-id="form.sessionSlotId" :class-id="form.classId" :max-date="todayString" :loading="monthLoading"
+                  @update:model-value="pickDate" @open-session="openExistingSession" @change-month="changeMonth" />
                 <input v-else id="input-kbm-date" type="date" v-model="form.date"
                   :min="isFromAttendance ? todayString : minDateString" :max="todayString"
                   :disabled="isFromAttendance || isPeriodLocked" @change="validateEligibility" class="form-input"
@@ -260,7 +260,7 @@
           <section class="kbm-history glass-card" aria-labelledby="history-heading">
             <div class="history-card-header">
               <div class="history-title-wrap">
-                <h2 id="history-heading">Riwayat KBM Bulan Ini</h2>
+                <h2 id="history-heading">Riwayat KBM {{ isCurrentMonthViewed ? "Bulan Ini" : activePeriodLabel }}</h2>
                 <p class="card-subtitle">
                   Total {{ history.length }} sesi pembelajaran yang tercatat
                 </p>
@@ -515,7 +515,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import KbmDatePicker from "@/components/KbmDatePicker.vue";
@@ -576,11 +576,16 @@ const formattedToday = computed(() => {
 
 const contextualDate = resolveKbmDateFromQuery(route.query.date);
 
+// The month shown in the calendar, the history and the attendance check. It follows the chosen date, and the month
+// arrows of the calendar move it (so earlier months an LPJ asks about can be opened and filled).
+const viewedMonth = ref(todayString.slice(0, 7));
+const monthLoading = ref(false);
 const viewedPeriod = () => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(form.value.date || "");
+  const m = /^(\d{4})-(\d{2})$/.exec(viewedMonth.value || "");
   if (m) return { month: Number(m[2]), year: Number(m[1]) };
   return { month: today.getMonth() + 1, year: today.getFullYear() };
 };
+const isCurrentMonthViewed = computed(() => viewedMonth.value === todayString.slice(0, 7));
 
 const activePeriodLabel = computed(() => {
   const p = viewedPeriod();
@@ -595,6 +600,8 @@ const form = ref({
   isSubstitute: false,
   substituteFor: "",
 });
+
+viewedMonth.value = (form.value.date || todayString).slice(0, 7);
 
 const isEligible = ref(false);
 const eligibilityMessage = ref("");
@@ -623,12 +630,63 @@ const useCalendar = computed(() => !!kbmCalendar.value && !isFromAttendance.valu
 
 const loadCalendar = async () => {
   try {
-    const { data } = await api.get("/teaching_sessions/calendar");
+    const { data } = await api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } });
     kbmCalendar.value = data;
   } catch {
     kbmCalendar.value = null;
   }
 };
+
+// Loads everything that belongs to the viewed month. The latest request wins if the teacher taps the arrows quickly.
+let monthRequest = 0;
+const loadMonthData = async () => {
+  const request = ++monthRequest;
+  const periodObj = viewedPeriod();
+  monthLoading.value = true;
+  try {
+    const [historyRes, attRes, lpjRes, calendarRes] = await Promise.all([
+      api.get("/teaching_sessions", { params: periodObj }),
+      api.get("/attendance/me", { params: periodObj }),
+      api.get("/ljp/reports", { params: { period: viewedMonth.value } }).catch(() => null),
+      api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } }).catch(() => null),
+    ]);
+    if (request !== monthRequest) return;
+    history.value = historyRes.data || [];
+    myAttendances.value = attRes.data || [];
+    currentLpjReport.value = Array.isArray(lpjRes?.data) && lpjRes.data.length > 0 ? lpjRes.data[0] : null;
+    kbmCalendar.value = calendarRes?.data || null;
+  } catch (error) {
+    if (request !== monthRequest) return;
+    console.error("Failed to load month data", error);
+    showError("Gagal memuat data bulan ini.");
+  } finally {
+    if (request === monthRequest) {
+      monthLoading.value = false;
+      validateEligibility();
+    }
+  }
+};
+
+// Month arrows: the date chosen in another month no longer applies.
+const changeMonth = (period) => {
+  if (!/^\d{4}-\d{2}$/.test(period || "") || period === viewedMonth.value) return;
+  viewedMonth.value = period;
+  form.value.date = "";
+  validateEligibility();
+  loadMonthData();
+};
+
+// A date set from elsewhere (a link from the LPJ card, "today", a chip) in another month moves the view there.
+watch(
+  () => form.value.date,
+  (date) => {
+    const month = String(date || "").slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(month) && month !== viewedMonth.value) {
+      viewedMonth.value = month;
+      loadMonthData();
+    }
+  },
+);
 
 const pickDate = (date) => {
   form.value.date = date;
@@ -679,7 +737,7 @@ const fetchInitialData = async () => {
         // Optional data: a failure here must not block the rest of the page
         api.get("/ljp/reports", { params: { period: periodStr } }).catch(() => null),
         api.get("/users/teachers/public").catch(() => null),
-        api.get("/teaching_sessions/calendar").catch(() => null),
+        api.get("/teaching_sessions/calendar", { params: { period: periodStr } }).catch(() => null),
       ]);
 
     classes.value = classesRes.data || [];
@@ -700,7 +758,7 @@ const fetchInitialData = async () => {
       (t) => t.id !== authStore.user?.id,
     );
     kbmCalendar.value = kbmCalendarRes?.data || null;
-    preselectFromLastSession();
+    await preselectFromLastSession();
   } catch (error) {
     console.error("Failed to load initial data", error);
     showError("Gagal memuat data KBM.");
@@ -710,12 +768,25 @@ const fetchInitialData = async () => {
   }
 };
 
-// Most teachers always teach the same sesi and jilid: start from their latest KBM.
-const preselectFromLastSession = () => {
-  if (form.value.sessionSlotId && form.value.classId) return;
-  const latest = [...history.value]
+// Most teachers always teach the same sesi and jilid: start from their latest KBM. When the page opens on an earlier
+// month that has no KBM yet (a link from the LPJ checklist), look in this month and the one before instead.
+const latestTeaching = (list) =>
+  [...(list || [])]
     .filter((s) => s.type === "teaching")
     .sort((a, b) => (b.date?._seconds || 0) - (a.date?._seconds || 0))[0];
+const preselectFromLastSession = async () => {
+  if (form.value.sessionSlotId && form.value.classId) return;
+  let latest = latestTeaching(history.value);
+  if (!latest) {
+    const current = { month: today.getMonth() + 1, year: today.getFullYear() };
+    const previous = current.month === 1 ? { month: 12, year: current.year - 1 } : { month: current.month - 1, year: current.year };
+    for (const params of [current, previous]) {
+      if (params.month === viewedPeriod().month && params.year === viewedPeriod().year) continue;
+      const res = await api.get("/teaching_sessions", { params }).catch(() => null);
+      latest = latestTeaching(res?.data);
+      if (latest) break;
+    }
+  }
   if (!latest) return;
   if (!form.value.sessionSlotId && sessionSlots.value.some((slot) => slot.id === latest.sessionSlotId)) {
     form.value.sessionSlotId = latest.sessionSlotId;
@@ -740,11 +811,13 @@ const validateEligibility = () => {
 
   const selectedDate = new Date(form.value.date);
 
-  // Check active operational period
+  // Active operational period. An earlier month is fine when the server says this teacher may still fill it
+  // (calendar.canFill: syahadah / part of an LPJ asking for that month).
   if (tpqProfile.value?.activeOperationalPeriod) {
-    const sessionPeriod = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}`;
-    if (sessionPeriod !== tpqProfile.value.activeOperationalPeriod) {
-      eligibilityMessage.value = `Tanggal berada di luar periode operasional aktif (${tpqProfile.value.activeOperationalPeriod}).`;
+    const sessionPeriod = form.value.date.slice(0, 7);
+    const monthOpen = kbmCalendar.value?.period === sessionPeriod && kbmCalendar.value?.canFill === true;
+    if (sessionPeriod !== tpqProfile.value.activeOperationalPeriod && !monthOpen) {
+      eligibilityMessage.value = `Tanggal berada di luar periode operasional aktif (${tpqProfile.value.activeOperationalPeriod}) dan Anda tidak termasuk LPJ yang memintanya.`;
       return;
     }
   }

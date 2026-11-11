@@ -207,7 +207,6 @@ test("teachers in an LPJ see their own checklist on the dashboard", () => {
   assert.ok(home.includes('<LpjStatusCard v-if="isGuru" />'), "only on the teacher dashboard");
   assert.ok(card.includes("api.get('/lpj/me'"), "own data only");
   assert.ok(card.includes('v-if="status?.batch"'), "hidden for teachers not in an LPJ");
-  for (const link of ["/dashboard/profile", "/dashboard/attendance", "/dashboard/kbm"]) {
-    assert.ok(card.includes(`to="${link}"`), `links straight to ${link}`);
-  }
+  assert.ok(card.includes('to="/dashboard/profile"'), "profile link");
+  assert.ok(card.includes(':to="attendanceLink(m.period)"') && card.includes(':to="kbmLink(m.first)"'), "each month links to that month");
 });

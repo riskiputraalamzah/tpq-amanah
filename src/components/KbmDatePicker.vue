@@ -1,15 +1,29 @@
 <template>
   <div class="kbm-picker">
     <div class="picker-head">
-      <strong>{{ view.title }}</strong>
-      <span v-if="!slotId || !classId" class="picker-hint">Pilih sesi &amp; jilid dulu agar tanggal yang sudah diisi terkunci.</span>
+      <div class="month-nav">
+        <button type="button" class="nav-btn" :disabled="!view.prevPeriod || loading" aria-label="Bulan sebelumnya"
+          @click="emit('change-month', view.prevPeriod)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+        </button>
+        <strong class="month-title" aria-live="polite">{{ view.title }}</strong>
+        <button type="button" class="nav-btn" :disabled="!view.nextPeriod || loading" aria-label="Bulan berikutnya"
+          @click="emit('change-month', view.nextPeriod)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+        </button>
+      </div>
+      <span v-if="!view.canFill" class="picker-closed">
+        Bulan ini sudah di luar periode aktif dan Anda tidak termasuk LPJ yang memintanya, jadi belum bisa diisi.
+        KBM yang sudah ada tetap bisa dibuka.
+      </span>
+      <span v-else-if="!slotId || !classId" class="picker-hint">Pilih sesi &amp; jilid dulu agar tanggal yang sudah diisi terkunci.</span>
     </div>
 
     <div class="weekdays" aria-hidden="true">
       <span v-for="d in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="d">{{ d }}</span>
     </div>
 
-    <div ref="gridEl" class="grid" role="group" :aria-label="`Pilih tanggal KBM, ${view.title}`" @keydown="onKeydown">
+    <div ref="gridEl" class="grid" :class="{ 'is-loading': loading }" :aria-busy="loading" role="group" :aria-label="`Pilih tanggal KBM, ${view.title}`" @keydown="onKeydown">
       <span v-for="n in view.leadingBlanks" :key="'blank-' + n" class="blank" aria-hidden="true"></span>
       <button v-for="(cell, index) in view.cells" :key="cell.date" type="button" class="cell"
         :class="[`is-${cell.state}`, { 'is-today': cell.isToday, 'is-selected': cell.isSelected }]"
@@ -57,8 +71,9 @@ const props = defineProps({
   classId: { type: [String, Number], default: '' },
   minDate: { type: String, default: '' },
   maxDate: { type: String, default: '' },
+  loading: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'open-session'])
+const emit = defineEmits(['update:modelValue', 'open-session', 'change-month'])
 
 const gridEl = ref(null)
 const view = computed(() =>
@@ -119,9 +134,58 @@ const shortDate = (date) => {
   margin-bottom: 8px;
 }
 
-.picker-head strong {
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.month-title {
   color: var(--primary-dark);
   font-size: 0.95rem;
+  text-align: center;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.nav-btn:focus-visible {
+  outline: 3px solid var(--primary-300, #81c784);
+  outline-offset: 1px;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.picker-closed {
+  font-size: 0.78rem;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.grid.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .picker-hint {

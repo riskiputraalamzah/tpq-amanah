@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildCalendar, dayState, normalizeLevel, longDate } from "../src/utils/kbmCalendar.js";
+import { buildCalendar, dayState, normalizeLevel, longDate, shiftPeriod } from "../src/utils/kbmCalendar.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const kbmView = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/KbmView.vue"), "utf8");
@@ -77,5 +77,43 @@ test("KBM form: sesi and jilid come before the date, duplicates are checked per 
   assert.ok(kbmView.includes("<KbmDatePicker"), "uses the KBM calendar");
   assert.ok(kbmView.includes("normalizeLevel(s.levelId || s.classId) === selectedLevel"), "same sesi, other jilid is allowed");
   assert.ok(kbmView.includes('@open-session="openExistingSession"'), "filled dates open the existing KBM");
-  assert.ok(kbmView.includes('api.get("/teaching_sessions/calendar")'));
+  assert.ok(kbmView.includes('api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } })'), "calendar of the viewed month");
+});
+
+test("month arrows: back to the first recorded month, forward up to the current month", () => {
+  assert.equal(shiftPeriod("2026-01", -1), "2025-12");
+  assert.equal(shiftPeriod("2026-12", 1), "2027-01");
+  assert.equal(shiftPeriod("2026-07", 4), "2026-11");
+  assert.equal(shiftPeriod("", 1), "");
+  const nov = buildCalendar({ period: "2026-11", firstPeriod: "2026-01", today: "2026-11-12", days: [] });
+  assert.deepEqual([nov.prevPeriod, nov.nextPeriod], ["2026-10", ""], "no future month");
+  const jan = buildCalendar({ period: "2026-01", firstPeriod: "2026-01", today: "2026-11-12", days: [] });
+  assert.deepEqual([jan.prevPeriod, jan.nextPeriod], ["", "2026-02"], "nothing before January 2026");
+  const jul = buildCalendar({ period: "2026-07", firstPeriod: "2026-01", today: "2026-11-12", days: [] });
+  assert.deepEqual([jul.title, jul.prevPeriod, jul.nextPeriod], ["Juli 2026", "2026-06", "2026-08"]);
+});
+
+test("a month the teacher can no longer fill: nothing selectable, existing KBM still opens", () => {
+  const days = [
+    day("2026-07-13", { attendance: "hadir" }),
+    day("2026-07-14", { attendance: "hadir", sessions: [malamJilid6] }),
+    day("2026-07-15"),
+  ];
+  const closed = buildCalendar({ period: "2026-07", firstPeriod: "2026-01", today: "2026-11-12", canFill: false, days }, { slotId: "wave_2", classId: "6" });
+  assert.equal(closed.canFill, false);
+  assert.deepEqual(closed.cells.map((c) => c.state), ["off", "filled", "off"]);
+  assert.deepEqual(closed.cells.map((c) => c.selectable), [false, false, false]);
+  assert.equal(closed.cells[1].openable, true, "already filled KBM can be opened");
+  assert.deepEqual(closed.needsDates, [], "no chips to fill a closed month");
+  const open = buildCalendar({ period: "2026-07", firstPeriod: "2026-01", today: "2026-11-12", canFill: true, days }, { slotId: "wave_2", classId: "6" });
+  assert.deepEqual(open.cells.map((c) => c.state), ["needs", "filled", "no-att"], "an LPJ month is fillable like the current one");
+  assert.deepEqual(open.needsDates, ["2026-07-13"]);
+});
+
+test("KBM page: the viewed month moves with the arrows and with dates from links, and reloads its data", () => {
+  assert.ok(kbmView.includes('@change-month="changeMonth"'), "picker arrows change the month");
+  assert.ok(!kbmView.includes(':min-date="minDateString"'), "the picker is not capped at the active period any more");
+  assert.ok(kbmView.includes("api.get(\"/attendance/me\", { params: periodObj })"), "attendance of the viewed month for the check");
+  assert.ok(kbmView.includes("kbmCalendar.value?.canFill === true"), "earlier month allowed only when the server says so");
+  assert.ok(kbmView.includes("if (request !== monthRequest) return;"), "fast taps: the latest month wins");
 });
