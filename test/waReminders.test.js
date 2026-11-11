@@ -38,3 +38,10 @@ test("tests go to a chosen number and the page shows whether the bot is alive", 
   assert.ok(view.includes("WA_SCHEDULE_SOURCE=backend"), "explains how to switch the bot over");
   assert.ok(view.includes("PageSkeleton"), "uses the shared loading skeleton");
 });
+
+test("bot status refreshes on its own while the page is open", () => {
+  assert.ok(view.includes("api.get('/wa-reminders/status')"), "light status endpoint");
+  assert.ok(view.includes("setInterval(refreshBotStatus, STATUS_REFRESH_MS)"), "periodic refresh");
+  assert.ok(view.includes("document.visibilityState !== 'visible'"), "paused when the tab is hidden");
+  assert.ok(view.includes("QR_RECEIVED: { tone: 'warn', label: 'Perlu scan QR'"), "clear label when a QR scan is needed");
+});

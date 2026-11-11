@@ -239,22 +239,53 @@ const relative = (date) => {
   return date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+// WhatsApp state as reported by the bot (whatsapp-web.js states plus "ready").
+const WA_STATES = {
+  ready: { tone: 'ok', label: 'Online', text: 'WhatsApp terhubung' },
+  CONNECTED: { tone: 'ok', label: 'Online', text: 'WhatsApp terhubung' },
+  QR_RECEIVED: { tone: 'warn', label: 'Perlu scan QR', text: 'WhatsApp menunggu scan QR di halaman /scan bot' },
+  AUTHENTICATED: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
+  INITIALIZING: { tone: 'warn', label: 'Menyambung...', text: 'Bot sedang menyalakan WhatsApp' },
+  OPENING: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
+  PAIRING: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
+  NOT_STARTED: { tone: 'warn', label: 'Menyambung...', text: 'Bot sedang menyalakan WhatsApp' },
+  RECONNECTING: { tone: 'warn', label: 'Menyambung ulang...', text: 'WhatsApp terputus, bot sedang menyambung ulang otomatis' },
+}
+
 const botStatus = computed(() => {
   const last = toDate(bot.value.lastSyncAt)
   if (!last) {
     return { tone: 'neutral', label: 'Belum terhubung', detail: 'Bot belum pernah mengambil pengaturan ini. Pastikan bot versi terbaru sudah berjalan di VM.' }
   }
   const minutes = (nowTick.value - last.getTime()) / 60000
-  const waText = bot.value.waState === 'ready' ? 'WhatsApp terhubung' : 'WhatsApp belum terhubung'
-  if (minutes > 15) {
-    return { tone: 'danger', label: 'Tidak ada kabar', detail: `Terakhir sinkron ${relative(last)}. Cek bot di VM.` }
+  if (minutes > 10) {
+    return { tone: 'danger', label: 'Tidak ada kabar', detail: `Kabar terakhir dari bot ${relative(last)}. Cek bot di VM.` }
   }
+  const wa = WA_STATES[bot.value.waState] || { tone: 'danger', label: 'WA terputus', text: 'WhatsApp terputus' }
   return {
-    tone: bot.value.waState === 'ready' ? 'ok' : 'warn',
-    label: bot.value.waState === 'ready' ? 'Online' : 'WA terputus',
-    detail: `Terakhir sinkron ${relative(last)} · ${waText} · perubahan dipakai bot paling lambat 5 menit setelah disimpan.`,
+    tone: wa.tone,
+    label: wa.label,
+    detail: `${wa.text} · kabar terakhir ${relative(last)} · perubahan pengaturan dipakai bot paling lambat 5 menit setelah disimpan.`,
   }
 })
+
+// Keeps the status card live: one light request every 15 seconds while the tab is visible.
+const STATUS_REFRESH_MS = 15000
+let statusTimer = null
+const refreshBotStatus = async () => {
+  if (document.visibilityState !== 'visible') return
+  try {
+    clearApiCache('/wa-reminders/status')
+    const { data } = await api.get('/wa-reminders/status')
+    bot.value = data || {}
+    nowTick.value = Date.now()
+  } catch {
+    // Keep the last known status; the next tick tries again.
+  }
+}
+const onVisibility = () => {
+  if (document.visibilityState === 'visible') refreshBotStatus()
+}
 
 const lastRunItems = computed(() =>
   Object.entries(bot.value.lastRuns || {})
@@ -450,12 +481,16 @@ onMounted(() => {
   clockTimer = setInterval(() => {
     nowTick.value = Date.now()
   }, 30000)
+  statusTimer = setInterval(refreshBotStatus, STATUS_REFRESH_MS)
+  document.addEventListener('visibilitychange', onVisibility)
   window.addEventListener('beforeunload', warnBeforeLeave)
 })
 
 onBeforeUnmount(() => {
   stopPolling()
   clearInterval(clockTimer)
+  clearInterval(statusTimer)
+  document.removeEventListener('visibilitychange', onVisibility)
   window.removeEventListener('beforeunload', warnBeforeLeave)
 })
 </script>
