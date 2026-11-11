@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { renderLpj, studentMatrix, lpjFilename, tanggalPanjang } from "../src/utils/lpjPdf.js";
+import { renderLpj, studentMatrix, teacherMatrix, journalRows, lpjFilename, tanggalPanjang, JOURNAL_SHEETS } from "../src/utils/lpjPdf.js";
 import { sampleLpjDocument } from "./fixtures/lpjDocument.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -18,29 +18,93 @@ const orientation = (doc, page) => {
   return box.topRightX > box.topRightY ? "L" : "P";
 };
 
-test("one teacher: cover, attendance, SPTJM, student attendance, journal - in that order and orientation", () => {
-  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument()] });
+const second = () =>
+  sampleLpjDocument({ guru: { id: "ella", name: "Ella Nurleila", nik: "1", birthPlace: "Sidoarjo", birthDate: "1999-01-02", address: "x", position: "Guru/Pengajar TPQ" } });
+const TITLES = ["LAPORAN PERTANGGUNGJAWABAN", "SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK", "DAFTAR HADIR SANTRI", "DAFTAR HADIR GURU", "BUKU JURNAL MENGAJAR", "BUKU JURNAL & BERITA ACARA"];
+const pageTitle = (doc, page) => {
+  const text = pageText(doc, page);
+  return TITLES.find((t) => text.includes(`(${t}`)) || "lanjutan";
+};
+
+test("whole TPQ: cover, then the official order 1. SPTJM, 2. santri, 3. guru (one recap), 4. jurnal", () => {
+  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument(), second()] });
   const pages = doc.getNumberOfPages();
-  const titles = Array.from({ length: pages }, (_, i) => {
-    const text = pageText(doc, i + 1);
-    for (const t of ["LAPORAN PERTANGGUNGJAWABAN", "DAFTAR HADIR GURU", "SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK", "DAFTAR HADIR SANTRI", "JURNAL MENGAJAR"]) {
-      if (text.includes(`(${t}`)) return t;
-    }
-    return "lanjutan";
-  });
-  assert.deepEqual(titles.slice(0, 4), ["LAPORAN PERTANGGUNGJAWABAN", "DAFTAR HADIR GURU", "DAFTAR HADIR GURU", "SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK"]);
-  assert.equal(titles.filter((t) => t === "DAFTAR HADIR SANTRI").length, 4, "2 months x (Jilid 6 + Jilid 5 badal)");
-  assert.ok(titles.indexOf("JURNAL MENGAJAR") > titles.lastIndexOf("DAFTAR HADIR SANTRI"));
-  assert.deepEqual([1, 2, 3, 4].map((p) => orientation(doc, p)), ["P", "P", "P", "P"], "cover, teacher attendance and SPTJM are portrait");
-  for (let p = 5; p <= pages; p++) assert.equal(orientation(doc, p), "L", `page ${p} (tables) is landscape`);
-  assert.deepEqual(sections, [{ guruId: "aini", name: "Ulrotul Aini", fromPage: 1, toPage: pages }]);
-  assert.ok(pageText(doc, pages).includes(`(Halaman ${pages} dari ${pages})`), "page numbers per teacher");
+  assert.deepEqual(
+    sections.map((s) => `${s.key}${s.guruId ? `:${s.guruId}` : ""}`),
+    ["cover", "sptjm:ella", "sptjm:aini", "santri:ella", "santri:aini", "guru", "jurnal:ella", "jurnal:aini"],
+    "teachers by name within each part",
+  );
+  sections.slice(1).forEach((s, i) => assert.equal(s.fromPage, sections[i].toPage + 1, `${s.key} follows on`));
+  assert.equal(sections.at(-1).toPage, pages);
+
+  const cover = pageText(doc, 1);
+  for (const expected of ["(LAPORAN PERTANGGUNGJAWABAN)", "Guru Penerima Insentif", "1.  Ella Nurleila", "2.  Ulrotul Aini", "411235151939"]) {
+    assert.ok(cover.includes(expected), `cover contains ${expected}`);
+  }
+
+  const guru = sections.find((s) => s.key === "guru");
+  assert.equal(guru.toPage - guru.fromPage + 1, 2, "one recap page per month for the whole TPQ");
+  for (let p = guru.fromPage; p <= guru.toPage; p++) {
+    assert.equal(pageTitle(doc, p), "DAFTAR HADIR GURU");
+    assert.equal(orientation(doc, p), "L");
+    assert.ok(pageText(doc, p).includes("(Ella Nurleila)") && pageText(doc, p).includes("(Ulrotul Aini)"), "both teachers in one table");
+  }
+
+  for (const s of sections.filter((x) => x.key === "sptjm")) {
+    assert.equal(pageTitle(doc, s.fromPage), "SURAT PERNYATAAN TANGGUNG JAWAB MUTLAK");
+    assert.equal(s.toPage, s.fromPage, "SPTJM fits one page");
+    assert.equal(orientation(doc, s.fromPage), "P");
+  }
+  assert.ok(pageText(doc, pages).includes(`(Halaman ${pages} dari ${pages})`), "page numbers run through the whole PDF");
   for (let p = 1; p <= pages; p++) assert.ok(pageText(doc, p).includes("/kop-surat") || pageText(doc, p).includes("Do"), `kop on page ${p}`);
 });
 
-test("SPTJM follows the official wording and the teacher's data", () => {
-  const { doc } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument()] });
-  const text = pageText(doc, 4);
+test("journal: a cover plus the first 3 sheets from the start of the period, in the paper book's columns", () => {
+  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument()], scope: "guru" });
+  const jurnal = sections.find((s) => s.key === "jurnal");
+  assert.equal(pageTitle(doc, jurnal.fromPage), "BUKU JURNAL MENGAJAR", "journal cover first");
+  assert.equal(orientation(doc, jurnal.fromPage), "P");
+  assert.ok(pageText(doc, jurnal.fromPage).includes("(Jilid 6)"), "cover lists the teacher's own class");
+  assert.equal(jurnal.toPage - jurnal.fromPage, JOURNAL_SHEETS, "exactly 3 sheets after the cover (the period has more)");
+  for (let p = jurnal.fromPage + 1; p <= jurnal.toPage; p++) {
+    const text = pageText(doc, p);
+    assert.equal(orientation(doc, p), "L");
+    assert.ok(text.includes("(BUKU JURNAL & BERITA ACARA)"), `sheet ${p} repeats the title`);
+    for (const col of ["Hari/Tgl", "Gel", "Kelas", "Santri", "Jml", "Masuk", "Absen", "Materi Inti", "Materi Penunjang", "Tanda Tangan"]) {
+      assert.ok(text.includes(`(${col})`), `column ${col} on sheet ${p}`);
+    }
+    assert.ok(text.includes("(Mengetahui,)") && text.includes("(Ulrotul Aini)"), `signatures on sheet ${p}`);
+  }
+  assert.ok(pageText(doc, jurnal.fromPage + 1).includes("1 Okt 2026"), "starts at the first day of the period");
+  const lastDay = journalRows(sampleLpjDocument()).filter((r) => r.date).at(-1).date.split("\n")[1];
+  assert.equal(lastDay, "12 Nov 2026");
+  for (let p = jurnal.fromPage + 1; p <= jurnal.toPage; p++) {
+    assert.ok(!pageText(doc, p).includes(`(${lastDay})`), "the end of the period is beyond the 3 sheets, so it was cut");
+  }
+
+  const rows = journalRows(sampleLpjDocument());
+  assert.deepEqual([rows[0].no, rows[0].date, rows[0].slot, rows[0].level], ["1", "Kamis,\n1 Okt 2026", "Sore", "Jilid 6"]);
+  assert.equal(rows[0].material, "Yasin & Tahlil");
+  const monday = rows.findIndex((r) => r.date.startsWith("Senin"));
+  assert.equal(rows[monday + 1].no, "", "second session of the same day has no day number");
+  assert.equal(rows[monday + 1].level, "Jilid 5\n(badal)");
+  assert.equal(rows[monday + 1].total, "5");
+  assert.equal(Number(rows[monday].present) + Number(rows[monday].absent), Number(rows[monday].total));
+  assert.ok(rows.some((r) => r.supporting === "Hafalan doa sehari-hari"), "materi penunjang from the KBM form");
+});
+
+test("one teacher: own cover, SPTJM, santri and journal; no TPQ teacher recap", () => {
+  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument()], scope: "guru" });
+  assert.deepEqual(sections.map((s) => s.key), ["cover", "sptjm", "santri", "jurnal"]);
+  assert.ok(pageText(doc, 1).includes("(Ulrotul Aini)"));
+  const all = Array.from({ length: doc.getNumberOfPages() }, (_, i) => pageTitle(doc, i + 1));
+  assert.ok(!all.includes("DAFTAR HADIR GURU"));
+  assert.equal(all.filter((t) => t === "DAFTAR HADIR SANTRI").length, 4, "2 months x (Jilid 6 + Jilid 5 badal)");
+});
+
+test("SPTJM follows the official wording, the teacher's data and has a materai box", () => {
+  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument()], scope: "guru" });
+  const text = pageText(doc, sections.find((s) => s.key === "sptjm").fromPage);
   for (const expected of [
     "PENERIMA INSENTIF GURU TAMAN PENDIDIKAN AL-QUR",
     "Yang bertanda tangan di bawah ini:",
@@ -54,6 +118,8 @@ test("SPTJM follows the official wording and the teacher's data", () => {
     "Sidoarjo, 30 November 2026",
     "Yang membuat pernyataan,",
     "NIK. 3515164906000004",
+    "(Materai)",
+    "(10.000)",
   ]) {
     assert.ok(text.includes(expected), `SPTJM contains "${expected}"`);
   }
@@ -62,18 +128,22 @@ test("SPTJM follows the official wording and the teacher's data", () => {
 
 test("missing profile data prints dotted blanks instead of failing", () => {
   const doc0 = sampleLpjDocument({ guru: { id: "x", name: "Guru Baru", nik: "", birthPlace: "", birthDate: "", address: "", position: "Guru/Pengajar TPQ" } });
-  const { doc } = renderLpj({ jsPDF, autoTable, kop, documents: [doc0] });
-  const sptjm = pageText(doc, 4);
-  assert.ok(sptjm.includes("NIK. .............................."));
+  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [doc0] });
+  assert.ok(pageText(doc, sections.find((s) => s.key === "sptjm").fromPage).includes("NIK. .............................."));
 });
 
-test("several teachers make one PDF, each starting with its own cover and page count", () => {
-  const second = sampleLpjDocument({ guru: { id: "ella", name: "Ustadzah Ella", nik: "1", birthPlace: "Sidoarjo", birthDate: "1999-01-02", address: "x", position: "Guru/Pengajar TPQ" } });
-  const { doc, sections } = renderLpj({ jsPDF, autoTable, kop, documents: [sampleLpjDocument(), second] });
-  assert.equal(sections.length, 2);
-  assert.equal(sections[1].fromPage, sections[0].toPage + 1);
-  assert.ok(pageText(doc, sections[1].fromPage).includes("(LAPORAN PERTANGGUNGJAWABAN)"));
-  assert.ok(pageText(doc, sections[1].fromPage).includes("Halaman 1 dari"), "page numbers restart for the next teacher");
+test("teacher recap: every date of the month, off days greyed, codes and totals per teacher", () => {
+  const { label, columns, rows } = teacherMatrix([sampleLpjDocument(), second()], 0);
+  assert.equal(label, "Oktober 2026");
+  assert.equal(columns.length, 31);
+  assert.equal(columns[0].label, "1");
+  assert.ok(columns.find((c) => c.date === "2026-10-03").off, "Saturday");
+  assert.equal(columns.find((c) => c.date === "2026-10-20").holidayName, "Libur Yayasan");
+  assert.deepEqual(rows.map((r) => r.name), ["Ella Nurleila", "Ulrotul Aini"]);
+  const aini = rows[1];
+  assert.equal(aini.codes[5], "I", "6 Oct: izin");
+  assert.equal(aini.codes[2], "", "3 Oct (Saturday) stays empty");
+  assert.equal(aini.totals[0] + aini.totals[1], aini.codes.filter(Boolean).length);
 });
 
 test("student attendance matrix: one table per class, codes and totals per santri", () => {
@@ -104,12 +174,12 @@ test("a month without sessions still gets a clear page", () => {
   const { doc } = renderLpj({ jsPDF, autoTable, kop, documents: [empty] });
   const all = Array.from({ length: doc.getNumberOfPages() }, (_, i) => pageText(doc, i + 1)).join("\n");
   assert.ok(all.includes("Tidak ada sesi mengajar dengan absensi santri pada bulan ini."));
-  assert.ok(all.includes("Tidak ada sesi mengajar pada bulan ini"));
+  assert.ok(all.includes("Tidak ada sesi mengajar pada periode ini"));
 });
 
 test("file names and dates", () => {
   const batch = sampleLpjDocument().batch;
-  assert.equal(lpjFilename(batch), "LPJ-Insentif-Semua-Guru-2026-10_2026-11.pdf");
+  assert.equal(lpjFilename(batch), "LPJ-Insentif-Lembaga-2026-10_2026-11.pdf");
   assert.equal(lpjFilename(batch, "Ulrotul Aini"), "LPJ-Insentif-Ulrotul-Aini-2026-10_2026-11.pdf");
   assert.equal(lpjFilename({ startPeriod: "2026-10", endPeriod: "2026-10" }, "A/B"), "LPJ-Insentif-AB-2026-10.pdf");
   assert.equal(tanggalPanjang("2026-10-10"), "10 Oktober 2026");
@@ -124,7 +194,9 @@ test("LPJ Insentif page: admin-only, one-click export and reminders", () => {
   assert.ok(view.includes("[3, 6, 12]"), "quick 3 / 6 / 12 month choices");
   assert.ok(view.includes("api.get(`/lpj/${selected.value.id}/readiness`"), "readiness per teacher");
   assert.ok(view.includes("api.post(`/lpj/${selected.value.id}/remind`"), "reminders from the admin");
-  assert.ok(view.includes("renderLpj({ jsPDF, autoTable, kop, documents })"), "one PDF for one or all teachers");
+  assert.ok(view.includes("renderLpj({ jsPDF, autoTable, kop, documents, scope })"), "one PDF for the TPQ or one teacher");
+  assert.ok(view.includes("exportPdf(readiness.gurus.map((g) => g.id), 'lembaga')"), "the main button builds the TPQ document");
+  assert.ok(view.includes("exportPdf([g.id], 'guru')"), "per-teacher export");
   assert.ok(view.includes("fetch('/kop-surat-pdf.jpg')"), "kop surat on every page");
   assert.ok(view.includes("loadPdfLibs()"), "jsPDF is loaded only when exporting");
 });

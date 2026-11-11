@@ -226,6 +226,21 @@
 
             <label class="field">
               <div class="field-label-bar">
+                <span class="field-title">Materi penunjang</span>
+                <span class="field-badge optional">Opsional</span>
+              </div>
+              <textarea
+                v-model="supportingMaterial"
+                class="form-input editor-textarea notes-textarea"
+                rows="2"
+                placeholder="Contoh: Hafalan doa sehari-hari, hafalan bacaan sholat..."
+                :disabled="saving"
+                @input="onEdit"
+              />
+            </label>
+
+            <label class="field">
+              <div class="field-label-bar">
                 <span class="field-title">Catatan guru</span>
                 <span class="field-badge optional">Opsional</span>
               </div>
@@ -328,6 +343,7 @@ const session = ref({});
 const sessionSlots = ref([]);
 const classes = ref([]);
 const material = ref("");
+const supportingMaterial = ref("");
 const notes = ref("");
 const dirty = ref(false);
 const saving = ref(false);
@@ -393,6 +409,7 @@ const fetchData = async () => {
     sessionSlots.value = slotsRes.data;
     classes.value = classesRes.data;
     material.value = session.value.journal?.material || "";
+    supportingMaterial.value = session.value.journal?.supportingMaterial || "";
     notes.value = session.value.journal?.notes || "";
     dirty.value = false;
     journalStatus.value = resolveJournalInitialStatus(material.value);
@@ -417,7 +434,7 @@ const save = async () => {
   saveMessage.value = "";
   try {
     await api.put(`/teaching_sessions/${sessionId}`, {
-      journal: { material: material.value, notes: notes.value },
+      journal: { material: material.value, supportingMaterial: supportingMaterial.value, notes: notes.value },
     });
     dirty.value = false;
     saveOk.value = true;

@@ -67,11 +67,15 @@
             <button type="button" class="btn btn-ghost" :disabled="!remindable.length || reminding" @click="remind(remindable.map((g) => g.id))">
               {{ reminding ? 'Mengirim...' : `Kirim pengingat WA (${remindable.length})` }}
             </button>
-            <button type="button" class="btn btn-primary" :disabled="!!exporting || !readiness.gurus.length" @click="exportPdf(readiness.gurus.map((g) => g.id))">
-              Export PDF semua guru
+            <button type="button" class="btn btn-primary" :disabled="!!exporting || !readiness.gurus.length" @click="exportPdf(readiness.gurus.map((g) => g.id), 'lembaga')">
+              Export PDF LPJ lembaga
             </button>
           </div>
           <p v-if="exporting" class="progress" role="status">{{ exporting }}</p>
+          <p v-if="!exporting" class="hint">
+            Isi PDF lembaga: Cover, 1. SPTJM tiap guru (ada kotak materai 10.000), 2. Daftar hadir santri tiap guru,
+            3. Daftar hadir guru (satu rekap TPQ), 4. Jurnal mengajar tiap guru (cover + {{ JOURNAL_SHEETS }} lembar awal periode).
+          </p>
           <p v-if="notReady.length && !exporting" class="hint">PDF tetap bisa di-export walau belum lengkap; bagian yang kosong tercetak apa adanya.</p>
         </section>
 
@@ -88,7 +92,7 @@
                   @click="remind([g.id])">
                   Kirim pengingat
                 </button>
-                <button type="button" class="btn btn-ghost btn-sm" :disabled="!!exporting" @click="exportPdf([g.id])">Export PDF</button>
+                <button type="button" class="btn btn-ghost btn-sm" :disabled="!!exporting" title="SPTJM, daftar hadir santri, dan jurnal guru ini saja" @click="exportPdf([g.id], 'guru')">Export PDF</button>
               </div>
             </div>
 
@@ -196,7 +200,7 @@ import api, { clearApiCache } from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast, useConfirm } from '@/composables/useToast'
 import { loadPdfLibs } from '@/utils/pdf'
-import { renderLpj, lpjFilename } from '@/utils/lpjPdf'
+import { renderLpj, lpjFilename, JOURNAL_SHEETS } from '@/utils/lpjPdf'
 
 const { success, error: showError, warning } = useToast()
 const { confirm } = useConfirm()
@@ -425,7 +429,8 @@ const loadKop = () => {
 }
 
 // Fetches each teacher's data one by one (small responses), then builds one PDF in the browser.
-const exportPdf = async (guruIds) => {
+// scope 'lembaga': the whole TPQ in the order of the official list; 'guru': one teacher's own part.
+const exportPdf = async (guruIds, scope = 'lembaga') => {
   if (exporting.value || !guruIds.length) return
   const batch = selected.value
   exporting.value = 'Menyiapkan...'
@@ -440,8 +445,8 @@ const exportPdf = async (guruIds) => {
     }
     exporting.value = 'Menyusun PDF...'
     await new Promise((r) => setTimeout(r, 30))
-    const { doc } = renderLpj({ jsPDF, autoTable, kop, documents })
-    const filename = lpjFilename(batch, guruIds.length === 1 ? documents[0].guru.name : null)
+    const { doc } = renderLpj({ jsPDF, autoTable, kop, documents, scope })
+    const filename = lpjFilename(batch, scope === 'guru' ? documents[0].guru.name : null)
     doc.save(filename)
     success(`${filename} diunduh (${doc.getNumberOfPages()} halaman).`)
   } catch (err) {

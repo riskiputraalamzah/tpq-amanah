@@ -1196,6 +1196,7 @@ async function submitKbm() {
       sessionSlotId: selectedSlotId.value,
       journal: {
         material: journalForm.value.material.trim(),
+        supportingMaterial: journalForm.value.supportingMaterial.trim(),
         notes: journalForm.value.notes.trim()
       },
       studentAttendances: roster.value.map(s => ({

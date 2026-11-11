@@ -54,6 +54,7 @@ function month(period, label) {
           meetingNumber: isThursday ? null : d,
           material: isThursday ? "Yasin & Tahlil" : date === "2026-11-10" ? "" : `Halaman ${d} – ${d + 1}, makharijul huruf dan tajwid bacaan mad thabi'i`,
           notes: d % 5 === 0 ? "Santri perlu mengulang halaman sebelumnya" : "",
+          supporting: d % 3 === 0 ? "Hafalan doa sehari-hari" : "",
           substituteFor: null,
           students: date === "2026-11-10" ? [] : students(SANTRI, date),
           complete: date !== "2026-11-10",
