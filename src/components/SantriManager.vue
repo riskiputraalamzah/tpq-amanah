@@ -88,6 +88,17 @@
           <h2>Daftar Santri ({{ filtered.length }})</h2>
         </div>
 
+        <!-- Nomor induk dengan NSPQ lama / salah ketik (Hanya Admin) -->
+        <div v-if="adminMode && wrongPrefixRows.length > 0" class="ni-banner ni-banner-warn" role="status">
+          <div class="ni-banner-text">
+            <strong>{{ wrongPrefixRows.length }} nomor induk masih memakai NSPQ {{ wrongPrefixes.join(", ") }}.</strong>
+            <span>NSPQ di Profil TPQ: {{ currentNspq }}. Contoh perbaikan: {{ wrongPrefixRows[0].nomorInduk }} → {{ correctedNumber(wrongPrefixRows[0].nomorInduk) }}</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" :disabled="fixingPrefix" @click="fixNspqPrefix">
+            {{ fixingPrefix ? "Memperbaiki..." : "Perbaiki ke " + currentNspq }}
+          </button>
+        </div>
+
         <!-- Santri lama yang belum punya nomor induk (Hanya Admin) -->
         <div v-if="adminMode && unnumberedCount > 0" class="ni-banner">
           <div class="ni-banner-text">
@@ -472,6 +483,48 @@ const generating = ref(false);
 const copiedId = ref(null);
 let copiedTimer = null;
 
+// NSPQ from Profil TPQ, normalized like the backend (empty means the official NSPQ).
+const currentNspq = ref("");
+const fixingPrefix = ref(false);
+const prefixOf = (nomorInduk) => String(nomorInduk || "").split("-")[0];
+const wrongPrefixRows = computed(() =>
+  currentNspq.value ? santri.value.filter((row) => row.nomorInduk && prefixOf(row.nomorInduk) !== currentNspq.value) : [],
+);
+const wrongPrefixes = computed(() => [...new Set(wrongPrefixRows.value.map((row) => prefixOf(row.nomorInduk)))]);
+const correctedNumber = (nomorInduk) => `${currentNspq.value}-${String(nomorInduk).split("-").slice(1).join("-")}`;
+
+const loadNspq = async () => {
+  if (!props.adminMode) return;
+  try {
+    const { data } = await api.get("/settings/tpq-profile");
+    const digits = String(data?.nsq || "").replace(/\D/g, "");
+    currentNspq.value = digits.length === 12 ? digits : "";
+  } catch {
+    currentNspq.value = "";
+  }
+};
+
+const fixNspqPrefix = async () => {
+  if (fixingPrefix.value) return;
+  const ok = await confirm(
+    `Ganti awalan NSPQ ${wrongPrefixes.value.join(", ")} menjadi ${currentNspq.value} pada ${wrongPrefixRows.value.length} nomor induk? Tahun dan nomor urut tidak berubah, nomor lama tetap disimpan sebagai riwayat.`,
+    { title: "Perbaiki Nomor Induk", confirmText: "Ya, Perbaiki", cancelText: "Batal" },
+  );
+  if (!ok) return;
+  fixingPrefix.value = true;
+  try {
+    const { data } = await api.post("/santri/nomor-induk/fix-nspq", {}, { timeout: 60000 });
+    const fixedById = new Map((data.fixed || []).map((item) => [item.id, item.nomorInduk]));
+    santri.value = santri.value.map((row) => (fixedById.has(row.id) ? { ...row, nomorInduk: fixedById.get(row.id) } : row));
+    currentNspq.value = data.nspq || currentNspq.value;
+    success(data.message || "Nomor induk berhasil diperbaiki.");
+  } catch (error) {
+    showError(error.response?.data?.error || "Gagal memperbaiki nomor induk.");
+  } finally {
+    fixingPrefix.value = false;
+  }
+};
+
 const unnumberedCount = computed(
   () => santri.value.filter((row) => !row.nomorInduk).length,
 );
@@ -674,6 +727,7 @@ const fetchData = async () => {
     const [santriRes, classesRes] = await Promise.all([
       api.get("/santri"),
       api.get("/classes"),
+      loadNspq(),
     ]);
     santri.value = santriRes.data;
     classes.value = classesRes.data;
@@ -1187,6 +1241,15 @@ onMounted(fetchData);
   border-radius: var(--radius-lg);
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.ni-banner-warn {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.ni-banner-warn .ni-banner-text strong {
+  color: #92400e;
 }
 
 .ni-banner-text {

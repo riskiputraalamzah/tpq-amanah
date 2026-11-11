@@ -70,3 +70,9 @@ test("Kelola Santri headers sort and announce their order", () => {
   }
   assert.ok(santriManager.includes('v-for="(row, index) in sortedRows"'), "table renders the sorted rows");
 });
+
+test("Kelola Santri offers to fix numbers issued with a mistyped NSPQ", () => {
+  assert.ok(santriManager.includes('v-if="adminMode && wrongPrefixRows.length > 0"'), "admin-only banner when prefixes differ");
+  assert.ok(santriManager.includes('api.post("/santri/nomor-induk/fix-nspq"'), "calls the fix endpoint");
+  assert.ok(santriManager.includes("await confirm("), "asks for confirmation first");
+});
