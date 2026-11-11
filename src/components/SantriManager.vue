@@ -86,6 +86,19 @@
       <section class="glass-card">
         <div class="roster-toolbar">
           <h2>Daftar Santri ({{ filtered.length }})</h2>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm export-btn"
+            :disabled="exportingExcel || filtered.length === 0"
+            @click="exportExcel"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {{ exportingExcel ? "Menyiapkan..." : "Export Excel" }}
+          </button>
         </div>
 
         <!-- Nomor induk dengan NSPQ lama / salah ketik (Hanya Admin) -->
@@ -311,17 +324,29 @@
                     <button
                       type="button"
                       class="ni-copy"
-                      :aria-label="`Salin nomor induk ${row.name}`"
-                      :title="copiedId === row.id ? 'Tersalin' : 'Salin nomor induk'"
+                      :aria-label="`Salin nomor induk ${row.name} dengan strip`"
+                      :title="copiedKey === `${row.id}:dash` ? 'Tersalin' : 'Salin dengan strip'"
                       @click="copyNomorInduk(row)"
                     >
-                      <svg v-if="copiedId === row.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <svg v-if="copiedKey === `${row.id}:dash`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <rect x="9" y="9" width="13" height="13" rx="2" />
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                       </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="ni-copy ni-copy-plain"
+                      :aria-label="`Salin nomor induk ${row.name} tanpa strip`"
+                      :title="copiedKey === `${row.id}:plain` ? 'Tersalin' : 'Salin tanpa strip'"
+                      @click="copyNomorInduk(row, { stripped: true })"
+                    >
+                      <svg v-if="copiedKey === `${row.id}:plain`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span v-else aria-hidden="true">123</span>
                     </button>
                   </template>
                   <span v-else class="ni-empty">Belum ada</span>
@@ -439,6 +464,8 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
 import api, { clearApiCache } from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import { sortSantri } from "@/utils/santriSort";
+import { loadExcelLib, downloadWorkbook } from "@/utils/excel";
+import { buildSantriWorkbook, santriFilename } from "@/utils/excelExports";
 import { useAuthStore } from "@/stores/auth";
 import { useToast, useConfirm } from "@/composables/useToast";
 
@@ -480,7 +507,7 @@ const conflictSantri = ref(null);
 const nomorIndukPreview = ref(null);
 const previewLoading = ref(false);
 const generating = ref(false);
-const copiedId = ref(null);
+const copiedKey = ref(null);
 let copiedTimer = null;
 
 // NSPQ from Profil TPQ, normalized like the backend (empty means the official NSPQ).
@@ -580,13 +607,16 @@ const generateNomorInduk = async () => {
   }
 };
 
-const copyNomorInduk = async (row) => {
+// Default copy keeps the dashes (safe to paste into Excel, where a 17-digit number loses its last digits);
+// the second button copies digits only, for forms that do not accept dashes.
+const copyNomorInduk = async (row, { stripped = false } = {}) => {
+  const text = stripped ? String(row.nomorInduk).replace(/-/g, "") : row.nomorInduk;
   try {
-    await navigator.clipboard.writeText(row.nomorInduk);
-    copiedId.value = row.id;
+    await navigator.clipboard.writeText(text);
+    copiedKey.value = `${row.id}:${stripped ? "plain" : "dash"}`;
     clearTimeout(copiedTimer);
     copiedTimer = setTimeout(() => {
-      copiedId.value = null;
+      copiedKey.value = null;
     }, 1500);
   } catch {
     showError("Gagal menyalin. Salin nomor induk secara manual.");
@@ -594,6 +624,40 @@ const copyNomorInduk = async (row) => {
 };
 
 onBeforeUnmount(() => clearTimeout(copiedTimer));
+
+// Excel export: exactly the rows on screen (search, filters and sort applied).
+const exportingExcel = ref(false);
+const hasActiveFilter = computed(
+  () => !!(search.value.trim() || levelFilter.value || statusFilter.value),
+);
+
+const exportExcel = async () => {
+  if (exportingExcel.value) return;
+  if (filtered.value.length === 0) {
+    warning("Tidak ada santri untuk diekspor.");
+    return;
+  }
+  exportingExcel.value = true;
+  try {
+    const ExcelJS = await loadExcelLib();
+    const exportedAt = new Date();
+    const rows = sortedRows.value.map((row) => ({
+      nomorInduk: row.nomorInduk,
+      name: row.name,
+      level: levelName(row.currentClassId),
+      status: statusLabel(row.status),
+    }));
+    const workbook = buildSantriWorkbook(ExcelJS, { rows, exportedAt });
+    const filename = santriFilename({ filtered: hasActiveFilter.value, date: exportedAt });
+    await downloadWorkbook(workbook, filename);
+    success(`${rows.length} santri diekspor ke ${filename}`);
+  } catch (error) {
+    console.error("Export santri Excel error:", error);
+    showError("Gagal mengekspor Excel. Periksa koneksi lalu coba lagi.");
+  } finally {
+    exportingExcel.value = false;
+  }
+};
 
 const statusLabel = (status) => {
   const s = String(status || "aktif").toLowerCase();
@@ -913,10 +977,25 @@ onMounted(fetchData);
   }
 }
 
+.roster-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
 .roster-toolbar h2 {
   margin-bottom: 0;
   padding-bottom: 0;
   border-bottom: none;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
 }
 
 .status-select {
@@ -1298,6 +1377,14 @@ onMounted(fetchData);
 .ni-copy:focus-visible {
   background: var(--gray-100);
   color: var(--primary-dark);
+}
+
+.ni-copy-plain {
+  width: 34px;
+  margin-left: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .ni-empty {

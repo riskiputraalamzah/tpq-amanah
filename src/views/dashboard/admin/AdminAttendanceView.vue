@@ -27,6 +27,10 @@
                 <span v-if="exporting">⏳ Mengunduh...</span>
                 <span v-else>📄 Export PDF</span>
               </button>
+              <button class="dropdown-item" @click="exportToExcel" :disabled="loading || exportingExcel">
+                <span v-if="exportingExcel">⏳ Menyiapkan...</span>
+                <span v-else>📊 Export Excel</span>
+              </button>
               <button class="dropdown-item" @click="openAddModal">
                 ➕ Tambah Absensi
               </button>
@@ -47,6 +51,10 @@
         <button v-else class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
           <span v-if="exporting">⏳ Mengunduh...</span>
           <span v-else>📄 Export PDF</span>
+        </button>
+        <button v-if="!isAdmin" class="btn btn-export" @click="exportToExcel" :disabled="loading || exportingExcel">
+          <span v-if="exportingExcel">⏳ Menyiapkan...</span>
+          <span v-else>📊 Export Excel</span>
         </button>
       </div>
     </header>
@@ -856,6 +864,8 @@ import {
   getHolidaysForMonth,
 } from "@/services/holidayService";
 import { loadPdfLibs } from "@/utils/pdf";
+import { loadExcelLib, downloadWorkbook } from "@/utils/excel";
+import { buildAttendanceWorkbook, attendanceFilename } from "@/utils/excelExports";
 import { prefetchWhenIdle } from "@/utils/prefetch";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -960,6 +970,7 @@ const teachersWithStats = computed(() => {
 const showModal = ref(false);
 const saving = ref(false);
 const exporting = ref(false);
+const exportingExcel = ref(false);
 
 // Reset Testing Modal state
 const showResetTestingModal = ref(false);
@@ -1844,6 +1855,56 @@ const exportToPDF = async () => {
     showError("Gagal mengexport PDF");
   } finally {
     exporting.value = false;
+  }
+};
+
+// Export to Excel: the same numbers as the PDF, plus a per-day grid for the month.
+const exportToExcel = async () => {
+  dropdownOpen.value = false;
+
+  if (teachersWithStats.value.length === 0) {
+    warning("Tidak ada data untuk di-export");
+    return;
+  }
+
+  exportingExcel.value = true;
+  try {
+    const ExcelJS = await loadExcelLib();
+    const period = selectedMonth.value;
+    const toKey = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+    const records = [];
+    for (const a of attendanceData.value) {
+      if (a.type === "student_attendance") continue;
+      const d = parseDate(a.date);
+      if (d) records.push({ guruId: a.guruId, date: toKey(d), status: a.status });
+    }
+
+    const workbook = buildAttendanceWorkbook(ExcelJS, {
+      period,
+      teachers: teachersWithStats.value.map((t) => ({
+        id: t.id,
+        name: t.displayName,
+        hadirCount: t.hadirCount,
+        tidakHadirCount: t.tidakHadirCount,
+      })),
+      records: records.filter((r) => r.date.startsWith(period)),
+      holidays: monthHolidays.value.map((h) => ({
+        date: `${period}-${String(h.date).padStart(2, "0")}`,
+        name: h.name,
+      })),
+      exportedAt: new Date(),
+    });
+
+    const filename = attendanceFilename({ period });
+    await downloadWorkbook(workbook, filename);
+    success(`Berhasil mengunduh ${filename}`);
+  } catch (e) {
+    console.error("Export Excel error:", e);
+    showError("Gagal mengexport Excel");
+  } finally {
+    exportingExcel.value = false;
   }
 };
 

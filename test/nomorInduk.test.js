@@ -16,7 +16,9 @@ test("Kelola Santri shows, searches and copies the nomor induk", () => {
   assert.ok(santriManager.includes("<th>No. Induk</th>"), "table has a No. Induk column");
   assert.ok(santriManager.includes("row.nomorInduk"), "each row shows its nomor induk");
   assert.ok(santriManager.includes("Cari nama atau nomor induk"), "search mentions nomor induk");
-  assert.ok(santriManager.includes("navigator.clipboard.writeText(row.nomorInduk)"), "number can be copied");
+  assert.ok(santriManager.includes("navigator.clipboard.writeText(text)"), "number can be copied");
+  assert.ok(santriManager.includes('replace(/-/g, "")'), "a second button copies it without dashes");
+  assert.ok(santriManager.includes("copyNomorInduk(row, { stripped: true })"));
 });
 
 test("Only admin can number existing santri, after a preview", () => {

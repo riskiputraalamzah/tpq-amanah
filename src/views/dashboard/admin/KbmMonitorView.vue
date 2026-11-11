@@ -23,6 +23,14 @@
       <button type="button" class="btn btn-ghost" :disabled="loading" @click="load(true)">
         {{ loading ? 'Memuat...' : 'Muat ulang' }}
       </button>
+      <button type="button" class="btn btn-ghost" :disabled="!data || loading || exportingExcel || rows.length === 0" @click="exportExcel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="btn-icon">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        {{ exportingExcel ? 'Menyiapkan...' : 'Export Excel' }}
+      </button>
     </div>
 
     <PageSkeleton v-if="loading && !data" :stats="4" :rows="6" label="Memuat monitor KBM" />
@@ -195,6 +203,9 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api, { clearApiCache } from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import { useToast } from '@/composables/useToast'
+import { loadExcelLib, downloadWorkbook } from '@/utils/excel'
+import { buildKbmMonitorWorkbook, monitorFilename } from '@/utils/excelExports'
 import {
   STATE_META,
   boardColumns,
@@ -207,6 +218,8 @@ import {
   longDate,
   monthTitle,
 } from '@/utils/kbmMonitor'
+
+const { success, error: showError, warning } = useToast()
 
 const legend = {
   complete: STATE_META.complete,
@@ -273,6 +286,32 @@ const nudgeNote = computed(() => {
     : ''
   return `Daftar ${detail.value.issues.length} hari di bawah dikirim ke WA guru.${lastText}`
 })
+
+// Excel export: the teachers on screen (search and "perlu tindak lanjut" applied), three sheets.
+const exportingExcel = ref(false)
+const exportExcel = async () => {
+  if (exportingExcel.value || !data.value) return
+  if (rows.value.length === 0) {
+    warning('Tidak ada guru untuk diekspor.')
+    return
+  }
+  exportingExcel.value = true
+  try {
+    const ExcelJS = await loadExcelLib()
+    const filterNote = [search.value.trim() ? `Pencarian "${search.value.trim()}"` : '', onlyIssues.value ? 'Perlu tindak lanjut saja' : '']
+      .filter(Boolean)
+      .join(', ')
+    const workbook = buildKbmMonitorWorkbook(ExcelJS, { data: data.value, gurus: rows.value, filterNote, exportedAt: new Date() })
+    const filename = monitorFilename({ period: data.value.period, filtered: !!filterNote })
+    await downloadWorkbook(workbook, filename)
+    success(`Monitor KBM diekspor ke ${filename}`)
+  } catch (err) {
+    console.error('Export Monitor KBM error:', err)
+    showError('Gagal mengekspor Excel. Periksa koneksi lalu coba lagi.')
+  } finally {
+    exportingExcel.value = false
+  }
+}
 
 const load = async (fresh = false) => {
   loading.value = true
@@ -456,6 +495,11 @@ onBeforeUnmount(stopPolling)
   background: #fff;
   border-color: var(--gray-300);
   color: var(--primary-dark);
+}
+
+.btn-icon {
+  margin-right: 8px;
+  flex: none;
 }
 
 .btn-block {
