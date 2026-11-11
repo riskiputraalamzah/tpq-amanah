@@ -5,6 +5,9 @@
       <p>Selamat datang, {{ user?.displayName }}!</p>
     </header>
 
+    <!-- Kelengkapan LPJ (hanya guru yang masuk LPJ) -->
+    <LpjStatusCard v-if="isGuru" />
+
     <div class="dashboard-cards">
       <!-- Admin Cards -->
       <template v-if="isAdmin">
@@ -326,6 +329,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import LpjStatusCard from '@/components/LpjStatusCard.vue'
 import { loadPdfLibs } from '@/utils/pdf'
 import { useToast } from '@/composables/useToast'
 

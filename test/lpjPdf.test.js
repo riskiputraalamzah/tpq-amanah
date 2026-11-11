@@ -128,3 +128,14 @@ test("LPJ Insentif page: admin-only, one-click export and reminders", () => {
   assert.ok(view.includes("fetch('/kop-surat-pdf.jpg')"), "kop surat on every page");
   assert.ok(view.includes("loadPdfLibs()"), "jsPDF is loaded only when exporting");
 });
+
+test("teachers in an LPJ see their own checklist on the dashboard", () => {
+  const card = fs.readFileSync(path.join(here, "../src/components/LpjStatusCard.vue"), "utf8");
+  const home = fs.readFileSync(path.join(here, "../src/views/dashboard/DashboardHome.vue"), "utf8");
+  assert.ok(home.includes('<LpjStatusCard v-if="isGuru" />'), "only on the teacher dashboard");
+  assert.ok(card.includes("api.get('/lpj/me'"), "own data only");
+  assert.ok(card.includes('v-if="status?.batch"'), "hidden for teachers not in an LPJ");
+  for (const link of ["/dashboard/profile", "/dashboard/attendance", "/dashboard/kbm"]) {
+    assert.ok(card.includes(`to="${link}"`), `links straight to ${link}`);
+  }
+});
