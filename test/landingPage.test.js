@@ -132,10 +132,11 @@ test("HomeView has mobile-friendly responsive layout and floating CTA", () => {
     homeViewSrc.includes("overflow-hidden") || homeViewSrc.includes("overflow-x-hidden"),
     "Prevents horizontal overflow"
   );
-  assert.ok(
-    homeViewSrc.includes("fixed bottom-5 right-5"),
-    "Includes floating mobile CTA buttons"
-  );
+  const floatingCta = homeViewSrc.match(/aria-label="Aksi Cepat Pendaftaran"[\s\S]*?class="([^"]+)"/);
+  assert.ok(floatingCta, "Includes floating mobile CTA buttons");
+  for (const cls of ["fixed", "bottom-5", "right-5", "lg:hidden"]) {
+    assert.ok(floatingCta[1].split(/\s+/).includes(cls), `Floating CTA keeps ${cls}`);
+  }
 });
 
 test("HomeView has no duplicate static element ids", () => {
@@ -160,9 +161,11 @@ test("Contact numbers are tappable and FAQ exposes its state to assistive tech",
 test("Official registration number matches the Tanda Daftar LPQ, in hero and footer", () => {
   const footerSrc = fs.readFileSync(path.join(here, "../src/components/FooterComponent.vue"), "utf8");
   const legalSrc = fs.readFileSync(path.join(here, "../src/data/legalDocuments.js"), "utf8");
-  assert.ok(homeViewSrc.includes("NSQ 411235151939"), "Hero shows the NSQ");
-  assert.ok(footerSrc.includes("NSQ 411235151939"), "Footer shows the NSQ");
-  assert.ok(legalSrc.includes("NSQ 411235151939"), "Document data carries the same NSQ");
+  // Label may be NSQ (as on the certificate) or NSPQ; the number must match everywhere.
+  const registration = /NS(P)?Q\s+411235151939/;
+  assert.match(homeViewSrc, registration, "Hero shows the registration number");
+  assert.match(footerSrc, registration, "Footer shows the registration number");
+  assert.match(legalSrc, registration, "Document data carries the same number");
 });
 
 test("WebP files exist in public folder and have small footprint (< 200KB each)", () => {

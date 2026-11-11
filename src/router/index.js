@@ -51,6 +51,13 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "wa-reminders",
+        name: "WaReminders",
+        component: () =>
+          import("../views/dashboard/admin/WaReminderView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "content",
         name: "ContentManagement",
         component: () =>
