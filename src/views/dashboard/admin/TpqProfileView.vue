@@ -51,9 +51,12 @@
               <input
                 v-model="form.nsq"
                 type="text"
+                inputmode="numeric"
+                maxlength="20"
                 class="form-input"
-                placeholder="Contoh: 411235xxxxxxxx"
+                placeholder="Contoh: 411235151939"
               />
+              <span class="field-hint">12 digit. Menjadi awalan nomor induk santri baru</span>
             </div>
 
             <!-- Nama Kepala TPQ -->
@@ -81,6 +84,18 @@
                 placeholder="https://..."
               />
             </div>
+          </div>
+
+          <!-- Link Sertifikat SIPDAR (Full Width) -->
+          <div class="form-group full-width">
+            <label class="form-label">Link Sertifikat LPQ di SIPDAR Kemenag</label>
+            <input
+              v-model="form.sipdarUrl"
+              type="url"
+              class="form-input"
+              placeholder="https://sipdarlpq.kemenag.go.id/print/sertifikat-lpq/..."
+            />
+            <span class="field-hint">Dibuka saat NSPQ di sidebar dashboard diklik</span>
           </div>
 
           <!-- Alamat Lembaga (Full Width) -->
@@ -128,6 +143,7 @@ import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { useToast } from '@/composables/useToast'
+import { applyTpqProfile, SIPDAR_ORIGIN } from '@/composables/useTpqIdentity'
 
 const defaultLogoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
 const { success, error: showError, warning } = useToast()
@@ -141,7 +157,8 @@ const form = ref({
   nsq: '',
   address: '',
   headName: '',
-  logoUrl: ''
+  logoUrl: '',
+  sipdarUrl: ''
 })
 
 const fetchTpqProfile = async () => {
@@ -154,7 +171,8 @@ const fetchTpqProfile = async () => {
       nsq: data.nsq || '',
       address: data.address || '',
       headName: data.headName || '',
-      logoUrl: data.logoUrl || ''
+      logoUrl: data.logoUrl || '',
+      sipdarUrl: data.sipdarUrl || ''
     }
   } catch (err) {
     console.error('Failed to fetch TPQ profile:', err)
@@ -170,7 +188,8 @@ const resetForm = () => {
     nsq: originalData.value.nsq || '',
     address: originalData.value.address || '',
     headName: originalData.value.headName || '',
-    logoUrl: originalData.value.logoUrl || ''
+    logoUrl: originalData.value.logoUrl || '',
+    sipdarUrl: originalData.value.sipdarUrl || ''
   }
 }
 
@@ -187,19 +206,31 @@ const saveTpqProfile = async () => {
     warning('Nama Kepala TPQ wajib diisi')
     return
   }
+  const nspqDigits = String(form.value.nsq || '').replace(/\D/g, '')
+  if (nspqDigits && nspqDigits.length !== 12) {
+    warning('NSPQ harus 12 digit angka')
+    return
+  }
+  const sipdarUrl = String(form.value.sipdarUrl || '').trim()
+  if (sipdarUrl && !sipdarUrl.startsWith(SIPDAR_ORIGIN)) {
+    warning('Link sertifikat harus diawali https://sipdarlpq.kemenag.go.id/')
+    return
+  }
 
   saving.value = true
   try {
     const payload = {
       name: form.value.name.trim(),
-      nsq: form.value.nsq ? form.value.nsq.trim() : '',
+      nsq: nspqDigits,
       address: form.value.address.trim(),
       headName: form.value.headName.trim(),
-      logoUrl: form.value.logoUrl ? form.value.logoUrl.trim() : null
+      logoUrl: form.value.logoUrl ? form.value.logoUrl.trim() : null,
+      sipdarUrl
     }
 
     await api.put('/settings/tpq-profile', payload)
     originalData.value = { ...payload }
+    applyTpqProfile(payload)
     success('Profil TPQ berhasil disimpan')
   } catch (err) {
     console.error('Failed to save TPQ profile:', err)

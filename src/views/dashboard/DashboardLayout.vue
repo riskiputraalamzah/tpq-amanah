@@ -4,10 +4,36 @@
     <AnnouncementBanner />
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
-      <router-link to="/" class="sidebar-header">
-        <img :src="logoUrl" alt="TPQ AMANAH" class="sidebar-logo" />
-        <span class="sidebar-title">TPQ AMANAH</span>
-      </router-link>
+      <div class="sidebar-brand">
+        <router-link to="/" class="sidebar-header">
+          <img :src="logoUrl" alt="TPQ AMANAH" class="sidebar-logo" />
+          <span class="sidebar-title">TPQ AMANAH</span>
+        </router-link>
+        <a
+          :href="tpqIdentity.sipdarUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sidebar-nspq"
+          :aria-label="`NSPQ ${tpqIdentity.nspq}, buka sertifikat LPQ di SIPDAR Kemenag (tab baru)`"
+          title="Buka sertifikat LPQ di SIPDAR Kemenag"
+        >
+          <svg class="sidebar-nspq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <polyline points="9 12 11 14 15 10" />
+          </svg>
+          <span class="sidebar-nspq-text">
+            <span class="sidebar-nspq-label">NSPQ</span>
+            <span class="sidebar-nspq-number">{{ tpqIdentity.nspq }}</span>
+          </span>
+          <svg class="sidebar-nspq-external" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </a>
+      </div>
 
       <nav class="sidebar-nav">
         <!-- Beranda / Utama -->
@@ -401,6 +427,7 @@ import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
 import { resolveLpjPeriod, fetchMyEligibility } from "@/utils/lpjEligibility";
 import { prefetchDashboardRoutes } from "@/utils/prefetch";
+import { useTpqIdentity } from "@/composables/useTpqIdentity";
 
 const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
@@ -423,6 +450,8 @@ const hasCustomPermissions = computed(() => {
 const hasPermission = (permissionId) => {
   return user.value?.permissions?.features?.includes(permissionId) || false;
 };
+
+const { tpqIdentity, loadTpqIdentity } = useTpqIdentity();
 
 const isSidebarOpen = ref(false);
 const showProfileMenu = ref(false);
@@ -519,6 +548,7 @@ onMounted(() => {
     refreshLpjEligibility();
   }
   prefetchDashboardRoutes(router, authStore.user?.role);
+  if (authStore.isAuthenticated) loadTpqIdentity();
 });
 </script>
 
@@ -558,12 +588,16 @@ onMounted(() => {
   transform: translateX(0);
 }
 
+.sidebar-brand {
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--gray-100);
+}
+
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-lg);
-  border-bottom: 1px solid var(--gray-100);
+  padding: var(--space-lg) var(--space-lg) var(--space-sm);
   cursor: pointer;
   text-decoration: none;
   transition: opacity 0.2s ease;
@@ -583,6 +617,64 @@ onMounted(() => {
   font-weight: 700;
   font-size: 1.125rem;
   color: var(--primary);
+}
+
+.sidebar-nspq {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin: 0 var(--space-lg);
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--primary-dark);
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-nspq:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.sidebar-nspq:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.sidebar-nspq-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.sidebar-nspq-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.sidebar-nspq-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gray-500);
+}
+
+.sidebar-nspq-number {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sidebar-nspq-external {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--gray-400);
 }
 
 .sidebar-nav {

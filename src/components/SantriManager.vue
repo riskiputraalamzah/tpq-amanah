@@ -87,11 +87,27 @@
         <div class="roster-toolbar">
           <h2>Daftar Santri ({{ filtered.length }})</h2>
         </div>
+
+        <!-- Santri lama yang belum punya nomor induk (Hanya Admin) -->
+        <div v-if="adminMode && unnumberedCount > 0" class="ni-banner">
+          <div class="ni-banner-text">
+            <strong>{{ unnumberedCount }} santri belum memiliki nomor induk.</strong>
+            <span>Format: NSPQ-Tahun-Urut, contoh {{ exampleNomorInduk }}</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            :disabled="previewLoading"
+            @click="openNomorIndukPreview"
+          >
+            {{ previewLoading ? "Menyiapkan..." : "Buat Nomor Induk" }}
+          </button>
+        </div>
         <div class="filters">
           <input
             v-model="search"
             class="form-input"
-            placeholder="Cari nama santri..."
+            placeholder="Cari nama atau nomor induk..."
           />
           <select v-model="levelFilter" class="form-input filter-select">
             <option value="">Semua Jilid / Marhalah</option>
@@ -107,6 +123,76 @@
             <option value="lulus">Lulus</option>
           </select>
         </div>
+
+        <!-- Pratinjau Nomor Induk -->
+        <Teleport to="body">
+          <div
+            v-if="nomorIndukPreview"
+            class="modal-overlay"
+            @click.self="closeNomorIndukPreview"
+            @keydown.esc="closeNomorIndukPreview"
+          >
+            <div
+              class="modal glass-card ni-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="ni-modal-title"
+            >
+              <h3 id="ni-modal-title" class="ni-modal-title">Buat Nomor Induk Santri</h3>
+              <p class="ni-modal-text">
+                <strong>{{ nomorIndukPreview.items.length }} santri</strong> akan
+                mendapatkan nomor induk dengan NSPQ
+                <strong>{{ nomorIndukPreview.nspq }}</strong> dan tahun
+                <strong>{{ nomorIndukPreview.yearCode }}</strong>. Urutan: Jilid /
+                Marhalah tertinggi lebih dulu, lalu nama A–Z.
+              </p>
+              <p class="ni-modal-note">
+                Nomor induk bersifat tetap: tidak bisa diubah dan tidak dipakai
+                ulang, walaupun santri lulus, nonaktif, atau dihapus.
+              </p>
+              <div class="ni-preview-list">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>No. Induk</th>
+                      <th>Nama</th>
+                      <th>Jilid / Marhalah</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in nomorIndukPreview.items" :key="item.id">
+                      <td class="ni-number">{{ item.nomorInduk }}</td>
+                      <td>{{ item.name }}</td>
+                      <td>{{ levelName(item.currentClassId) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="modal-action-buttons">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  :disabled="generating"
+                  @click="closeNomorIndukPreview"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  :disabled="generating || nomorIndukPreview.items.length === 0"
+                  @click="generateNomorInduk"
+                >
+                  {{
+                    generating
+                      ? "Membuat nomor induk..."
+                      : `Buat ${nomorIndukPreview.items.length} Nomor Induk`
+                  }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
 
         <!-- Conflict Modal (Fixed Viewport Center via Teleport to body) -->
         <Teleport to="body">
@@ -171,15 +257,64 @@
             <thead>
               <tr>
                 <th>No</th>
-                <th>Nama</th>
-                <th>Jilid / Marhalah</th>
+                <th :aria-sort="ariaSort('nomorInduk')">
+                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'nomorInduk' }" @click="toggleSort('nomorInduk')">
+                    No. Induk
+                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path v-if="sortKey !== 'nomorInduk'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                      <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
+                      <path v-else d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                </th>
+                <th :aria-sort="ariaSort('name')">
+                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'name' }" @click="toggleSort('name')">
+                    Nama
+                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path v-if="sortKey !== 'name'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                      <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
+                      <path v-else d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                </th>
+                <th :aria-sort="ariaSort('level')">
+                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'level' }" @click="toggleSort('level')">
+                    Jilid / Marhalah
+                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path v-if="sortKey !== 'level'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                      <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
+                      <path v-else d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                </th>
                 <th>Status</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(row, index) in filtered" :key="row.id">
+              <tr v-for="(row, index) in sortedRows" :key="row.id">
                 <td>{{ index + 1 }}</td>
+                <td class="ni-cell">
+                  <template v-if="row.nomorInduk">
+                    <span class="ni-number">{{ row.nomorInduk }}</span>
+                    <button
+                      type="button"
+                      class="ni-copy"
+                      :aria-label="`Salin nomor induk ${row.name}`"
+                      :title="copiedId === row.id ? 'Tersalin' : 'Salin nomor induk'"
+                      @click="copyNomorInduk(row)"
+                    >
+                      <svg v-if="copiedId === row.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </button>
+                  </template>
+                  <span v-else class="ni-empty">Belum ada</span>
+                </td>
                 <td>
                   <template v-if="editingId === row.id">
                     <input
@@ -289,9 +424,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import api from "@/services/api";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import api, { clearApiCache } from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
+import { sortSantri } from "@/utils/santriSort";
 import { useAuthStore } from "@/stores/auth";
 import { useToast, useConfirm } from "@/composables/useToast";
 
@@ -330,6 +466,81 @@ const editingName = ref("");
 const editingLevel = ref("");
 const editingStatus = ref("aktif");
 const conflictSantri = ref(null);
+const nomorIndukPreview = ref(null);
+const previewLoading = ref(false);
+const generating = ref(false);
+const copiedId = ref(null);
+let copiedTimer = null;
+
+const unnumberedCount = computed(
+  () => santri.value.filter((row) => !row.nomorInduk).length,
+);
+
+const exampleNomorInduk = computed(
+  () =>
+    santri.value.find((row) => row.nomorInduk)?.nomorInduk ||
+    "411235151939-26-001",
+);
+
+const openNomorIndukPreview = async () => {
+  if (previewLoading.value) return;
+  previewLoading.value = true;
+  try {
+    clearApiCache("/santri/nomor-induk");
+    const { data } = await api.get("/santri/nomor-induk/preview");
+    if (!data.items?.length) {
+      success("Semua santri sudah memiliki nomor induk.");
+      await fetchData();
+      return;
+    }
+    nomorIndukPreview.value = data;
+    await nextTick();
+    document.querySelector(".ni-modal .btn-primary")?.focus();
+  } catch (error) {
+    showError(error.response?.data?.error || "Gagal menyiapkan pratinjau nomor induk.");
+  } finally {
+    previewLoading.value = false;
+  }
+};
+
+const closeNomorIndukPreview = () => {
+  if (!generating.value) nomorIndukPreview.value = null;
+};
+
+const generateNomorInduk = async () => {
+  if (generating.value) return;
+  generating.value = true;
+  try {
+    const { data } = await api.post("/santri/nomor-induk/generate", {}, {
+      timeout: 60000,
+    });
+    const assignedById = new Map((data.assigned || []).map((item) => [item.id, item]));
+    santri.value = santri.value.map((row) =>
+      assignedById.has(row.id) ? { ...row, ...assignedById.get(row.id) } : row,
+    );
+    nomorIndukPreview.value = null;
+    success(data.message || "Nomor induk berhasil dibuat.");
+  } catch (error) {
+    showError(error.response?.data?.error || "Gagal membuat nomor induk.");
+  } finally {
+    generating.value = false;
+  }
+};
+
+const copyNomorInduk = async (row) => {
+  try {
+    await navigator.clipboard.writeText(row.nomorInduk);
+    copiedId.value = row.id;
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => {
+      copiedId.value = null;
+    }, 1500);
+  } catch {
+    showError("Gagal menyalin. Salin nomor induk secara manual.");
+  }
+};
+
+onBeforeUnmount(() => clearTimeout(copiedTimer));
 
 const statusLabel = (status) => {
   const s = String(status || "aktif").toLowerCase();
@@ -412,14 +623,17 @@ const levelName = (classId) => {
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase();
+  const qDigits = q.replace(/\D/g, "");
   return santri.value.filter((row) => {
-    if (
-      q &&
-      !String(row.name || "")
-        .toLowerCase()
-        .includes(q)
-    )
-      return false;
+    if (q) {
+      const nomorInduk = String(row.nomorInduk || "");
+      const matches =
+        String(row.name || "").toLowerCase().includes(q) ||
+        nomorInduk.includes(q) ||
+        // "26001" or "26 001" also finds 411235151939-26-001
+        (qDigits.length >= 3 && nomorInduk.replace(/\D/g, "").includes(qDigits));
+      if (!matches) return false;
+    }
     if (levelFilter.value === "__none") {
       if (row.currentClassId) return false;
     } else if (levelFilter.value) {
@@ -432,6 +646,26 @@ const filtered = computed(() => {
     return true;
   });
 });
+
+// Sorting: Nama (default), No. Induk, and Jilid 1-6 then Marhalah. Empty values always stay at the bottom.
+const sortKey = ref("name");
+const sortDir = ref("asc");
+
+const toggleSort = (key) => {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === "asc" ? "desc" : "asc";
+  } else {
+    sortKey.value = key;
+    sortDir.value = "asc";
+  }
+};
+
+const ariaSort = (key) =>
+  sortKey.value !== key ? "none" : sortDir.value === "asc" ? "ascending" : "descending";
+
+const sortedRows = computed(() =>
+  sortSantri(filtered.value, sortKey.value, sortDir.value),
+);
 
 const fetchData = async () => {
   loading.value = true;
@@ -656,6 +890,45 @@ onMounted(fetchData);
   font-weight: 600;
   color: var(--gray-700);
   background: var(--gray-50);
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sort-btn:hover,
+.sort-btn:focus-visible {
+  background: var(--gray-200);
+}
+
+.sort-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.sort-icon {
+  flex-shrink: 0;
+  color: var(--gray-400);
+}
+
+.sort-btn.active {
+  color: var(--primary-dark);
+}
+
+.sort-btn.active .sort-icon {
+  color: var(--primary);
 }
 
 .btn {
@@ -901,6 +1174,123 @@ onMounted(fetchData);
   font-size: 0.88rem;
   line-height: 1.45;
   color: var(--gray-700);
+}
+
+.ni-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin: var(--space-md) 0 var(--space-lg);
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.ni-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.88rem;
+  color: var(--primary-dark);
+  min-width: 0;
+}
+
+.ni-banner-text span {
+  color: var(--gray-600);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.ni-cell {
+  white-space: nowrap;
+}
+
+.ni-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-800);
+  white-space: nowrap;
+}
+
+.ni-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 4px;
+  vertical-align: middle;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--gray-500);
+  cursor: pointer;
+}
+
+.ni-copy:hover,
+.ni-copy:focus-visible {
+  background: var(--gray-100);
+  color: var(--primary-dark);
+}
+
+.ni-empty {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+}
+
+.ni-modal {
+  max-width: 640px !important;
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.ni-modal-title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.ni-modal-text {
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--gray-700);
+}
+
+.ni-modal-note {
+  margin: 0 0 16px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+
+.ni-preview-list {
+  max-height: 45vh;
+  overflow: auto;
+  margin-bottom: 20px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+.ni-preview-list .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ni-preview-list .data-table th,
+.ni-preview-list .data-table td {
+  padding: 8px 12px;
 }
 
 .editing-name-input {
