@@ -1258,13 +1258,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: var(--space-xl) 20px;
-  background: linear-gradient(145deg, #059669 0%, #047857 60%, #065f46 100%);
+  background: linear-gradient(145deg, #0a5c40 0%, #053d2c 100%);
   border-radius: var(--radius-xl);
   color: white;
   width: 140px;
   flex-shrink: 0;
   align-self: stretch;
-  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.3), 0 6px 18px rgba(3, 41, 29, 0.22);
 }
 
 @media (max-width: 768px) {
@@ -1280,7 +1280,7 @@ onMounted(async () => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  opacity: 0.9;
+  color: #fcd34d;
 }
 
 .date-number {
@@ -1877,7 +1877,7 @@ onMounted(async () => {
 
 .status-badge.hadir {
   background: rgba(76, 175, 80, 0.15);
-  color: #388e3c;
+  color: #168058;
 }
 
 .status-badge.tidak {
@@ -2082,7 +2082,7 @@ onMounted(async () => {
 }
 
 .calendar-cell.hadir .cell-status {
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .calendar-cell.tidak .cell-status {
@@ -2388,7 +2388,7 @@ onMounted(async () => {
 
 .popup-status.hadir {
   background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .popup-status.tidak_hadir,
@@ -2431,7 +2431,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(46, 125, 50, 0.08));
   border-bottom: 1px solid rgba(76, 175, 80, 0.2);
   font-size: 0.85rem;
-  color: #2e7d32;
+  color: #0f6b4a;
   font-weight: 500;
 }
 
@@ -2835,7 +2835,7 @@ onMounted(async () => {
 }
 
 .badge-success-pill {
-  background: #2e7d32;
+  background: #0f6b4a;
   color: white;
   padding: 2px 10px;
   border-radius: var(--radius-full);

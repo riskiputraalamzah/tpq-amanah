@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    // Light only: `dark:` utilities (public savings page) apply only under a .dark class, which nothing sets,
+    // so the OS dark-mode preference no longer changes the app.
+    darkMode: "class",
     content: [
         "./index.html",
         "./src/**/*.{vue,js,ts,jsx,tsx}",

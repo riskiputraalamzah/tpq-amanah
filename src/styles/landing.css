@@ -1,7 +1,8 @@
 /* Landing page design language ("mihrab light"): one centre axis, eight-point star ornament, emerald and gold,
    scalloped arch fringes where an emerald band meets the ivory page. Everything is prefixed lp- / hero-. */
 
-.lp {
+.lp,
+.dashboard-layout {
   --lp-ivory: #fbf9f3;
   --lp-emerald-0: #03291d;
   --lp-emerald-1: #053d2c;
@@ -15,6 +16,9 @@
   --lp-fringe-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 0 H36 V2 C36 12 26 18 18 22 C10 18 0 12 0 2 Z' fill='%2303291d'/%3E%3C/svg%3E");
   --lp-fringe-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 22 H36 V20 C36 10 26 4 18 0 C10 4 0 10 0 20 Z' fill='%23fbf9f3'/%3E%3C/svg%3E");
   --lp-fringe-up-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 22 H36 V20 C36 10 26 4 18 0 C10 4 0 10 0 20 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+}
+
+.lp {
   background: #fff;
   color: var(--lp-ink);
 }
@@ -103,6 +107,15 @@
   background-image: var(--lp-fringe-up);
   background-position: center bottom;
   z-index: 2;
+}
+
+/* text colours: headings and strong text in ink, running text in the softer body tone */
+.lp-ink {
+  color: var(--lp-ink);
+}
+
+.lp-body {
+  color: var(--lp-body);
 }
 
 /* ------------------------------------------------------------ headings */

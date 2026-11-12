@@ -74,15 +74,20 @@ test("session workflow summary derives from server data only", () => {
 
 test("KBM history exposes Absensi and Jurnal actions with server states", () => {
   const src = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/KbmView.vue"), "utf8");
-  assert.match(src, /Absensi Santri/);
-  assert.match(src, /Jurnal/);
-  assert.match(src, /status-chips/);
-  assert.match(src, /attChipLabel/);
-  assert.match(src, /journalChipLabel/);
-  assert.match(src, /Absensi Belum diisi/);
-  assert.match(src, /Jurnal Tersimpan/);
-  assert.match(src, /btn btn-primary btn-sm/);
-  assert.match(src, /btn btn-secondary btn-sm/);
+  // each history card carries two task blocks, both driven by the loaded session workflow
+  assert.match(src, /Presensi Santri/);
+  assert.match(src, /Jurnal Mengajar/);
+  assert.match(src, /workflowOf\(session\)\.attFilled/);
+  assert.match(src, /workflowOf\(session\)\.journalFilled/);
+  assert.match(src, /Belum Diisi/);
+  assert.match(src, /Lengkap/);
+  assert.match(src, /Isi Absensi Santri/);
+  assert.match(src, /Ubah Absensi/);
+  assert.match(src, /Ubah Jurnal/);
+  assert.match(src, /goAttendance\(session\.id\)/);
+  assert.match(src, /isWorkflowComplete/);
+  // filter by completeness
+  assert.match(src, /Perlu Dilengkapi/);
 });
 
 test("KBM history adds no per-row API round-trip", () => {
@@ -93,7 +98,12 @@ test("KBM history adds no per-row API round-trip", () => {
 
 test("LPJ day actions keep primary hierarchy without duplicate editors", () => {
   const src = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/LpjDetailView.vue"), "utf8");
-  assert.match(src, /dayAction\(day\)\.primary/);
+  // the day row shows one quick action, taken from the shared resolver, only when it is a real link
+  assert.match(src, /dayAction\(day\)\.kind === ['"]link['"]/);
+  assert.match(src, /:to="dayAction\(day\)\.to"/);
+  assert.match(src, /dayAction\(day\)\.label/);
+  const util = fs.readFileSync(path.join(here, "../src/utils/lpjState.js"), "utf8");
+  assert.match(util, /primary: true/);
   assert.ok(!src.includes("studentAttendances:") || src.includes("summarizeStudentAttendance"), "no attendance editor in LPJ detail");
 });
 

@@ -308,7 +308,7 @@ onMounted(() => {
   border-radius: var(--radius-xl);
   background: white;
   padding: 8px;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.15);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.15);
   border: 1px solid var(--gray-200);
 }
 

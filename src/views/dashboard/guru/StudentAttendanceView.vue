@@ -861,7 +861,7 @@ onMounted(fetchData);
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid var(--gray-200, #e5e7eb);
   border-radius: 10px;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   font-weight: 600;
   font-size: 0.88rem;
   cursor: pointer;
@@ -870,9 +870,9 @@ onMounted(fetchData);
 }
 
 .btn-back-kbm:hover {
-  background: var(--primary, #2e7d32);
+  background: var(--primary, #0f6b4a);
   color: #ffffff;
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   transform: translateX(-3px);
   text-decoration: none;
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
@@ -915,7 +915,7 @@ onMounted(fetchData);
 
 .nav-tab.active {
   background: #ffffff;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   font-weight: 700;
 }
@@ -925,7 +925,7 @@ onMounted(fetchData);
   border-radius: 999px;
   font-size: 0.75rem;
   background: rgba(46, 125, 50, 0.12);
-  color: #1b5e20;
+  color: #0a5c40;
   font-weight: 700;
 }
 
@@ -937,7 +937,7 @@ onMounted(fetchData);
 
 .nav-tab:hover .tab-arrow-icon {
   transform: translateX(3px);
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
 }
 
 /* --- Glass Cards & Layout --- */
@@ -991,7 +991,7 @@ onMounted(fetchData);
   height: 40px;
   border-radius: 10px;
   background: rgba(46, 125, 50, 0.1);
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1001,7 +1001,7 @@ onMounted(fetchData);
 .session-card-header h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   margin: 0 0 2px 0;
 }
 
@@ -1079,7 +1079,7 @@ onMounted(fetchData);
 .tally-percent {
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
 }
 
 .tally-progress-track {
@@ -1093,7 +1093,7 @@ onMounted(fetchData);
 .tally-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--primary-gradient, linear-gradient(90deg, #1b5e20, #43a047));
+  background: var(--primary-gradient, linear-gradient(90deg, #0a5c40, #43a047));
   transition: width 0.3s ease;
 }
 
@@ -1121,10 +1121,10 @@ onMounted(fetchData);
 
 .tally-chip.hadir {
   background: rgba(46, 125, 50, 0.1);
-  color: #1b5e20;
+  color: #0a5c40;
 }
 .tally-chip.hadir .dot {
-  background: #2e7d32;
+  background: #0f6b4a;
 }
 
 .tally-chip.izin {
@@ -1181,14 +1181,14 @@ onMounted(fetchData);
 .roster-title-box h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   margin: 0;
 }
 
 .roster-class-pill {
   padding: 3px 10px;
   background: rgba(46, 125, 50, 0.1);
-  color: #1b5e20;
+  color: #0a5c40;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
@@ -1200,7 +1200,7 @@ onMounted(fetchData);
   gap: 6px;
   padding: 9px 16px;
   background: #e8f5e9;
-  color: #1b5e20;
+  color: #0a5c40;
   border: 1.5px solid rgba(46, 125, 50, 0.3);
   border-radius: 10px;
   font-weight: 700;
@@ -1211,10 +1211,10 @@ onMounted(fetchData);
 }
 
 .btn-all-present:hover:not(:disabled) {
-  background: #1b5e20;
+  background: #0a5c40;
   color: #ffffff;
-  border-color: #1b5e20;
-  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
+  border-color: #0a5c40;
+  box-shadow: 0 4px 14px rgba(10, 92, 64, 0.25);
   transform: translateY(-1px);
 }
 
@@ -1278,7 +1278,7 @@ onMounted(fetchData);
 }
 
 .student-avatar.avatar-hadir {
-  background: #2e7d32;
+  background: #0f6b4a;
 }
 .student-avatar.avatar-izin {
   background: #0284c7;
@@ -1330,10 +1330,10 @@ onMounted(fetchData);
 }
 
 .seg-btn.active.seg-hadir {
-  background: #1b5e20;
+  background: #0a5c40;
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 2px 6px rgba(27, 94, 32, 0.28);
+  box-shadow: 0 2px 6px rgba(10, 92, 64, 0.28);
 }
 
 .seg-btn.active.seg-izin {
@@ -1405,7 +1405,7 @@ onMounted(fetchData);
 
 .save-saved {
   background: rgba(46, 125, 50, 0.1);
-  color: #1b5e20;
+  color: #0a5c40;
   border: 1px solid rgba(46, 125, 50, 0.2);
 }
 
@@ -1450,20 +1450,20 @@ onMounted(fetchData);
   justify-content: center;
   gap: 10px;
   padding: 14px 24px;
-  background: var(--primary-gradient, linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%));
+  background: var(--primary-gradient, linear-gradient(135deg, #0a5c40 0%, #0f6b4a 100%));
   color: #ffffff;
   border: none;
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(27, 94, 32, 0.28);
+  box-shadow: 0 4px 16px rgba(10, 92, 64, 0.28);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-save-attendance:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(27, 94, 32, 0.38);
+  box-shadow: 0 8px 24px rgba(10, 92, 64, 0.38);
   filter: brightness(1.05);
 }
 
@@ -1496,7 +1496,7 @@ onMounted(fetchData);
 
 .alert-success {
   background: rgba(76, 175, 80, 0.1);
-  color: #2e7d32;
+  color: #0f6b4a;
   border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
@@ -1676,7 +1676,7 @@ onMounted(fetchData);
 .btn-rename-santri:hover {
   background: rgba(46, 125, 50, 0.1);
   border-color: rgba(46, 125, 50, 0.25);
-  color: var(--primary, #2e7d32);
+  color: var(--primary, #0f6b4a);
 }
 
 .roster-name-row {
@@ -1705,7 +1705,7 @@ onMounted(fetchData);
   height: 42px;
   border-radius: 10px;
   background: rgba(46, 125, 50, 0.12);
-  color: var(--primary, #2e7d32);
+  color: var(--primary, #0f6b4a);
   display: flex;
   align-items: center;
   justify-content: center;

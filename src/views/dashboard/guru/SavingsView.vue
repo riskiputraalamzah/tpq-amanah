@@ -725,7 +725,7 @@ onMounted(() => {
 }
 
 .guide-toggle:hover {
-  background: rgba(27, 94, 32, 0.04);
+  background: rgba(10, 92, 64, 0.04);
 }
 
 .guide-toggle-left {
@@ -797,7 +797,7 @@ onMounted(() => {
   gap: var(--space-md);
   align-items: flex-start;
   padding: var(--space-md) var(--space-lg);
-  background: rgba(27, 94, 32, 0.04);
+  background: rgba(10, 92, 64, 0.04);
   border-radius: var(--radius-lg);
   border-left: 3px solid var(--primary);
 }
@@ -892,7 +892,7 @@ onMounted(() => {
 
 .icon-active {
   background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .icon-balance {
@@ -988,7 +988,7 @@ onMounted(() => {
 
 .book-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(27, 94, 32, 0.14);
+  box-shadow: 0 16px 36px rgba(10, 92, 64, 0.14);
 }
 
 .book-card.closed {
@@ -1011,7 +1011,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -1242,12 +1242,12 @@ onMounted(() => {
   height: 76px;
   border-radius: 50%;
   margin: 0 auto var(--space-lg);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(27, 94, 32, 0.08);
+  box-shadow: 0 4px 16px rgba(10, 92, 64, 0.08);
 }
 
 .empty-state h3 {
@@ -1277,7 +1277,7 @@ onMounted(() => {
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.3);
   white-space: nowrap;
   border: none;
   cursor: pointer;
@@ -1285,7 +1285,7 @@ onMounted(() => {
 
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(27, 94, 32, 0.4);
+  box-shadow: 0 8px 25px rgba(10, 92, 64, 0.4);
 }
 
 .m-auto {
@@ -1606,7 +1606,7 @@ onMounted(() => {
   padding: 4px 10px;
   border-radius: var(--radius-full);
   background: rgba(76, 175, 80, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -1615,7 +1615,7 @@ onMounted(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2e7d32;
+  background: #0f6b4a;
   box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
 }
 

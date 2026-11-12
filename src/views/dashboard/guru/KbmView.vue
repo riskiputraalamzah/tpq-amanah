@@ -1155,7 +1155,7 @@ onMounted(() => {
 .header-title-row h1 {
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   margin: 0;
   line-height: 1.2;
 }
@@ -1165,7 +1165,7 @@ onMounted(() => {
   font-weight: 600;
   padding: 3px 10px;
   background: rgba(46, 125, 50, 0.1);
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   border-radius: 999px;
   border: 1px solid rgba(46, 125, 50, 0.2);
 }
@@ -1212,7 +1212,7 @@ onMounted(() => {
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 2px 7px;
-  background: var(--primary, #2e7d32);
+  background: var(--primary, #0f6b4a);
   color: #ffffff;
   border-radius: 4px;
   margin-bottom: 3px;
@@ -1221,7 +1221,7 @@ onMounted(() => {
 .banner-content h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   margin: 0 0 3px 0;
 }
 
@@ -1305,7 +1305,7 @@ onMounted(() => {
 
 .metric-icon.total {
   background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .metric-icon.today {
@@ -1449,14 +1449,14 @@ onMounted(() => {
   height: 36px;
   border-radius: 9px;
   background: rgba(46, 125, 50, 0.1);
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   flex-shrink: 0;
 }
 
 .card-header-row h2 {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   margin: 0;
   line-height: 1.2;
 }
@@ -1552,7 +1552,7 @@ onMounted(() => {
 
 .form-input:focus {
   outline: none;
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
 }
 
@@ -1594,7 +1594,7 @@ onMounted(() => {
 .checkbox-label input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary-dark, #2e7d32);
+  accent-color: var(--primary-dark, #0f6b4a);
   cursor: pointer;
 }
 
@@ -1636,7 +1636,7 @@ onMounted(() => {
 
 .alert-success {
   background: rgba(46, 125, 50, 0.08);
-  color: #1b5e20;
+  color: #0a5c40;
   border: 1px solid rgba(46, 125, 50, 0.2);
 }
 
@@ -1672,7 +1672,7 @@ onMounted(() => {
 }
 
 .submit-kbm-btn.is-eligible {
-  background: var(--primary-gradient, linear-gradient(135deg, #1b5e20 0%, #2e7d32 50%, #388e3c 100%));
+  background: var(--primary-gradient, linear-gradient(135deg, #0a5c40 0%, #0f6b4a 50%, #168058 100%));
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(46, 125, 50, 0.25);
 }
@@ -1711,7 +1711,7 @@ onMounted(() => {
 .history-title-wrap h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   margin: 0;
   line-height: 1.2;
 }
@@ -1761,7 +1761,7 @@ onMounted(() => {
 
 .pill-tab-btn.active {
   background: #ffffff;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -1855,7 +1855,7 @@ onMounted(() => {
 }
 
 .session-structured-card.is-complete {
-  border-left-color: #2e7d32;
+  border-left-color: #0f6b4a;
 }
 
 .session-structured-card.is-pending {
@@ -1977,7 +1977,7 @@ onMounted(() => {
   font-size: 0.76rem;
   font-weight: 700;
   background: rgba(46, 125, 50, 0.1);
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   padding: 2px 8px;
   border-radius: 6px;
   white-space: nowrap;
@@ -2147,15 +2147,15 @@ onMounted(() => {
 
 /* Primary when still pending */
 .btn-task-submit {
-  background: #2e7d32;
+  background: #0f6b4a;
   color: #ffffff;
-  border: 1px solid #2e7d32;
+  border: 1px solid #0f6b4a;
   box-shadow: 0 2px 6px rgba(46, 125, 50, 0.2);
 }
 
 .btn-task-submit:hover {
-  background: #1b5e20;
-  border-color: #1b5e20;
+  background: #0a5c40;
+  border-color: #0a5c40;
 }
 
 /* Soft edit when already complete */
@@ -2245,7 +2245,7 @@ onMounted(() => {
 .session-modal h2 {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--primary-dark, #2e7d32);
+  color: var(--primary-dark, #0f6b4a);
   margin: 0 0 8px 0;
 }
 

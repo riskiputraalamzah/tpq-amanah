@@ -1,401 +1,171 @@
 <template>
-  <div
-    class="flex items-center justify-center p-4 min-h-dvh bg-gradient-to-br from-primary-100 via-primary-50 to-green-50 islamic-pattern"
+  <main
+    class="relative flex items-center justify-center px-4 py-10 lp lp-emerald lp-on-dark isolate min-h-dvh"
   >
-    <div class="grid items-center w-full max-w-md gap-8">
-      <!-- Login Card -->
-      <div class="w-full p-6 glass-card-solid sm:p-8 animate-slide-up">
-        <!-- Logo -->
-        <div class="mb-6 text-center">
-          <img
-            :src="logoUrl"
-            alt="TPQ AMANAH"
-            class="w-16 h-16 mx-auto mb-3 drop-shadow-lg"
-          />
-          <h1 class="text-2xl font-bold text-primary-700">Login Dashboard</h1>
-          <p class="mt-1 text-gray-500">Masuk untuk mengakses dashboard</p>
+    <div class="w-full max-w-[26rem]">
+      <div class="login-card login-rise">
+        <!-- The mihrab dome carries the brand -->
+        <div class="login-dome">
+          <img :src="logoUrl" alt="TPQ AMANAH" width="64" height="64" class="w-16 h-16" />
+          <h1 class="mt-3 text-2xl font-extrabold tracking-tight lp-ink">Login Dashboard</h1>
+          <p class="mt-1 text-sm lp-body">Masuk untuk mengakses dashboard</p>
         </div>
 
-        <!-- Notice if coming from quick attendance account switch -->
-        <div
-          v-if="route.query.notice === 'switched_account'"
-          class="p-3 mb-4 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2"
-        >
-          <span>ℹ️</span>
-          <span>Anda telah logout dari sesi sebelumnya. Silakan login dengan akun yang sesuai.</span>
-        </div>
+        <div class="px-6 pb-8 sm:px-9">
+          <OrnamentRule class="mt-5 mb-6" />
 
-        <!-- Tabs -->
-        <div class="flex p-1 mb-6 bg-gray-100 rounded-xl">
-          <button
-            @click="activeTab = 'credentials'"
-            class="flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200"
-            :class="
-              activeTab === 'credentials'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            "
+          <!-- Notice if coming from quick attendance account switch -->
+          <div
+            v-if="route.query.notice === 'switched_account'"
+            role="status"
+            class="flex items-start gap-2.5 p-3 mb-5 text-xs font-medium border rounded-xl border-amber-700/30 bg-amber-50 text-amber-900"
           >
-            Admin / Guru
-          </button>
-          <button
-            @click="activeTab = 'google'"
-            class="flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200"
-            :class="
-              activeTab === 'google'
-                ? 'bg-white text-primary-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            "
-          >
-            Santri
-          </button>
-        </div>
-
-        <!-- Login Form - Admin/Guru -->
-        <form
-          v-if="activeTab === 'credentials'"
-          @submit.prevent="handleCredentialsLogin"
-          class="space-y-4"
-        >
-          <div>
-            <label class="block mb-2 text-sm font-medium text-gray-700"
-              >Username</label
-            >
-            <input
-              v-model="username"
-              type="text"
-              class="input-field"
-              placeholder="Masukkan username"
-              required
-            />
+            <i class="lp-diamond mt-1 text-amber-600"></i>
+            <span>Anda telah logout dari sesi sebelumnya. Silakan login dengan akun yang sesuai.</span>
           </div>
-          <div>
-            <label class="block mb-2 text-sm font-medium text-gray-700"
-              >Password</label
+
+          <!-- Account type -->
+          <div role="tablist" aria-label="Jenis akun" class="login-tabs">
+            <button
+              id="tab-credentials"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'credentials'"
+              aria-controls="panel-credentials"
+              @click="activeTab = 'credentials'"
+              :class="{ 'is-active': activeTab === 'credentials' }"
             >
-            <div class="relative">
+              Admin / Guru
+            </button>
+            <button
+              id="tab-google"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'google'"
+              aria-controls="panel-google"
+              @click="activeTab = 'google'"
+              :class="{ 'is-active': activeTab === 'google' }"
+            >
+              Santri
+            </button>
+          </div>
+
+          <!-- Login Form - Admin/Guru -->
+          <form
+            v-if="activeTab === 'credentials'"
+            id="panel-credentials"
+            role="tabpanel"
+            aria-labelledby="tab-credentials"
+            @submit.prevent="handleCredentialsLogin"
+            class="mt-6 space-y-4"
+          >
+            <div>
+              <label for="login-username" class="login-label">Username</label>
               <input
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                class="pr-12 input-field"
-                placeholder="Masukkan password"
+                id="login-username"
+                v-model="username"
+                type="text"
+                class="login-input"
+                placeholder="Masukkan username"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
                 required
               />
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute text-gray-400 -translate-y-1/2 right-4 top-1/2 hover:text-gray-600"
-              >
-                <svg
-                  v-if="!showPassword"
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
-                <svg
-                  v-else
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                  />
-                </svg>
-              </button>
             </div>
-          </div>
+            <div>
+              <label for="login-password" class="login-label">Password</label>
+              <div class="relative">
+                <input
+                  id="login-password"
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="pr-12 login-input"
+                  placeholder="Masukkan password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                  :aria-pressed="showPassword"
+                  class="login-eye"
+                >
+                  <svg v-if="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /> </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /> </svg>
+                </button>
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            class="w-full py-3 btn-primary"
-            :disabled="loading"
+            <button type="submit" class="w-full mt-2 lp-btn-gold" :disabled="loading">
+              <span v-if="loading" class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /> </svg>
+                Memproses...
+              </span>
+              <span v-else>Masuk</span>
+            </button>
+          </form>
+
+          <!-- Google Login - Santri -->
+          <div
+            v-else
+            id="panel-google"
+            role="tabpanel"
+            aria-labelledby="tab-google"
+            class="mt-6 space-y-5"
           >
-            <span v-if="loading" class="flex items-center justify-center gap-2">
-              <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                />
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Memproses...
-            </span>
-            <span v-else>Masuk</span>
-          </button>
-        </form>
-
-        <!-- Google Login - Santri -->
-        <div v-else class="space-y-6">
-          <div class="text-center">
-            <div
-              class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-blue-50 to-green-50"
-            >
-              <svg class="w-8 h-8" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-            </div>
-            <p class="font-medium text-gray-600">
+            <p class="text-sm font-medium text-center lp-body">
               Santri gunakan akun Google untuk login
+            </p>
+
+            <button
+              type="button"
+              @click="handleGoogleLogin"
+              class="w-full google-login-btn"
+              :disabled="loading"
+            >
+              <div class="google-btn-inner">
+                <div class="google-icon-wrapper">
+                  <svg v-if="!loading" class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true"> <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /> <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /> <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /> <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /> </svg>
+                  <svg v-else class="w-5 h-5 text-gray-600 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /> </svg>
+                </div>
+                <span class="google-btn-text">{{
+                  loading ? "Memproses..." : "Masuk dengan Google"
+                }}</span>
+                <svg class="w-5 h-5 text-amber-700 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /> </svg>
+              </div>
+            </button>
+
+            <p class="text-xs text-center lp-body">
+              Login menggunakan akun Google yang terdaftar di TPQ
             </p>
           </div>
 
-          <button
-            @click="handleGoogleLogin"
-            class="w-full google-login-btn"
-            :disabled="loading"
+          <!-- Error Message -->
+          <div
+            v-if="error"
+            role="alert"
+            class="flex items-center gap-3 p-4 mt-5 text-red-700 border border-red-200 bg-red-50 rounded-xl animate-slide-down"
           >
-            <div class="google-btn-inner">
-              <div class="google-icon-wrapper">
-                <svg v-if="!loading" class="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <svg
-                  v-else
-                  class="w-5 h-5 text-gray-600 animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  />
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-              </div>
-              <span class="google-btn-text">{{
-                loading ? "Memproses..." : "Masuk dengan Google"
-              }}</span>
-              <svg
-                class="w-5 h-5 text-gray-400 transition-transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </button>
-
-          <p class="text-xs text-center text-gray-400">
-            Login menggunakan akun Google yang terdaftar di TPQ
-          </p>
-        </div>
-
-        <!-- Error Message -->
-        <div
-          v-if="error"
-          class="flex items-center gap-3 p-4 mt-4 text-red-600 border border-red-200 bg-red-50 rounded-xl animate-slide-down"
-        >
-          <svg
-            class="flex-shrink-0 w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span class="text-sm">{{ error }}</span>
-        </div>
-
-        <!-- Back Link -->
-        <div class="pt-6 mt-6 text-center border-t border-gray-200">
-          <router-link
-            to="/"
-            class="inline-flex items-center gap-2 text-gray-500 transition-colors hover:text-primary-600"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Kembali ke Beranda
-          </router-link>
+            <svg class="flex-shrink-0 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg>
+            <span class="text-sm">{{ error }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Info Panel -->
-      <div
-        class="order-1 hidden text-white lg:order-2 animate-slide-up"
-        style="animation-delay: 100ms"
-      >
-        <h2 class="mb-4 text-3xl font-bold lg:text-4xl text-primary-800">
-          Selamat Datang!
-        </h2>
-        <p class="mb-8 text-primary-700/80">
-          Akses dashboard TPQ AMANAH untuk:
-        </p>
-
-        <div class="space-y-4">
-          <div class="p-5 glass-card bg-white/60">
-            <div class="flex items-start gap-4">
-              <div
-                class="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600"
-              >
-                <svg
-                  class="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-primary-800">Admin</h3>
-                <p class="text-sm text-gray-600">
-                  Kelola users, konten, dan data TPQ
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-5 glass-card bg-white/60">
-            <div class="flex items-start gap-4">
-              <div
-                class="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600"
-              >
-                <svg
-                  class="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-primary-800">Guru</h3>
-                <p class="text-sm text-gray-600">
-                  Absensi online dan input nilai ujian
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-5 glass-card bg-white/60">
-            <div class="flex items-start gap-4">
-              <div
-                class="flex items-center justify-center flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600"
-              >
-                <svg
-                  class="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-primary-800">Santri</h3>
-                <p class="text-sm text-gray-600">
-                  Lihat nilai dan informasi pribadi
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Back Link -->
+      <div class="mt-6 text-center">
+        <router-link
+          to="/"
+          class="inline-flex items-center gap-2 min-h-11 px-3 text-sm font-medium transition-colors rounded-lg text-emerald-100/85 hover:text-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /> </svg>
+          Kembali ke Beranda
+        </router-link>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -403,6 +173,8 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { prefetchWhenIdle } from "@/utils/prefetch";
+import OrnamentRule from "@/components/landing/OrnamentRule.vue";
+import "@/styles/landing.css";
 
 const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
@@ -473,49 +245,177 @@ const handleGoogleLogin = async () => {
 </script>
 
 <style scoped>
-.google-login-btn {
+/* Login: a mihrab-shaped card on the emerald ground, same language as the landing page */
+.login-card {
   position: relative;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 12rem 12rem 1.75rem 1.75rem;
+  border: 1px solid rgba(252, 211, 77, 0.5);
+  background: var(--lp-ivory);
+  box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.65), 0 0 0 6px rgba(252, 211, 77, 0.06);
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-brown);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.06;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 55%);
+  mask-image: linear-gradient(180deg, #000, transparent 55%);
+}
+
+.login-card::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 11.5rem 11.5rem 1.4rem 1.4rem;
+  border: 1px solid rgba(180, 83, 9, 0.16);
+  pointer-events: none;
+}
+
+.login-dome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3.25rem 1.5rem 0;
+  text-align: center;
+}
+
+.login-tabs {
+  display: flex;
+  gap: 4px;
   padding: 4px;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  background: rgba(255, 251, 235, 0.7);
+}
+
+.login-tabs button {
+  flex: 1;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 0.65rem;
+  font-weight: 600;
+  color: #5b6b62;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-tabs button:hover:not(.is-active) {
+  color: var(--lp-ink);
+}
+
+.login-tabs button.is-active {
+  background: #fff;
+  color: #065f46;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 6px 14px -8px rgba(5, 61, 44, 0.5), 0 0 0 1px rgba(180, 83, 9, 0.28);
+}
+
+.login-tabs button:focus-visible {
+  outline: 2px solid var(--lp-gold-deep);
+  outline-offset: 2px;
+}
+
+.login-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--lp-ink);
+}
+
+.login-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(180, 83, 9, 0.3);
+  background: #fff;
+  color: var(--lp-ink);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-input::placeholder {
+  color: #8a968f;
+}
+
+.login-input:hover {
+  border-color: rgba(180, 83, 9, 0.55);
+}
+
+.login-input:focus {
+  border-color: #047857;
+  box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.16);
+}
+
+.login-eye {
+  position: absolute;
+  top: 50%;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translateY(-50%);
+  border-radius: 0.6rem;
+  color: #7a8680;
+  transition: color 0.2s ease;
+}
+
+.login-eye:hover {
+  color: var(--lp-ink);
+}
+
+.login-eye:focus-visible {
+  outline: 2px solid var(--lp-gold-deep);
+  outline-offset: 1px;
+}
+
+.lp-btn-gold:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.google-login-btn {
+  width: 100%;
+  border: 1px solid rgba(180, 83, 9, 0.32);
+  border-radius: 0.9rem;
+  padding: 3px;
+  background: #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.08),
-    0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.google-login-btn:hover {
-  border-color: #10b981;
-  box-shadow:
-    0 10px 25px -5px rgba(16, 185, 129, 0.15),
-    0 8px 10px -6px rgba(16, 185, 129, 0.1);
-  transform: translateY(-2px);
+.google-login-btn:hover:not(:disabled) {
+  border-color: #047857;
+  box-shadow: 0 14px 28px -16px rgba(5, 61, 44, 0.55);
+  transform: translateY(-1px);
 }
 
-.google-login-btn:active {
-  transform: translateY(0);
+.google-login-btn:focus-visible {
+  outline: 2px solid var(--lp-gold-deep);
+  outline-offset: 3px;
 }
 
 .google-login-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
 }
 
 .google-btn-inner {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
-  background: white;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.google-login-btn:hover .google-btn-inner {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  padding: 11px 16px;
+  border-radius: 0.7rem;
+  background: #fff;
 }
 
 .google-icon-wrapper {
@@ -524,16 +424,34 @@ const handleGoogleLogin = async () => {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-radius: 10px;
   flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--lp-ivory);
+  box-shadow: 0 0 0 1px rgba(180, 83, 9, 0.18);
 }
 
 .google-btn-text {
   flex: 1;
-  font-weight: 600;
   font-size: 15px;
-  color: #374151;
+  font-weight: 600;
+  color: var(--lp-ink);
   text-align: left;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .login-rise {
+    animation: login-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

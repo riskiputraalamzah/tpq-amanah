@@ -821,7 +821,7 @@ onMounted(loadAll)
 
 .chip.ok {
   background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .chip.warn {

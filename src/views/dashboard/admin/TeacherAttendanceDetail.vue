@@ -687,7 +687,7 @@ onMounted(async () => {
 }
 
 .stat-box.hadir .stat-value {
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .stat-box.tidak .stat-value {
@@ -863,7 +863,7 @@ onMounted(async () => {
 }
 
 .calendar-cell.hadir .cell-status {
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .calendar-cell.tidak .cell-status {
@@ -979,7 +979,7 @@ onMounted(async () => {
 
 .status-badge.hadir {
   background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .status-badge.tidak_hadir {
@@ -1126,7 +1126,7 @@ onMounted(async () => {
 .status-btn-small.hadir.active {
   border-color: #4caf50;
   background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .status-btn-small.tidak:hover,

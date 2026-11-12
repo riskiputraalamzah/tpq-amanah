@@ -89,7 +89,7 @@ onMounted(fetchPeriods)
 
 .period-card { padding: var(--space-xl); background: rgba(255,255,255,0.9); position: relative; }
 .period-status { position: absolute; top: var(--space-md); right: var(--space-md); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); font-size: 0.7rem; text-transform: uppercase; font-weight: 600; }
-.period-status.active { background: rgba(76,175,80,0.15); color: #388e3c; }
+.period-status.active { background: rgba(76,175,80,0.15); color: #168058; }
 .period-card h3 { color: var(--primary-dark); margin-bottom: var(--space-sm); padding-right: 80px; }
 .period-dates { color: var(--gray-600); font-size: 0.875rem; line-height: 1.6; }
 .period-desc { color: var(--gray-500); font-size: 0.875rem; margin-top: var(--space-sm); }

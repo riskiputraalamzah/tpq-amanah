@@ -330,7 +330,7 @@ onMounted(async () => {
   border-radius: var(--radius-lg);
   font-weight: 600;
   font-size: 0.9rem;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.3);
   white-space: nowrap;
   transition: all 0.2s;
   border: none;
@@ -339,7 +339,7 @@ onMounted(async () => {
 
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(27, 94, 32, 0.4);
+  box-shadow: 0 8px 25px rgba(10, 92, 64, 0.4);
 }
 
 @media (max-width: 640px) {
@@ -418,7 +418,7 @@ onMounted(async () => {
 
 .icon-active {
   background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .icon-total {
@@ -496,7 +496,7 @@ onMounted(async () => {
 
 .search-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.1);
 }
 
 .filter-controls-wrap {
@@ -600,7 +600,7 @@ onMounted(async () => {
 
 .book-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(27, 94, 32, 0.14);
+  box-shadow: 0 16px 36px rgba(10, 92, 64, 0.14);
 }
 
 .book-card:hover .book-open-link {
@@ -628,7 +628,7 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -781,12 +781,12 @@ onMounted(async () => {
   height: 76px;
   border-radius: 50%;
   margin: 0 auto var(--space-lg);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(27, 94, 32, 0.08);
+  box-shadow: 0 4px 16px rgba(10, 92, 64, 0.08);
 }
 
 .empty-state h3 {

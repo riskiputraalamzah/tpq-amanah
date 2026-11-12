@@ -529,7 +529,7 @@ onMounted(() => {
 .page-header h1 { color: var(--primary-dark); margin: 0; }
 .period-info { color: var(--gray-600); font-size: 0.875rem; margin-top: var(--space-xs); }
 .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; text-transform: uppercase; font-weight: 600; }
-.status-badge.active { background: rgba(76,175,80,0.15); color: #388e3c; }
+.status-badge.active { background: rgba(76,175,80,0.15); color: #168058; }
 .status-badge.archived { background: rgba(255,152,0,0.15); color: #f57c00; }
 
 /* Grade Legend */
@@ -537,7 +537,7 @@ onMounted(() => {
 .grade-legend h4 { font-size: 0.875rem; color: var(--gray-600); margin: 0; }
 .legend-items { display: flex; gap: var(--space-md); }
 .legend-item { padding: var(--space-xs) var(--space-md); border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; }
-.legend-item.A { background: rgba(76,175,80,0.15); color: #388e3c; }
+.legend-item.A { background: rgba(76,175,80,0.15); color: #168058; }
 .legend-item.B { background: rgba(33,150,243,0.15); color: #1976d2; }
 .legend-item.C { background: rgba(255,152,0,0.15); color: #f57c00; }
 
@@ -556,7 +556,7 @@ onMounted(() => {
 .grade-badge { display: inline-block; width: 36px; height: 36px; line-height: 36px; text-align: center; border-radius: var(--radius-full); font-weight: 800; font-size: 1rem; }
 .grade-badge.A { background: #4caf50; color: white; }
 .grade-badge.B { background: #2196f3; color: white; }
-.grade-badge.C { background: #ff9800; color: white; }
+.grade-badge.C { background: #fcd34d; color: #4a2c05; }
 
 /* Cross-guru badge */
 .cross-guru-badge { font-size: 0.75rem; color: var(--primary); background: rgba(var(--primary-rgb), 0.1); padding: 2px 8px; border-radius: 12px; margin-top: var(--space-xs); display: inline-flex; align-items: center; gap: 4px; }

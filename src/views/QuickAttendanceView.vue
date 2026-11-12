@@ -1,5 +1,5 @@
 <template>
-  <main class="quick-attendance-page">
+  <main class="quick-attendance-page lp">
     <section class="quick-card">
       <img :src="logoUrl" alt="TPQ AMANAH" class="mx-auto quick-logo" />
 
@@ -250,6 +250,7 @@ import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
 import { useAuthStore } from "@/stores/auth";
 import logoUrl from "../assets/logo-sm.png";
+import "@/styles/landing.css";
 
 const route = useRoute();
 const router = useRouter();
@@ -528,29 +529,72 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* WhatsApp quick-attendance landing: same mihrab language as login (emerald ground, ivory arch card, gold hairline).
+   One tap from a chat, so the status and the next action stay large and the ornament stays out of the way. */
 .quick-attendance-page {
+  position: relative;
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: linear-gradient(135deg, #e8f5e9 0%, #f7fff8 45%, #d6efd8 100%);
+  background: radial-gradient(120% 90% at 50% 0%, var(--lp-emerald-1) 0%, var(--lp-emerald-0) 60%, var(--lp-emerald-2) 100%);
+}
+
+.quick-attendance-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.07;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 70%);
+  mask-image: linear-gradient(180deg, #000, transparent 70%);
 }
 
 .quick-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   width: min(100%, 460px);
-  padding: 32px 28px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 24px 70px rgba(27, 94, 32, 0.16);
+  padding: 44px 28px 32px;
+  border-radius: 9rem 9rem 1.5rem 1.5rem;
+  border: 1px solid rgba(252, 211, 77, 0.5);
+  background: var(--lp-ivory);
+  box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.65), 0 0 0 6px rgba(252, 211, 77, 0.06);
   text-align: center;
 }
 
+.quick-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-brown);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.06;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent 50%);
+  mask-image: linear-gradient(180deg, #000, transparent 50%);
+}
+
+.quick-card::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 8.6rem 8.6rem 1.15rem 1.15rem;
+  border: 1px solid rgba(180, 83, 9, 0.16);
+  pointer-events: none;
+}
+
 .quick-logo {
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   object-fit: contain;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .state-block {
@@ -563,15 +607,20 @@ onMounted(async () => {
 .state-block h1 {
   margin: 0;
   font-size: 26px;
+  font-weight: 800;
   line-height: 1.2;
-  color: #123d19;
+  color: var(--lp-ink);
 }
 
 .state-block p {
   margin: 0;
-  color: #52615a;
+  color: var(--lp-body);
   font-size: 16px;
   line-height: 1.55;
+}
+
+.state-block p strong {
+  color: var(--lp-ink);
 }
 
 .status-icon {
@@ -580,18 +629,19 @@ onMounted(async () => {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 36px;
+  font-size: 34px;
   font-weight: 700;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9);
 }
 
 .success .status-icon {
-  color: #1b7a31;
-  background: #dcf4e1;
+  color: #0a5c40;
+  background: #d9efe4;
 }
 
 .warning .status-icon {
   color: #8a5a00;
-  background: #fff4cc;
+  background: #fdeeb0;
 }
 
 .expired .status-icon {
@@ -602,8 +652,8 @@ onMounted(async () => {
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #d9eadb;
-  border-top-color: #2e7d32;
+  border: 4px solid #d9e8df;
+  border-top-color: #0a5c40;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -621,18 +671,24 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
+  min-height: 48px;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 700;
   text-decoration: none;
+  transition: background-color 0.18s ease, border-color 0.18s ease, filter 0.18s ease;
 }
 
 .primary-btn {
   border: 0;
   color: #fff;
-  background: #2e7d32;
+  background: linear-gradient(135deg, #0a5c40, #053d2c);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.2), 0 8px 18px -8px rgba(3, 41, 29, 0.55);
   cursor: pointer;
+}
+
+.primary-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
 }
 
 .primary-btn:disabled {
@@ -642,9 +698,25 @@ onMounted(async () => {
 
 .ghost-btn,
 .secondary-link {
-  color: #1f6b2b;
-  border: 1px solid #2e7d32;
+  color: #0a5c40;
+  border: 1.5px solid #0a5c40;
   background: #fff;
+}
+
+.ghost-btn:hover,
+.secondary-link:hover {
+  background: #eef6f1;
+}
+
+.primary-btn:focus-visible,
+.ghost-btn:focus-visible,
+.secondary-link:focus-visible,
+.secondary-btn:focus-visible,
+.admin-rekap-btn:focus-visible,
+.logout-action-btn:focus-visible,
+.text-link-btn:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
 }
 
 /* --- Mismatch Banner Styles --- */
@@ -652,9 +724,9 @@ onMounted(async () => {
   width: 100%;
   margin-top: 14px;
   padding: 16px;
-  border-radius: 10px;
+  border-radius: 14px;
   background: #fffbeb;
-  border: 1.5px solid #f59e0b;
+  border: 1.5px solid #d9a21b;
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -663,8 +735,8 @@ onMounted(async () => {
 }
 
 .mismatch-banner.admin-mismatch {
-  background: #f0fdf4;
-  border-color: #10b981;
+  background: #eef6f1;
+  border-color: #0a5c40;
 }
 
 .conflict-mismatch {
@@ -686,11 +758,11 @@ onMounted(async () => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #b45309;
+  color: #92400e;
 }
 
 .admin-mismatch .mismatch-badge {
-  color: #047857;
+  color: #0a5c40;
 }
 
 .mismatch-body {
@@ -707,36 +779,36 @@ onMounted(async () => {
 }
 
 .admin-mismatch .mismatch-text {
-  color: #065f46;
+  color: #053d2c;
 }
 
 .mismatch-note {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   line-height: 1.4;
-  color: #166534;
+  color: #0a5c40;
   font-weight: 500;
 }
 
 .check-mark {
-  color: #15803d;
+  color: #0a5c40;
   font-weight: 700;
 }
 
 .mismatch-subtext {
   font-size: 12.5px;
   line-height: 1.45;
-  color: #92400e;
+  color: #7c3a0d;
   margin: 0;
 }
 
 .admin-mismatch .mismatch-subtext {
-  color: #047857;
+  color: #0a5c40;
 }
 
 .mismatch-actions {
@@ -750,20 +822,20 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 14px;
-  color: #fff;
-  background: #d97706;
+  color: #4a2c05;
+  background: #fcd34d;
   border: none;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .logout-action-btn:hover {
-  background: #b45309;
+  background: #f5c02a;
 }
 
 .logout-action-btn:disabled {
@@ -775,60 +847,66 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 14px;
   color: #fff;
-  background: #059669;
+  background: #0a5c40;
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .admin-rekap-btn:hover {
-  background: #047857;
+  background: #053d2c;
 }
 
 .secondary-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 13.5px;
-  color: #374151;
+  color: #2f4339;
   background: #fff;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(11, 59, 42, 0.25);
   text-decoration: none;
-  transition: background 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
 .secondary-btn:hover {
-  background: #f9fafb;
+  background: #f4f8f5;
 }
 
 .text-link-btn {
   background: none;
   border: none;
-  color: #dc2626;
+  color: #b42318;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   text-decoration: underline;
   text-align: center;
 }
 
 .text-link-btn:hover {
-  color: #b91c1c;
+  color: #8e1b12;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
   }
 }
 
@@ -838,7 +916,12 @@ onMounted(async () => {
   }
 
   .quick-card {
-    padding: 28px 20px;
+    padding: 40px 20px 28px;
+    border-radius: 7rem 7rem 1.25rem 1.25rem;
+  }
+
+  .quick-card::after {
+    border-radius: 6.6rem 6.6rem 0.95rem 0.95rem;
   }
 
   .state-block h1 {

@@ -1320,7 +1320,7 @@ onMounted(async () => {
 }
 
 .preview-success {
-  background: linear-gradient(90deg, #2E7D32, #388E3C);
+  background: linear-gradient(90deg, #0f6b4a, #168058);
 }
 
 .preview-warning {
@@ -1373,13 +1373,13 @@ onMounted(async () => {
   font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.3);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.3);
   white-space: nowrap;
 }
 
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(27, 94, 32, 0.4);
+  box-shadow: 0 8px 25px rgba(10, 92, 64, 0.4);
 }
 
 /* Modal */

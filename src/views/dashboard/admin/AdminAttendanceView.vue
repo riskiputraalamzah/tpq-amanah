@@ -2,7 +2,7 @@
   <div class="admin-attendance-view">
     <header class="page-header">
       <div>
-        <h1>📊 Rekap Absensi Guru</h1>
+        <h1>Rekap Absensi Guru</h1>
         <p>Monitor kehadiran semua pengajar TPQ AMANAH</p>
       </div>
       <div class="header-actions">
@@ -87,7 +87,7 @@
     <!-- Summary Cards -->
     <div class="summary-row">
       <div class="summary-card glass-card">
-        <div class="summary-icon">👥</div>
+        <div class="summary-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton"></span>
           <span v-else class="summary-value">{{ teachers.length }}</span>
@@ -95,7 +95,7 @@
         </div>
       </div>
       <div class="summary-card glass-card">
-        <div class="summary-icon">🗓️</div>
+        <div class="summary-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton"></span>
           <span v-else class="summary-value">{{ activeDays }} Hari</span>
@@ -103,7 +103,7 @@
         </div>
       </div>
       <div class="summary-card glass-card">
-        <div class="summary-icon">✅</div>
+        <div class="summary-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton"></span>
           <span v-else class="summary-value">{{ totalAttendance }}</span>
@@ -111,7 +111,7 @@
         </div>
       </div>
       <div class="summary-card glass-card highlight">
-        <div class="summary-icon">💰</div>
+        <div class="summary-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></div>
         <div class="summary-content">
           <span v-if="loading" class="summary-value-skeleton wide"></span>
           <span v-else class="summary-value">Rp {{ formatCurrency(totalSalary) }}</span>
@@ -1150,7 +1150,7 @@ const teacherColorMap = ref({});
 const palette = [
   "#D32F2F", // Red
   "#1976D2", // Blue
-  "#388E3C", // Green
+  "#168058", // Green
   "#F57C00", // Orange
   "#7B1FA2", // Purple
   "#0097A7", // Cyan
@@ -2265,7 +2265,22 @@ onUnmounted(() => {
 }
 
 .summary-icon {
-  font-size: 2.5rem;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  color: #fcd34d;
+  background: linear-gradient(145deg, #053d2c, #03261a);
+  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.28);
+}
+
+.summary-card.highlight .summary-icon {
+  color: #053d2c;
+  background: linear-gradient(145deg, #fde68a, #fcd34d);
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.25);
 }
 
 .summary-content {
@@ -2749,7 +2764,7 @@ onUnmounted(() => {
       rgba(46, 125, 50, 0.08));
   border-bottom: 1px solid rgba(76, 175, 80, 0.2);
   font-size: 0.85rem;
-  color: #2e7d32;
+  color: #0f6b4a;
   font-weight: 500;
 }
 
@@ -2772,7 +2787,7 @@ onUnmounted(() => {
 
 .status-badge.hadir {
   background: rgba(76, 175, 80, 0.15);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .status-badge.tidak {
@@ -3037,7 +3052,7 @@ onUnmounted(() => {
 
 .status-btn.active.hadir {
   background: rgba(76, 175, 80, 0.15);
-  color: #388e3c;
+  color: #168058;
   border: 2px solid #4caf50;
 }
 
@@ -3520,7 +3535,7 @@ onUnmounted(() => {
 }
 
 .btn-action-primary:hover {
-  background: linear-gradient(135deg, #43a047, #388e3c);
+  background: linear-gradient(135deg, #43a047, #168058);
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(76, 175, 80, 0.4), 0 4px 6px -2px rgba(76, 175, 80, 0.2);
 }
@@ -3588,7 +3603,7 @@ onUnmounted(() => {
 }
 
 .btn-restore-holiday:hover {
-  background: linear-gradient(135deg, #43a047, #388e3c);
+  background: linear-gradient(135deg, #43a047, #168058);
   transform: translateY(-1px);
 }
 
@@ -3649,7 +3664,9 @@ onUnmounted(() => {
   }
 
   .summary-icon {
-    font-size: 1.8rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
   }
 
   .summary-value {
@@ -3875,7 +3892,9 @@ onUnmounted(() => {
   }
 
   .summary-icon {
-    font-size: 1.5rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
   }
 
   .summary-value {

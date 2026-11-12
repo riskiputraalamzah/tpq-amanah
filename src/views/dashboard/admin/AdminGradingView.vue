@@ -251,7 +251,7 @@ onMounted(fetchPeriods)
 .period-card { padding: var(--space-xl); background: rgba(255,255,255,0.9); position: relative; }
 .period-card.archived { opacity: 0.7; }
 .period-status { position: absolute; top: var(--space-md); right: var(--space-md); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); font-size: 0.7rem; text-transform: uppercase; font-weight: 600; }
-.period-status.active { background: rgba(76,175,80,0.15); color: #388e3c; }
+.period-status.active { background: rgba(76,175,80,0.15); color: #168058; }
 .period-status.archived { background: rgba(255,152,0,0.15); color: #f57c00; }
 .period-card h3 { color: var(--primary-dark); margin-bottom: var(--space-sm); padding-right: 80px; }
 .period-dates { color: var(--gray-600); font-size: 0.875rem; line-height: 1.6; }
@@ -261,13 +261,13 @@ onMounted(fetchPeriods)
 .guru-recap { margin-top: var(--space-md); padding: var(--space-sm); background: var(--gray-50); border-radius: var(--radius-md); font-size: 0.75rem; }
 .guru-recap strong { color: var(--gray-600); display: block; margin-bottom: var(--space-xs); }
 .guru-list { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
-.guru-chip { background: rgba(27, 94, 32, 0.1); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-sm); }
+.guru-chip { background: rgba(10, 92, 64, 0.1); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-sm); }
 
 .card-actions { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
 .card-actions-row { display: flex; gap: var(--space-sm); }
 .btn-action { flex: 1; border-radius: var(--radius-full) !important; padding: var(--space-md) var(--space-lg); }
 .btn-action-full { width: 100%; border-radius: var(--radius-full) !important; padding: var(--space-md) var(--space-lg); }
-.btn-warning { background: #ff9800; color: white; }
+.btn-warning { background: #fcd34d; color: #4a2c05; }
 .empty-state { padding: var(--space-3xl); text-align: center; color: var(--gray-500); grid-column: 1 / -1; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: var(--z-modal); padding: var(--space-lg); }
 .modal { width: 100%; max-width: 500px; padding: var(--space-xl); background: var(--white); }

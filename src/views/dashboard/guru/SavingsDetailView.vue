@@ -2532,14 +2532,14 @@ onBeforeUnmount(() => {
   margin-bottom: var(--space-md);
   padding: 6px 14px;
   border-radius: var(--radius-md);
-  background: rgba(27, 94, 32, 0.06);
-  border: 1px solid rgba(27, 94, 32, 0.12);
+  background: rgba(10, 92, 64, 0.06);
+  border: 1px solid rgba(10, 92, 64, 0.12);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .back-btn:hover {
-  background: rgba(27, 94, 32, 0.12);
+  background: rgba(10, 92, 64, 0.12);
   transform: translateX(-2px);
 }
 
@@ -2631,9 +2631,9 @@ onBeforeUnmount(() => {
   min-height: 40px;
   padding: 0 var(--space-lg);
   border-radius: var(--radius-lg);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
-  border: 1px solid rgba(27, 94, 32, 0.2);
+  border: 1px solid rgba(10, 92, 64, 0.2);
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.2s;
@@ -2642,7 +2642,7 @@ onBeforeUnmount(() => {
 }
 
 .share-trigger-btn:hover {
-  background: rgba(27, 94, 32, 0.15);
+  background: rgba(10, 92, 64, 0.15);
   transform: translateY(-1px);
 }
 
@@ -2722,7 +2722,7 @@ onBeforeUnmount(() => {
   padding: 4px 10px;
   border-radius: var(--radius-full);
   background: rgba(76, 175, 80, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -2731,7 +2731,7 @@ onBeforeUnmount(() => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2e7d32;
+  background: #0f6b4a;
   box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.2);
 }
 
@@ -2822,7 +2822,7 @@ onBeforeUnmount(() => {
   color: white;
   font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
+  box-shadow: 0 4px 14px rgba(10, 92, 64, 0.25);
   transition: all 0.2s;
   border: none;
   cursor: pointer;
@@ -2831,7 +2831,7 @@ onBeforeUnmount(() => {
 
 .print-trigger-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(27, 94, 32, 0.35);
+  box-shadow: 0 8px 20px rgba(10, 92, 64, 0.35);
 }
 
 .book-action-wrap {
@@ -2953,7 +2953,7 @@ onBeforeUnmount(() => {
   min-height: 26px;
   padding: 0 var(--space-md);
   border-radius: var(--radius-full);
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
   font-size: 0.72rem;
   font-weight: 800;
@@ -3031,7 +3031,7 @@ onBeforeUnmount(() => {
 
 .sum-icon.icon-members {
   background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 .sum-icon.icon-tx {
@@ -3130,13 +3130,13 @@ onBeforeUnmount(() => {
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-xl);
   margin-bottom: var(--space-xl);
-  border: 1.5px dashed rgba(27, 94, 32, 0.3);
-  background: rgba(27, 94, 32, 0.04);
+  border: 1.5px dashed rgba(10, 92, 64, 0.3);
+  background: rgba(10, 92, 64, 0.04);
   transition: all 0.2s;
 }
 
 .collapsed-form-card:hover {
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   border-color: var(--primary);
 }
 
@@ -3194,7 +3194,7 @@ onBeforeUnmount(() => {
 .type-tab.active.income {
   background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.25);
+  box-shadow: 0 4px 14px rgba(10, 92, 64, 0.25);
 }
 
 .type-tab.active.expense {
@@ -3273,7 +3273,7 @@ onBeforeUnmount(() => {
 
 .form-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.1);
 }
 
 .mt-2 {
@@ -3320,7 +3320,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   font-size: 0.92rem;
   transition: all 0.2s;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.28);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.28);
   border: none;
   cursor: pointer;
   margin-top: var(--space-xs);
@@ -3328,7 +3328,7 @@ onBeforeUnmount(() => {
 
 .btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(27, 94, 32, 0.38);
+  box-shadow: 0 8px 24px rgba(10, 92, 64, 0.38);
 }
 
 .btn-add.btn-expense {
@@ -3423,7 +3423,7 @@ onBeforeUnmount(() => {
 }
 
 .mobile-tab-btn.active .mobile-tab-count {
-  background: rgba(27, 94, 32, 0.15);
+  background: rgba(10, 92, 64, 0.15);
   color: var(--primary-dark);
 }
 
@@ -3499,7 +3499,7 @@ onBeforeUnmount(() => {
 }
 
 .ws-tab-btn.active {
-  background: rgba(27, 94, 32, 0.1);
+  background: rgba(10, 92, 64, 0.1);
   color: var(--primary-dark);
 }
 
@@ -3530,15 +3530,15 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-md);
   font-size: 0.8rem;
   font-weight: 700;
-  background: rgba(27, 94, 32, 0.08);
+  background: rgba(10, 92, 64, 0.08);
   color: var(--primary);
-  border: 1px solid rgba(27, 94, 32, 0.18);
+  border: 1px solid rgba(10, 92, 64, 0.18);
   cursor: pointer;
   transition: all 0.18s;
 }
 
 .uncollapse-btn:hover {
-  background: rgba(27, 94, 32, 0.15);
+  background: rgba(10, 92, 64, 0.15);
 }
 
 /* ── History & Member Controls ── */
@@ -3580,7 +3580,7 @@ onBeforeUnmount(() => {
   background: var(--primary-gradient);
   color: white;
   border-color: transparent;
-  box-shadow: 0 2px 8px rgba(27, 94, 32, 0.2);
+  box-shadow: 0 2px 8px rgba(10, 92, 64, 0.2);
 }
 
 .filter-chip.expense-chip.active {
@@ -3625,7 +3625,7 @@ onBeforeUnmount(() => {
 
 .tx-search-wrap .search-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.1);
 }
 
 .clear-search-btn {
@@ -3732,7 +3732,7 @@ onBeforeUnmount(() => {
 }
 
 .data-table tr:hover td {
-  background: rgba(27, 94, 32, 0.02);
+  background: rgba(10, 92, 64, 0.02);
 }
 
 .data-table tr:last-child td {
@@ -3749,7 +3749,7 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(27, 94, 32, 0.09);
+  background: rgba(10, 92, 64, 0.09);
   color: var(--primary-dark);
   font-weight: 700;
   font-size: 0.85rem;
@@ -3803,8 +3803,8 @@ onBeforeUnmount(() => {
 }
 
 .tx-item:hover {
-  background: rgba(27, 94, 32, 0.04);
-  border-color: rgba(27, 94, 32, 0.15);
+  background: rgba(10, 92, 64, 0.04);
+  border-color: rgba(10, 92, 64, 0.15);
 }
 
 .tx-item.expense:hover {
@@ -4166,7 +4166,7 @@ onBeforeUnmount(() => {
   border-color: transparent;
   background: var(--primary);
   color: white;
-  box-shadow: 0 8px 18px rgba(27, 94, 32, 0.18);
+  box-shadow: 0 8px 18px rgba(10, 92, 64, 0.18);
 }
 
 .print-range-grid {

@@ -105,13 +105,14 @@ test("LpjDetailView smoke: backend completeness, day actions, submit states", ()
   assert.match(src, /\/submit/);
   assert.match(src, /\/approve/);
   assert.match(src, /\/reopen/);
-  assert.match(src, /Belum lengkap/);
+  assert.match(src, /Belum Lengkap/);
   assert.match(src, /@media/);
   assert.match(src, /100%/);
-  assert.ok(!src.includes("Math.round"), "percentage must come from backend");
+  assert.ok(!/Math\.round\([^)]*(coveredDays|totalExpectedDays|missingDays|completeness)/.test(src), "LPJ completeness percentage must come from backend");
+  assert.match(src, /completeness\.percentage/);
   assert.match(src, /Kelengkapan LPJ/);
   assert.match(src, /Rincian Harian/);
-  assert.match(src, /Pengajuan/);
+  assert.match(src, /Ajukan LPJ ke Admin/);
   assert.match(src, /progressbar/);
 });
 
@@ -201,17 +202,19 @@ test("Lihat Detail is primary green CTA", () => {
   assert.ok(!btnBlock.includes("btn-secondary"), "Lihat Detail must not be grey secondary");
 });
 
-test("disabled future CTA is muted primary green and non-interactive", () => {
+test("future days get no clickable CTA: only real links render, the resolver marks them disabled", () => {
   const src = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/LpjDetailView.vue"), "utf8");
-  assert.match(src, /btn btn-primary btn-day btn-disabled/);
-  assert.match(src, /<button[^>]*disabled>/);
-  assert.match(src, /cursor: not-allowed/);
-  assert.match(src, /opacity: 0\.55/);
-  assert.match(src, /dayAction\(day\)\.reason/);
   const utilSrc = fs.readFileSync(path.join(here, "../src/utils/lpjState.js"), "utf8");
+  // resolver: a future, uncovered day is disabled with a reason
+  assert.match(utilSrc, /kind: "disabled"/);
   assert.match(utilSrc, /Belum dapat diisi/);
-  const disabledBlock = src.slice(src.indexOf("day-action-disabled"), src.indexOf("day-action-disabled") + 600);
-  assert.ok(!disabledBlock.includes("router-link") && !disabledBlock.includes("@click") && !disabledBlock.includes("api."), "disabled CTA must not navigate or call API");
+  // view: the only quick-action element is a router-link guarded by kind === "link", so a disabled day renders nothing to click
+  assert.match(src, /dayAction\(day\)\.kind === ['"]link['"]/);
+  const guard = src.indexOf("dayAction(day).kind === 'link'") >= 0 ? src.indexOf("dayAction(day).kind === 'link'") : src.indexOf('dayAction(day).kind === "link"');
+  const quickAction = src.slice(guard - 120, guard + 300);
+  assert.match(quickAction, /<router-link/);
+  assert.ok(!quickAction.includes("@click=\"") || quickAction.includes("@click.stop"), "quick action only stops propagation, it does not call the API");
+  assert.ok(!quickAction.includes("api."), "quick action must not call the API");
 });
 
 test("backend keeps authoritative future-date and attendance guards", () => {

@@ -534,7 +534,7 @@ onMounted(fetchData);
   left: 0;
   width: 5px;
   height: 100%;
-  background: var(--primary-gradient, linear-gradient(180deg, #1b5e20 0%, #43a047 100%));
+  background: var(--primary-gradient, linear-gradient(180deg, #0a5c40 0%, #43a047 100%));
 }
 
 @media (min-width: 900px) {
@@ -564,7 +564,7 @@ onMounted(fetchData);
   gap: 6px;
   padding: 4px 12px;
   background: rgba(46, 125, 50, 0.12);
-  color: #1b5e20;
+  color: #0a5c40;
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 700;
@@ -575,7 +575,7 @@ onMounted(fetchData);
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2e7d32;
+  background: #0f6b4a;
   box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
   animation: pulse-green 2s infinite;
 }
@@ -595,7 +595,7 @@ onMounted(fetchData);
 .banner-title {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   margin: 2px 0 4px 0;
 }
 
@@ -635,7 +635,7 @@ onMounted(fetchData);
 .progress-percent {
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
 }
 
 .banner-track {
@@ -648,7 +648,7 @@ onMounted(fetchData);
 .banner-fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--primary-gradient, linear-gradient(135deg, #1b5e20, #43a047));
+  background: var(--primary-gradient, linear-gradient(135deg, #0a5c40, #43a047));
   transition: width 0.4s ease;
 }
 
@@ -675,13 +675,13 @@ onMounted(fetchData);
   justify-content: center;
   gap: 10px;
   padding: 14px 24px;
-  background: var(--primary-gradient, linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%));
+  background: var(--primary-gradient, linear-gradient(135deg, #0a5c40 0%, #0f6b4a 100%));
   color: #ffffff;
   border: none;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(27, 94, 32, 0.28);
+  box-shadow: 0 4px 16px rgba(10, 92, 64, 0.28);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -689,7 +689,7 @@ onMounted(fetchData);
 
 .btn-open-active:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(27, 94, 32, 0.38);
+  box-shadow: 0 8px 24px rgba(10, 92, 64, 0.38);
   filter: brightness(1.05);
 }
 
@@ -732,7 +732,7 @@ onMounted(fetchData);
 .toolbar-title-box h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   margin: 0;
 }
 
@@ -848,7 +848,7 @@ onMounted(fetchData);
   height: 36px;
   border-radius: 10px;
   background: rgba(46, 125, 50, 0.08);
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -867,7 +867,7 @@ onMounted(fetchData);
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #1b5e20;
+  color: #0a5c40;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-top: 2px;
@@ -894,7 +894,7 @@ onMounted(fetchData);
 .progress-percent-val {
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--primary-dark, #1b5e20);
+  color: var(--primary-dark, #0a5c40);
 }
 
 .progress-track {
@@ -907,7 +907,7 @@ onMounted(fetchData);
 .progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--primary-gradient, linear-gradient(135deg, #1b5e20, #43a047));
+  background: var(--primary-gradient, linear-gradient(135deg, #0a5c40, #43a047));
   transition: width 0.3s ease;
 }
 
@@ -936,9 +936,9 @@ onMounted(fetchData);
 }
 
 .btn-open-detail:hover {
-  background: var(--primary, #2e7d32);
+  background: var(--primary, #0f6b4a);
   color: #ffffff;
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
 }
 
@@ -956,7 +956,7 @@ onMounted(fetchData);
 
 .badge-success {
   background: rgba(46, 125, 50, 0.12);
-  color: #1b5e20;
+  color: #0a5c40;
 }
 
 .badge-warning {
@@ -994,12 +994,12 @@ onMounted(fetchData);
 }
 
 .btn-primary {
-  background: var(--primary, #2e7d32);
+  background: var(--primary, #0f6b4a);
   color: #ffffff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-dark, #1b5e20);
+  background: var(--primary-dark, #0a5c40);
 }
 
 .btn-secondary {
@@ -1054,7 +1054,7 @@ onMounted(fetchData);
 
 .period-month-select:focus {
   outline: none;
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
 }
 
@@ -1078,7 +1078,7 @@ onMounted(fetchData);
 }
 
 .add-period-card:hover {
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   background: linear-gradient(180deg, rgba(240, 253, 244, 0.8) 0%, #ffffff 100%);
   box-shadow: 0 8px 20px rgba(46, 125, 50, 0.1);
   transform: translateY(-3px);
@@ -1086,7 +1086,7 @@ onMounted(fetchData);
 
 .add-icon-badge {
   background: rgba(46, 125, 50, 0.12) !important;
-  color: var(--primary, #2e7d32) !important;
+  color: var(--primary, #0f6b4a) !important;
 }
 
 .add-period-indicator {
@@ -1125,19 +1125,19 @@ onMounted(fetchData);
 
 .card-select-period:focus {
   outline: none;
-  border-color: var(--primary, #2e7d32);
+  border-color: var(--primary, #0f6b4a);
   box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
 }
 
 .btn-open-target-period {
-  background: var(--primary, #2e7d32) !important;
+  background: var(--primary, #0f6b4a) !important;
   color: #ffffff !important;
-  border-color: var(--primary, #2e7d32) !important;
+  border-color: var(--primary, #0f6b4a) !important;
 }
 
 .btn-open-target-period:hover:not(:disabled) {
-  background: var(--primary-dark, #1b5e20) !important;
-  border-color: var(--primary-dark, #1b5e20) !important;
+  background: var(--primary-dark, #0a5c40) !important;
+  border-color: var(--primary-dark, #0a5c40) !important;
   box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
 }
 

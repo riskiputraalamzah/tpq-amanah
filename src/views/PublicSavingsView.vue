@@ -1380,32 +1380,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:root {
-  color-scheme: light dark;
-}
-
+/* Always light, whatever the device prefers: native controls and scrollbars stay light too. */
 .public-savings-page {
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Hardened Dark Mode Badges & Inversion Protections */
-@media (prefers-color-scheme: dark) {
-  .public-savings-page {
-    background-color: #0c1411 !important;
-    color: #f1f5f9 !important;
-  }
-
-  /* Prevent forced stark white badges in dark mode */
-  .tab-badge {
-    background-color: #0f241c !important;
-    color: #6ee7b7 !important;
-    border-color: rgba(5, 150, 105, 0.4) !important;
-  }
-
-  .tab-badge-active {
-    background-color: #064e3b !important;
-    color: #ecfdf5 !important;
-    border-color: #10b981 !important;
-  }
 }
 </style>

@@ -616,7 +616,7 @@ button.sq:focus-visible,
   font-size: 0.65rem;
 }
 
-.tone-ok.sq { background: #2e7d32; color: #fff; }
+.tone-ok.sq { background: #0f6b4a; color: #fff; }
 .tone-warn.sq { background: #fde68a; color: #92400e; border-color: #f59e0b; }
 .tone-alert.sq { background: #ffedd5; color: #c2410c; border-color: #fb923c; }
 .tone-muted.sq { background: #fff; color: var(--gray-600); border-color: var(--gray-400); border-style: dashed; }
@@ -624,7 +624,7 @@ button.sq:focus-visible,
 .tone-off.sq { background: repeating-linear-gradient(135deg, var(--gray-100), var(--gray-100) 3px, transparent 3px, transparent 6px); }
 .tone-none.sq { background: transparent; }
 
-.tone-ok { color: #2e7d32; }
+.tone-ok { color: #0f6b4a; }
 .tone-warn { color: #b45309; }
 .tone-alert { color: #c2410c; }
 
@@ -788,7 +788,7 @@ button.sq:focus-visible,
 .bar span {
   display: block;
   height: 100%;
-  background: #2e7d32;
+  background: #0f6b4a;
 }
 
 .card-sub {
@@ -815,7 +815,7 @@ button.sq:focus-visible,
 
 .chip.tone-warn { background: #fef3c7; color: #92400e; }
 .chip.tone-alert { background: #ffedd5; color: #c2410c; }
-.chip.tone-ok { background: rgba(46, 125, 50, 0.12); color: #2e7d32; }
+.chip.tone-ok { background: rgba(46, 125, 50, 0.12); color: #0f6b4a; }
 .chip.tone-muted { background: var(--gray-100); color: var(--gray-700); }
 .chip.tone-leave { background: var(--gray-100); color: var(--gray-500); }
 
@@ -823,7 +823,7 @@ button.sq:focus-visible,
   margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 
 /* Detail */
@@ -965,7 +965,7 @@ button.sq:focus-visible,
   color: var(--gray-700);
 }
 
-.tone-text-ok { color: #2e7d32; font-weight: 600; }
+.tone-text-ok { color: #0f6b4a; font-weight: 600; }
 .tone-text-warn { color: #b45309; font-weight: 600; }
 
 .material {

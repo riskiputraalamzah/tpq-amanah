@@ -361,7 +361,7 @@ onMounted(fetchData);
 }
 .alert-success {
   background: rgba(76, 175, 80, 0.1);
-  color: #2e7d32;
+  color: #0f6b4a;
   border: 1px solid rgba(76, 175, 80, 0.2);
 }
 .alert-warning {
@@ -383,7 +383,7 @@ onMounted(fetchData);
 }
 .badge-success {
   background: rgba(76, 175, 80, 0.1);
-  color: #2e7d32;
+  color: #0f6b4a;
 }
 .badge-warning {
   background: rgba(255, 152, 0, 0.1);

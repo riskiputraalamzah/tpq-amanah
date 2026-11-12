@@ -1868,7 +1868,7 @@ onMounted(async () => {
 .slot-summary-main .slot-status-saved {
   flex-basis: 100%;
   font-size: 0.82rem;
-  color: #2e7d32;
+  color: #0f6b4a;
   font-weight: 600;
 }
 
@@ -1898,7 +1898,7 @@ onMounted(async () => {
   padding: 10px 12px;
   border-radius: 10px;
   background: #e8f5e9;
-  color: #1b5e20;
+  color: #0a5c40;
   font-size: 0.88rem;
   font-weight: 600;
 }
@@ -2360,7 +2360,7 @@ onMounted(async () => {
   }
 }
 
-.pill-hadir.active { background: #10b981; color: white; border-color: #10b981; }
+.pill-hadir.active { background: #0a5c40; color: white; border-color: #0a5c40; }
 .pill-sakit.active { background: #f59e0b; color: white; border-color: #f59e0b; }
 .pill-izin.active { background: #6366f1; color: white; border-color: #6366f1; }
 .pill-alpa.active { background: #ef4444; color: white; border-color: #ef4444; }
@@ -2706,12 +2706,12 @@ onMounted(async () => {
 }
 
 .btn-next-day {
-  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+  background: linear-gradient(135deg, #053d2c 0%, #0a5c40 100%);
   color: white;
   border: none;
   padding: 0.95rem 1rem;
   border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(45, 106, 79, 0.3);
+  box-shadow: 0 4px 14px rgba(3, 41, 29, 0.3);
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -2783,22 +2783,21 @@ onMounted(async () => {
 }
 
 .btn-finish-lpj {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #0a5c40 0%, #053d2c 100%);
   color: white;
   font-weight: 800;
   font-size: 0.95rem;
   padding: 0.85rem 1rem;
   border-radius: 10px;
   border: none;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 12px rgba(3, 41, 29, 0.3);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-finish-lpj:hover {
-  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, #0f6b4a 0%, #0a5c40 100%);
+  box-shadow: 0 6px 16px rgba(3, 41, 29, 0.4);
 }
 
 .btn-outline-secondary {

@@ -709,7 +709,7 @@ onMounted(() => {
 
 .role-badge.guru {
   background: rgba(76, 175, 80, 0.15);
-  color: #388e3c;
+  color: #168058;
 }
 
 .role-badge.santri {
@@ -1043,7 +1043,7 @@ onMounted(() => {
 .permission-tag {
   padding: var(--space-xs) var(--space-sm);
   background: rgba(76, 175, 80, 0.15);
-  color: #388e3c;
+  color: #168058;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
@@ -1055,12 +1055,12 @@ onMounted(() => {
 }
 
 .btn-warning {
-  background: #ff9800;
-  color: var(--white);
+  background: #fcd34d;
+  color: #4a2c05;
 }
 
 .btn-warning:hover {
-  background: #f57c00;
+  background: #f5c02a;
 }
 
 .error-text {

@@ -332,7 +332,7 @@ onMounted(() => {
   justify-content: center;
   font-size: 2rem;
   font-weight: 700;
-  box-shadow: 0 4px 15px rgba(27, 94, 32, 0.2);
+  box-shadow: 0 4px 15px rgba(10, 92, 64, 0.2);
 }
 
 .summary-info h2 {

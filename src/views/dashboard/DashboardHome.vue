@@ -573,6 +573,7 @@ watch(
 </script>
 
 <style scoped>
+/* Operate surface: the ornament stays in the details (gold hairline, emerald/gold tiles); cards never move on hover. */
 .dashboard-home {
   padding-top: 60px;
 }
@@ -589,12 +590,24 @@ watch(
 
 .page-header h1 {
   font-size: 2rem;
-  color: var(--primary-dark);
+  font-weight: 700;
+  color: var(--lp-ink);
   margin-bottom: var(--space-xs);
 }
 
 .page-header p {
-  color: var(--gray-600);
+  color: var(--lp-body);
+}
+
+/* gold rule with a diamond, the same mark the landing uses between headings and copy */
+.page-header::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 9px;
+  margin-top: 0.85rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='9' viewBox='0 0 72 9'%3E%3Cpath d='M0 4.5H27M45 4.5H72' stroke='%23b45309' stroke-width='1'/%3E%3Cpath d='M36 0.5 L40 4.5 L36 8.5 L32 4.5 Z' fill='%23b45309'/%3E%3C/svg%3E") no-repeat center / 72px 9px;
+  opacity: 0.85;
 }
 
 .dashboard-cards {
@@ -616,58 +629,62 @@ watch(
   }
 }
 
+/* shared card surface: solid white, hairline border, soft emerald shadow, no blur and no lift */
+.stat-card.glass-card,
+.action-card.glass-card,
+.under-construction.glass-card {
+  background: #fff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  border-radius: 1.125rem;
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.05), 0 6px 18px -8px rgba(3, 41, 29, 0.14);
+  transform: none;
+}
+
 .stat-card {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
   padding: var(--space-xl);
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .stat-card-icon {
+  flex: none;
   width: 60px;
   height: 60px;
-  border-radius: var(--radius-lg);
+  border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--white);
+  color: var(--lp-gold);
+  background: linear-gradient(145deg, var(--lp-emerald-1), var(--lp-emerald-2));
+  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.28);
 }
 
-.stat-card-icon.admin {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.stat-card-icon.guru {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-}
-
-.stat-card-icon.santri {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.stat-card-icon.attendance {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
+/* the "needs attention / result" tile is the one gold tile on the page */
 .stat-card-icon.grading {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: var(--lp-emerald-1);
+  background: linear-gradient(145deg, #fde68a, var(--lp-gold));
+  box-shadow: inset 0 0 0 1px rgba(180, 83, 9, 0.25);
 }
 
 .stat-card-info {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .stat-card-value {
-  font-size: 2rem;
+  font-size: 2.125rem;
   font-weight: 700;
-  color: var(--primary-dark);
+  color: var(--lp-ink);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card-label {
-  color: var(--gray-500);
+  color: var(--lp-body);
   font-size: 0.875rem;
   margin-top: var(--space-xs);
 }
@@ -677,21 +694,20 @@ watch(
   grid-column: 1 / -1;
   text-align: center;
   padding: var(--space-3xl);
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .under-construction-icon {
-  color: var(--primary);
+  color: var(--lp-gold-deep);
   margin-bottom: var(--space-lg);
 }
 
 .under-construction h2 {
-  color: var(--primary);
+  color: var(--lp-ink);
   margin-bottom: var(--space-md);
 }
 
 .under-construction p {
-  color: var(--gray-600);
+  color: var(--lp-body);
   max-width: 500px;
   margin: 0 auto;
 }
@@ -701,10 +717,26 @@ watch(
   margin-top: var(--space-2xl);
 }
 
-.quick-actions h2 {
-  font-size: 1.25rem;
-  color: var(--primary-dark);
+.quick-actions h2,
+.permissions-actions h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--lp-ink);
   margin-bottom: var(--space-lg);
+}
+
+/* small gold diamond before each section title, echoing the sidebar group labels */
+.quick-actions h2::before,
+.permissions-actions h2::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--lp-gold-deep);
+  transform: rotate(45deg);
 }
 
 .action-grid {
@@ -726,34 +758,44 @@ watch(
   gap: var(--space-md);
   padding: var(--space-xl);
   text-align: center;
-  background: rgba(255, 255, 255, 0.9);
-  transition: all var(--transition-fast);
+  color: var(--lp-ink);
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 .action-card:hover {
-  background: var(--primary);
-  color: var(--white);
+  background: var(--lp-emerald-1);
+  border-color: var(--lp-emerald-1);
+  color: #fff;
+}
+
+.action-card:focus-visible {
+  outline: 3px solid var(--lp-gold-deep);
+  outline-offset: 2px;
+}
+
+.action-card:active {
+  transform: scale(0.985);
 }
 
 .action-icon {
   width: 50px;
   height: 50px;
   border-radius: var(--radius-full);
-  background: var(--gray-100);
+  background: #eef4ef;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary);
-  transition: all var(--transition-fast);
+  color: var(--lp-emerald-1);
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .action-card:hover .action-icon {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--white);
+  background: var(--lp-gold);
+  color: var(--lp-emerald-1);
 }
 
 .action-card span {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
 }
 
@@ -762,24 +804,24 @@ watch(
   margin-top: var(--space-2xl);
 }
 
-.permissions-actions h2 {
-  font-size: 1.25rem;
-  color: var(--primary-dark);
-  margin-bottom: var(--space-lg);
-}
-
-.permission-card {
+/* special-access cards carry a gold hairline so they read as a separate group */
+.permission-card.glass-card {
   cursor: pointer;
-  border: 2px solid transparent;
+  border-color: rgba(180, 83, 9, 0.3);
 }
 
-.permission-card:hover {
-  border-color: var(--primary);
+.permission-card.glass-card:hover {
+  border-color: var(--lp-emerald-1);
 }
 
 .permission-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
+  background: var(--lp-emerald-1) !important;
+  color: var(--lp-gold) !important;
+}
+
+.permission-card:hover .permission-icon {
+  background: var(--lp-gold) !important;
+  color: var(--lp-emerald-1) !important;
 }
 
 .permission-card:disabled {
@@ -788,17 +830,24 @@ watch(
 }
 
 button.action-card {
-  border: none;
   width: 100%;
+  font: inherit;
 }
 
 .savings-icon {
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%) !important;
-  color: white !important;
+  background: #fdf1c9 !important;
+  color: var(--lp-gold-deep) !important;
 }
 
 .savings-action:hover .savings-icon {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
+  background: var(--lp-gold) !important;
+  color: var(--lp-emerald-1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-card,
+  .action-icon {
+    transition: none;
+  }
 }
 </style>
