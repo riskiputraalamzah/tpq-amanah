@@ -1,44 +1,37 @@
 <template>
   <section v-if="visibleDocuments.length" id="legalitas" aria-labelledby="legalitas-title"
-    class="py-20 lg:py-28 bg-gradient-to-br from-[#063f2e] via-[#094d39] to-[#042d21] text-white scroll-mt-28 relative overflow-hidden">
-    <div class="absolute inset-0 islamic-pattern opacity-[0.06] pointer-events-none"></div>
+    class="lp-section lp-emerald lp-on-dark scroll-mt-28">
+    <span class="lp-fringe-top" aria-hidden="true"></span>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
-        <div class="inline-flex items-center gap-2 text-xs font-bold tracking-wider text-amber-300 uppercase bg-white/10 px-4 py-1.5 rounded-full border border-white/15 mb-4">
-          Legalitas Lembaga
-        </div>
-        <h2 id="legalitas-title" class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight mb-4 text-balance">
-          Terdaftar Resmi, dan Dokumennya Bisa Anda Periksa
-        </h2>
-        <p class="text-emerald-100/90 text-base sm:text-lg leading-relaxed">
-          TPQ Amanah terdaftar sebagai Lembaga Pendidikan Al-Qur'an di Kementerian Agama Kabupaten Sidoarjo dan berada di bawah bimbingan Yayasan Belajar Membaca Al-Qur'an (BMQ) At-Tartil. Ketuk dokumen untuk melihatnya lebih jelas.
-        </p>
-      </div>
+    <div class="lp-wrap">
+      <SectionHeading dark heading-id="legalitas-title" title="Terdaftar Resmi, dan Dokumennya Bisa Anda Periksa">
+        TPQ Amanah terdaftar sebagai Lembaga Pendidikan Al-Qur'an di Kementerian Agama Kabupaten Sidoarjo dan berada di bawah bimbingan Yayasan Belajar Membaca Al-Qur'an (BMQ) At-Tartil. Ketuk dokumen untuk melihatnya lebih jelas.
+      </SectionHeading>
 
-      <ul class="flex flex-wrap justify-center gap-5 sm:gap-6">
+      <ul class="flex flex-wrap justify-center gap-5 pb-6 sm:gap-6">
         <li v-for="doc in visibleDocuments" :key="doc.id" class="w-full sm:w-[17rem]">
           <button type="button"
-            class="group w-full h-full flex sm:flex-col gap-4 sm:gap-0 text-left bg-white text-slate-900 rounded-3xl p-3 sm:p-4 shadow-lg shadow-black/20 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+            class="lp-card lp-lift group flex w-full h-full gap-4 p-3 text-left sm:flex-col sm:gap-0 sm:p-4 text-[color:var(--lp-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
             @click="openDocument(doc, $event)">
-            <span class="block shrink-0 w-24 sm:w-full aspect-[3/4] overflow-hidden rounded-2xl bg-slate-100 border border-slate-200">
+            <span class="block w-24 overflow-hidden rounded-xl shrink-0 sm:w-full aspect-[3/4] bg-stone-100 ring-1 ring-amber-700/20 shadow-md">
               <img :src="documentSrc(doc, 'thumb')" alt="" width="480" height="640" loading="lazy" decoding="async"
-                class="w-full h-full object-cover object-top" />
+                class="object-cover object-top w-full h-full transition-transform duration-500 group-hover:scale-[1.03]" />
             </span>
             <span class="flex flex-col justify-center min-w-0 sm:pt-4 sm:px-1 sm:pb-1">
               <span class="text-base font-bold leading-snug">{{ doc.title }}</span>
-              <span class="mt-1 text-sm text-slate-600 leading-snug">{{ doc.issuer }}</span>
+              <span class="mt-1 text-sm leading-snug lp-body">{{ doc.issuer }}</span>
               <span class="mt-2 text-sm font-semibold text-emerald-800">{{ doc.summary }}</span>
               <span v-if="doc.redacted"
-                class="mt-2 inline-flex self-start items-center rounded-full bg-amber-100 text-amber-900 text-xs font-bold px-2.5 py-1">
+                class="inline-flex self-start items-center px-2.5 py-1 mt-2 text-xs font-semibold border rounded-full border-amber-700/30 bg-amber-50 text-amber-900">
                 Data pribadi disamarkan
               </span>
-              <span class="mt-3 text-sm font-bold text-emerald-700 group-hover:underline underline-offset-4">Lihat dokumen &rarr;</span>
+              <span class="mt-3 text-sm font-bold text-emerald-700 underline-offset-4 group-hover:underline">Lihat dokumen &rarr;</span>
             </span>
           </button>
         </li>
       </ul>
     </div>
+    <span class="lp-fringe-bottom is-paper" aria-hidden="true"></span>
   </section>
 
   <Teleport to="body">
@@ -105,6 +98,7 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
+import SectionHeading from '@/components/landing/SectionHeading.vue'
 import { legalDocuments, documentSrc } from '@/data/legalDocuments'
 
 // Documents stay hidden until the server confirms what may be shown. If the settings cannot be

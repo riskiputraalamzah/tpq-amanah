@@ -1,38 +1,41 @@
 <template>
-  <footer class="bg-[#04241a] text-white border-t border-emerald-950/80">
-    <div class="px-4 py-16 mx-auto max-w-7xl sm:px-6 lg:px-8">
-      <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-12">
-        <!-- Logo & Description (5 cols) -->
-        <div class="space-y-4 lg:col-span-5">
-          <div class="flex items-center gap-3">
-            <img
-              :src="logoUrl"
-              alt="TPQ AMANAH"
-              class="w-12 h-12 border rounded-full shadow-md border-white/20"
-            />
-            <div>
-              <span class="text-xl font-bold tracking-tight text-white"
-                >TPQ AMANAH</span
-              >
-              <p class="text-xs font-medium text-amber-300">
-                Sawotratap, Gedangan, Sidoarjo
-              </p>
-            </div>
-          </div>
-          <p
-            class="max-w-md text-sm font-normal leading-relaxed text-emerald-100/80"
-          >
-            Taman Pendidikan Al-Qur'an (TPQ) AMANAH membimbing generasi Qur'ani
-            yang tartil membaca, cerdas memahami, dan berakhlakul karimah dengan
-            kurikulum terpadu Metode At-Tartil 6 Jilid.
-          </p>
-          <div class="pt-2 text-xs text-emerald-100/70 space-y-1.5">
-            <p class="flex items-start gap-2">
+  <footer class="lp-footer text-white">
+    <span class="lp-fringe-top" aria-hidden="true"></span>
+
+    <div class="relative px-4 pt-20 pb-10 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <!-- Brand, on the centre axis -->
+      <div class="flex flex-col items-center max-w-2xl mx-auto text-center">
+        <img
+          :src="logoUrl"
+          alt="TPQ AMANAH"
+          class="w-16 h-16 rounded-full shadow-lg ring-1 ring-amber-200/40"
+        />
+        <p class="mt-4 text-2xl font-bold tracking-tight text-white">TPQ AMANAH</p>
+        <p class="text-xs font-semibold text-amber-300">
+          Sawotratap, Gedangan, Sidoarjo
+        </p>
+        <OrnamentRule class="w-full mt-5 !text-amber-300" />
+        <p class="mt-5 text-sm leading-relaxed text-emerald-100/80 text-pretty">
+          Taman Pendidikan Al-Qur'an (TPQ) AMANAH membimbing generasi Qur'ani
+          yang tartil membaca, cerdas memahami, dan berakhlakul karimah dengan
+          kurikulum terpadu Metode At-Tartil 6 Jilid.
+        </p>
+      </div>
+
+      <div
+        class="grid gap-10 mt-14 md:grid-cols-3 md:gap-0 md:divide-x md:divide-amber-200/15"
+      >
+        <!-- Address & registration -->
+        <div class="md:pr-10">
+          <h4 class="mb-4 text-base font-bold text-white">Alamat &amp; Legalitas</h4>
+          <div class="space-y-3 text-sm text-emerald-100/75">
+            <p class="flex items-start gap-2.5">
               <svg
-                class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"
+                class="w-4 h-4 mt-0.5 text-amber-300 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
@@ -52,9 +55,9 @@
                 Gedangan, Kab. Sidoarjo 61256</span
               >
             </p>
-            <p class="flex items-start gap-2">
+            <p class="flex items-start gap-2.5">
               <svg
-                class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"
+                class="w-4 h-4 mt-0.5 text-amber-300 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -75,89 +78,38 @@
           </div>
         </div>
 
-        <!-- Links (3 cols) -->
-        <div class="lg:col-span-3">
+        <!-- Links -->
+        <div class="md:px-10">
           <h4 class="mb-4 text-base font-bold text-white">Navigasi Utama</h4>
-          <ul class="space-y-0 lg:space-y-0.5 text-sm">
-            <li>
+          <ul class="text-sm">
+            <li v-for="link in links" :key="link.href">
               <a
-                href="#beranda"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Beranda</a
-              >
-            </li>
-            <li>
-              <a
-                href="#pendaftaran"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Pendaftaran Santri Baru</a
-              >
-            </li>
-            <li>
-              <a
-                href="#keunggulan"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Keunggulan Lembaga</a
-              >
-            </li>
-            <li>
-              <a
-                href="#program"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Kurikulum 6 Jilid</a
-              >
-            </li>
-            <li>
-              <a
-                href="#at-tartil"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >E-Kitab Digital At-Tartil</a
-              >
-            </li>
-            <li>
-              <a
-                href="#jadwal"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Jadwal Sesi Mengaji</a
-              >
-            </li>
-            <li>
-              <a
-                href="#pengajar"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Dewan Asatidz</a
-              >
-            </li>
-            <li>
-              <a
-                href="#kontak"
-                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors"
-                >Kontak &amp; Lokasi</a
+                :href="link.href"
+                class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                >{{ link.label }}</a
               >
             </li>
           </ul>
         </div>
 
-        <!-- Jadwal Mengaji & Layanan (4 cols) -->
-        <div class="lg:col-span-4">
-          <h4 class="mb-4 text-base font-bold text-white">
-            Jadwal Sesi Mengaji
-          </h4>
+        <!-- Schedule & contacts -->
+        <div class="md:pl-10">
+          <h4 class="mb-4 text-base font-bold text-white">Jadwal Sesi Mengaji</h4>
           <div class="space-y-3 text-sm text-emerald-100/80">
             <p class="font-medium text-white/90">Hari Aktif: Senin s/d Jumat</p>
             <div class="space-y-2">
-              <div class="p-3 border bg-white/5 rounded-xl border-white/10">
+              <div class="p-3 border rounded-xl border-amber-200/20 bg-white/5">
                 <div
-                  class="flex items-center justify-between text-xs text-amber-300 font-semibold mb-0.5"
+                  class="flex items-center justify-between mb-0.5 text-xs font-semibold text-amber-300"
                 >
                   <span>Sesi 1 (Ba'da Ashar)</span>
                   <span>Usia Dini &amp; SD</span>
                 </div>
                 <p class="text-base font-bold text-white">15:30 - 17:00 WIB</p>
               </div>
-              <div class="p-3 border bg-white/5 rounded-xl border-white/10">
+              <div class="p-3 border rounded-xl border-amber-200/20 bg-white/5">
                 <div
-                  class="flex items-center justify-between text-xs text-emerald-300 font-semibold mb-0.5"
+                  class="flex items-center justify-between mb-0.5 text-xs font-semibold text-emerald-300"
                 >
                   <span>Sesi 2 (Ba'da Maghrib)</span>
                   <span>Kelas Lanjutan</span>
@@ -171,7 +123,7 @@
                 href="https://wa.me/6289530397058"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm font-medium border border-emerald-600/60 transition-colors"
+                class="lp-btn-ghost !justify-start"
               >
                 <span>WA Ustadzah Ella (0895-3039-7058)</span>
               </a>
@@ -179,7 +131,7 @@
                 href="https://wa.me/6282233361877"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg bg-emerald-700/60 hover:bg-emerald-700 text-white text-sm font-medium border border-emerald-600/60 transition-colors"
+                class="lp-btn-ghost !justify-start"
               >
                 <span>WA Ustadz Riski (0822-3336-1877)</span>
               </a>
@@ -190,7 +142,7 @@
 
       <!-- Bottom -->
       <div
-        class="flex flex-col items-center justify-between gap-4 pt-8 mt-12 text-xs border-t border-white/10 sm:flex-row text-emerald-100/60"
+        class="flex flex-col items-center justify-between gap-4 pt-8 mt-14 text-xs border-t border-amber-200/15 sm:flex-row text-emerald-100/60"
       >
         <p>
           &copy; {{ new Date().getFullYear() }} TPQ AMANAH Sawotratap, Gedangan,
@@ -203,5 +155,18 @@
 </template>
 
 <script setup>
+import OrnamentRule from "@/components/landing/OrnamentRule.vue";
+
 const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
+
+const links = [
+  { href: "#beranda", label: "Beranda" },
+  { href: "#pendaftaran", label: "Pendaftaran Santri Baru" },
+  { href: "#keunggulan", label: "Keunggulan Lembaga" },
+  { href: "#program", label: "Kurikulum 6 Jilid" },
+  { href: "#at-tartil", label: "E-Kitab Digital At-Tartil" },
+  { href: "#jadwal", label: "Jadwal Sesi Mengaji" },
+  { href: "#pengajar", label: "Dewan Asatidz" },
+  { href: "#kontak", label: "Kontak & Lokasi" },
+];
 </script>

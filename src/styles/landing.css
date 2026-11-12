@@ -1,0 +1,528 @@
+/* Landing page design language ("mihrab light"): one centre axis, eight-point star ornament, emerald and gold,
+   scalloped arch fringes where an emerald band meets the ivory page. Everything is prefixed lp- / hero-. */
+
+.lp {
+  --lp-ivory: #fbf9f3;
+  --lp-emerald-0: #03291d;
+  --lp-emerald-1: #053d2c;
+  --lp-emerald-2: #03261a;
+  --lp-gold: #fcd34d;
+  --lp-gold-deep: #b45309;
+  --lp-ink: #0b3b2a;
+  --lp-body: #475a50;
+  --lp-khatam-gold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23fcd34d' stroke-width='1'%3E%3Cpath d='M54.00 32.00 L32.00 54.00 L10.00 32.00 L32.00 10.00 Z'/%3E%3Cpath d='M47.56 47.56 L16.44 47.56 L16.44 16.44 L47.56 16.44 Z'/%3E%3C/g%3E%3Cg fill='%23fcd34d'%3E%3Cpath d='M0 0 L4 0 L0 4Z'/%3E%3Cpath d='M64 0 L60 0 L64 4Z'/%3E%3Cpath d='M0 64 L4 64 L0 60Z'/%3E%3Cpath d='M64 64 L60 64 L64 60Z'/%3E%3C/g%3E%3C/svg%3E");
+  --lp-khatam-brown: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23b45309' stroke-width='1'%3E%3Cpath d='M54.00 32.00 L32.00 54.00 L10.00 32.00 L32.00 10.00 Z'/%3E%3Cpath d='M47.56 47.56 L16.44 47.56 L16.44 16.44 L47.56 16.44 Z'/%3E%3C/g%3E%3Cg fill='%23b45309'%3E%3Cpath d='M0 0 L4 0 L0 4Z'/%3E%3Cpath d='M64 0 L60 0 L64 4Z'/%3E%3Cpath d='M0 64 L4 64 L0 60Z'/%3E%3Cpath d='M64 64 L60 64 L64 60Z'/%3E%3C/g%3E%3C/svg%3E");
+  --lp-fringe-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 0 H36 V2 C36 12 26 18 18 22 C10 18 0 12 0 2 Z' fill='%2303291d'/%3E%3C/svg%3E");
+  --lp-fringe-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 22 H36 V20 C36 10 26 4 18 0 C10 4 0 10 0 20 Z' fill='%23fbf9f3'/%3E%3C/svg%3E");
+  --lp-fringe-up-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='22' viewBox='0 0 36 22'%3E%3Cpath d='M0 22 H36 V20 C36 10 26 4 18 0 C10 4 0 10 0 20 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background: #fff;
+  color: var(--lp-ink);
+}
+
+/* ------------------------------------------------------------ grounds */
+.lp-section {
+  position: relative;
+  isolation: isolate;
+  padding: 5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .lp-section { padding: 7rem 0; }
+}
+
+.lp-wrap {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) { .lp-wrap { padding: 0 1.5rem; } }
+@media (min-width: 1024px) { .lp-wrap { padding: 0 2rem; } }
+
+.lp-ivory { background: var(--lp-ivory); }
+.lp-paper { background: #fff; }
+
+.lp-ivory::before,
+.lp-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-brown);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.05;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 46%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 46%);
+  pointer-events: none;
+}
+
+.lp-emerald {
+  color: #fff;
+  background:
+    radial-gradient(60rem 30rem at 50% 0%, rgba(251, 191, 36, 0.16), transparent 62%),
+    radial-gradient(48rem 30rem at 50% 100%, rgba(16, 185, 129, 0.14), transparent 66%),
+    linear-gradient(180deg, var(--lp-emerald-0) 0%, var(--lp-emerald-1) 48%, var(--lp-emerald-2) 100%);
+}
+
+.lp-emerald::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.11;
+  -webkit-mask-image: radial-gradient(ellipse 62% 56% at 50% 22%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 62% 56% at 50% 22%, #000 0%, transparent 78%);
+  pointer-events: none;
+}
+
+/* Emerald band edges: arches hang down into the page above, ivory arches rise into the band's foot. */
+.lp-fringe-top,
+.lp-fringe-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background-repeat: repeat-x;
+  background-size: 36px 22px;
+  pointer-events: none;
+}
+
+.lp-fringe-top {
+  top: -21px;
+  background-image: var(--lp-fringe-down);
+  z-index: 2;
+}
+
+.lp-fringe-bottom {
+  bottom: -1px;
+  background-image: var(--lp-fringe-up);
+  background-position: center bottom;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------------ headings */
+.lp-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--lp-gold-deep);
+}
+
+.lp-rule i {
+  display: block;
+  height: 1px;
+  width: 5.5rem;
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+
+.lp-rule i:last-child {
+  background: linear-gradient(270deg, transparent, currentColor);
+}
+
+.lp-on-dark .lp-rule { color: var(--lp-gold); }
+
+.lp-title {
+  margin: 1.25rem 0 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  text-wrap: balance;
+  color: var(--lp-ink);
+}
+
+.lp-on-dark .lp-title { color: #fff; }
+
+.lp-lede {
+  margin: 0 auto;
+  max-width: 42rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--lp-body);
+  text-wrap: pretty;
+}
+
+.lp-lede a {
+  font-weight: 700;
+  color: #047857;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.lp-on-dark .lp-lede { color: rgba(209, 250, 229, 0.82); }
+
+/* ------------------------------------------------------------ surfaces */
+.lp-card {
+  background: #fff;
+  border: 1px solid rgba(180, 83, 9, 0.14);
+  border-radius: 1.5rem;
+  box-shadow: 0 22px 44px -28px rgba(5, 61, 44, 0.38);
+}
+
+.lp-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.lp-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(180, 83, 9, 0.34);
+  box-shadow: 0 30px 50px -26px rgba(5, 61, 44, 0.5);
+}
+
+.lp-dark-panel {
+  position: relative;
+  color: #fff;
+  border-radius: 1.5rem;
+  background: linear-gradient(160deg, #063f2e 0%, #094d39 52%, #042d21 100%);
+  box-shadow: 0 30px 60px -30px rgba(3, 41, 29, 0.7);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.lp-dark-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  opacity: 0.09;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000, transparent 78%);
+}
+
+/* mihrab: round-topped panel */
+.lp-arch {
+  border-radius: 9999px 9999px 1.5rem 1.5rem;
+}
+
+/* ------------------------------------------------------------ star badge (icon / numeral frame) */
+.lp-star {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  color: var(--lp-gold-deep);
+}
+
+.lp-star > svg.lp-star-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.lp-star-body {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.lp-on-dark .lp-star,
+.lp-star.is-gold { color: var(--lp-gold); }
+
+/* ------------------------------------------------------------ small parts */
+.lp-diamond {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.lp-check {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lp-check li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  line-height: 1.55;
+}
+
+.lp-check .lp-diamond {
+  margin-top: 0.5rem;
+  color: var(--lp-gold-deep);
+}
+
+.lp-on-dark .lp-check .lp-diamond,
+.lp-check.is-dark .lp-diamond { color: var(--lp-gold); }
+
+/* gold hairline link button on light grounds */
+.lp-btn-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #065f46;
+  transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
+.lp-btn-line:hover {
+  background: #fffbeb;
+  border-color: rgba(180, 83, 9, 0.7);
+  transform: translateY(-1px);
+}
+
+.lp-btn-line:focus-visible,
+.lp-btn-gold:focus-visible,
+.lp-btn-ghost:focus-visible {
+  outline: 2px solid var(--lp-gold-deep);
+  outline-offset: 3px;
+}
+
+.lp-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 800;
+  color: #022c1e;
+  background: linear-gradient(90deg, #fbbf24, #fcd34d 50%, #fbbf24);
+  box-shadow: 0 14px 28px -12px rgba(251, 191, 36, 0.65);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.lp-btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px -12px rgba(251, 191, 36, 0.8);
+}
+
+.lp-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(252, 211, 77, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.lp-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(252, 211, 77, 0.7);
+}
+
+/* browser surfaces carry the palette too */
+.lp ::selection { background: #fcd34d; color: #03291d; }
+.lp { scrollbar-color: #0b6b4a #fbf9f3; }
+
+/* ------------------------------------------------------------ pillars: arcade of niches */
+.lp-niche {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3.5rem 1.5rem 2rem;
+  border-radius: 9999px 9999px 1.5rem 1.5rem;
+  border: 1px solid rgba(252, 211, 77, 0.34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, background-color 0.4s ease;
+}
+
+.lp-niche::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: 9999px 9999px 1rem 1rem;
+  border: 1px solid rgba(252, 211, 77, 0.14);
+  pointer-events: none;
+}
+
+.lp-niche:hover {
+  transform: translateY(-6px);
+  border-color: rgba(252, 211, 77, 0.7);
+}
+
+/* ------------------------------------------------------------ jilid journey (zig-zag around the centre axis) */
+.lp-journey {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.75rem;
+}
+
+.lp-journey::before {
+  content: "";
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 1.625rem;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(180, 83, 9, 0.55) 8%, rgba(180, 83, 9, 0.55) 92%, transparent);
+}
+
+.lp-journey > li {
+  position: relative;
+  padding-left: 4.5rem;
+}
+
+.lp-journey > li > .lp-node {
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  background: var(--lp-ivory);
+}
+
+@media (min-width: 1024px) {
+  .lp-journey {
+    gap: 2.25rem 0;
+  }
+
+  .lp-journey::before {
+    left: 50%;
+  }
+
+  .lp-journey > li {
+    width: 50%;
+    padding: 0 3.75rem 0 0;
+  }
+
+  .lp-journey > li:nth-child(even) {
+    margin-left: 50%;
+    padding: 0 0 0 3.75rem;
+  }
+
+  .lp-journey > li > .lp-node {
+    left: auto;
+    right: -1.625rem;
+  }
+
+  .lp-journey > li:nth-child(even) > .lp-node {
+    right: auto;
+    left: -1.625rem;
+  }
+}
+
+/* ------------------------------------------------------------ book shelf */
+.lp-board {
+  height: 10px;
+  margin: 0 -0.5rem 1rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #d9a441 0%, #b9822a 55%, #8a5a17 100%);
+  box-shadow: 0 10px 16px -8px rgba(5, 61, 44, 0.45);
+}
+
+/* ------------------------------------------------------------ routine: proportional bar */
+.lp-bar {
+  display: flex;
+  height: 3.25rem;
+  gap: 4px;
+  border-radius: 0.9rem;
+  overflow: hidden;
+}
+
+.lp-bar > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #022c1e;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ teachers: arch portraits */
+.lp-portrait {
+  width: 9rem;
+  height: 11rem;
+  margin: 0 auto 1.25rem;
+  overflow: hidden;
+  border-radius: 9999px 9999px 1rem 1rem;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(180, 83, 9, 0.5), 0 22px 30px -18px rgba(5, 61, 44, 0.55);
+  background: linear-gradient(160deg, #0b6b4a, #053d2c);
+}
+
+/* ------------------------------------------------------------ faq */
+.lp-faq-item {
+  border-bottom: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.lp-faq-item:first-child {
+  border-top: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+/* ------------------------------------------------------------ quotes */
+.lp-quote-mark {
+  font-family: Amiri, serif;
+  font-size: 5rem;
+  line-height: 0.6;
+  color: rgba(180, 83, 9, 0.35);
+  height: 2rem;
+}
+
+/* ------------------------------------------------------------ one authored reveal for the sections below the fold */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-reveal {
+    animation: lp-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 38%;
+  }
+}
+
+@keyframes lp-reveal {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------------------------------------------------ footer */
+.lp-footer {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(56rem 24rem at 50% 0%, rgba(251, 191, 36, 0.12), transparent 62%),
+    linear-gradient(180deg, #03291d 0%, #021c13 100%);
+}
+
+.lp-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  opacity: 0.08;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000, transparent 76%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000, transparent 76%);
+  pointer-events: none;
+}
+
+.lp-fringe-bottom.is-paper {
+  background-image: var(--lp-fringe-up-paper);
+}
