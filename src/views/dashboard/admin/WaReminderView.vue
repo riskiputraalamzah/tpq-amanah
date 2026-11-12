@@ -80,6 +80,31 @@
               <input id="recap-switch" v-model="form.nightlyRecap.enabled" type="checkbox" role="switch" class="switch" />
             </div>
           </li>
+          <li>
+            <div class="toggle-row">
+              <label class="toggle-text" for="coverage-switch">
+                <strong>Jaga sesi agar tidak kosong guru</strong>
+                <small>Jika guru lain di sesi yang sama berhalangan dan tinggal satu guru yang belum absen, guru itu diminta hadir
+                  (berisi siapa saja yang berhalangan). Jika semua berhalangan, nomor admin di bawah diberi peringatan. Dicek tiap 5 menit.</small>
+              </label>
+              <select v-model.number="form.coverageAlert.leadMinutes" class="form-input time-inline lead-select"
+                aria-label="Mulai dipantau sebelum sesi" :disabled="!form.coverageAlert.enabled">
+                <option :value="60">1 jam sebelum</option>
+                <option :value="120">2 jam sebelum</option>
+                <option :value="180">3 jam sebelum</option>
+                <option :value="240">4 jam sebelum</option>
+              </select>
+              <input id="coverage-switch" v-model="form.coverageAlert.enabled" type="checkbox" role="switch" class="switch" />
+            </div>
+            <label v-if="form.coverageAlert.enabled" class="admin-numbers">
+              <span>Nomor WA admin untuk peringatan sesi kosong guru (pisahkan dengan koma, maks. 5)</span>
+              <input v-model="form.coverageAlert.adminNumbersText" type="text" inputmode="tel" class="form-input"
+                placeholder="0812xxxxxxxx, 0813xxxxxxxx" />
+              <small v-if="!form.coverageAlert.adminNumbersText.trim()" class="field-warn">
+                Belum diisi: kalau satu sesi kosong guru, belum ada yang diberi tahu.
+              </small>
+            </label>
+          </li>
         </ul>
         <p class="hint">Pesan Sabtu, Minggu, dan info libur tetap terkirim otomatis seperti biasa.</p>
       </section>
@@ -207,7 +232,7 @@ const testTypes = [
   { value: 'end', label: 'Cek akhir sesi', hint: 'Sesuai status absen guru hari ini' },
   { value: 'recap', label: 'Rekap belum absen', hint: 'Daftar tanggal yang belum lengkap bulan ini' },
 ]
-const RUN_LABELS = { start: 'Pesan awal sesi', end: 'Cek akhir sesi', recap: 'Rekap belum absen' }
+const RUN_LABELS = { start: 'Pesan awal sesi', end: 'Cek akhir sesi', recap: 'Rekap belum absen', coverage: 'Jaga sesi tidak kosong guru' }
 
 const loading = ref(true)
 const loadError = ref('')
@@ -333,6 +358,11 @@ const buildForm = (data) => {
     startMessage: { enabled: data.config.startMessage.enabled },
     endCheck: { enabled: data.config.endCheck.enabled },
     nightlyRecap: { enabled: data.config.nightlyRecap.enabled, time: data.config.nightlyRecap.time },
+    coverageAlert: {
+      enabled: data.config.coverageAlert?.enabled !== false,
+      leadMinutes: data.config.coverageAlert?.leadMinutes || 180,
+      adminNumbersText: (data.config.coverageAlert?.adminNumbers || []).join(', '),
+    },
     gurus: gurusForm,
   }
 }
@@ -378,10 +408,17 @@ const save = async () => {
         entry.endTime = null
       }
     }
+    payload.coverageAlert = {
+      enabled: payload.coverageAlert.enabled,
+      leadMinutes: payload.coverageAlert.leadMinutes,
+      adminNumbers: payload.coverageAlert.adminNumbersText,
+    }
     const { data } = await api.put('/wa-reminders/settings', payload)
     for (const [id, entry] of Object.entries(data.config.gurus)) {
       if (form.value.gurus[id]) form.value.gurus[id].number = entry.number
     }
+    // numbers come back normalized (628...)
+    form.value.coverageAlert.adminNumbersText = (data.config.coverageAlert?.adminNumbers || []).join(', ')
     snapshot.value = JSON.stringify(form.value)
     success(data.message || 'Pengaturan notifikasi WA tersimpan.')
   } catch (err) {
@@ -708,6 +745,23 @@ onBeforeUnmount(() => {
 .time-inline {
   width: 120px;
   flex: none;
+}
+
+.lead-select {
+  width: 160px;
+}
+
+.admin-numbers {
+  display: grid;
+  gap: 4px;
+  margin-top: var(--space-sm);
+  padding: 0 var(--space-md);
+  font-size: 0.85rem;
+  color: var(--gray-700);
+}
+
+.field-warn {
+  color: #b45309;
 }
 
 @media (max-width: 480px) {

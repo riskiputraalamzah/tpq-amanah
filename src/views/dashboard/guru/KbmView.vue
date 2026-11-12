@@ -772,27 +772,37 @@ const fetchInitialData = async () => {
 
 // Most teachers always teach the same sesi and jilid: start from their latest KBM. When the page opens on an earlier
 // month that has no KBM yet (a link from the LPJ checklist), look in this month and the one before instead.
-const latestTeaching = (list) =>
+// The teacher's own KBM (badal is someone else's class), newest first; optionally only in one sesi.
+const latestTeaching = (list, slotId = null) =>
   [...(list || [])]
-    .filter((s) => s.type === "teaching")
+    .filter((s) => s.type === "teaching" && !s.substituteFor && (!slotId || (s.sessionSlotId || "wave_1") === slotId))
     .sort((a, b) => (b.date?._seconds || 0) - (a.date?._seconds || 0))[0];
+
+// Start from the teacher's sesi (admin schedule, like the Daily Workspace) and the jilid of their latest KBM in it.
+// When the page opens on an earlier month without KBM (a link from the LPJ checklist), look in this month and the
+// one before instead.
 const preselectFromLastSession = async () => {
   if (form.value.sessionSlotId && form.value.classId) return;
-  let latest = latestTeaching(history.value);
-  if (!latest) {
+  let pool = history.value || [];
+  if (!latestTeaching(pool)) {
     const current = { month: today.getMonth() + 1, year: today.getFullYear() };
     const previous = current.month === 1 ? { month: 12, year: current.year - 1 } : { month: current.month - 1, year: current.year };
     for (const params of [current, previous]) {
       if (params.month === viewedPeriod().month && params.year === viewedPeriod().year) continue;
       const res = await api.get("/teaching_sessions", { params }).catch(() => null);
-      latest = latestTeaching(res?.data);
-      if (latest) break;
+      if (latestTeaching(res?.data)) {
+        pool = res.data;
+        break;
+      }
     }
   }
-  if (!latest) return;
-  if (!form.value.sessionSlotId && sessionSlots.value.some((slot) => slot.id === latest.sessionSlotId)) {
-    form.value.sessionSlotId = latest.sessionSlotId;
+  const scheduled = kbmCalendar.value?.scheduledSlotId;
+  const slotId = sessionSlots.value.some((slot) => slot.id === scheduled) ? scheduled : latestTeaching(pool)?.sessionSlotId;
+  if (!form.value.sessionSlotId && slotId && sessionSlots.value.some((slot) => slot.id === slotId)) {
+    form.value.sessionSlotId = slotId;
   }
+  const latest = latestTeaching(pool, form.value.sessionSlotId) || latestTeaching(pool);
+  if (!latest) return;
   const level = normalizeLevel(latest.levelId || latest.classId);
   const match = classes.value.find((c) => normalizeLevel(c.id) === level);
   if (!form.value.classId && match) form.value.classId = match.id;

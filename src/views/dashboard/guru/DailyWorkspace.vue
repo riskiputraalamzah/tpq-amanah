@@ -148,17 +148,27 @@
           </div>
         </div>
 
-        <!-- Section 1: Session Slot -->
+        <!-- Section 1: Session Slot (the teacher's own sesi, set for them; "Ganti" only for badal / extra classes) -->
         <section class="workspace-section glass-card">
           <div class="section-header">
             <span class="step-num">1</span>
             <div>
-              <h2>Pilih Sesi Pembelajaran</h2>
-              <p>Pilih slot waktu KBM yang dijalankan</p>
+              <h2>Sesi Pembelajaran</h2>
+              <p>{{ slotPickerOpen ? 'Pilih sesi yang dijalankan (mis. saat badal atau ada kelas tambahan)' : slotSourceText }}</p>
             </div>
           </div>
 
-          <div class="slots-grid">
+          <div v-if="!slotPickerOpen" class="slot-summary">
+            <div class="slot-summary-main" :class="selectedSlotId === 'wave_2' ? 'is-malam' : 'is-sore'">
+              <span class="slot-name">{{ selectedSlotId === 'wave_2' ? 'MALAM' : 'SORE' }}</span>
+              <span class="slot-time">{{ selectedSlotId === 'wave_2' ? '18.00 – 19.30' : '15.00 – 16.30' }}</span>
+              <span v-if="getSavedSessionsForSlot(selectedSlotId).length > 0" class="slot-status-saved">
+                ✓ {{ getSavedSessionsForSlot(selectedSlotId).length }} Sesi ({{ getSavedSessionsNamesForSlot(selectedSlotId) }})
+              </span>
+            </div>
+            <button type="button" class="btn-change-slot" @click="slotPickerOpen = true">Ganti</button>
+          </div>
+          <div v-else class="slots-grid">
             <button
               type="button"
               class="slot-btn"
@@ -166,7 +176,7 @@
                 active: selectedSlotId === 'wave_1',
                 'has-sessions': getSavedSessionsForSlot('wave_1').length > 0
               }"
-              @click="selectSlot('wave_1')"
+              @click="chooseSlot('wave_1')"
             >
               <div class="slot-header">
                 <span class="slot-name">SORE</span>
@@ -185,7 +195,7 @@
                 active: selectedSlotId === 'wave_2',
                 'has-sessions': getSavedSessionsForSlot('wave_2').length > 0
               }"
-              @click="selectSlot('wave_2')"
+              @click="chooseSlot('wave_2')"
             >
               <div class="slot-header">
                 <span class="slot-name">MALAM</span>
@@ -209,6 +219,11 @@
             </div>
           </div>
 
+          <div v-if="slotDoneToday && !selectedLevelId" class="slot-done-note" role="status">
+            ✓ KBM {{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }} Anda hari ini sudah tersimpan
+            ({{ getSavedSessionsNamesForSlot(selectedSlotId) }}). Mengajar jilid lain juga? Pilih di bawah.
+          </div>
+
           <!-- Jilid List -->
           <div class="level-group-title">Jilid</div>
           <div class="levels-grid">
@@ -219,7 +234,7 @@
               class="level-card"
               :class="{
                 active: selectedLevelId === item.levelId,
-                recommended: dailyContext?.suggestedLevelId === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
+                recommended: suggestedLevelForSlot === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
                 'level-saved': isLevelSavedInSelectedSlot(item.levelId)
               }"
               @click="selectLevel(item.levelId)"
@@ -228,7 +243,7 @@
               <span v-if="isLevelSavedInSelectedSlot(item.levelId)" class="badge-saved">
                 ✓ Tersimpan ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})
               </span>
-              <span v-else-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
+              <span v-else-if="suggestedLevelForSlot === item.levelId" class="badge-rec">
                 Rekomendasi
               </span>
             </button>
@@ -244,7 +259,7 @@
               class="level-card"
               :class="{
                 active: selectedLevelId === item.levelId,
-                recommended: dailyContext?.suggestedLevelId === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
+                recommended: suggestedLevelForSlot === item.levelId && !isLevelSavedInSelectedSlot(item.levelId),
                 'level-saved': isLevelSavedInSelectedSlot(item.levelId)
               }"
               @click="selectLevel(item.levelId)"
@@ -253,7 +268,7 @@
               <span v-if="isLevelSavedInSelectedSlot(item.levelId)" class="badge-saved">
                 ✓ Tersimpan ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})
               </span>
-              <span v-else-if="dailyContext?.suggestedLevelId === item.levelId" class="badge-rec">
+              <span v-else-if="suggestedLevelForSlot === item.levelId" class="badge-rec">
                 Rekomendasi
               </span>
             </button>
@@ -732,6 +747,8 @@ const blockingError = ref(null);
 
 const selectedSlotId = ref('wave_1');
 const selectedLevelId = ref('');
+// The sesi is set for the teacher (admin schedule -> latest KBM -> time of day); the picker opens only on "Ganti".
+const slotPickerOpen = ref(false);
 const roster = ref([]);
 const inactiveSantri = ref([]);
 const curriculum = ref(null);
@@ -1029,9 +1046,52 @@ function getSavedSessionsNamesForSlot(slotId) {
   return list.map(s => s.className || `Jilid ${s.classId || s.levelId}`).join(', ');
 }
 
+// The jilid this teacher usually teaches in the selected sesi and has not saved today (from the server).
+const suggestedLevelForSlot = computed(() => {
+  const bySlot = dailyContext.value?.suggestedLevelsBySlot;
+  if (bySlot && Object.prototype.hasOwnProperty.call(bySlot, selectedSlotId.value)) return bySlot[selectedSlotId.value] || null;
+  return dailyContext.value?.suggestedLevelId || null; // older server
+});
+
+// The selected sesi already has KBM today and nothing usual is left to fill.
+const slotDoneToday = computed(() => getSavedSessionsForSlot(selectedSlotId.value).length > 0 && !suggestedLevelForSlot.value);
+
+const slotSourceText = computed(() => {
+  const source = dailyContext.value?.defaultSlot?.source;
+  if (source === 'jadwal') return 'Sesuai jadwal Anda dari admin';
+  if (source === 'riwayat') return 'Sesuai KBM terakhir Anda';
+  if (source === 'jam') return 'Menyesuaikan jam sekarang';
+  return 'Sesi yang dijalankan';
+});
+
+function clearLevelSelection() {
+  selectedLevelId.value = '';
+  roster.value = [];
+  inactiveSantri.value = [];
+  curriculum.value = null;
+  journalForm.value.material = '';
+  journalForm.value.supportingMaterial = '';
+}
+
+// Start from the teacher's usual jilid in the selected sesi, unless it is already saved today.
+function preselectLevelForSlot() {
+  const level = suggestedLevelForSlot.value;
+  if (level && !isLevelSavedInSelectedSlot(level)) selectLevel(level);
+}
+
 // Select Slot
 function selectSlot(slotId) {
   selectedSlotId.value = slotId;
+}
+
+// "Ganti" -> a sesi picked by hand: keep a chosen jilid unless it is already saved in that sesi.
+function chooseSlot(slotId) {
+  const changed = slotId !== selectedSlotId.value;
+  selectSlot(slotId);
+  slotPickerOpen.value = false;
+  if (!changed) return;
+  if (selectedLevelId.value && isLevelSavedInSelectedSlot(selectedLevelId.value)) clearLevelSelection();
+  if (!selectedLevelId.value) preselectLevelForSlot();
 }
 
 // Select Level
@@ -1124,16 +1184,12 @@ async function loadDailyContext(isAddingNewSession = false) {
       return;
     }
 
-    // Set suggested level if present and not already saved for this slot
-    if (!isAddingNewSession && data.suggestedLevelId) {
-      const alreadySaved = (data.existingSessions || []).some(s => 
-        (s.sessionSlotId || 'wave_1') === selectedSlotId.value &&
-        String(s.classId || s.levelId) === String(data.suggestedLevelId)
-      );
-      if (!alreadySaved) {
-        selectLevel(data.suggestedLevelId);
-      }
+    // The teacher's own sesi on first load; when adding another class the sesi stays where it was.
+    if (!isAddingNewSession && data.defaultSlot?.slotId) {
+      selectSlot(data.defaultSlot.slotId);
     }
+    // Then their usual jilid in that sesi that is not saved yet (a second jilid of the same sesi after a save).
+    if (!selectedLevelId.value) preselectLevelForSlot();
   } catch (err) {
     console.error('Failed to load daily context:', err);
     blockingError.value = {
@@ -1236,12 +1292,7 @@ async function submitKbm() {
 // Multi-session: Add another session for another Jilid or slot
 async function handleAddNewSession() {
   showSuccessModal.value = false;
-  selectedLevelId.value = '';
-  roster.value = [];
-  inactiveSantri.value = [];
-  curriculum.value = null;
-  journalForm.value.material = '';
-  journalForm.value.supportingMaterial = '';
+  clearLevelSelection();
   journalForm.value.notes = '';
   await loadDailyContext(true);
 }
@@ -1785,6 +1836,73 @@ onMounted(async () => {
 }
 
 /* Slots Grid */
+.slot-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--primary);
+  background: rgba(46, 125, 50, 0.06);
+}
+
+.slot-summary-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.slot-summary-main .slot-name {
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.slot-summary-main .slot-time {
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.slot-summary-main .slot-status-saved {
+  flex-basis: 100%;
+  font-size: 0.82rem;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.btn-change-slot {
+  flex: none;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  color: var(--primary-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-change-slot:hover {
+  border-color: var(--primary);
+}
+
+.btn-change-slot:focus-visible {
+  outline: 3px solid var(--primary-300, #81c784);
+  outline-offset: 2px;
+}
+
+.slot-done-note {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e8f5e9;
+  color: #1b5e20;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
 .slots-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

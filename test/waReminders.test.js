@@ -45,3 +45,13 @@ test("bot status refreshes on its own while the page is open", () => {
   assert.ok(view.includes("document.visibilityState !== 'visible'"), "paused when the tab is hidden");
   assert.ok(view.includes("QR_RECEIVED: { tone: 'warn', label: 'Perlu scan QR'"), "clear label when a QR scan is needed");
 });
+
+test("Notifikasi WA: 'jaga sesi agar tidak kosong guru' with lead time and admin numbers", () => {
+  const src = fs.readFileSync(path.join(here, "../src/views/dashboard/admin/WaReminderView.vue"), "utf8");
+  assert.ok(src.includes('id="coverage-switch" v-model="form.coverageAlert.enabled"'), "on/off");
+  assert.ok(/<option :value="60">1 jam sebelum<\/option>[\s\S]*<option :value="180">3 jam sebelum<\/option>/.test(src), "how early it starts watching");
+  assert.ok(src.includes('v-model="form.coverageAlert.adminNumbersText"'), "admin numbers");
+  assert.ok(src.includes("Belum diisi: kalau satu sesi kosong guru, belum ada yang diberi tahu."), "warns when no admin number");
+  assert.ok(src.includes("adminNumbers: payload.coverageAlert.adminNumbersText"), "sent to the server, which validates and normalizes");
+  assert.ok(src.includes("coverage: 'Jaga sesi tidak kosong guru'"), "shown in the bot's last runs");
+});
