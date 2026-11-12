@@ -44,7 +44,7 @@ test("save button labels cover all states", () => {
 test("save handler guards duplicate submission", () => {
   const m = viewSrc.match(/const save = async \(\) => \{[\s\S]*?\n\};/);
   assert.ok(m, "save handler exists");
-  assert.ok(m[0].includes("if (!dirty.value || saving.value) return;"));
+  assert.match(m[0], /if \(!dirty\.value \|\| saving\.value(?: \|\| sessionLocked\.value)?\) return;/, "no second save while one is running");
   const puts = (m[0].match(/api\.put/g) || []).length;
   assert.equal(puts, 1, "exactly one PUT per save");
 });

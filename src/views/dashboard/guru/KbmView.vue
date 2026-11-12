@@ -42,8 +42,8 @@
       <div class="locked-text">
         <strong>Administrasi Periode Ini Sedang Dikunci</strong>
         <p>
-          Laporan LPJ periode ini berstatus <strong>{{ lockedStatusText }}</strong>. Penambahan atau penghapusan sesi
-          dinonaktifkan sementara.
+          Laporan LPJ bulanan periode ini berstatus <strong>{{ lockedStatusText }}</strong>, jadi KBM bulan ini hanya
+          bisa dilihat. Pakai panah di kalender untuk pindah ke bulan lain, atau hubungi admin bila perlu dikoreksi.
         </p>
       </div>
     </div>
@@ -133,7 +133,7 @@
             </div>
 
             <!-- Contextual notice if date passed via URL -->
-            <div v-if="contextualDate && !isFromAttendance" class="contextual-date-banner">
+            <div v-if="contextualDate && !isFromAttendance && form.date" class="contextual-date-banner">
               <div class="contextual-badge">
                 <span>📅 Sesi tanggal: <strong>{{ formatContextualDate(form.date) }}</strong></span>
                 <button v-if="form.date !== todayString" type="button" class="btn-reset-date" @click="setDateToday"
@@ -177,6 +177,7 @@
 
                 <KbmDatePicker v-if="useCalendar" :calendar="kbmCalendar" :model-value="form.date"
                   :slot-id="form.sessionSlotId" :class-id="form.classId" :max-date="todayString" :loading="monthLoading"
+                  :locked-reason="calendarLockedReason"
                   @update:model-value="pickDate" @open-session="openExistingSession" @change-month="changeMonth" />
                 <input v-else id="input-kbm-date" type="date" v-model="form.date"
                   :min="isFromAttendance ? todayString : minDateString" :max="todayString"
@@ -396,7 +397,7 @@
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                       </svg>
-                      <span>{{ workflowOf(session).attFilled ? "Ubah Absensi" : "Isi Absensi Santri" }}</span>
+                      <span>{{ isPeriodLocked ? "Lihat Absensi" : workflowOf(session).attFilled ? "Ubah Absensi" : "Isi Absensi Santri" }}</span>
                     </button>
                   </div>
 
@@ -425,7 +426,7 @@
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                       </svg>
-                      <span>{{ workflowOf(session).journalFilled ? "Ubah Jurnal" : "Isi Jurnal KBM" }}</span>
+                      <span>{{ isPeriodLocked ? "Lihat Jurnal" : workflowOf(session).journalFilled ? "Ubah Jurnal" : "Isi Jurnal KBM" }}</span>
                     </button>
                   </div>
                 </div>
@@ -519,6 +520,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import KbmDatePicker from "@/components/KbmDatePicker.vue";
+import { pickMonthReport, lockMessage } from "@/utils/lpjLock";
 import { findDay, normalizeLevel } from "@/utils/kbmCalendar";
 import { useRoute, useRouter } from "vue-router";
 import { resolveKbmDateFromQuery } from "@/utils/lpjState";
@@ -624,9 +626,10 @@ const lockedStatusText = computed(() => {
   return "Terkunci";
 });
 
-// The calendar replaces the native date input, except when the date is fixed (from attendance / locked period)
-// or the calendar could not be loaded.
-const useCalendar = computed(() => !!kbmCalendar.value && !isFromAttendance.value && !isPeriodLocked.value);
+// The calendar replaces the native date input, except when the date is fixed (coming from today's attendance) or the
+// calendar could not be loaded. A locked month keeps the calendar, so the month arrows always stay available.
+const useCalendar = computed(() => !!kbmCalendar.value && !isFromAttendance.value);
+const calendarLockedReason = computed(() => (isPeriodLocked.value ? lockMessage(currentLpjReport.value?.status) : ""));
 
 const loadCalendar = async () => {
   try {
@@ -653,7 +656,7 @@ const loadMonthData = async () => {
     if (request !== monthRequest) return;
     history.value = historyRes.data || [];
     myAttendances.value = attRes.data || [];
-    currentLpjReport.value = Array.isArray(lpjRes?.data) && lpjRes.data.length > 0 ? lpjRes.data[0] : null;
+    currentLpjReport.value = pickMonthReport(lpjRes?.data);
     kbmCalendar.value = calendarRes?.data || null;
   } catch (error) {
     if (request !== monthRequest) return;
@@ -699,8 +702,9 @@ const openExistingSession = (sessionId) => {
   router.push(`/dashboard/kbm/${sessionId}/${next}`);
 };
 
+// Also the way back from a locked month to today.
 const setDateToday = () => {
-  if (isFromAttendance.value || isPeriodLocked.value) return;
+  if (isFromAttendance.value) return;
   form.value.date = todayString;
   validateEligibility();
 };
@@ -751,9 +755,7 @@ const fetchInitialData = async () => {
       minDateString.value = `${tpqProfile.value.activeOperationalPeriod}-01`;
     }
 
-    currentLpjReport.value = Array.isArray(lpjRes?.data) && lpjRes.data.length > 0
-      ? lpjRes.data[0]
-      : null;
+    currentLpjReport.value = pickMonthReport(lpjRes?.data);
     teachers.value = (teachersRes?.data || []).filter(
       (t) => t.id !== authStore.user?.id,
     );

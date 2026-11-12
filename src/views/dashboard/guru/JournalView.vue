@@ -204,6 +204,8 @@
             </div>
           </div>
 
+          <div v-if="sessionLocked" class="alert alert-locked" role="status">🔒 {{ lockText }}</div>
+
           <div v-if="isSpecial" class="alert alert-warning">
             Kegiatan khusus: jurnal memakai nama kegiatan. Tidak memajukan pertemuan maupun RPP.
           </div>
@@ -219,7 +221,7 @@
                 class="form-input editor-textarea"
                 rows="5"
                 placeholder="Tuliskan materi pembelajaran yang diajarkan pada sesi ini..."
-                :disabled="saving"
+                :disabled="saving || sessionLocked"
                 @input="onEdit"
               />
             </label>
@@ -234,7 +236,7 @@
                 class="form-input editor-textarea notes-textarea"
                 rows="2"
                 placeholder="Contoh: Hafalan doa sehari-hari, hafalan bacaan sholat..."
-                :disabled="saving"
+                :disabled="saving || sessionLocked"
                 @input="onEdit"
               />
             </label>
@@ -249,7 +251,7 @@
                 class="form-input editor-textarea notes-textarea"
                 rows="4"
                 placeholder="Catatan perkembangan santri, kendala mengajar, atau evaluasi kelas..."
-                :disabled="saving"
+                :disabled="saving || sessionLocked"
                 @input="onEdit"
               />
             </label>
@@ -296,7 +298,7 @@
             <button
               type="button"
               class="mt-4 btn btn-primary btn-save"
-              :disabled="!dirty || saving"
+              :disabled="!dirty || saving || sessionLocked"
               @click="save"
             >
               <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -316,6 +318,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useSessionLock } from "@/composables/useSessionLock";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import { useToast } from "@/composables/useToast";
@@ -339,6 +342,8 @@ const sessionId = route.params.id;
 
 const loading = ref(true);
 const loadError = ref("");
+// Month locked by a submitted/approved monthly LPJ: the journal is shown read-only.
+const { locked: sessionLocked, message: lockText, check: checkLock } = useSessionLock();
 const session = ref({});
 const sessionSlots = ref([]);
 const classes = ref([]);
@@ -408,6 +413,7 @@ const fetchData = async () => {
     session.value = sessionRes.data;
     sessionSlots.value = slotsRes.data;
     classes.value = classesRes.data;
+    checkLock(session.value);
     material.value = session.value.journal?.material || "";
     supportingMaterial.value = session.value.journal?.supportingMaterial || "";
     notes.value = session.value.journal?.notes || "";
@@ -428,7 +434,7 @@ const fetchData = async () => {
 };
 
 const save = async () => {
-  if (!dirty.value || saving.value) return;
+  if (!dirty.value || saving.value || sessionLocked.value) return;
   saving.value = true;
   journalStatus.value = "saving";
   saveMessage.value = "";
@@ -464,6 +470,17 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
+.alert-locked {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .journal-view {
   padding-top: 60px;
   display: flex;

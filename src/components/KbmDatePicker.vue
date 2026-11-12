@@ -12,7 +12,8 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
         </button>
       </div>
-      <span v-if="!view.canFill" class="picker-closed">
+      <span v-if="lockedReason" class="picker-closed" role="status">🔒 {{ lockedReason }}</span>
+      <span v-else-if="!view.canFill" class="picker-closed">
         Bulan ini sudah di luar periode aktif dan Anda tidak termasuk LPJ yang memintanya, jadi belum bisa diisi.
         KBM yang sudah ada tetap bisa dibuka.
       </span>
@@ -72,6 +73,8 @@ const props = defineProps({
   minDate: { type: String, default: '' },
   maxDate: { type: String, default: '' },
   loading: { type: Boolean, default: false },
+  // Set when the month's monthly LPJ is submitted/approved: shown instead of the dates to fill.
+  lockedReason: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue', 'open-session', 'change-month'])
 
@@ -81,6 +84,7 @@ const view = computed(() =>
     slotId: props.slotId,
     classId: props.classId ? String(props.classId) : '',
     selectedDate: props.modelValue,
+    locked: !!props.lockedReason,
     minDate: props.minDate,
     maxDate: props.maxDate,
   }),

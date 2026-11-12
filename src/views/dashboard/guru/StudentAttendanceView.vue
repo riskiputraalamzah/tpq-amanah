@@ -140,6 +140,8 @@
           </div>
         </section>
 
+        <div v-if="sessionLocked" class="alert alert-locked" role="status">🔒 {{ lockText }}</div>
+
         <!-- Main Content: Student Roster -->
         <section v-if="!isTeaching" class="glass-card">
           <div class="alert alert-error">
@@ -147,7 +149,7 @@
           </div>
         </section>
 
-        <section v-else class="glass-card roster-main-card">
+        <section v-else class="glass-card roster-main-card" :class="{ 'is-readonly': sessionLocked }">
           <div class="roster-toolbar">
             <div class="roster-title-box">
               <h2>Daftar Santri ({{ roster.length }})</h2>
@@ -156,7 +158,7 @@
             <button
               type="button"
               class="btn btn-secondary btn-all-present"
-              :disabled="roster.length === 0 || saving"
+              :disabled="roster.length === 0 || saving || sessionLocked"
               @click="markAllPresent"
               title="Set semua santri menjadi Hadir"
             >
@@ -437,7 +439,7 @@
             <button
               type="button"
               class="mt-4 btn btn-primary btn-save-attendance"
-              :disabled="!dirty || saving || roster.length === 0 || isFuture"
+              :disabled="!dirty || saving || roster.length === 0 || isFuture || sessionLocked"
               @click="save"
             >
               <svg v-if="!saving" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -529,6 +531,10 @@ import {
   saveButtonLabel,
 } from "@/utils/studentAttendanceState";
 import { resolveSessionSlotFullName } from "@/utils/sessionSlot";
+import { useSessionLock } from "@/composables/useSessionLock";
+
+// Month locked by a submitted/approved monthly LPJ: the roster is shown read-only.
+const { locked: sessionLocked, message: lockText, check: checkLock } = useSessionLock();
 
 const { success, error: showError, warning } = useToast();
 
@@ -666,7 +672,7 @@ const attendancePercent = computed(() => {
 });
 
 const setStatus = (row, newStatus) => {
-  if (row.status === newStatus) return;
+  if (sessionLocked.value || row.status === newStatus) return;
   row.status = newStatus;
   onEdit();
 };
@@ -685,6 +691,7 @@ const onEdit = () => {
 };
 
 const markAllPresent = () => {
+  if (sessionLocked.value) return;
   roster.value = applyAllPresent(roster.value);
   dirty.value = true;
   saveStatus.value = "unsaved";
@@ -703,6 +710,7 @@ const fetchData = async () => {
     session.value = sessionRes.data;
     sessionSlots.value = slotsRes.data;
     classes.value = classesRes.data;
+    checkLock(session.value);
 
     if (["teaching", "special_non_kbm"].includes(session.value.type)) {
       const targetClassId = String(session.value.levelId || session.value.classId || "");
@@ -754,7 +762,7 @@ const fetchData = async () => {
 };
 
 const save = async () => {
-  if (!dirty.value || saving.value) return;
+  if (!dirty.value || saving.value || sessionLocked.value) return;
   saving.value = true;
   saveStatus.value = "saving";
   saveMessage.value = "";
@@ -794,6 +802,22 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
+.alert-locked {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.roster-main-card.is-readonly .seg-btn {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .student-attendance-view {
   padding-top: 60px;
 }
