@@ -20,7 +20,7 @@
     </div>
 
     <div class="weekdays" aria-hidden="true">
-      <span v-for="d in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="d">{{ d }}</span>
+      <span v-for="d in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']" :key="d">{{ d }}</span>
     </div>
 
     <div ref="gridEl" class="grid" :class="{ 'is-loading': loading }" :aria-busy="loading" role="group" :aria-label="`Kalender KBM, ${view.title}`" @keydown="onKeydown">

@@ -60,13 +60,16 @@ test("present without KBM, not checked in, on leave, holiday, weekend, future, o
   assert.equal(dayState(day("2026-10-30"), opts).label, "Di luar periode aktif");
 });
 
-test("month grid starts on Monday; empty days are filled, days with KBM are opened", () => {
+test("month grid starts on Sunday like the attendance calendar; empty days are filled, days with KBM are opened", () => {
   const days = ["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-04", "2026-11-05"].map((d, i) =>
     day(d, [{ kind: "weekend" }, { attendance: "hadir" }, { attendance: "hadir", sessions: [malamJilid6] }, {}, { attendance: "hadir", sessions: [soreJilid5Open] }][i]),
   );
   const view = buildCalendar({ period: "2026-11", today: "2026-11-04", days }, { ...opts, selectedDate: "2026-11-04" });
   assert.equal(view.title, "November 2026");
-  assert.equal(view.leadingBlanks, 6, "1 Nov 2026 is a Sunday");
+  assert.equal(view.leadingBlanks, 0, "1 Nov 2026 is a Sunday: first column");
+  const oct = buildCalendar({ period: "2026-10", today: "2026-11-04", days: [day("2026-10-01")] });
+  assert.equal(oct.leadingBlanks, 4, "1 Oct 2026 is a Thursday: after Min, Sen, Sel, Rab");
+  assert.ok(picker.includes("['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"), "headers in the same order");
   assert.deepEqual(view.needsDates, ["2026-11-02"]);
   assert.deepEqual(view.incompleteDates, ["2026-11-05"]);
   const [sun, mon, tue, wed, thu] = view.cells;

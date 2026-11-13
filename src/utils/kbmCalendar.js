@@ -70,7 +70,8 @@ export function dayState(day, { minDate, maxDate, canFill = true } = {}) {
 export function buildCalendar(calendar, options = {}) {
   const days = Array.isArray(calendar?.days) ? calendar.days : []
   const firstWeekday = days.length ? days[0].weekday : 1
-  const leadingBlanks = (firstWeekday + 6) % 7 // Monday first
+  // Sunday first (Min, Sen, ..., Sab), the same as the attendance calendar
+  const leadingBlanks = firstWeekday
   // locked: the month's monthly LPJ is submitted/approved, so nothing can be added (existing KBM still open to view)
   const canFill = calendar?.canFill !== false && !options.locked
   const cells = days.map((day) => {

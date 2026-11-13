@@ -268,16 +268,12 @@
       <!-- Calendar Navigation -->
       <div class="calendar-section glass-card">
         <div class="calendar-header">
-          <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
+          <button type="button" class="nav-btn" aria-label="Bulan sebelumnya" @click="prevMonth" :disabled="isFirstMonth">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
           </button>
-          <h3>{{ calendarMonthNames[calendarMonth] }} {{ calendarYear }}</h3>
-          <button class="nav-btn" @click="nextMonth" :disabled="isCurrentCalendarMonth">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
+          <strong class="month-title" aria-live="polite">{{ calendarMonthNames[calendarMonth] }} {{ calendarYear }}</strong>
+          <button type="button" class="nav-btn" aria-label="Bulan berikutnya" @click="nextMonth" :disabled="isCurrentCalendarMonth">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
 
@@ -289,41 +285,51 @@
         </div>
 
         <template v-else>
-          <!-- Calendar Grid -->
-          <div class="calendar-grid">
-            <!-- Day Headers -->
-            <div class="day-header" v-for="day in calendarDayNames" :key="day">{{ day }}</div>
+          <!-- Calendar Grid (same look as the KBM calendar: Min first, marks in the corner) -->
+          <div class="weekdays" aria-hidden="true">
+            <span v-for="day in calendarDayNames" :key="day">{{ day }}</span>
+          </div>
+          <div class="calendar-grid" role="group" :aria-label="`Kalender absensi, ${calendarMonthNames[calendarMonth]} ${calendarYear}`">
+            <span v-for="n in firstDayOfMonth" :key="'empty-' + n" aria-hidden="true"></span>
 
-            <!-- Empty cells for alignment -->
-            <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
-
-            <!-- Date Cells -->
-            <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCalendarCellClass(date)"
-              @click="showCalendarDetail(date)" :title="getHolidayForDate(date)?.name || ''">
+            <button v-for="date in daysInMonth" :key="date" type="button" class="calendar-cell"
+              :class="getCalendarCellClass(date)" :aria-pressed="selectedCalendarDate === date"
+              :aria-label="getCalendarCellLabel(date)" :title="getHolidayForDate(date)?.name || ''"
+              @click="showCalendarDetail(date)">
               <span class="cell-date">{{ date }}</span>
-              <span class="cell-status" v-if="getAttendanceForDate(date)">
-                {{ getAttendanceForDate(date).status === 'hadir' ? '✓' : '✗' }}
+              <span v-if="getAttendanceForDate(date)?.status === 'hadir'" class="mark mark-hadir" aria-hidden="true">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg>
               </span>
-              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
-            </div>
+              <span v-else-if="getAttendanceForDate(date)" class="mark mark-tidak" aria-hidden="true">✕</span>
+              <span v-else-if="isPastWorkday(date)" class="mark mark-empty" aria-hidden="true"></span>
+              <span v-if="getHolidayForDate(date)" class="cell-holiday-dot" aria-hidden="true"></span>
+            </button>
           </div>
 
           <!-- Legend -->
-          <div class="calendar-legend">
-            <div class="legend-item"><span class="legend-dot hadir"></span> Hadir</div>
-            <div class="legend-item"><span class="legend-dot tidak"></span> Tidak Hadir</div>
-            <div class="legend-item"><span class="legend-dot empty"></span> Tidak Ada Data</div>
-            <div class="legend-item"><span class="legend-dot libur"></span> Hari Libur</div>
-          </div>
+          <ul class="calendar-legend" aria-label="Keterangan">
+            <li><span class="mark mark-hadir"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg></span>Hadir</li>
+            <li><span class="mark mark-tidak">✕</span>Tidak hadir (izin / sakit)</li>
+            <li><span class="mark mark-empty"></span>Belum absen</li>
+            <li><span class="swatch-libur"></span>Hari libur</li>
+            <li><span class="swatch-off"></span>Akhir pekan / belum tiba</li>
+          </ul>
+          <p class="calendar-tip">Ketuk tanggal untuk melihat atau mengubah absensinya.</p>
         </template>
       </div>
 
-      <!-- Calendar Detail Popup -->
-      <div v-if="selectedCalendarDate" class="calendar-popup-overlay" @click="selectedCalendarDate = null"></div>
-      <div v-if="selectedCalendarDate" class="calendar-popup glass-card">
+      <!-- Calendar Detail Popup (under <body>, so a parent's transform cannot move it) -->
+      <Teleport to="body">
+      <div v-if="selectedCalendarDate" class="att-day-overlay" @click="selectedCalendarDate = null"></div>
+      <div v-if="selectedCalendarDate" class="att-day-sheet" role="dialog" aria-modal="true" aria-labelledby="att-day-title">
         <div class="popup-header">
-          <h4>{{ formatCalendarDate(selectedCalendarDate) }}</h4>
-          <button class="close-btn" @click="selectedCalendarDate = null">×</button>
+          <h4 id="att-day-title">{{ formatCalendarDate(selectedCalendarDate) }}</h4>
+          <button type="button" class="sheet-close" aria-label="Tutup" @click="selectedCalendarDate = null">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         <!-- Check-in Time - Below Date Header -->
@@ -414,6 +420,7 @@
           </div>
         </div>
       </div>
+      </Teleport>
     </div>
 
     <!-- Update / Create Attendance Modal -->
@@ -788,23 +795,37 @@ const getAttendanceForDate = (date) => {
   })
 }
 
+// The day is in the past (or today) on a weekday and not a holiday: attendance was expected.
+const isPastWorkday = (date) => {
+  const d = new Date(calendarYear.value, calendarMonth.value, date)
+  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  return d <= end && !isWeekendDay(date) && !getHolidayForDate(date)
+}
+
+const isTodayCell = (date) => calendarYear.value === today.getFullYear() && calendarMonth.value === today.getMonth() && date === today.getDate()
+
+// One state per day, same look as the KBM calendar.
 const getCalendarCellClass = (date) => {
-  const classes = []
   const attendance = getAttendanceForDate(date)
+  const holiday = getHolidayForDate(date)
+  const classes = []
+  if (attendance) classes.push(attendance.status === 'hadir' ? 'is-hadir' : 'is-tidak')
+  else if (holiday || isWeekendDay(date) || !isPastWorkday(date)) classes.push('is-off')
+  if (holiday && attendance) classes.push('is-libur-masuk')
+  if (isTodayCell(date)) classes.push('is-today')
+  if (selectedCalendarDate.value === date) classes.push('is-selected')
+  return classes
+}
 
-  if (!attendance) {
-    classes.push('no-data')
-  } else {
-    classes.push(attendance.status === 'hadir' ? 'hadir' : 'tidak')
-  }
-
-  // Check if this date is a holiday
-  if (getHolidayForDate(date)) {
-    classes.push('libur')
-    if (attendance) classes.push('libur-override')
-  }
-
-  return classes.join(' ')
+const getCalendarCellLabel = (date) => {
+  const attendance = getAttendanceForDate(date)
+  const holiday = getHolidayForDate(date)
+  let state = 'belum absen'
+  if (attendance) state = attendance.status === 'hadir' ? 'hadir' : 'tidak hadir'
+  else if (holiday) state = `libur: ${holiday.name}`
+  else if (isWeekendDay(date)) state = 'akhir pekan'
+  else if (!isPastWorkday(date)) state = 'belum tiba'
+  return `${formatCalendarDate(date)}. ${state}`
 }
 
 const getHolidayForDate = (date) => {
@@ -1940,225 +1961,6 @@ onMounted(async () => {
   margin-top: var(--space-xl);
 }
 
-/* Calendar Styles */
-.calendar-section {
-  padding: var(--space-xl);
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-xl);
-}
-
-.calendar-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--primary-dark);
-}
-
-.nav-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--gray-100);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: var(--primary);
-  color: white;
-}
-
-.nav-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.loading-calendar {
-  padding: var(--space-lg);
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.day-header {
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  padding: var(--space-sm);
-}
-
-/* Skeleton Calendar Styles */
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.skeleton-calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-xs);
-}
-
-.skeleton-day-header,
-.skeleton-calendar-cell {
-  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-md);
-}
-
-.skeleton-day-header {
-  height: 20px;
-  margin-bottom: var(--space-xs);
-  opacity: 0.7;
-}
-
-.skeleton-calendar-cell {
-  aspect-ratio: 1;
-}
-
-.calendar-cell {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.2s;
-  background: var(--gray-50);
-  font-size: 0.875rem;
-}
-
-.calendar-cell.empty {
-  background: transparent;
-  cursor: default;
-}
-
-.calendar-cell:not(.empty):hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.calendar-cell.hadir {
-  background: rgba(76, 175, 80, 0.2);
-  border: 2px solid #4caf50;
-}
-
-.calendar-cell.tidak {
-  background: rgba(244, 67, 54, 0.2);
-  border: 2px solid #f44336;
-}
-
-.calendar-cell.no-data {
-  background: var(--gray-100);
-  border: 1px dashed var(--gray-300);
-}
-
-.cell-date {
-  font-weight: 600;
-  color: var(--gray-800);
-}
-
-.cell-status {
-  font-size: 0.625rem;
-  margin-top: 1px;
-}
-
-.calendar-cell.hadir .cell-status {
-  color: #0f6b4a;
-}
-
-.calendar-cell.tidak .cell-status {
-  color: #c62828;
-}
-
-.calendar-legend {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-lg);
-  margin-top: var(--space-lg);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--gray-100);
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: 0.75rem;
-  color: var(--gray-600);
-}
-
-.legend-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-}
-
-.legend-dot.hadir {
-  background: rgba(76, 175, 80, 0.3);
-  border: 2px solid #4caf50;
-}
-
-.legend-dot.tidak {
-  background: rgba(244, 67, 54, 0.3);
-  border: 2px solid #f44336;
-}
-
-.legend-dot.empty {
-  background: var(--gray-100);
-  border: 1px dashed var(--gray-300);
-}
-
-.legend-dot.libur {
-  background: rgba(255, 193, 7, 0.4);
-  border: 2px solid #ffc107;
-}
-
-/* Holiday Styles */
-.calendar-cell.libur {
-  background: rgba(255, 193, 7, 0.25) !important;
-  border: 2px solid #ffc107 !important;
-  position: relative;
-}
-
-.calendar-cell.libur-override {
-  background: rgba(139, 195, 74, 0.2) !important;
-  border: 2px dashed #ffc107 !important;
-}
-
-.calendar-cell.libur.no-data {
-  border-style: solid !important;
-}
-
-.cell-holiday-dot {
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  font-size: 0.4rem;
-  line-height: 1;
-}
-
 /* Holiday Alert Banner */
 .holiday-alert {
   display: flex;
@@ -2318,65 +2120,6 @@ onMounted(async () => {
   .holiday-alert-name {
     font-size: 0.95rem;
   }
-
-  .cell-holiday-dot {
-    font-size: 0.35rem;
-  }
-}
-
-/* Calendar Popup */
-.calendar-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 100;
-}
-
-.calendar-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 350px;
-  padding: 0;
-  background: white;
-  border-radius: var(--radius-xl);
-  z-index: 101;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-}
-
-.calendar-popup .popup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--gray-100);
-}
-
-.calendar-popup .popup-header h4 {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--primary-dark);
-}
-
-.calendar-popup .close-btn {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--gray-400);
-  cursor: pointer;
-  line-height: 1;
-}
-
-.calendar-popup .close-btn:hover {
-  color: var(--gray-600);
-}
-
-.calendar-popup .popup-content {
-  padding: var(--space-lg);
 }
 
 .popup-status {
@@ -2540,76 +2283,8 @@ onMounted(async () => {
 
 @media (max-width: 640px) {
 
-  /* Calendar Responsive Fixes */
-  .calendar-section {
-    padding: var(--space-sm);
-  }
-
-  .calendar-header {
-    margin-bottom: var(--space-md);
-  }
-
-  .calendar-header h3 {
-    font-size: 0.9rem;
-  }
-
-  .nav-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .calendar-grid {
-    gap: 2px;
-  }
-
-  .day-header {
-    font-size: 0.65rem;
-    padding: 2px 0;
-  }
-
-  .calendar-cell {
-    border-radius: var(--radius-sm);
-    font-size: 0.8rem;
-  }
-
-  .cell-date {
-    font-size: 0.75rem;
-  }
-
-  .cell-status {
-    font-size: 0.5rem;
-    margin-top: 1px;
-  }
-
-  .calendar-legend {
-    gap: var(--space-sm);
-    margin-top: var(--space-md);
-  }
-
-  .legend-item {
-    font-size: 0.5rem;
-  }
-
   .attendance-view {
     padding-top: 10px;
-  }
-}
-
-@media (max-width: 400px) {
-  .calendar-section {
-    padding: 4px;
-  }
-
-  .calendar-grid {
-    gap: 1px;
-  }
-
-  .cell-date {
-    font-size: 0.7rem;
-  }
-
-  .cell-status {
-    font-size: 8px;
   }
 }
 
@@ -2888,5 +2563,330 @@ onMounted(async () => {
 
 .status-context-preview {
   font-size: 0.80rem;
+}
+
+/* ---------------------------------------------------------------- attendance calendar (same look as the KBM calendar) */
+.calendar-section {
+  padding: 18px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.month-title {
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.nav-btn:focus-visible,
+.calendar-cell:focus-visible,
+.sheet-close:focus-visible {
+  outline: 3px solid var(--primary-300, #81c784);
+  outline-offset: 1px;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.loading-calendar {
+  padding: 4px 0;
+}
+
+.weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.weekdays span {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  padding-bottom: 4px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.skeleton-day-header,
+.skeleton-calendar-cell {
+  background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 10px;
+}
+
+.skeleton-day-header {
+  height: 16px;
+  opacity: 0.7;
+}
+
+.skeleton-calendar-cell {
+  min-height: 48px;
+}
+
+.calendar-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--gray-50, #f8fafc);
+  color: var(--gray-800);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.calendar-cell:hover {
+  border-color: var(--primary);
+}
+
+.calendar-cell.is-hadir {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.calendar-cell.is-tidak {
+  background: #fdecea;
+  color: #8e1b12;
+}
+
+.calendar-cell.is-off {
+  background: transparent;
+  color: var(--gray-300);
+  text-decoration: line-through;
+  text-decoration-color: var(--gray-300);
+}
+
+/* a holiday the teacher still came in: keep it readable, mark the holiday with a gold edge */
+.calendar-cell.is-libur-masuk {
+  box-shadow: inset 0 0 0 1.5px #d9a21b;
+}
+
+.calendar-cell.is-today {
+  border-color: var(--primary);
+}
+
+.calendar-cell.is-selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  text-decoration: none;
+}
+
+.mark {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-legend .mark {
+  position: static;
+  flex: none;
+}
+
+.mark-hadir,
+.mark-tidak {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mark-hadir {
+  background: #0a5c40;
+}
+
+.mark-tidak {
+  background: #b42318;
+}
+
+.mark-empty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-400);
+}
+
+.cell-holiday-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #d9a21b;
+}
+
+.calendar-cell.is-selected .mark-empty {
+  border-color: #fff;
+}
+
+.calendar-legend {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.72rem;
+  color: var(--gray-600);
+}
+
+.calendar-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.swatch-off {
+  width: 12px;
+  height: 2px;
+  background: var(--gray-300);
+}
+
+.swatch-libur {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9a21b;
+}
+
+.calendar-tip {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* ---------------------------------------------------------------- day detail (same as the KBM day sheet) */
+.att-day-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgba(3, 41, 29, 0.45);
+}
+
+.att-day-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9991;
+  width: 100%;
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 0;
+  background: #fbf9f3;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.45);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 640px) {
+  .att-day-sheet {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    width: min(440px, calc(100vw - 48px));
+    transform: translate(-50%, -50%);
+    border-radius: 20px;
+    max-height: 80vh;
+  }
+}
+
+.att-day-sheet .popup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.att-day-sheet .popup-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.sheet-close {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.15);
+  background: #fff;
+  color: #2f4339;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.att-day-sheet .popup-content {
+  padding: 16px 18px 20px;
+}
+
+.att-day-sheet .popup-checkin-time-header {
+  margin: 12px 18px 0;
+}
+
+.att-day-sheet .holiday-banner {
+  margin: 12px 18px 0;
+}
+
+.att-day-sheet .popup-actions .btn {
+  min-height: 46px;
+  border-radius: 12px;
 }
 </style>
