@@ -120,7 +120,7 @@
             <div class="today-sessions-title">
               <span class="sessions-indicator-icon">📋</span>
               <div>
-                <h3>Sesi Mengajar Hari Ini ({{ dailyContext.existingSessions.length }} Tersimpan)</h3>
+                <h3>{{ isTodayTarget ? 'KBM Hari Ini' : `KBM ${formatShortDate(targetDate)}` }} ({{ dailyContext.existingSessions.length }} Tersimpan)</h3>
                 <span class="today-sessions-hint">Guru dapat mengajar lebih dari 1 jilid/kelas. Anda dapat mengisi jilid berikutnya di bawah.</span>
               </div>
             </div>
@@ -131,8 +131,8 @@
               :key="sess.id"
               class="today-session-chip"
             >
-              <span class="slot-pill" :class="sess.sessionSlotId === 'wave_2' ? 'slot-pill-malam' : 'slot-pill-sore'">
-                {{ sess.sessionSlotId === 'wave_2' ? 'MALAM' : 'SORE' }}
+              <span class="slot-pill" :class="normalizeSlotId(sess.sessionSlotId) === 'wave_2' ? 'slot-pill-malam' : 'slot-pill-sore'">
+                {{ normalizeSlotId(sess.sessionSlotId) === 'wave_2' ? 'MALAM' : 'SORE' }}
               </span>
               <div class="session-chip-content">
                 <span class="session-chip-class">
@@ -236,7 +236,7 @@
           </div>
 
           <div v-if="slotDoneToday && !selectedLevelId" class="slot-done-note" role="status">
-            ✓ KBM {{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }} Anda hari ini sudah tersimpan
+            ✓ KBM {{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }} Anda {{ dayWord }} sudah tersimpan
             ({{ getSavedSessionsNamesForSlot(selectedSlotId) }}). Mengajar jilid lain juga? Pilih di bawah.
           </div>
 
@@ -298,7 +298,7 @@
             <span class="alert-icon">⚠️</span>
             <div>
               <strong>Sesi Sudah Tersimpan</strong>
-              <p>Sesi untuk <strong>{{ currentLevelName }} ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})</strong> sudah tercatat hari ini. Silakan pilih Jilid / Marhalah lain di atas untuk mengisi kelas Anda berikutnya.</p>
+              <p>Sesi untuk <strong>{{ currentLevelName }} ({{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }})</strong> sudah tercatat {{ dayWord }}. Silakan pilih Jilid / Marhalah lain di atas untuk mengisi kelas Anda berikutnya.</p>
             </div>
           </div>
 
@@ -459,7 +459,7 @@
                 </span>
               </div>
               <p v-if="curriculum?.material">Materi kurikulum tersedia untuk pertemuan ini. Anda dapat menggunakannya atau menulis materi sendiri.</p>
-              <p v-else>Tuliskan materi KBM hari ini, atau klik pilihan cepat di bawah.</p>
+              <p v-else>Tuliskan materi KBM {{ dayWord }}, atau klik pilihan cepat di bawah.</p>
             </div>
           </div>
 
@@ -731,6 +731,8 @@ import api from '@/services/api';
 import PageSkeleton from '@/components/PageSkeleton.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
+import { normalizeSlotId } from '@/utils/sessionSlot';
+import { normalizeLevel } from '@/utils/kbmCalendar';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -751,6 +753,9 @@ const reportId = computed(() => (typeof route.query.reportId === 'string' ? rout
 const effectiveReportId = computed(() => reportId.value || dailyContext.value?.lpj?.reportId || null);
 
 // Came from the KBM calendar (or fills an earlier day): back to that calendar on this day, else to the attendance page.
+// The workspace may show an earlier day: never call it "hari ini" then.
+const isTodayTarget = computed(() => targetDate.value === getTodayWibString());
+const dayWord = computed(() => (isTodayTarget.value ? 'hari ini' : 'di tanggal ini'));
 const returnsToKbm = computed(() => route.query.from === 'kbm' || targetDate.value < getTodayWibString());
 const kbmDayLink = computed(() => `/dashboard/kbm?date=${targetDate.value}`);
 const returnDailyLabel = computed(() => (returnsToKbm.value ? '← Kembali ke KBM' : '← Kembali ke Absensi'));
@@ -1003,8 +1008,8 @@ const stats = computed(() => {
 function isLevelSavedInSelectedSlot(levelId) {
   const sessions = dailyContext.value?.existingSessions || [];
   return sessions.some(s => 
-    (s.sessionSlotId || 'wave_1') === selectedSlotId.value &&
-    String(s.classId || s.levelId) === String(levelId)
+    normalizeSlotId(s.sessionSlotId) === selectedSlotId.value &&
+    normalizeLevel(s.levelId || s.classId) === normalizeLevel(levelId)
   );
 }
 
@@ -1084,7 +1089,7 @@ const canSubmit = computed(() => {
 // Slot helpers
 function getSavedSessionsForSlot(slotId) {
   const sessions = dailyContext.value?.existingSessions || [];
-  return sessions.filter(s => (s.sessionSlotId || 'wave_1') === slotId);
+  return sessions.filter(s => normalizeSlotId(s.sessionSlotId) === slotId);
 }
 
 function getSavedSessionsNamesForSlot(slotId) {
@@ -1180,7 +1185,7 @@ async function loadDailyContext(isAddingNewSession = false) {
       blockingError.value = {
         icon: 'ℹ️',
         title: `Status Kehadiran: ${statusName}`,
-        message: `Pada tanggal ini status kehadiran Anda tercatat sebagai "${statusName}". Anda tidak perlu mengisi data KBM pada hari ini.`,
+        message: `Pada tanggal ini status kehadiran Anda tercatat sebagai "${statusName}". Anda tidak perlu mengisi data KBM pada tanggal ini.`,
         actionLink: nextTargetDate
           ? `/dashboard/kbm/daily-workspace?date=${nextTargetDate}&isBackfill=true${effectiveReportId.value ? `&reportId=${effectiveReportId.value}` : ''}`
           : null,
@@ -1205,7 +1210,7 @@ async function loadDailyContext(isAddingNewSession = false) {
       blockingError.value = {
         icon: '🎉',
         title: 'Hari Libur',
-        message: `Hari ini libur: ${data.holiday.name}. Tidak ada KBM yang perlu diisi.`
+        message: `${isTodayTarget.value ? 'Hari ini' : 'Tanggal ini'} libur: ${data.holiday.name}. Tidak ada KBM yang perlu diisi.`
       };
       return;
     }
@@ -1668,15 +1673,22 @@ onMounted(async () => {
 }
 
 /* Workspace Grid */
+/* minmax(0, ...): a column may never grow wider than the screen because of one wide child (narrow phones, large
+   text). Its children shrink and wrap instead. */
 .workspace-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
+}
+
+.workspace-grid > *,
+.workspace-main {
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
   .workspace-grid {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   }
 }
 
@@ -1819,13 +1831,13 @@ onMounted(async () => {
 
 .today-sessions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   gap: 0.75rem;
 }
 
 @media (max-width: 640px) {
   .today-sessions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
   }
 }

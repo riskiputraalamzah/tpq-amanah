@@ -10,6 +10,12 @@ export function isEveningSlot(slotId) {
   return s.includes("2") || s.includes("malam");
 }
 
+// Older KBM carry other spellings of the sesi id ("slot_wave_2_malam", ...). Compare sesi only through this, the
+// same rule as the labels (and as normalizeSlotId in backend/src/utils/teacher_slot.js).
+export function normalizeSlotId(slotId) {
+  return isEveningSlot(slotId) ? "wave_2" : "wave_1";
+}
+
 export function resolveSessionSlotName(slotId, sessionSlots = []) {
   if (!slotId) return "-";
   if (isEveningSlot(slotId)) return "Sesi Malam";

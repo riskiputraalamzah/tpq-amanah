@@ -1832,4 +1832,25 @@ onMounted(fetchData);
   color: #b45309;
   border: 1px solid #fde68a;
 }
+
+/* Narrow phones: both tabs always visible side by side (no hidden tab behind a sideways scroll) */
+@media (max-width: 420px) {
+  .session-nav-tabs {
+    width: 100%;
+    overflow-x: visible;
+  }
+
+  .nav-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 10px 8px;
+    min-height: 44px;
+  }
+
+  .nav-tab .tab-badge,
+  .nav-tab .tab-arrow-icon {
+    display: none;
+  }
+}
 </style>
