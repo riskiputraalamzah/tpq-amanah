@@ -37,6 +37,9 @@
         <span v-else-if="cell.state === 'incomplete'" class="mark mark-incomplete" aria-hidden="true">!</span>
         <span v-else-if="cell.state === 'needs'" class="mark mark-needs" aria-hidden="true"></span>
         <span v-else-if="cell.state === 'no-att'" class="mark mark-noatt" aria-hidden="true"></span>
+        <!-- not present (izin / sakit / alfa): a cross, like the attendance calendar -->
+        <span v-else-if="cell.state === 'absent'" class="mark mark-absent" aria-hidden="true">✕</span>
+        <span v-if="cell.isHoliday" class="holiday-dot" aria-hidden="true"></span>
         <!-- more than one KBM that day (e.g. two jilid): how many -->
         <span v-if="cell.count > 1" class="count" aria-hidden="true">{{ cell.count }} KBM</span>
       </button>
@@ -47,7 +50,9 @@
       <li><span class="mark mark-incomplete">!</span>Absen santri / jurnal belum</li>
       <li><span class="mark mark-needs"></span>Hadir, KBM belum diisi</li>
       <li><span class="mark mark-noatt"></span>Belum absen</li>
-      <li><span class="swatch-off"></span>Libur / izin</li>
+      <li><span class="mark mark-absent">✕</span>Tidak hadir (izin / sakit)</li>
+      <li><span class="swatch-libur"></span>Hari libur</li>
+      <li><span class="swatch-off"></span>Akhir pekan / belum tiba</li>
     </ul>
     <p class="picker-tip">Ketuk tanggal untuk melihat atau mengisi KBM hari itu.</p>
   </div>
@@ -231,9 +236,40 @@ const choose = (cell) => {
   text-decoration-color: var(--gray-300);
 }
 
+/* same as "tidak hadir" in the attendance calendar */
 .cell.is-absent {
   text-decoration: none;
-  color: var(--gray-400);
+  background: #fdecea;
+  color: #8e1b12;
+}
+
+.mark-absent {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #b42318;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.holiday-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #d9a21b;
+}
+
+.swatch-libur {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9a21b;
 }
 
 .cell.is-done {

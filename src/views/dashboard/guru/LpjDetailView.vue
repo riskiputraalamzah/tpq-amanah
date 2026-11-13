@@ -846,7 +846,7 @@ const formatAttStatus = (status) => {
   if (s === "izin") return "Izin";
   if (s === "sakit") return "Sakit";
   if (s === "tidak_hadir") return "Tidak Hadir";
-  if (s === "alfa" || s === "alpa") return "Alpa";
+  if (s === "alfa" || s === "alpa") return "Alfa";
   return "Belum Mengisi Absen";
 };
 

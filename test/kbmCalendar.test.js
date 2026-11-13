@@ -140,9 +140,19 @@ test("delete: the dialog closes itself after deleting (the old guard kept it ope
 });
 
 test("calendar legend explains every mark; no selection-dependent hint left", () => {
-  for (const text of ["KBM lengkap", "Absen santri / jurnal belum", "Hadir, KBM belum diisi", "Belum absen", "Libur / izin"]) {
+  for (const text of ["KBM lengkap", "Absen santri / jurnal belum", "Hadir, KBM belum diisi", "Belum absen", "Tidak hadir (izin / sakit)", "Hari libur", "Akhir pekan / belum tiba"]) {
     assert.ok(picker.includes(text), text);
   }
   assert.ok(!picker.includes("Pilih sesi &amp; jilid dulu"), "the old hint is gone");
   assert.ok(!picker.includes("Ada KBM jilid/sesi lain"), "the confusing '1' badge is gone");
+});
+
+test("KBM calendar marks like the attendance calendar: a cross for izin/sakit/alfa, a gold dot for holidays", () => {
+  const days = [day("2026-11-09", { attendance: "izin" }), day("2026-11-20", { kind: "holiday", holidayName: "Libur Yayasan" })];
+  const view = buildCalendar({ period: "2026-11", today: "2026-11-25", days }, opts);
+  assert.deepEqual([view.cells[0].state, view.cells[0].isHoliday], ["absent", false]);
+  assert.deepEqual([view.cells[1].state, view.cells[1].isHoliday], ["off", true]);
+  assert.ok(picker.includes("cell.state === 'absent'\" class=\"mark mark-absent\""), "cross on absent days");
+  assert.ok(picker.includes('v-if="cell.isHoliday" class="holiday-dot"'), "gold dot on holidays");
+  assert.ok(picker.includes("Tidak hadir (izin / sakit)") && picker.includes("Hari libur"), "legend says it");
 });

@@ -1,263 +1,200 @@
 <template>
   <div class="attendance-view">
-    <header class="page-header">
+    <header class="page-header at-head">
       <h1>Absensi Online</h1>
-      <p>Catat kehadiran mengajar (Senin - Jumat)</p>
+      <p>Catat kehadiran mengajar Anda setiap hari aktif, Senin sampai Jumat.</p>
     </header>
 
-    <!-- Holiday Banner -->
-    <div v-if="loadingHolidays" class="holiday-alert skeleton-holiday-alert">
-      <div class="skeleton-icon"></div>
-      <div class="skeleton-text-container">
-        <div class="skeleton-text label"></div>
-        <div class="skeleton-text name"></div>
-      </div>
+    <!-- Holiday notice (today or tomorrow) -->
+    <div v-if="loadingHolidays" class="at-notice at-notice-loading" aria-hidden="true">
+      <span class="at-notice-icon"></span>
+      <span class="at-notice-lines"><i></i><i></i></span>
     </div>
     <template v-else>
-      <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
-        <div class="holiday-alert-icon">🎉</div>
-        <div class="holiday-alert-content">
-          <span class="holiday-alert-label">{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional'
-          }}</span>
-          <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
-        </div>
+      <div v-if="todayHoliday.isHoliday" class="at-notice" role="status">
+        <span class="at-notice-icon"><LineIcon name="star" :size="18" /></span>
+        <span class="at-notice-text">
+          <strong>{{ todayHoliday.isCustom ? 'Hari ini libur' : 'Hari ini libur nasional' }}</strong>
+          <span>{{ todayHoliday.holidayName }}</span>
+        </span>
       </div>
-      <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
-        <div class="holiday-alert-icon">📅</div>
-        <div class="holiday-alert-content">
-          <span class="holiday-alert-label">Besok Libur Nasional</span>
-          <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
-        </div>
+      <div v-else-if="tomorrowHoliday.isHoliday" class="at-notice" role="status">
+        <span class="at-notice-icon"><LineIcon name="calendar" :size="18" /></span>
+        <span class="at-notice-text">
+          <strong>Besok libur nasional</strong>
+          <span>{{ tomorrowHoliday.holidayName }}</span>
+        </span>
       </div>
     </template>
 
-    <!-- Today's Card - Prominent Design -->
-    <!-- Today's Card - Prominent Symmetrical Design -->
-    <div class="today-card glass-card">
-      <!-- Loading State -->
-      <div v-if="loading" class="loading-today">
-        <SkeletonLoader type="text" height="24px" width="180px" />
-        <SkeletonLoader type="text" height="40px" width="220px" />
-        <SkeletonLoader type="text" height="20px" width="140px" />
+    <!-- Today -->
+    <section class="at-today" aria-labelledby="at-today-title">
+      <div class="at-date" aria-hidden="true">
+        <span class="at-date-day">{{ dayName }}</span>
+        <span class="at-date-num">{{ dateNumber }}</span>
+        <span class="at-date-month">{{ monthYear }}</span>
       </div>
 
-      <!-- Attendance Recorded State -->
-      <div v-else-if="todayAttendance" class="today-attendance-recorded"
-        :class="{ 'holiday-override': todayHoliday.isHoliday }">
-
-        <!-- Top Row: Date Badge & Status Panel (Balanced & Symmetrical) -->
-        <div class="attendance-header-panel">
-          <div class="today-date-display">
-            <span class="day-name">{{ dayName }}</span>
-            <div class="date-number">{{ dateNumber }}</div>
-            <span class="month-year">{{ monthYear }}</span>
-          </div>
-
-          <div class="att-status-card">
-            <div class="att-status-info">
-              <div class="status-badge-lg" :class="todayAttendance.status"
-                :style="todayHoliday.isHoliday ? 'background: rgba(255, 193, 7, 0.2); color: #b45309; border-color: rgba(245, 158, 11, 0.4);' : ''">
-                <span class="badge-icon">{{ todayAttendance.status === 'hadir' ? '✓' : '✗' }}</span>
-                <span class="badge-text">{{ todayAttendance.status === 'hadir' ? 'HADIR' : 'TIDAK HADIR' }}</span>
-              </div>
-              <div class="att-status-texts">
-                <h3 class="att-status-title">
-                  {{ todayHoliday.isHoliday ? 'Absen Masuk (Hari Libur)' : 'Absensi Hari Ini Sudah Tercatat' }}
-                </h3>
-                <p v-if="todayHoliday.isHoliday" class="att-notes-text override-notice-inline">
-                  📌 Anda masuk pada hari libur, dan admin telah mengabsenkan Anda.
-                </p>
-                <p v-else-if="todayAttendance.notes" class="att-notes-text">
-                  Catatan: {{ todayAttendance.notes }}
-                </p>
-                <p v-else class="att-status-subtitle">
-                  Kehadiran Anda telah tersimpan dan sinkron dengan rekap bulanan.
-                </p>
-              </div>
-            </div>
-
-            <div class="att-status-actions" v-if="!todayHoliday.isHoliday">
-              <button class="btn btn-outline-secondary btn-sm btn-update-compact" @click="openUpdateModal">
-                ✏️ Ubah Status
-              </button>
-            </div>
-          </div>
+      <div class="at-today-body">
+        <!-- loading -->
+        <div v-if="loadingToday" class="at-loading" aria-busy="true">
+          <SkeletonLoader type="text" height="22px" width="60%" />
+          <SkeletonLoader type="text" height="16px" width="80%" />
+          <SkeletonLoader type="text" height="44px" width="100%" />
         </div>
 
-        <!-- Bottom Section: KBM Guidance Box (Full Width & Symmetrical) -->
-        <div v-if="todayAttendance.status === 'hadir'" class="kbm-guidance-box">
-          <div class="kbm-guidance-header">
-            <div class="kbm-guidance-icon">📚</div>
-            <div class="kbm-guidance-info">
-              <h4>Kegiatan Belajar Mengajar (KBM) Hari Ini</h4>
-              <SkeletonLoader v-if="loadingTodayKbm" type="text" width="70%" />
-              <p v-else-if="todayKbmSessions.length === 0">
-                Kehadiran Anda sudah tercatat! Silakan lanjutkan untuk mengisi absensi santri dan jurnal mengajar hari
-                ini.
-              </p>
-              <p v-else>
-                Alhamdulillah, Anda sudah mengisi <strong>{{ todayKbmSessions.length }} sesi KBM</strong> hari ini:
-              </p>
+        <!-- already recorded -->
+        <template v-else-if="todayAttendance">
+          <div class="at-recorded">
+            <span class="at-status-chip" :class="todayAttendance.status === 'hadir' ? 'is-hadir' : 'is-tidak'">
+              <LineIcon :name="todayAttendance.status === 'hadir' ? 'check' : 'x'" :size="16" :stroke="2.6" />
+              {{ todayAttendance.status === 'hadir' ? 'Hadir' : 'Tidak hadir' }}
+            </span>
+            <div class="at-recorded-text">
+              <h2 id="at-today-title">
+                {{ todayHoliday.isHoliday ? 'Masuk di hari libur' : 'Absensi hari ini sudah tercatat' }}
+              </h2>
+              <p v-if="todayHoliday.isHoliday">Anda masuk pada hari libur, dan admin telah mengabsenkan Anda.</p>
+              <p v-else-if="todayAttendance.notes">Catatan: {{ todayAttendance.notes }}</p>
+              <p v-else>Tersimpan dan sudah masuk rekap bulanan.</p>
             </div>
+            <button v-if="!todayHoliday.isHoliday" type="button" class="at-btn-ghost" @click="openUpdateModal">
+              <LineIcon name="pencil" :size="16" />
+              Ubah status
+            </button>
           </div>
 
-          <!-- List of today's already filled sessions with rich formatting -->
-          <div v-if="!loadingTodayKbm && todayKbmSessions.length > 0" class="today-sessions-list">
-            <div v-for="s in todayKbmSessions" :key="s.id" class="today-session-item">
-              <div class="session-item-badge">✓</div>
-              <div class="session-item-details">
-                <div class="session-item-header">
-                  <span class="session-item-class">{{ formatSessionClass(s) }}</span>
-                  <span class="session-item-slot-badge">{{ formatSessionSlot(s) }}</span>
-                </div>
-                <div class="session-item-sub">
-                  <span class="session-item-activity">
-                    {{ s.type === 'teaching' ? 'KBM Normal' : (s.activityName || 'Non-KBM') }}
-                  </span>
-                  <span v-if="s.meetingNumber" class="session-item-meeting">Pertemuan Ke-{{ s.meetingNumber }}</span>
-                  <span v-if="s.substituteFor" class="session-item-badal">Badal</span>
-                </div>
+          <!-- KBM of today (only when present) -->
+          <div v-if="todayAttendance.status === 'hadir'" class="at-kbm">
+            <div class="at-kbm-head">
+              <span class="at-kbm-icon"><LineIcon name="book" :size="20" /></span>
+              <div>
+                <h3>KBM hari ini</h3>
+                <SkeletonLoader v-if="loadingTodayKbm" type="text" width="70%" />
+                <p v-else-if="todayKbmSessions.length === 0">Belum ada KBM. Lanjutkan dengan absensi santri dan jurnal mengajar.</p>
+                <p v-else>{{ todayKbmSessions.length }} sesi sudah tersimpan.</p>
               </div>
             </div>
-          </div>
 
-          <div class="kbm-guidance-actions">
-            <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-kbm-cta">
-              <span class="cta-icon">{{ todayKbmSessions.length === 0 ? '✍️' : '➕' }}</span>
-              <span style="font-size: 0.80rem;">
-                {{ todayKbmSessions.length === 0 ? `Mulai Isi KBM & Jurnal Hari Ini →` : `Buka / Tambah Sesi KBM Hari
-                Ini →`
-                }}
-              </span>
+            <ul v-if="!loadingTodayKbm && todayKbmSessions.length > 0" class="at-kbm-list">
+              <li v-for="s in todayKbmSessions" :key="s.id">
+                <span class="at-kbm-done"><LineIcon name="check" :size="13" :stroke="3" /></span>
+                <strong>{{ formatSessionClass(s) }}</strong>
+                <span class="at-kbm-slot">{{ formatSessionSlot(s) }}</span>
+                <span class="at-kbm-meta">
+                  {{ s.type === 'teaching' ? 'KBM Normal' : (s.activityName || 'Non-KBM') }}<template v-if="s.meetingNumber"> · Pertemuan ke-{{ s.meetingNumber }}</template><template v-if="s.substituteFor"> · Badal</template>
+                </span>
+              </li>
+            </ul>
+
+            <router-link :to="todayKbmWorkspaceUrl" class="at-btn-primary">
+              <LineIcon :name="todayKbmSessions.length === 0 ? 'pencil' : 'plus'" :size="17" />
+              {{ todayKbmSessions.length === 0 ? 'Isi KBM & jurnal hari ini' : 'Buka / tambah KBM hari ini' }}
+              <LineIcon name="arrow-right" :size="17" />
             </router-link>
           </div>
-        </div>
 
-        <!-- Non-Hadir Information Box -->
-        <div v-else class="not-hadir-box">
-          <span class="not-hadir-icon">ℹ️</span>
+          <p v-else class="at-quiet">
+            <LineIcon name="info" :size="18" />
+            Anda tercatat tidak hadir hari ini, jadi tidak ada absensi santri atau jurnal yang perlu diisi.
+          </p>
+        </template>
+
+        <!-- weekend -->
+        <div v-else-if="isWeekend" class="at-rest">
+          <span class="at-rest-icon"><LineIcon name="sun" :size="22" /></span>
           <div>
-            <strong>Status: Tidak Hadir</strong>
-            <p>Anda tercatat tidak hadir hari ini. Tidak ada kewajiban mengisi absensi santri atau jurnal mengajar.</p>
+            <h2 id="at-today-title">Hari ini akhir pekan</h2>
+            <p>Absensi hanya untuk Senin sampai Jumat.</p>
           </div>
         </div>
-      </div>
 
-      <!-- Weekend State -->
-      <div v-else-if="isWeekend" class="today-panel-wrapper">
-        <div class="today-date-display">
-          <span class="day-name">{{ dayName }}</span>
-          <div class="date-number">{{ dateNumber }}</div>
-          <span class="month-year">{{ monthYear }}</span>
-        </div>
-        <div class="weekend-notice">
-          <span class="weekend-icon">🏖️</span>
-          <p>Hari ini adalah akhir pekan.<br />Absensi hanya untuk hari Senin - Jumat.</p>
-        </div>
-      </div>
-
-      <!-- Holiday State -->
-      <div v-else-if="todayHoliday.isHoliday" class="today-panel-wrapper">
-        <div class="today-date-display">
-          <span class="day-name">{{ dayName }}</span>
-          <div class="date-number">{{ dateNumber }}</div>
-          <span class="month-year">{{ monthYear }}</span>
-        </div>
-        <div class="holiday-notice">
-          <span class="holiday-notice-icon">🎉</span>
-          <h3>{{ todayHoliday.isCustom ? 'Hari Ini Libur' : 'Hari Ini Libur Nasional' }}</h3>
-          <p class="holiday-notice-name">{{ todayHoliday.holidayName }}</p>
-          <p class="holiday-notice-text">Tidak ada absensi untuk hari libur.<br />Selamat beristirahat! 🙏</p>
-        </div>
-      </div>
-
-      <!-- Attendance Form (Belum Absen) -->
-      <div v-else class="today-panel-wrapper">
-        <div class="today-date-display">
-          <span class="day-name">{{ dayName }}</span>
-          <div class="date-number">{{ dateNumber }}</div>
-          <span class="month-year">{{ monthYear }}</span>
-        </div>
-
-        <div class="attendance-form">
-          <div class="attendance-form-header">
-            <h3 class="form-title">Pilih Status Kehadiran Hari Ini</h3>
-            <p class="form-subtitle">Silakan catat kehadiran Anda sebelum memulai sesi KBM dan absensi santri.</p>
+        <!-- holiday -->
+        <div v-else-if="todayHoliday.isHoliday" class="at-rest is-holiday">
+          <span class="at-rest-icon"><LineIcon name="star" :size="22" /></span>
+          <div>
+            <h2 id="at-today-title">{{ todayHoliday.isCustom ? 'Hari ini libur' : 'Hari ini libur nasional' }}</h2>
+            <p class="at-rest-name">{{ todayHoliday.holidayName }}</p>
+            <p>Tidak ada absensi untuk hari libur. Selamat beristirahat.</p>
           </div>
+        </div>
 
-          <div class="status-buttons">
-            <button type="button" class="status-btn hadir" :class="{ active: selectedStatus === 'hadir' }"
-              @click="selectedStatus = 'hadir'">
-              <div class="status-btn-icon">✓</div>
-              <div class="status-btn-body">
-                <span class="btn-title">HADIR</span>
-                <span class="btn-desc">Siap mengajar & mengisi jurnal KBM</span>
-              </div>
+        <!-- not recorded yet -->
+        <div v-else class="at-form">
+          <h2 id="at-today-title">Bagaimana kehadiran Anda hari ini?</h2>
+          <p class="at-form-sub">Catat dulu kehadiran Anda, setelah itu KBM dan absensi santri bisa diisi.</p>
+
+          <div class="at-choices" role="radiogroup" aria-labelledby="at-today-title">
+            <button type="button" role="radio" class="at-choice is-hadir" :aria-checked="selectedStatus === 'hadir'"
+              :class="{ active: selectedStatus === 'hadir' }" @click="selectedStatus = 'hadir'">
+              <span class="at-choice-icon"><LineIcon name="check" :size="22" :stroke="2.6" /></span>
+              <span class="at-choice-text">
+                <strong>Hadir</strong>
+                <span>Siap mengajar dan mengisi jurnal KBM</span>
+              </span>
             </button>
-            <button type="button" class="status-btn tidak-hadir" :class="{ active: selectedStatus === 'tidak_hadir' }"
-              @click="selectedStatus = 'tidak_hadir'">
-              <div class="status-btn-icon">✗</div>
-              <div class="status-btn-body">
-                <span class="btn-title">TIDAK HADIR</span>
-                <span class="btn-desc">Izin, sakit, atau berhalangan</span>
-              </div>
+            <button type="button" role="radio" class="at-choice is-tidak" :aria-checked="selectedStatus === 'tidak_hadir'"
+              :class="{ active: selectedStatus === 'tidak_hadir' }" @click="selectedStatus = 'tidak_hadir'">
+              <span class="at-choice-icon"><LineIcon name="x" :size="22" :stroke="2.6" /></span>
+              <span class="at-choice-text">
+                <strong>Tidak hadir</strong>
+                <span>Izin, sakit, atau berhalangan</span>
+              </span>
             </button>
           </div>
 
-          <!-- Dynamic Context Preview -->
-          <div v-if="selectedStatus === 'hadir'" class="status-context-preview hadir-preview">
-            <span class="context-icon">💡</span>
-            <span>Kehadiran Anda akan dicatat. Selanjutnya Anda dapat langsung mengisi absensi santri dan jurnal KBM
-              hari
-              ini.</span>
-          </div>
-          <div v-else-if="selectedStatus === 'tidak_hadir'" class="status-context-preview tidak-hadir-preview">
-            <span class="context-icon">ℹ️</span>
-            <span>Status tidak hadir akan dicatat pada rekap bulanan Anda. Tidak ada kewajiban mengisi sesi KBM hari
-              ini.</span>
-          </div>
+          <p v-if="selectedStatus" class="at-hint" aria-live="polite">
+            <LineIcon name="info" :size="16" />
+            {{ selectedStatus === 'hadir'
+              ? 'Setelah disimpan, Anda langsung diarahkan untuk mengisi KBM hari ini.'
+              : 'Dicatat sebagai tidak hadir di rekap bulanan. Tidak ada KBM yang perlu diisi hari ini.' }}
+          </p>
 
-          <div class="notes-input">
-            <label class="form-label">Catatan Kehadiran (Opsional)</label>
-            <input v-model="notes" type="text" class="form-input"
-              placeholder="Tambahkan catatan jika izin, sakit, atau ada keterangan..." />
-          </div>
+          <label class="at-field">
+            <span>Catatan <em>(opsional)</em></span>
+            <input v-model="notes" type="text" placeholder="Misalnya: izin acara keluarga" />
+          </label>
 
-          <button class="btn btn-primary btn-submit" @click="submitAttendance"
-            :disabled="!selectedStatus || submitting">
-            <span v-if="submitting">Menyimpan Kehadiran...</span>
-            <span v-else-if="selectedStatus === 'hadir'">✓ Konfirmasi Hadir & Lanjut ke KBM →</span>
-            <span v-else-if="selectedStatus === 'tidak_hadir'">Simpan Status Tidak Hadir</span>
-            <span v-else>Pilih Status di Atas untuk Menyimpan</span>
+          <button type="button" class="at-btn-primary at-submit" :disabled="!selectedStatus || submitting" @click="submitAttendance">
+            <template v-if="submitting">Menyimpan kehadiran…</template>
+            <template v-else-if="selectedStatus === 'hadir'">Simpan hadir &amp; lanjut ke KBM <LineIcon name="arrow-right" :size="17" /></template>
+            <template v-else-if="selectedStatus === 'tidak_hadir'">Simpan tidak hadir</template>
+            <template v-else>Pilih status kehadiran dulu</template>
           </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Monthly Recap -->
-    <div class="recap-section">
-      <h2>Rekap Bulan Ini</h2>
-      <div class="recap-cards">
-        <div class="recap-card glass-card">
-          <div class="recap-icon hadir">✓</div>
-          <div v-if="loading" class="recap-value-skeleton"></div>
-          <div v-else class="recap-value">{{ monthlyStats.hadir }}</div>
-          <div class="recap-label">Hari Hadir</div>
+    <!-- Recap of the month shown in the calendar below -->
+    <section class="at-recap" aria-labelledby="at-recap-title">
+      <h2 id="at-recap-title" class="at-section-title">Rekap {{ calendarMonthNames[calendarMonth] }} {{ calendarYear }}</h2>
+      <div class="at-ledger">
+        <div class="at-ledger-cell">
+          <span class="at-ledger-icon is-hadir"><LineIcon name="check" :size="18" :stroke="2.6" /></span>
+          <span class="at-ledger-text">
+            <span v-if="loading" class="at-ledger-skel"></span>
+            <strong v-else>{{ monthlyStats.hadir }}</strong>
+            <span>hari hadir</span>
+          </span>
         </div>
-        <div class="recap-card glass-card">
-          <div class="recap-icon tidak">✗</div>
-          <div v-if="loading" class="recap-value-skeleton"></div>
-          <div v-else class="recap-value">{{ monthlyStats.tidakHadir }}</div>
-          <div class="recap-label">Tidak Hadir</div>
+        <div class="at-ledger-cell">
+          <span class="at-ledger-icon is-tidak"><LineIcon name="x" :size="18" :stroke="2.6" /></span>
+          <span class="at-ledger-text">
+            <span v-if="loading" class="at-ledger-skel"></span>
+            <strong v-else>{{ monthlyStats.tidakHadir }}</strong>
+            <span>hari tidak hadir</span>
+          </span>
         </div>
-        <div class="recap-card glass-card salary">
-          <div class="recap-icon gaji">💰</div>
-          <div v-if="loading" class="recap-value-skeleton wide"></div>
-          <div v-else class="recap-value">Rp {{ formatCurrency(monthlyStats.hadir * 10000) }}</div>
-          <div class="recap-label">Estimasi Gaji</div>
+        <div class="at-ledger-cell is-pay">
+          <span class="at-ledger-icon is-pay"><LineIcon name="coin" :size="18" /></span>
+          <span class="at-ledger-text">
+            <span v-if="loading" class="at-ledger-skel wide"></span>
+            <strong v-else>Rp {{ formatCurrency(monthlyStats.hadir * 10000) }}</strong>
+            <span>estimasi gaji · Rp 10.000 per hari hadir</span>
+          </span>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- History Section - Calendar View -->
     <div class="history-section">
@@ -426,33 +363,29 @@
     <!-- Update / Create Attendance Modal -->
     <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
       <div class="modal glass-card">
-        <h3>{{ updateForm.mode === 'create' ? '➕ Catat Kehadiran Guru' : '✏️ Ubah Status Absensi' }}</h3>
-        <p class="modal-date">{{ updateForm.dateFormatted }}</p>
+        <h3 class="at-modal-title">
+          <span class="at-modal-title-icon"><LineIcon :name="updateForm.mode === 'create' ? 'plus' : 'pencil'" :size="18" /></span>
+          {{ updateForm.mode === 'create' ? 'Catat kehadiran' : 'Ubah status absensi' }}
+        </h3>
+        <p class="at-modal-date">{{ updateForm.dateFormatted }}</p>
 
-        <div v-if="!updateForm.isToday" class="modal-date-alert">
-          <span>🗓️ Mengisi absensi untuk tanggal yang dipilih pada kalender.</span>
+        <div v-if="!updateForm.isToday" class="at-modal-note">
+          <LineIcon name="calendar" :size="16" />
+          <span>Mengisi absensi untuk tanggal yang dipilih di kalender.</span>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Status Kehadiran</label>
-          <div class="status-buttons modal-status">
-            <button
-              type="button"
-              class="status-btn hadir"
-              :class="{ active: updateForm.status === 'hadir' }"
-              @click="updateForm.status = 'hadir'"
-            >
-              <span class="btn-icon">✓</span>
-              <span class="btn-text">HADIR</span>
+          <label class="form-label" id="at-modal-status">Status kehadiran</label>
+          <div class="at-choices" role="radiogroup" aria-labelledby="at-modal-status">
+            <button type="button" role="radio" class="at-choice is-hadir" :aria-checked="updateForm.status === 'hadir'"
+              :class="{ active: updateForm.status === 'hadir' }" @click="updateForm.status = 'hadir'">
+              <span class="at-choice-icon"><LineIcon name="check" :size="20" :stroke="2.6" /></span>
+              <span class="at-choice-text"><strong>Hadir</strong></span>
             </button>
-            <button
-              type="button"
-              class="status-btn tidak-hadir"
-              :class="{ active: updateForm.status === 'tidak_hadir' }"
-              @click="updateForm.status = 'tidak_hadir'"
-            >
-              <span class="btn-icon">✗</span>
-              <span class="btn-text">TIDAK HADIR</span>
+            <button type="button" role="radio" class="at-choice is-tidak" :aria-checked="updateForm.status === 'tidak_hadir'"
+              :class="{ active: updateForm.status === 'tidak_hadir' }" @click="updateForm.status = 'tidak_hadir'">
+              <span class="at-choice-icon"><LineIcon name="x" :size="20" :stroke="2.6" /></span>
+              <span class="at-choice-text"><strong>Tidak hadir</strong></span>
             </button>
           </div>
         </div>
@@ -482,29 +415,27 @@
     <Teleport to="body">
       <div v-if="showPostAttendanceModal" class="modal-overlay" @click.self="showPostAttendanceModal = false">
         <div class="modal glass-card post-attendance-modal">
-          <div class="post-att-header text-center">
-            <div class="post-att-icon">🎉</div>
-            <h3 class="post-att-title">Alhamdulillah, Kehadiran Tercatat!</h3>
-            <p class="post-att-subtitle">
-              Status presensi Anda hari ini: <span class="badge-success-pill">HADIR</span>
-            </p>
+          <div class="at-welcome">
+            <div class="at-welcome-icon"><LineIcon name="check" :size="26" :stroke="2.8" /></div>
+            <h3>Alhamdulillah, kehadiran tercatat</h3>
+            <p>Status Anda hari ini: <strong>Hadir</strong></p>
           </div>
 
-          <div class="post-att-card">
-            <div class="post-att-card-icon">📖</div>
-            <div class="post-att-card-content">
-              <strong>Lanjutkan Isi KBM & Jurnal Santri</strong>
-              <p>Mari lengkapi absensi santri jilid Anda dan materi jurnal pembelajaran yang diajarkan hari ini.</p>
+          <div class="at-welcome-next">
+            <span class="at-kbm-icon"><LineIcon name="book" :size="20" /></span>
+            <div>
+              <strong>Lanjut isi KBM &amp; jurnal</strong>
+              <p>Lengkapi absensi santri jilid Anda dan materi yang diajarkan hari ini.</p>
             </div>
           </div>
 
-          <div class="post-att-actions">
+          <div class="at-welcome-actions">
             <button type="button" class="btn btn-secondary" @click="showPostAttendanceModal = false">
               Nanti Saja
             </button>
             <router-link :to="todayKbmWorkspaceUrl" class="btn btn-primary btn-direct-kbm"
               @click="showPostAttendanceModal = false">
-              Isi KBM Sekarang →
+              Isi KBM sekarang
             </router-link>
           </div>
         </div>
@@ -518,6 +449,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import LineIcon from '@/components/LineIcon.vue'
 import { useToast } from '@/composables/useToast'
 import { fetchHolidays, isTodayHoliday, isTomorrowHoliday, getHolidaysForMonth } from '@/services/holidayService'
 import { resolveSessionSlotFullName } from '@/utils/sessionSlot'
@@ -538,6 +470,8 @@ const selectedStatus = ref(null)
 const notes = ref('')
 const submitting = ref(false)
 const loading = ref(true)
+// Today's own status: always from the current month, whatever month the calendar shows.
+const loadingToday = ref(true)
 const loadingHolidays = ref(true)
 const todayAttendance = ref(null)
 const attendanceHistory = ref([])
@@ -976,39 +910,53 @@ const fetchAttendance = async () => {
       }
     })
     attendanceHistory.value = (data || []).filter(a => a.type !== 'student_attendance')
-
-    // Check for today's attendance using local date comparison
-    const todayYear = today.getFullYear()
-    const todayMonth = today.getMonth()
-    const todayDate = today.getDate()
-
-    todayAttendance.value = data.find(a => {
-      if (!a.date) return false
-      // Handle Firestore Timestamp format
-      let d
-      if (a.date._seconds !== undefined) {
-        d = new Date(a.date._seconds * 1000)
-      } else if (a.date.seconds !== undefined) {
-        d = new Date(a.date.seconds * 1000)
-      } else {
-        d = new Date(a.date)
-      }
-      // Compare using local date components
-      return !isNaN(d.getTime()) &&
-        d.getFullYear() === todayYear &&
-        d.getMonth() === todayMonth &&
-        d.getDate() === todayDate
-    }) || null
-
-    if (todayAttendance.value && todayAttendance.value.status === 'hadir') {
-      fetchTodayKbm()
-    } else {
-      todayKbmSessions.value = []
+    // Viewing the current month: the same list also tells today's status (no second request needed).
+    if (calendarYear.value === today.getFullYear() && calendarMonth.value === today.getMonth()) {
+      applyToday(attendanceHistory.value)
     }
   } catch (e) {
     console.log('Fetch error')
   } finally {
     loading.value = false
+  }
+}
+
+// Today's record in a list of the current month's attendance (local date comparison).
+const findToday = (list) => (list || []).find(a => {
+  if (!a.date) return false
+  let d
+  if (a.date._seconds !== undefined) d = new Date(a.date._seconds * 1000)
+  else if (a.date.seconds !== undefined) d = new Date(a.date.seconds * 1000)
+  else d = new Date(a.date)
+  return !isNaN(d.getTime()) &&
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate()
+}) || null
+
+const applyToday = (list) => {
+  todayAttendance.value = findToday(list)
+  loadingToday.value = false
+  if (todayAttendance.value && todayAttendance.value.status === 'hadir') {
+    fetchTodayKbm()
+  } else {
+    todayKbmSessions.value = []
+  }
+}
+
+// The today card reads the CURRENT month, so moving the calendar to another month (or opening the page on
+// ?month=...) never makes it look like today has not been filled in.
+const fetchToday = async () => {
+  loadingToday.value = true
+  try {
+    const { data } = await api.get('/attendance/me', {
+      params: { month: today.getMonth() + 1, year: today.getFullYear() }
+    })
+    applyToday((data || []).filter(a => a.type !== 'student_attendance'))
+  } catch (e) {
+    console.log('Fetch today error')
+  } finally {
+    loadingToday.value = false
   }
 }
 
@@ -1029,7 +977,9 @@ const submitAttendance = async () => {
       date: today,
       createdAt: new Date() // Add current timestamp for immediate display
     }
-    attendanceHistory.value.unshift(todayAttendance.value)
+    if (calendarYear.value === today.getFullYear() && calendarMonth.value === today.getMonth()) {
+      attendanceHistory.value.unshift(todayAttendance.value)
+    }
     success('Absensi berhasil disimpan')
 
     if (status === 'hadir') {
@@ -1165,6 +1115,7 @@ const submitUpdate = async () => {
 
       success('Absensi berhasil disimpan')
       await fetchAttendance()
+      if (updateForm.value.isToday) await fetchToday()
 
       if (updateForm.value.isToday) {
         if (updateForm.value.status === 'hadir') {
@@ -1182,6 +1133,7 @@ const submitUpdate = async () => {
 
       success('Absensi berhasil diperbarui')
       await fetchAttendance()
+      if (updateForm.value.isToday) await fetchToday()
 
       if (updateForm.value.isToday) {
         if (updateForm.value.status === 'hadir') {
@@ -1203,6 +1155,8 @@ const submitUpdate = async () => {
 onMounted(async () => {
   loadingHolidays.value = true
   const attendanceLoaded = fetchAttendance()
+  const viewingThisMonth = calendarYear.value === today.getFullYear() && calendarMonth.value === today.getMonth()
+  if (!viewingThisMonth) fetchToday()
   const [holidayList] = await Promise.all([
     fetchHolidays(calendarYear.value),
     fetchCustomHolidays(),
@@ -1229,137 +1183,6 @@ onMounted(async () => {
   }
 }
 
-.page-header {
-  margin-bottom: var(--space-xl);
-}
-
-.page-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-dark);
-  margin-bottom: 4px;
-}
-
-.page-header p {
-  font-size: 0.95rem;
-  color: var(--gray-600);
-}
-
-/* Today Card */
-.today-card {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-xl);
-  margin-bottom: var(--space-2xl);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: var(--radius-2xl);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-}
-
-.today-panel-wrapper {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-xl);
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .today-card {
-    padding: var(--space-lg);
-  }
-
-  .today-panel-wrapper {
-    flex-direction: column;
-    gap: var(--space-lg);
-  }
-}
-
-.today-date-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-xl) 20px;
-  background: linear-gradient(145deg, #0a5c40 0%, #053d2c 100%);
-  border-radius: var(--radius-xl);
-  color: white;
-  width: 140px;
-  flex-shrink: 0;
-  align-self: stretch;
-  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.3), 0 6px 18px rgba(3, 41, 29, 0.22);
-}
-
-@media (max-width: 768px) {
-  .today-date-display {
-    width: 100%;
-    max-width: none;
-    padding: 16px 20px;
-  }
-}
-
-.day-name {
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #fcd34d;
-}
-
-.date-number {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1;
-  margin: 10px 0;
-}
-
-.month-year {
-  font-size: 0.86rem;
-  font-weight: 600;
-  opacity: 0.95;
-  white-space: nowrap;
-}
-
-.loading-today {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-}
-
-.weekend-notice {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  padding: var(--space-xl);
-  color: var(--gray-500);
-}
-
-.weekend-icon {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: var(--space-md);
-}
-
-/* Holiday Notice in Today Card */
-.holiday-notice {
-  flex: 1;
-  min-width: 0;
-  text-align: center;
-  padding: var(--space-xl);
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
-  border-radius: var(--radius-xl);
-  border: 2px solid rgba(255, 152, 0, 0.3);
-}
-
-.holiday-notice-icon {
-  font-size: 3.5rem;
-  display: block;
-  margin-bottom: var(--space-md);
-  animation: bounce 1s ease infinite;
-}
-
 @keyframes bounce {
 
   0%,
@@ -1372,452 +1195,10 @@ onMounted(async () => {
   }
 }
 
-.holiday-notice h3 {
-  color: #e65100;
-  margin-bottom: var(--space-sm);
-  font-size: 1.25rem;
-}
-
-.holiday-notice-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #e65100;
-  margin-bottom: var(--space-md);
-  padding: var(--space-sm) var(--space-lg);
-  background: rgba(255, 152, 0, 0.15);
-  border-radius: var(--radius-full);
-  display: inline-block;
-}
-
-.holiday-notice-text {
-  color: var(--gray-600);
-  font-size: 0.9rem;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.holiday-override {
-  background: rgba(139, 195, 74, 0.1);
-  border: 2px dashed rgba(255, 152, 0, 0.3);
-  border-radius: var(--radius-xl);
-}
-
-.override-notice {
-  color: #e65100 !important;
-  font-weight: 500;
-  padding: var(--space-sm) var(--space-md);
-  background: rgba(255, 152, 0, 0.1);
-  border-radius: var(--radius-md);
-  display: inline-block;
-  margin-top: var(--space-lg) !important;
-}
-
-.today-attendance-recorded {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  width: 100%;
-}
-
-.attendance-header-panel {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-lg);
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .attendance-header-panel {
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-}
-
-.att-status-card {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-md);
-  padding: 14px var(--space-xl);
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.85));
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-}
-
-.att-status-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  min-width: 0;
-  flex: 1;
-}
-
-.status-badge-lg {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  flex-shrink: 0;
-}
-
-.status-badge-lg.hadir {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1.5px solid #86efac;
-}
-
-.status-badge-lg.tidak_hadir,
-.status-badge-lg.izin,
-.status-badge-lg.sakit {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1.5px solid #fca5a5;
-}
-
-.att-status-texts {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.att-status-title {
-  font-size: 1.12rem;
-  font-weight: 700;
-  color: var(--gray-800);
-  margin: 0;
-  line-height: 1.3;
-}
-
-.att-status-subtitle {
-  font-size: 0.84rem;
-  color: var(--gray-500);
-  margin: 2px 0 0 0;
-  line-height: 1.4;
-}
-
-.att-notes-text {
-  font-size: 0.84rem;
-  color: var(--gray-600);
-  font-style: italic;
-  margin: 2px 0 0 0;
-}
-
-.override-notice-inline {
-  color: #d97706 !important;
-  font-weight: 600;
-}
-
-.att-status-actions {
-  flex-shrink: 0;
-}
-
-.btn-update-compact {
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  color: var(--gray-700);
-  border: 1px solid var(--gray-300);
-  background: white;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-update-compact:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-400);
-  color: var(--gray-900);
-}
-
-@media (max-width: 768px) {
-  .att-status-card {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: var(--space-md);
-    gap: var(--space-md);
-  }
-
-  .att-status-info {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .att-status-actions {
-    width: 100%;
-  }
-
-  .btn-update-compact {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
-}
-
 .notes-text {
   margin-top: var(--space-md);
   color: var(--gray-500);
   font-style: italic;
-}
-
-.attendance-form {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.attendance-form-header {
-  margin-bottom: 2px;
-}
-
-.attendance-form-header .form-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--gray-800);
-  margin: 0 0 4px 0;
-}
-
-.attendance-form-header .form-subtitle {
-  font-size: 0.88rem;
-  color: var(--gray-500);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.status-buttons {
-  display: flex;
-  gap: var(--space-md);
-  margin-top: 4px;
-}
-
-.status-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding: 16px 20px;
-  border-radius: var(--radius-xl);
-  border: 2px solid var(--gray-200);
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: left;
-}
-
-.status-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-}
-
-.status-btn-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 1.35rem;
-  font-weight: 800;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.status-btn.hadir .status-btn-icon {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.status-btn.tidak-hadir .status-btn-icon {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.status-btn-body {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.status-btn .btn-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: var(--gray-800);
-}
-
-.status-btn .btn-desc {
-  font-size: 0.82rem;
-  color: var(--gray-500);
-  margin-top: 2px;
-  line-height: 1.3;
-}
-
-.status-btn.hadir:hover,
-.status-btn.hadir.active {
-  border-color: #16a34a;
-  background: #f0fdf4;
-}
-
-.status-btn.hadir.active .status-btn-icon {
-  background: #16a34a;
-  color: white;
-}
-
-.status-btn.hadir.active .btn-title {
-  color: #15803d;
-}
-
-.status-btn.tidak-hadir:hover,
-.status-btn.tidak-hadir.active {
-  border-color: #dc2626;
-  background: #fef2f2;
-}
-
-.status-btn.tidak-hadir.active .status-btn-icon {
-  background: #dc2626;
-  color: white;
-}
-
-.status-btn.tidak-hadir.active .btn-title {
-  color: #b91c1c;
-}
-
-.notes-input {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.notes-input .form-label {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: var(--gray-700);
-  margin: 0;
-}
-
-.btn-submit {
-  width: 100%;
-  padding: 12px var(--space-xl);
-  font-size: 0.90rem;
-  font-weight: 700;
-  border-radius: var(--radius-lg);
-  margin-top: 4px;
-  transition: all 0.2s ease;
-}
-
-.btn-submit:not(:disabled) {
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28);
-}
-
-@media (max-width: 768px) {
-  .status-buttons {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-
-  .status-btn {
-    padding: 12px 16px;
-  }
-}
-
-/* Recap Section */
-.recap-section {
-  margin-bottom: var(--space-2xl);
-}
-
-.recap-section h2 {
-  color: var(--primary-dark);
-  margin-bottom: var(--space-lg);
-}
-
-.recap-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-md);
-}
-
-@media (max-width: 768px) {
-  .recap-cards {
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-sm);
-  }
-
-  .recap-card.salary {
-    grid-column: 1 / -1;
-    /* Full width - spans both columns */
-  }
-}
-
-.recap-card {
-  padding: var(--space-lg);
-  text-align: center;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.recap-card.salary {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.1));
-  border: 2px solid rgba(255, 193, 7, 0.3);
-}
-
-.recap-icon {
-  font-size: 2rem;
-  margin-bottom: var(--space-sm);
-}
-
-.recap-icon.hadir {
-  color: #4caf50;
-}
-
-.recap-icon.tidak {
-  color: #f44336;
-}
-
-.recap-icon.gaji {
-  color: #ffc107;
-}
-
-.recap-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-dark);
-}
-
-.recap-label {
-  font-size: 0.875rem;
-  color: var(--gray-500);
-  margin-top: var(--space-xs);
-}
-
-/* Skeleton Loading for Recap Values */
-.recap-value-skeleton {
-  height: 1.75rem;
-  width: 60px;
-  margin: 0 auto;
-  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-md);
-}
-
-.recap-value-skeleton.wide {
-  width: 120px;
 }
 
 /* History Section */
@@ -1945,31 +1326,11 @@ onMounted(async () => {
   margin-bottom: var(--space-sm);
 }
 
-.modal-date {
-  color: var(--gray-500);
-  margin-bottom: var(--space-lg);
-}
-
-.modal-status {
-  margin-bottom: var(--space-md);
-}
-
 .modal-actions {
   display: flex;
   gap: var(--space-md);
   justify-content: flex-end;
   margin-top: var(--space-xl);
-}
-
-/* Holiday Alert Banner */
-.holiday-alert {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-lg) var(--space-xl);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--space-lg);
-  animation: slideIn 0.3s ease-out;
 }
 
 @keyframes slideIn {
@@ -1992,83 +1353,6 @@ onMounted(async () => {
 .tomorrow-holiday {
   background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(30, 136, 229, 0.2));
   border: 2px solid rgba(33, 150, 243, 0.3);
-}
-
-.skeleton-holiday-alert {
-  background: var(--gray-50);
-  border: 2px solid var(--gray-200);
-}
-
-.skeleton-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-text-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-
-.skeleton-text {
-  height: 16px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-text.label {
-  width: 150px;
-}
-
-.skeleton-text.name {
-  width: 250px;
-  height: 20px;
-}
-
-.holiday-alert-icon {
-  font-size: 2rem;
-  flex-shrink: 0;
-}
-
-.holiday-alert-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.holiday-alert-label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.today-holiday .holiday-alert-label {
-  color: #e65100;
-}
-
-.tomorrow-holiday .holiday-alert-label {
-  color: #1565c0;
-}
-
-.holiday-alert-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.today-holiday .holiday-alert-name {
-  color: #e65100;
-}
-
-.tomorrow-holiday .holiday-alert-name {
-  color: #1565c0;
 }
 
 /* Holiday Banner in Popup */
@@ -2102,24 +1386,6 @@ onMounted(async () => {
   font-size: 0.9rem;
   color: #e65100;
   font-weight: 500;
-}
-
-@media (max-width: 640px) {
-  .holiday-alert {
-    padding: var(--space-md);
-  }
-
-  .holiday-alert-icon {
-    font-size: 1.5rem;
-  }
-
-  .holiday-alert-label {
-    font-size: 0.7rem;
-  }
-
-  .holiday-alert-name {
-    font-size: 0.95rem;
-  }
 }
 
 .popup-status {
@@ -2251,19 +1517,6 @@ onMounted(async () => {
   gap: var(--space-xs);
 }
 
-.modal-date-alert {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: var(--radius-md);
-  color: #1d4ed8;
-  font-size: 0.82rem;
-  margin-bottom: var(--space-md);
-}
-
 .btn-outline-primary {
   background: transparent;
   color: var(--primary);
@@ -2288,203 +1541,6 @@ onMounted(async () => {
   }
 }
 
-/* KBM Guidance Box in Today Attendance Card */
-.kbm-guidance-box {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(240, 253, 244, 0.8));
-  border: 1.5px solid rgba(16, 185, 129, 0.35);
-  border-radius: var(--radius-xl);
-  padding: var(--space-lg);
-  margin-top: var(--space-lg);
-  text-align: left;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.08);
-}
-
-.kbm-guidance-header {
-  display: flex;
-  gap: var(--space-md);
-  align-items: flex-start;
-}
-
-.kbm-guidance-icon {
-  font-size: 2.2rem;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.kbm-guidance-info h4 {
-  color: #065f46;
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin: 0 0 4px 0;
-}
-
-.kbm-guidance-info p {
-  color: #047857;
-  font-size: 0.88rem;
-  margin: 0;
-  line-height: 1.45;
-}
-
-.today-sessions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.today-session-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: var(--radius-lg);
-  padding: 10px 14px;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.06);
-}
-
-.session-item-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #10b981;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.session-item-details {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.session-item-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.session-item-class {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #065f46;
-}
-
-.session-item-slot-badge {
-  font-size: 0.82rem;
-  font-weight: 600;
-  background: #d1fae5;
-  color: #047857;
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  border: 1px solid #a7f3d0;
-}
-
-.session-item-sub {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: #059669;
-}
-
-.session-item-meeting {
-  background: #e0f2fe;
-  color: #0369a1;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.75rem;
-  border: 1px solid #bae6fd;
-}
-
-.session-item-badal {
-  background: #fef3c7;
-  color: #b45309;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 0.75rem;
-  border: 1px solid #fde68a;
-}
-
-@media (max-width: 768px) {
-  .today-session-item {
-    align-items: flex-start;
-  }
-
-  .session-item-details {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-}
-
-.not-hadir-box {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  border-radius: var(--radius-xl);
-  padding: var(--space-md) var(--space-lg);
-  margin-top: var(--space-sm);
-}
-
-.not-hadir-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.not-hadir-box strong {
-  color: #9a3412;
-  font-size: 0.95rem;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.not-hadir-box p {
-  color: #c2410c;
-  font-size: 0.85rem;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.kbm-guidance-actions {
-  margin-top: var(--space-md);
-}
-
-.btn-kbm-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 10px 20px;
-  border-radius: var(--radius-lg);
-  width: 100%;
-  text-decoration: none;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-  transition: all 0.2s ease;
-}
-
-.btn-kbm-cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
-}
-
 /* Post-Attendance Modal */
 .post-attendance-modal {
   max-width: 440px;
@@ -2494,75 +1550,9 @@ onMounted(async () => {
   background: white;
 }
 
-.post-att-icon {
-  font-size: 3rem;
-  margin-bottom: var(--space-sm);
-}
-
-.post-att-title {
-  color: var(--primary-dark);
-  font-size: 1.3rem;
-  margin-bottom: 6px;
-}
-
-.post-att-subtitle {
-  color: var(--gray-600);
-  font-size: 0.95rem;
-  margin-bottom: var(--space-lg);
-}
-
-.badge-success-pill {
-  background: #0f6b4a;
-  color: white;
-  padding: 2px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.post-att-card {
-  display: flex;
-  gap: 12px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: var(--radius-lg);
-  padding: var(--space-md);
-  margin-bottom: var(--space-xl);
-  text-align: left;
-}
-
-.post-att-card-icon {
-  font-size: 1.8rem;
-  flex-shrink: 0;
-}
-
-.post-att-card-content strong {
-  display: block;
-  color: #166534;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-}
-
-.post-att-card-content p {
-  color: #15803d;
-  font-size: 0.85rem;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.post-att-actions {
-  display: flex;
-  gap: var(--space-md);
-  justify-content: flex-end;
-}
-
 .btn-direct-kbm {
   font-weight: 600;
   text-decoration: none;
-}
-
-.status-context-preview {
-  font-size: 0.80rem;
 }
 
 /* ---------------------------------------------------------------- attendance calendar (same look as the KBM calendar) */
@@ -2888,5 +1878,988 @@ onMounted(async () => {
 .att-day-sheet .popup-actions .btn {
   min-height: 46px;
   border-radius: 12px;
+}
+
+/* ================================================================ attendance page (guru): today + recap
+   Operate surface in the dashboard world: ivory ground, emerald for "hadir", gold for pay and holidays.
+   One drawn icon set (LineIcon); no emoji, no nested cards. */
+.at-head {
+  margin-bottom: 1.25rem;
+}
+
+.at-head h1 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+.at-head p {
+  margin: 0;
+  color: var(--lp-body, #475a50);
+  font-size: 0.95rem;
+}
+
+.at-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 2rem 0 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-section-title::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--lp-gold-deep, #b45309);
+  transform: rotate(45deg);
+}
+
+/* holiday notice */
+.at-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+}
+
+.at-notice-icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #fcd34d;
+  color: #4a2c05;
+}
+
+.at-notice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.at-notice-text strong {
+  font-size: 0.9rem;
+}
+
+.at-notice-text span {
+  font-size: 0.85rem;
+}
+
+.at-notice-loading .at-notice-icon {
+  background: #f3e7c2;
+}
+
+.at-notice-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.at-notice-lines i {
+  display: block;
+  height: 10px;
+  width: 40%;
+  border-radius: 6px;
+  background: #f3e7c2;
+}
+
+.at-notice-lines i + i {
+  width: 65%;
+}
+
+/* today */
+.at-today {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.05), 0 10px 26px -14px rgba(3, 41, 29, 0.2);
+}
+
+.at-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 18px 10px;
+  border-radius: 16px;
+  color: #fff;
+  background: linear-gradient(150deg, #0a5c40 0%, #053d2c 100%);
+  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.3);
+  text-align: center;
+}
+
+.at-date-day {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fcd34d;
+}
+
+.at-date-num {
+  font-size: 3.4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.at-date-month {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+.at-today-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.at-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.at-today-body h2,
+.at-today-body h3 {
+  margin: 0;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-today-body h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.at-today-body p {
+  margin: 0;
+  color: var(--lp-body, #475a50);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* recorded */
+.at-recorded {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.at-recorded-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.at-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.at-status-chip.is-hadir {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.at-status-chip.is-tidak {
+  background: #fdecea;
+  color: #8e1b12;
+}
+
+.at-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.2);
+  background: #fff;
+  color: var(--lp-ink, #0b3b2a);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.at-btn-ghost:hover {
+  border-color: #0a5c40;
+  background: #f3f8f5;
+}
+
+.at-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #0a5c40, #053d2c);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.2), 0 8px 18px -8px rgba(3, 41, 29, 0.55);
+  transition: filter 0.15s ease;
+}
+
+.at-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.at-btn-primary:disabled {
+  background: #d9e4de;
+  color: #5b6b62;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.at-btn-ghost:focus-visible,
+.at-btn-primary:focus-visible,
+.at-choice:focus-visible,
+.at-field input:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+/* KBM of today */
+.at-kbm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(11, 59, 42, 0.1);
+}
+
+.at-kbm-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.at-kbm-head h3 {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.at-kbm-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #0a5c40;
+  color: #fcd34d;
+}
+
+.at-kbm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.at-kbm-list li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.07);
+}
+
+.at-kbm-list li:first-child {
+  border-top: 1px solid rgba(11, 59, 42, 0.07);
+}
+
+.at-kbm-list strong {
+  color: var(--lp-ink, #0b3b2a);
+  font-size: 0.95rem;
+}
+
+.at-kbm-done {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #0a5c40;
+  color: #fff;
+}
+
+.at-kbm-slot {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e3f1ea;
+  color: #0a5c40;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.at-kbm-meta {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #5b6b62;
+}
+
+.at-quiet {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f6f7f6;
+  color: #3b4a42 !important;
+}
+
+/* weekend / holiday */
+.at-rest {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.at-rest-icon {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #eef2ef;
+  color: #3b4a42;
+}
+
+.at-rest.is-holiday .at-rest-icon {
+  background: #fcd34d;
+  color: #4a2c05;
+}
+
+.at-rest-name {
+  font-weight: 700;
+  color: #7c3a0d !important;
+}
+
+/* form */
+.at-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.at-form-sub {
+  margin-top: -6px !important;
+}
+
+.at-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.at-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(11, 59, 42, 0.14);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.at-choice:hover {
+  border-color: rgba(11, 59, 42, 0.35);
+}
+
+.at-choice-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f1f3f2;
+  color: #5b6b62;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.at-choice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.at-choice-text strong {
+  font-size: 1rem;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-choice-text span {
+  font-size: 0.82rem;
+  color: #5b6b62;
+}
+
+.at-choice.is-hadir .at-choice-icon {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.at-choice.is-tidak .at-choice-icon {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.at-choice.is-hadir.active {
+  border-color: #0a5c40;
+  background: #f1f8f4;
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.12);
+}
+
+.at-choice.is-hadir.active .at-choice-icon {
+  background: #0a5c40;
+  color: #fff;
+}
+
+.at-choice.is-tidak.active {
+  border-color: #b42318;
+  background: #fff6f5;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.1);
+}
+
+.at-choice.is-tidak.active .at-choice-icon {
+  background: #b42318;
+  color: #fff;
+}
+
+.at-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem !important;
+}
+
+.at-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.at-field > span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-field em {
+  font-style: normal;
+  font-weight: 500;
+  color: #5b6b62;
+}
+
+.at-field input {
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.22);
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-field input::placeholder {
+  color: #7c8a83;
+}
+
+.at-submit {
+  width: 100%;
+}
+
+/* recap ledger: one row, three readings divided by hairlines */
+.at-ledger {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.05), 0 8px 22px -14px rgba(3, 41, 29, 0.18);
+  overflow: hidden;
+}
+
+.at-ledger-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  min-width: 0;
+}
+
+.at-ledger-cell + .at-ledger-cell {
+  border-left: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.at-ledger-cell.is-pay {
+  background: #fffaeb;
+}
+
+.at-ledger-icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+}
+
+.at-ledger-icon.is-hadir {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.at-ledger-icon.is-tidak {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.at-ledger-icon.is-pay {
+  background: #fcd34d;
+  color: #4a2c05;
+}
+
+.at-ledger-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.at-ledger-text strong {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--lp-ink, #0b3b2a);
+  font-variant-numeric: tabular-nums;
+}
+
+.at-ledger-cell.is-pay strong {
+  color: #5b3a06;
+}
+
+.at-ledger-text > span:last-child {
+  font-size: 0.8rem;
+  color: #5b6b62;
+}
+
+.at-ledger-cell.is-pay .at-ledger-text > span:last-child {
+  color: #7c5a1b;
+}
+
+.at-ledger-skel {
+  display: block;
+  width: 36px;
+  height: 26px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  background: #eef2ef;
+}
+
+.at-ledger-skel.wide {
+  width: 120px;
+}
+
+/* the calendar section title matches, with the same air above it as the recap */
+.history-section {
+  margin-top: 2.25rem;
+}
+
+.history-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.history-section h2::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--lp-gold-deep, #b45309);
+  transform: rotate(45deg);
+}
+
+/* ---------------------------------------------------------------- dialogs of this page */
+.at-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-modal-title-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.at-modal-date {
+  margin: 0 0 12px;
+  color: var(--lp-body, #475a50);
+  font-size: 0.9rem;
+}
+
+.at-modal-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.85rem;
+}
+
+.at-welcome {
+  text-align: center;
+}
+
+.at-welcome-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #0a5c40;
+  color: #fcd34d;
+  box-shadow: 0 0 0 6px #e3f1ea;
+}
+
+.at-welcome h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-welcome p {
+  margin: 0;
+  color: var(--lp-body, #475a50);
+}
+
+.at-welcome-next {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f1f8f4;
+  border: 1px solid #cfe6da;
+  text-align: left;
+}
+
+.at-welcome-next strong {
+  display: block;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.at-welcome-next p {
+  margin: 2px 0 0;
+  font-size: 0.86rem;
+  color: var(--lp-body, #475a50);
+}
+
+.at-welcome-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.at-welcome-actions > * {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------- phones */
+@media (max-width: 640px) {
+  .at-head {
+    margin-bottom: 1rem;
+  }
+
+  .at-head h1 {
+    font-size: 1.55rem;
+  }
+
+  .at-head p {
+    font-size: 0.9rem;
+  }
+
+  /* status first, then the sentence, then the action: nothing squeezed side by side */
+  .at-recorded {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .at-recorded .at-status-chip {
+    align-self: flex-start;
+  }
+
+  .at-recorded-text {
+    flex: none;
+  }
+
+  .at-today-body h2 {
+    font-size: 1.1rem;
+  }
+
+  .at-section-title {
+    margin-top: 1.75rem;
+  }
+
+  .history-section {
+    margin-top: 1.75rem;
+  }
+
+  .at-today {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+  }
+
+  /* date as a strip: the number on the left, day over month on the right */
+  .at-date {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 12px 16px;
+    text-align: left;
+  }
+
+  .at-date-num {
+    grid-row: 1 / 3;
+    font-size: 2.6rem;
+  }
+
+  .at-date-day {
+    grid-column: 2;
+    align-self: end;
+    font-size: 0.72rem;
+  }
+
+  .at-date-month {
+    grid-column: 2;
+    align-self: start;
+  }
+
+  .at-recorded .at-btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .at-choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .at-kbm-meta {
+    margin-left: 32px;
+    flex-basis: 100%;
+  }
+
+  .at-kbm-list strong {
+    font-size: 0.92rem;
+  }
+
+  .at-btn-primary {
+    width: 100%;
+  }
+
+  .at-ledger {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .at-ledger-cell.is-pay {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid rgba(11, 59, 42, 0.08);
+  }
+
+  .at-ledger-cell {
+    padding: 14px;
+  }
+
+  .at-ledger-text strong {
+    font-size: 1.35rem;
+  }
+
+  .at-welcome-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* phones: the today card is one centred column - date, status, sentence, action - symmetric and calm */
+@media (max-width: 640px) {
+  .at-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .at-date-num {
+    grid-row: auto;
+    font-size: 2.8rem;
+    order: 0;
+  }
+
+  .at-date-day,
+  .at-date-month {
+    grid-column: auto;
+    align-self: center;
+  }
+
+  .at-recorded,
+  .at-rest,
+  .at-form {
+    align-items: center;
+    text-align: center;
+  }
+
+  .at-rest {
+    flex-direction: column;
+  }
+
+  .at-recorded .at-status-chip {
+    align-self: center;
+  }
+
+  .at-recorded-text p,
+  .at-form p {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 34ch;
+  }
+
+  .at-hint {
+    justify-content: center;
+    text-align: left;
+  }
+
+  .at-choices,
+  .at-field,
+  .at-submit {
+    align-self: stretch;
+    text-align: left;
+  }
+
+  .at-kbm-head {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .at-kbm-list li {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .at-kbm-meta {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+
+  .at-quiet {
+    text-align: left;
+  }
+
+  .at-section-title {
+    justify-content: center;
+  }
+
+  .history-section h2 {
+    justify-content: center;
+  }
+
+  .history-header {
+    justify-content: center;
+  }
+
+  .at-head {
+    text-align: center;
+  }
+
+  .at-head p {
+    max-width: 32ch;
+    margin: 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .at-choice,
+  .at-choice-icon,
+  .at-btn-ghost,
+  .at-btn-primary {
+    transition: none;
+  }
 }
 </style>

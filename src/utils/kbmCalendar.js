@@ -81,6 +81,7 @@ export function buildCalendar(calendar, options = {}) {
       date: day.date,
       dayNumber: Number(day.date.slice(8, 10)),
       isToday: day.date === calendar.today,
+      isHoliday: day.kind === 'holiday',
       isSelected: day.date === options.selectedDate,
       // fill: go and write the KBM of that day; open: show the KBM already saved that day
       selectable: ['needs', 'no-att'].includes(info.state),

@@ -323,7 +323,7 @@
               <span class="chip chip-hadir">{{ stats.hadir }} Hadir</span>
               <span class="chip chip-sakit">{{ stats.sakit }} Sakit</span>
               <span class="chip chip-izin">{{ stats.izin }} Izin</span>
-              <span class="chip chip-alpa">{{ stats.alpa }} Alpa</span>
+              <span class="chip chip-alpa">{{ stats.alfa }} Alfa</span>
             </div>
           </div>
 
@@ -396,10 +396,10 @@
                 <button
                   type="button"
                   class="pill-btn pill-alpa"
-                  :class="{ active: santri.status === 'alpa' }"
-                  @click="setSantriStatus(santri.santriId, 'alpa')"
+                  :class="{ active: santri.status === 'alfa' }"
+                  @click="setSantriStatus(santri.santriId, 'alfa')"
                 >
-                  Alpa
+                  Alfa
                 </button>
               </div>
             </div>
@@ -732,6 +732,7 @@ import PageSkeleton from '@/components/PageSkeleton.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 import { normalizeSlotId } from '@/utils/sessionSlot';
+import { normalizeStudentStatus } from '@/utils/journalState';
 import { normalizeLevel } from '@/utils/kbmCalendar';
 
 const route = useRoute();
@@ -993,10 +994,11 @@ const filteredRoster = computed(() => {
 
 // Roster Attendance Counts
 const stats = computed(() => {
-  const count = { hadir: 0, sakit: 0, izin: 0, alpa: 0 };
+  const count = { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
   for (const s of roster.value) {
-    if (count[s.status] !== undefined) {
-      count[s.status]++;
+    const status = normalizeStudentStatus(s.status);
+    if (status && count[status] !== undefined) {
+      count[status]++;
     } else {
       count.hadir++;
     }
@@ -1024,7 +1026,7 @@ function statusDisplayLabel(status) {
   if (s === 'hadir') return 'Hadir';
   if (s === 'izin') return 'Izin';
   if (s === 'sakit') return 'Sakit';
-  if (s === 'alpa' || s === 'alfa') return 'Alpa';
+  if (s === 'alpa' || s === 'alfa') return 'Alfa';
   if (s === 'tidak_hadir') return 'Tidak Hadir';
   return String(status);
 }

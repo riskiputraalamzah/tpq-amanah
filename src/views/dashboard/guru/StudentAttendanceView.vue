@@ -520,7 +520,7 @@
 
 <script setup>
 import KbmNextStep from "@/components/KbmNextStep.vue";
-import { kbmDayLink, nextStepAfterSave } from "@/utils/journalState";
+import { kbmDayLink, nextStepAfterSave, normalizeStudentStatus } from "@/utils/journalState";
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
@@ -749,10 +749,11 @@ const fetchData = async () => {
         (session.value.studentAttendances || []).map((s) => [s.santriId, s.status]),
       );
 
+      // Saved status in one spelling ("alpa" from older KBM is Alfa); a santri not in this KBM yet starts as Hadir.
       roster.value = activeSantri.map((s) => ({
         id: s.id,
         name: s.name,
-        status: existing.get(s.id) || "hadir",
+        status: normalizeStudentStatus(existing.get(s.id)) || "hadir",
       }));
       dirty.value = existing.size === 0 && roster.value.length > 0;
       saveStatus.value = resolveInitialStatus(existing.size, roster.value.length);

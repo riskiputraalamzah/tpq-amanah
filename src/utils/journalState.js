@@ -1,3 +1,13 @@
+// Student attendance status, one spelling for every page. Older KBM saved from the Daily Workspace used "alpa":
+// it is the same as "alfa" (reports already count both), so it must select the Alfa button too.
+export const STUDENT_STATUSES = ["hadir", "izin", "sakit", "alfa"];
+export function normalizeStudentStatus(value) {
+  const s = String(value ?? "").trim().toLowerCase();
+  if (s === "alpa" || s === "alpha") return "alfa";
+  if (s === "present") return "hadir";
+  return STUDENT_STATUSES.includes(s) ? s : "";
+}
+
 export function summarizeStudentAttendance(list) {
   const rows = Array.isArray(list) ? list : [];
   const summary = { total: rows.length, hadir: 0, izin: 0, sakit: 0, alfa: 0, alpa: 0 };

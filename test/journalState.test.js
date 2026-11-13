@@ -149,3 +149,18 @@ test("journal views responsive smoke", () => {
     assert.match(src, /100%/);
   }
 });
+
+test("student status has one spelling: 'alpa' from older KBM selects Alfa, unknown values are not invented", async () => {
+  const { normalizeStudentStatus } = await import("../src/utils/journalState.js");
+  assert.equal(normalizeStudentStatus("alpa"), "alfa");
+  assert.equal(normalizeStudentStatus("Alpha"), "alfa");
+  assert.equal(normalizeStudentStatus(" Hadir "), "hadir");
+  assert.equal(normalizeStudentStatus("izin"), "izin");
+  assert.equal(normalizeStudentStatus("sakit"), "sakit");
+  assert.equal(normalizeStudentStatus(""), "");
+  assert.equal(normalizeStudentStatus(undefined), "");
+  const sa = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/StudentAttendanceView.vue"), "utf8");
+  assert.ok(sa.includes('status: normalizeStudentStatus(existing.get(s.id)) || "hadir"'), "the attendance page reads saved statuses through it");
+  const ws = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/DailyWorkspace.vue"), "utf8");
+  assert.ok(ws.includes("setSantriStatus(santri.santriId, 'alfa')") && !ws.includes("setSantriStatus(santri.santriId, 'alpa')"), "the workspace saves 'alfa' too");
+});

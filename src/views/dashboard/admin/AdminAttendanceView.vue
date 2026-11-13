@@ -15,7 +15,8 @@
         <!-- Dropdown Actions for Admin -->
         <div v-if="isAdmin" class="dropdown-wrapper" ref="dropdownRef">
           <button class="btn btn-primary dropdown-trigger" @click="toggleDropdown">
-            <span>⚡ Aksi</span>
+            <LineIcon name="bolt" :size="16" />
+            <span>Aksi</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               :class="{ rotated: dropdownOpen }">
               <path d="M6 9l6 6 6-6" />
@@ -24,24 +25,28 @@
           <transition name="dropdown">
             <div v-if="dropdownOpen" class="dropdown-menu">
               <button class="dropdown-item" @click="exportToPDF" :disabled="loading || exporting">
-                <span v-if="exporting">⏳ Mengunduh...</span>
-                <span v-else>📄 Export PDF</span>
+                <LineIcon :name="exporting ? 'clock' : 'file'" :size="17" />
+                <span>{{ exporting ? 'Mengunduh…' : 'Export PDF' }}</span>
               </button>
               <button class="dropdown-item" @click="exportToExcel" :disabled="loading || exportingExcel">
-                <span v-if="exportingExcel">⏳ Menyiapkan...</span>
-                <span v-else>📊 Export Excel</span>
+                <LineIcon :name="exportingExcel ? 'clock' : 'table'" :size="17" />
+                <span>{{ exportingExcel ? 'Menyiapkan…' : 'Export Excel' }}</span>
               </button>
               <button class="dropdown-item" @click="openAddModal">
-                ➕ Tambah Absensi
+                <LineIcon name="plus" :size="17" />
+                <span>Tambah absensi</span>
               </button>
               <button class="dropdown-item" @click="openHolidayModal">
-                📅 Kelola Hari Libur
+                <LineIcon name="calendar" :size="17" />
+                <span>Kelola hari libur</span>
               </button>
               <button class="dropdown-item" @click="openQuickSettingsModal">
-                🔗 Pengaturan Link WA
+                <LineIcon name="link" :size="17" />
+                <span>Pengaturan link WA</span>
               </button>
               <button class="dropdown-item dropdown-item-danger" @click="openResetTestingModal()">
-                🧪 Reset Sesi Testing
+                <LineIcon name="refresh" :size="17" />
+                <span>Reset sesi testing</span>
               </button>
             </div>
           </transition>
@@ -49,12 +54,12 @@
 
         <!-- Simple Export Button for Guru -->
         <button v-else class="btn btn-export" @click="exportToPDF" :disabled="loading || exporting">
-          <span v-if="exporting">⏳ Mengunduh...</span>
-          <span v-else>📄 Export PDF</span>
+          <LineIcon :name="exporting ? 'clock' : 'file'" :size="17" />
+          <span>{{ exporting ? 'Mengunduh…' : 'Export PDF' }}</span>
         </button>
         <button v-if="!isAdmin" class="btn btn-export" @click="exportToExcel" :disabled="loading || exportingExcel">
-          <span v-if="exportingExcel">⏳ Menyiapkan...</span>
-          <span v-else>📊 Export Excel</span>
+          <LineIcon :name="exportingExcel ? 'clock' : 'table'" :size="17" />
+          <span>{{ exportingExcel ? 'Menyiapkan…' : 'Export Excel' }}</span>
         </button>
       </div>
     </header>
@@ -68,19 +73,13 @@
       </div>
     </div>
     <template v-else>
-      <div v-if="todayHoliday.isHoliday" class="holiday-alert today-holiday">
-        <div class="holiday-alert-icon">🎉</div>
-        <div class="holiday-alert-content">
-          <span class="holiday-alert-label">Hari Ini Libur Nasional</span>
-          <span class="holiday-alert-name">{{ todayHoliday.holidayName }}</span>
-        </div>
+      <div v-if="todayHoliday.isHoliday" class="ta-notice" role="status">
+        <span class="ta-notice-icon"><LineIcon name="star" :size="18" /></span>
+        <span class="ta-notice-text"><strong>Hari ini libur nasional</strong><span>{{ todayHoliday.holidayName }}</span></span>
       </div>
-      <div v-else-if="tomorrowHoliday.isHoliday" class="holiday-alert tomorrow-holiday">
-        <div class="holiday-alert-icon">📅</div>
-        <div class="holiday-alert-content">
-          <span class="holiday-alert-label">Besok Libur Nasional</span>
-          <span class="holiday-alert-name">{{ tomorrowHoliday.holidayName }}</span>
-        </div>
+      <div v-else-if="tomorrowHoliday.isHoliday" class="ta-notice" role="status">
+        <span class="ta-notice-icon"><LineIcon name="calendar" :size="18" /></span>
+        <span class="ta-notice-text"><strong>Besok libur nasional</strong><span>{{ tomorrowHoliday.holidayName }}</span></span>
       </div>
     </template>
 
@@ -124,9 +123,9 @@
     <div class="calendar-wrapper">
       <!-- Filter moved outside/above calendar grid to match Guru style cleanliness -->
       <div class="filter-section">
-        <label>Filter Guru:</label>
+        <label for="ta-teacher-filter">Tampilkan</label>
         <div class="select-wrapper">
-          <select v-model="selectedTeacherId" class="form-input form-select filter-select">
+          <select id="ta-teacher-filter" v-model="selectedTeacherId" class="form-input form-select filter-select">
             <option value="all">Semua Guru</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">
               {{ t.displayName }}
@@ -162,31 +161,25 @@
         <template v-else>
           <!-- Month Navigation -->
           <div class="calendar-header">
-            <button class="nav-btn" @click="prevMonth" :disabled="isFirstMonth">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
+            <button type="button" class="nav-btn" aria-label="Bulan sebelumnya" @click="prevMonth" :disabled="isFirstMonth">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
-            <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
-            <button class="nav-btn" @click="nextMonth" :disabled="isLastAllowedMonth">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
+            <strong class="month-title" aria-live="polite">{{ monthNames[currentMonth] }} {{ currentYear }}</strong>
+            <button type="button" class="nav-btn" aria-label="Bulan berikutnya" @click="nextMonth" :disabled="isLastAllowedMonth">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
           </div>
 
-          <div class="calendar-grid">
-            <!-- Day Headers -->
-            <div class="day-header" v-for="day in dayNames" :key="day">
-              {{ day }}
-            </div>
+          <!-- Same look as the guru calendar: Min first, marks in the corner -->
+          <div class="weekdays" aria-hidden="true">
+            <span v-for="day in dayNames" :key="day">{{ day }}</span>
+          </div>
+          <div class="calendar-grid" :class="{ 'is-all': selectedTeacherId === 'all' }" role="group"
+            :aria-label="`Kalender absensi, ${monthNames[currentMonth]} ${currentYear}`">
+            <span v-for="n in firstDayOfMonth" :key="'empty-' + n" aria-hidden="true"></span>
 
-            <!-- Empty cells for alignment -->
-            <div v-for="n in firstDayOfMonth" :key="'empty-' + n" class="calendar-cell empty"></div>
-
-            <!-- Date Cells -->
-            <div v-for="date in daysInMonth" :key="date" class="calendar-cell" :class="getCellClass(date)"
-              :title="getHolidayForDate(date)?.name || ''" @click="showDateDetail(date)">
+            <button v-for="date in daysInMonth" :key="date" type="button" class="calendar-cell" :class="getCellClass(date)"
+              :title="getHolidayForDate(date)?.name || ''" :aria-pressed="selectedDate === date" @click="showDateDetail(date)">
               <span class="cell-date">{{ date }}</span>
 
               <!-- Teacher Avatars for ALL mode (Compact) -->
@@ -202,47 +195,44 @@
                 </div>
               </div>
 
-              <!-- Single Teacher Status -->
-              <div v-else class="cell-status-single">
-                <span v-if="getTeacherAttendanceForDate(date)" class="status-icon" :class="getTeacherAttendanceForDate(date).status === 'hadir'
-                  ? 'hadir'
-                  : 'tidak'
-                  ">
-                  {{
-                    getTeacherAttendanceForDate(date).status === "hadir"
-                      ? "✓"
-                      : "✗"
-                  }}
+              <!-- One teacher: the same marks as the guru calendar -->
+              <template v-else>
+                <span v-if="getTeacherAttendanceForDate(date)?.status === 'hadir'" class="mark mark-hadir" aria-hidden="true">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg>
                 </span>
-              </div>
+                <span v-else-if="getTeacherAttendanceForDate(date)" class="mark mark-tidak" aria-hidden="true">✕</span>
+                <span v-else-if="isExpectedDay(date)" class="mark mark-empty" aria-hidden="true"></span>
+              </template>
 
-              <span class="cell-holiday-dot" v-if="getHolidayForDate(date)">🎉</span>
-            </div>
+              <span v-if="getHolidayForDate(date)" class="cell-holiday-dot" aria-hidden="true"></span>
+            </button>
           </div>
 
           <!-- Legend -->
-          <div class="calendar-legend">
-            <div class="legend-item">
-              <span class="legend-dot hadir"></span> Hadir
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot tidak"></span> Tidak Hadir
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot empty"></span> Tidak Ada Data
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot libur"></span> Hari Libur
-            </div>
-          </div>
+          <ul class="calendar-legend" aria-label="Keterangan">
+            <template v-if="selectedTeacherId === 'all'">
+              <li><span class="legend-initial">UA</span>Inisial guru yang hadir</li>
+            </template>
+            <template v-else>
+              <li><span class="mark mark-hadir"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg></span>Hadir</li>
+              <li><span class="mark mark-tidak">✕</span>Tidak hadir (izin / sakit)</li>
+              <li><span class="mark mark-empty"></span>Belum absen</li>
+            </template>
+            <li><span class="swatch-libur"></span>Hari libur</li>
+            <li><span class="swatch-off"></span>Akhir pekan / belum tiba</li>
+          </ul>
+          <p class="calendar-tip">Ketuk tanggal untuk melihat detail{{ selectedTeacherId === 'all' ? ' siapa saja yang hadir' : '' }}.</p>
         </template>
 
         <!-- Date Detail Popup -->
-          <div v-if="selectedDate" class="calendar-popup-overlay" @click="selectedDate = null"></div>
-          <div v-if="selectedDate" class="calendar-popup glass-card">
+          <Teleport to="body">
+          <div v-if="selectedDate" class="ta-day-overlay" @click="selectedDate = null"></div>
+          <div v-if="selectedDate" class="ta-day-sheet" role="dialog" aria-modal="true">
           <div class="popup-header">
             <h4>{{ formatFullDate(selectedDate) }}</h4>
-            <button class="close-btn" @click="selectedDate = null">×</button>
+            <button type="button" class="close-btn sheet-close" aria-label="Tutup" @click="selectedDate = null">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
           </div>
 
           <!-- Check-in Time - Below Date Header (for single teacher view) -->
@@ -485,41 +475,64 @@
             </template>
           </div>
           </div>
+          </Teleport>
       </div>
     </div>
 
-    <!-- Teachers Stats Summary -->
-    <div class="teachers-stats glass-card" v-if="!loading">
-      <h3>📊 Statistik Per Guru</h3>
-      <div class="stats-grid">
-        <div v-for="teacher in teachersWithStats" :key="teacher.id" class="stat-card"
-          :style="{ '--teacher-color': getTeacherColor(teacher.displayName) }">
-          <div class="stat-card-header">
-            <span class="stat-avatar" :style="{ background: getTeacherColor(teacher.displayName) }">
-              {{ getInitials(teacher.displayName) }}
-            </span>
-            <div class="stat-info">
-              <h4>{{ teacher.displayName }}</h4>
-              <p>{{ teacher.position || "Pengajar" }}</p>
-            </div>
-          </div>
-          <div class="stat-card-body">
-            <div class="stat-item hadir">
-              <span class="stat-value">{{ teacher.hadirCount }}</span>
-              <span class="stat-label">Hadir</span>
-            </div>
-            <div class="stat-item tidak">
-              <span class="stat-value">{{ teacher.tidakHadirCount }}</span>
-              <span class="stat-label">Tidak Hadir</span>
-            </div>
-            <div class="stat-item gaji">
-              <span class="stat-value">Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</span>
-              <span class="stat-label">Gaji</span>
-            </div>
-          </div>
-        </div>
+    <!-- Per-teacher recap: one row per teacher, columns line up, total at the bottom -->
+    <section v-if="!loading" class="ta-teachers" aria-labelledby="ta-teachers-title">
+      <div class="ta-teachers-head">
+        <h2 id="ta-teachers-title">Rekap per guru</h2>
+        <span class="ta-teachers-month">{{ selectedMonthLabel }}</span>
       </div>
-    </div>
+
+      <p v-if="!teachersWithStats.length" class="ta-empty">Belum ada guru untuk ditampilkan.</p>
+
+      <table v-else class="ta-table">
+        <thead>
+          <tr>
+            <th scope="col">Guru</th>
+            <th scope="col" class="ta-col-bar"><span class="sr-only">Perbandingan </span>Kehadiran</th>
+            <th scope="col" class="ta-num">Hadir</th>
+            <th scope="col" class="ta-num">Tidak hadir</th>
+            <th scope="col" class="ta-num">Gaji</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="teacher in teachersWithStats" :key="teacher.id">
+            <th scope="row" class="ta-who">
+              <span class="ta-who-inner">
+                <span class="ta-avatar" :style="{ background: getTeacherColor(teacher.displayName) }" aria-hidden="true">
+                  {{ getInitials(teacher.displayName) }}
+                </span>
+                <span class="ta-who-text">
+                  <strong>{{ teacher.displayName }}</strong>
+                  <span>{{ teacher.position || "Pengajar" }}</span>
+                </span>
+              </span>
+            </th>
+            <td class="ta-col-bar" aria-hidden="true">
+              <span class="ta-bar" :title="`${teacher.hadirCount} hadir, ${teacher.tidakHadirCount} tidak hadir`">
+                <span class="ta-bar-hadir" :style="{ flexGrow: teacher.hadirCount }"></span>
+                <span class="ta-bar-tidak" :style="{ flexGrow: teacher.tidakHadirCount }"></span>
+              </span>
+            </td>
+            <td class="ta-num ta-hadir" data-label="Hadir">{{ teacher.hadirCount }}</td>
+            <td class="ta-num" :class="{ 'ta-tidak': teacher.tidakHadirCount > 0 }" data-label="Tidak hadir">{{ teacher.tidakHadirCount }}</td>
+            <td class="ta-num ta-pay" data-label="Gaji">Rp {{ formatCurrency(teacher.hadirCount * 10000) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row" class="ta-who">Total {{ teachersWithStats.length }} guru</th>
+            <td class="ta-col-bar" aria-hidden="true"></td>
+            <td class="ta-num ta-hadir" data-label="Hadir">{{ totalAttendance }}</td>
+            <td class="ta-num" data-label="Tidak hadir">{{ totalTidakHadir }}</td>
+            <td class="ta-num ta-pay" data-label="Gaji">Rp {{ formatCurrency(totalSalary) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
 
     <!-- Add Attendance Modal -->
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -566,13 +579,13 @@
               active: form.status === 'hadir',
               hadir: form.status === 'hadir',
             }" @click="form.status = 'hadir'">
-              ✅ Hadir
+              <LineIcon name="check" :size="17" :stroke="2.6" /> Hadir
             </button>
             <button class="status-btn" :class="{
               active: form.status === 'tidak_hadir',
               tidak: form.status === 'tidak_hadir',
             }" @click="form.status = 'tidak_hadir'">
-              ❌ Tidak Hadir
+              <LineIcon name="x" :size="17" :stroke="2.6" /> Tidak hadir
             </button>
           </div>
         </div>
@@ -592,7 +605,7 @@
     <!-- Quick Settings Modal -->
       <div v-if="showQuickSettingsModal" class="modal-overlay" @click.self="closeQuickSettingsModal">
         <div class="modal glass-card quick-settings-modal">
-        <h3>🔗 Pengaturan Link Absensi WA</h3>
+        <h3>Pengaturan link absensi WA</h3>
 
         <PageSkeleton v-if="quickSettingsLoading" variant="inline" :rows="3" label="Memuat pengaturan" />
 
@@ -641,8 +654,10 @@
       <div v-if="showHolidayModal" class="modal-overlay" @click.self="closeHolidayModal">
         <div class="modal glass-card holiday-modal">
         <div class="holiday-modal-header">
-          <h3>📅 Kelola Hari Libur</h3>
-          <button class="close-btn" @click="closeHolidayModal">×</button>
+          <h3>Kelola hari libur</h3>
+          <button type="button" class="close-btn ta-close" aria-label="Tutup" @click="closeHolidayModal">
+            <LineIcon name="x" :size="18" :stroke="2.4" />
+          </button>
         </div>
 
         <!-- Add Holiday Form -->
@@ -664,7 +679,7 @@
               placeholder="Contoh: Libur Semester Genap, Cuti Bersama Idul Fitri" />
           </div>
           <button class="btn btn-primary" @click="saveHoliday" :disabled="savingHoliday" style="width: 100%">
-            {{ savingHoliday ? 'Menyimpan...' : '➕ Tambah Hari Libur' }}
+            {{ savingHoliday ? 'Menyimpan…' : 'Tambah hari libur' }}
           </button>
         </div>
 
@@ -710,7 +725,7 @@
         <div class="modal glass-card reset-testing-modal-card">
           <div class="reset-modal-header">
             <div class="reset-header-icon">
-              🧪
+              <LineIcon name="refresh" :size="22" />
             </div>
             <div>
               <h3 class="modal-title">Reset Sesi KBM & Absen (Testing Tool)</h3>
@@ -868,6 +883,7 @@ import { loadExcelLib, downloadWorkbook } from "@/utils/excel";
 import { buildAttendanceWorkbook, attendanceFilename } from "@/utils/excelExports";
 import { prefetchWhenIdle } from "@/utils/prefetch";
 import PageSkeleton from "@/components/PageSkeleton.vue";
+import LineIcon from "@/components/LineIcon.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const { success, error: showError, warning } = useToast();
@@ -1033,6 +1049,9 @@ const totalAttendance = computed(() => {
 const totalSalary = computed(() => {
   return totalAttendance.value * 10000;
 });
+
+const totalTidakHadir = computed(() => teachersWithStats.value.reduce((sum, t) => sum + t.tidakHadirCount, 0));
+const selectedMonthLabel = computed(() => availableMonths.value.find((m) => m.value === selectedMonth.value)?.label || "");
 
 // Computed: active working days (excluding weekends, national holidays, custom holidays)
 const activeDays = computed(() => {
@@ -1311,30 +1330,29 @@ const getTeacherAttendanceForDate = (date) => {
   });
 };
 
+// A weekday up to today that is not a holiday: attendance was expected that day.
+const isExpectedDay = (date) => {
+  const d = new Date(currentYear.value, currentMonth.value, date);
+  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return d <= end && !isWeekend(date) && !getHolidayForDate(date);
+};
+
+// One state per day, same look as the guru calendar (and the KBM calendar).
 const getCellClass = (date) => {
   const classes = [];
-
+  const off = !isExpectedDay(date);
   if (selectedTeacherId.value === "all") {
-    const presentTeachers = getPresentTeachersForDate(date);
-    if (presentTeachers.length > 0) {
-      classes.push("has-attendance");
-    } else {
-      classes.push("no-data");
-    }
+    if (getPresentTeachersForDate(date).length > 0) classes.push("has-attendance");
+    else if (off) classes.push("is-off");
   } else {
     const attendance = getTeacherAttendanceForDate(date);
-    if (!attendance) {
-      classes.push("no-data");
-    } else {
-      classes.push(attendance.status === "hadir" ? "hadir" : "tidak");
-    }
+    if (attendance) classes.push(attendance.status === "hadir" ? "is-hadir" : "is-tidak");
+    else if (off) classes.push("is-off");
   }
-
-  if (getHolidayForDate(date)) {
-    classes.push("libur");
-  }
-
-  return classes.join(" ");
+  if (getHolidayForDate(date)) classes.push("is-libur");
+  if (currentYear.value === today.getFullYear() && currentMonth.value === today.getMonth() && date === today.getDate()) classes.push("is-today");
+  if (selectedDate.value === date) classes.push("is-selected");
+  return classes;
 };
 
 // Logic for Avatars
@@ -2304,212 +2322,8 @@ onUnmounted(() => {
   margin-bottom: var(--space-xl);
 }
 
-.filter-section {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.filter-section label {
-  font-weight: 600;
-  color: var(--gray-700);
-}
-
-.select-wrapper {
-  flex-grow: 1;
-  max-width: 300px;
-}
-
-.calendar-container {
-  padding: var(--space-xl);
-  background: rgba(255, 255, 255, 0.95);
-  /* Guru style white background */
-  border-radius: var(--radius-xl);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Teacher Legend */
-.teacher-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-lg);
-  border: 1px solid var(--gray-100);
-}
-
-.legend-teacher {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 4px 8px;
-  background: white;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--gray-200);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.legend-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-full);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.55rem;
-}
-
-.legend-name {
-  font-size: 0.75rem;
-  color: var(--gray-700);
-  font-weight: 500;
-}
-
-/* Calendar Header */
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-xl);
-}
-
-.calendar-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-
-.nav-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background: var(--gray-100);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--gray-600);
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: var(--primary);
-  color: white;
-}
-
-.nav-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Calendar Grid */
-/* Calendar Grid - Compact & Safe */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  /* Force columns to not expand */
-  gap: 5px;
-  /* Tighter gap */
-  margin-top: var(--space-md);
-  width: 100%;
-}
-
-.day-header {
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  padding: 4px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.calendar-popup .mini-avatar {
+.ta-day-sheet .mini-avatar {
   margin: 0 !important;
-}
-
-.calendar-cell {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding: 0;
-  border-radius: var(--radius-md);
-  position: relative;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: transform 0.2s;
-  border: 1px solid transparent;
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  box-sizing: border-box;
-  /* Crucial for borders */
-  overflow: hidden;
-}
-
-.calendar-cell:hover:not(.empty) {
-  transform: scale(1.05);
-  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
-  z-index: 5;
-  /* background: white; */
-  /* border-color: var(--primary-light); */
-}
-
-.calendar-cell.empty {
-  background: transparent;
-  cursor: default;
-}
-
-.calendar-cell.has-attendance {
-  background: white;
-  border: 1px solid var(--gray-200);
-}
-
-.calendar-cell.hadir {
-  background: rgba(76, 175, 80, 0.1);
-  border: 2px solid #4caf50;
-}
-
-.calendar-cell.tidak {
-  background: rgba(244, 67, 54, 0.1);
-  border: 2px solid #f44336;
-}
-
-.calendar-cell.no-data {
-  background: var(--gray-100);
-  border: 1px dashed var(--gray-200);
-}
-
-.calendar-cell.libur {
-  background: rgba(255, 193, 7, 0.15) !important;
-  border: 2px solid #ffc107 !important;
-}
-
-.cell-date {
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--gray-800);
-  margin-bottom: 4px;
-}
-
-.cell-avatars {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
-  justify-content: center;
-  width: 100%;
-  padding: 0 4px;
 }
 
 .mini-avatar {
@@ -2532,104 +2346,6 @@ onUnmounted(() => {
   grid-column: 1 / -1;
   font-weight: 600;
   margin-top: 2px;
-}
-
-.cell-status-single {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.status-icon {
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.status-icon.hadir {
-  color: #4caf50;
-}
-
-.status-icon.tidak {
-  color: #f44336;
-}
-
-.cell-holiday-dot {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 0.6rem;
-  line-height: 1;
-}
-
-/* Calendar Legend */
-.calendar-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-lg);
-  margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--gray-100);
-  justify-content: center;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  font-size: 0.8rem;
-  color: var(--gray-600);
-}
-
-.legend-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-}
-
-.legend-dot.hadir {
-  background: rgba(76, 175, 80, 0.3);
-  border: 2px solid #4caf50;
-}
-
-.legend-dot.tidak {
-  background: rgba(244, 67, 54, 0.3);
-  border: 2px solid #f44336;
-}
-
-.legend-dot.empty {
-  background: var(--gray-100);
-  border: 1px dashed var(--gray-300);
-}
-
-.legend-dot.libur {
-  background: rgba(255, 193, 7, 0.3);
-  border: 2px solid #ffc107;
-}
-
-/* Calendar Popup */
-.calendar-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
-  backdrop-filter: blur(2px);
-}
-
-.calendar-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 400px;
-  background: white;
-  border-radius: var(--radius-xl);
-  z-index: 101;
-  padding: 0;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .popup-header {
@@ -2801,98 +2517,6 @@ onUnmounted(() => {
   font-size: 0.85rem;
 }
 
-/* Teachers Stats */
-.teachers-stats {
-  padding: var(--space-xl);
-  background: rgba(255, 255, 255, 0.95);
-  margin-top: var(--space-xl);
-}
-
-.teachers-stats h3 {
-  color: var(--primary-dark);
-  margin: 0 0 var(--space-lg) 0;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-lg);
-}
-
-.stat-card {
-  background: var(--gray-50);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  border-left: 4px solid var(--teacher-color, var(--primary));
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.stat-card-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.stat-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-}
-
-.stat-info h4 {
-  margin: 0;
-  color: var(--primary-dark);
-  font-size: 0.95rem;
-}
-
-.stat-info p {
-  margin: 0;
-  color: var(--gray-500);
-  font-size: 0.75rem;
-}
-
-.stat-card-body {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.stat-item {
-  text-align: center;
-  flex: 1;
-}
-
-.stat-item .stat-value {
-  display: block;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.stat-item .stat-label {
-  font-size: 0.65rem;
-  color: var(--gray-500);
-  text-transform: uppercase;
-}
-
-.stat-item.hadir .stat-value {
-  color: #4caf50;
-}
-
-.stat-item.tidak .stat-value {
-  color: #f44336;
-}
-
-.stat-item.gaji .stat-value {
-  color: #ff9800;
-  font-size: 0.85rem;
-}
-
 /* Holiday Alert Banner */
 .holiday-alert {
   display: flex;
@@ -2916,20 +2540,6 @@ onUnmounted(() => {
   }
 }
 
-.today-holiday {
-  background: linear-gradient(135deg,
-      rgba(255, 193, 7, 0.2),
-      rgba(255, 152, 0, 0.25));
-  border: 2px solid rgba(255, 152, 0, 0.4);
-}
-
-.tomorrow-holiday {
-  background: linear-gradient(135deg,
-      rgba(33, 150, 243, 0.15),
-      rgba(30, 136, 229, 0.2));
-  border: 2px solid rgba(33, 150, 243, 0.3);
-}
-
 .holiday-alert-icon {
   font-size: 2rem;
   flex-shrink: 0;
@@ -2948,25 +2558,9 @@ onUnmounted(() => {
   letter-spacing: 0.5px;
 }
 
-.today-holiday .holiday-alert-label {
-  color: #e65100;
-}
-
-.tomorrow-holiday .holiday-alert-label {
-  color: #1565c0;
-}
-
 .holiday-alert-name {
   font-size: 1.1rem;
   font-weight: 600;
-}
-
-.today-holiday .holiday-alert-name {
-  color: #e65100;
-}
-
-.tomorrow-holiday .holiday-alert-name {
-  color: #1565c0;
 }
 
 /* Modal */
@@ -3164,7 +2758,7 @@ onUnmounted(() => {
   }
 
   .dropdown-wrapper,
-  .btn-export {
+.btn-export {
     width: 100%;
   }
 
@@ -3183,100 +2777,6 @@ onUnmounted(() => {
     gap: var(--space-md);
   }
 
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-xs);
-  }
-
-  .select-wrapper {
-    max-width: none;
-    width: 100%;
-  }
-
-  .calendar-container {
-    padding: 6px;
-    /* Reduced for mobile */
-    overflow: visible;
-    /* Allow content to show, grid should fit */
-  }
-
-  .teacher-legend {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
-    padding: 8px;
-    margin-bottom: var(--space-md);
-  }
-
-  .legend-teacher {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 2px 4px;
-    min-width: 0;
-  }
-
-  .legend-name {
-    display: block;
-    font-size: 0.65rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .calendar-header {
-    margin-bottom: var(--space-md);
-  }
-
-  .calendar-header h3 {
-    font-size: 1rem;
-  }
-
-  .nav-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .calendar-grid {
-    gap: 1px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    /* Force strict width */
-  }
-
-  .day-header {
-    font-size: 0.65rem;
-    padding: 2px 0;
-  }
-
-  .calendar-cell {
-    box-sizing: border-box;
-    /* Ensure borders don't add width */
-    padding: 0px;
-    border-radius: var(--radius-sm);
-    min-height: 0;
-    min-width: 0;
-    /* CRITICAL for grid shrinking */
-    width: 100%;
-    /* Ensure fits in grid track */
-    aspect-ratio: 1;
-    /* Force square shape */
-  }
-
-  .cell-date {
-    font-size: 0.6rem;
-    margin-top: 2px;
-    margin-bottom: 0;
-    line-height: 1.2;
-  }
-
-  .cell-avatars {
-    gap: 1px;
-    padding: 0 1px;
-    margin-top: 1px;
-  }
-
   .mini-avatar {
     width: 14px;
     height: 14px;
@@ -3286,11 +2786,6 @@ onUnmounted(() => {
   .more-indicator {
     font-size: 0.45rem;
     margin-top: 0;
-  }
-
-  /* Status icon for single view */
-  .status-icon {
-    font-size: 0.9rem;
   }
 
   .holiday-alert {
@@ -3311,15 +2806,6 @@ onUnmounted(() => {
   .holiday-alert-name {
     font-size: 0.85rem;
     width: 100%;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
-  }
-
-  .stat-card {
-    padding: var(--space-md);
   }
 
   /* Skeleton Mobile Overrides */
@@ -3348,30 +2834,7 @@ onUnmounted(() => {
   }
 }
 
-/* Desktop Avatar Grid Override (Show All) */
-@media (min-width: 1025px) {
-  .cell-avatars {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    /* 3 columns on desktop for density */
-    gap: 4px;
-    align-content: start;
-    padding: 2px;
-  }
-}
-
 @media (max-width: 640px) {
-  .legend-item {
-    font-size: 0.5rem;
-  }
-
-  .calendar-legend {
-    gap: var(--space-sm);
-  }
-
-  .teachers-stats {
-    padding: var(--space-md) !important;
-  }
 
   .mini-avatar {
     width: 10px;
@@ -3703,34 +3166,6 @@ onUnmounted(() => {
     font-size: 0.7rem;
   }
 
-  /* Calendar section */
-  .calendar-container {
-    padding: var(--space-md);
-  }
-
-  .calendar-header h3 {
-    font-size: 1rem;
-  }
-
-  .calendar-grid {
-    gap: 3px;
-  }
-
-  .day-header {
-    font-size: 0.65rem;
-    padding: 2px 0;
-  }
-
-  .cell-date {
-    font-size: 0.7rem;
-    margin-bottom: 2px;
-  }
-
-  .cell-avatars {
-    padding: 0 2px;
-    gap: 1px;
-  }
-
   .mini-avatar {
     width: 12px;
     height: 12px;
@@ -3739,75 +3174,6 @@ onUnmounted(() => {
 
   .more-indicator {
     font-size: 0.5rem;
-  }
-
-  .status-icon {
-    font-size: 0.9rem;
-  }
-
-  .cell-holiday-dot {
-    font-size: 0.45rem;
-    top: 1px;
-    right: 1px;
-  }
-
-  /* Calendar Legend */
-  .calendar-legend {
-    gap: var(--space-sm);
-    margin-top: var(--space-md);
-    padding-top: var(--space-md);
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .legend-item {
-    font-size: 0.7rem;
-    gap: 3px;
-  }
-
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-  }
-
-  /* Teacher Legend */
-  .teacher-legend {
-    gap: 4px;
-    padding: var(--space-sm);
-    margin-bottom: var(--space-md);
-  }
-
-  .legend-teacher {
-    padding: 2px 6px;
-    font-size: 0.7rem;
-  }
-
-  .legend-avatar {
-    width: 16px;
-    height: 16px;
-    font-size: 0.45rem;
-  }
-
-  .legend-name {
-    font-size: 0.65rem;
-  }
-
-  /* Filter section */
-  .filter-section {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-
-  .select-wrapper {
-    max-width: 100%;
-  }
-
-  /* Popup */
-  .calendar-popup {
-    width: 95%;
-    max-width: none;
-    max-height: 85vh;
   }
 
   .popup-header h4 {
@@ -3824,42 +3190,6 @@ onUnmounted(() => {
     padding: 4px 6px;
   }
 
-  /* Stats Grid */
-  .teachers-stats {
-    padding: var(--space-md);
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-md);
-  }
-
-  .stat-card {
-    padding: var(--space-md);
-  }
-
-  .stat-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 0.75rem;
-  }
-
-  .stat-info h4 {
-    font-size: 0.85rem;
-  }
-
-  .stat-card-body {
-    gap: var(--space-md);
-  }
-
-  .stat-item .stat-value {
-    font-size: 0.9rem;
-  }
-
-  .stat-item .stat-label {
-    font-size: 0.6rem;
-  }
-
   /* Modals */
   .modal {
     max-width: 100%;
@@ -3869,8 +3199,6 @@ onUnmounted(() => {
   .modal h3 {
     font-size: 1.1rem;
   }
-
-
 
   /* Holiday Modal */
   .holiday-modal {
@@ -3885,7 +3213,6 @@ onUnmounted(() => {
 
 /* Extra small screens */
 @media (max-width: 400px) {
-
 
   .summary-card {
     padding: var(--space-sm);
@@ -3903,14 +3230,6 @@ onUnmounted(() => {
 
   .summary-label {
     font-size: 0.65rem;
-  }
-
-  .calendar-grid {
-    gap: 2px;
-  }
-
-  .cell-date {
-    font-size: 0.6rem;
   }
 
   .mini-avatar {
@@ -4116,6 +3435,769 @@ onUnmounted(() => {
 .btn-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ================================================================ admin attendance: actions, notice, per-teacher recap */
+.dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown-item {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.dropdown-item svg {
+  flex: none;
+  color: #0a5c40;
+}
+
+.dropdown-item-danger svg {
+  color: #b42318;
+}
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ta-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+}
+
+.ta-notice-icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: #fcd34d;
+  color: #4a2c05;
+}
+
+.ta-notice-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.ta-notice-text strong {
+  font-size: 0.9rem;
+}
+
+.ta-close {
+  width: 44px;
+  height: 44px;
+  display: grid !important;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.15) !important;
+  background: #fff !important;
+  color: #2f4339;
+}
+
+.reset-header-icon {
+  display: grid;
+  place-items: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* per-teacher recap */
+.ta-teachers {
+  margin-top: 1.5rem;
+  padding: 18px 18px 8px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.05), 0 10px 26px -14px rgba(3, 41, 29, 0.2);
+}
+
+.ta-teachers-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ta-teachers-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.ta-teachers-head h2::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--lp-gold-deep, #b45309);
+  transform: rotate(45deg);
+}
+
+.ta-teachers-month {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5b6b62;
+}
+
+.ta-empty {
+  margin: 8px 0 14px;
+  color: #5b6b62;
+}
+
+.ta-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ta-table thead th {
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5b6b62;
+  text-align: left;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.12);
+}
+
+.ta-table tbody td,
+.ta-table tbody th,
+.ta-table tfoot td,
+.ta-table tfoot th {
+  padding: 10px;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.07);
+  vertical-align: middle;
+}
+
+.ta-table tbody tr:hover {
+  background: #f7faf8;
+}
+
+.ta-table tfoot th,
+.ta-table tfoot td {
+  border-bottom: 0;
+  border-top: 1.5px solid rgba(11, 59, 42, 0.18);
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.ta-table tfoot th {
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.ta-num {
+  text-align: right !important;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.ta-hadir {
+  color: #0a5c40;
+}
+
+.ta-tidak {
+  color: #b42318;
+}
+
+.ta-pay {
+  color: #5b3a06;
+}
+
+.ta-who {
+  text-align: left;
+  font-weight: 400;
+}
+
+.ta-avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.ta-who-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ta-who-text strong {
+  color: var(--lp-ink, #0b3b2a);
+  font-size: 0.95rem;
+}
+
+.ta-who-text span {
+  font-size: 0.8rem;
+  color: #5b6b62;
+}
+
+.ta-col-bar {
+  width: 32%;
+}
+
+.ta-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #eef2ef;
+}
+
+.ta-bar-hadir {
+  background: #0a5c40;
+}
+
+.ta-bar-tidak {
+  background: #e7826f;
+}
+
+/* phones: each teacher becomes a block; numbers keep their labels */
+@media (max-width: 720px) {
+  .ta-teachers {
+    padding: 14px 14px 4px;
+  }
+
+  .ta-table thead {
+    display: none;
+  }
+
+  .ta-table,
+.ta-table tbody,
+.ta-table tfoot {
+    display: block;
+  }
+
+  .ta-table tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+  }
+
+  .ta-table tfoot tr {
+    border-bottom: 0;
+    border-top: 1.5px solid rgba(11, 59, 42, 0.18);
+  }
+
+  .ta-table tbody td,
+.ta-table tbody th,
+.ta-table tfoot td,
+.ta-table tfoot th {
+    padding: 0;
+    border: 0 !important;
+  }
+
+  .ta-table .ta-who,
+.ta-table .ta-col-bar {
+    grid-column: 1 / -1;
+    width: auto;
+  }
+
+  .ta-table tfoot .ta-col-bar {
+    display: none;
+  }
+
+  .ta-num {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left !important;
+    font-size: 1rem;
+  }
+
+  .ta-num::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #5b6b62;
+  }
+}
+
+/* ================================================================ admin calendar: the same look as the guru calendar */
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.filter-section label {
+  font-weight: 700;
+  color: var(--lp-ink, #0b3b2a);
+  font-size: 0.9rem;
+}
+
+.select-wrapper {
+  flex: 1;
+  max-width: 320px;
+}
+
+.calendar-container {
+  padding: 18px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.05), 0 10px 26px -14px rgba(3, 41, 29, 0.2);
+}
+
+/* who is who in the "Semua guru" view */
+.teacher-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.legend-teacher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+.legend-name {
+  font-size: 0.8rem;
+  color: #2f4339;
+  font-weight: 600;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.month-title {
+  color: var(--primary-dark);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.nav-btn:focus-visible,
+.calendar-cell:focus-visible,
+.sheet-close:focus-visible {
+  outline: 3px solid var(--primary-300, #81c784);
+  outline-offset: 1px;
+}
+
+.weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.weekdays span {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  padding-bottom: 4px;
+}
+
+.calendar-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 4px 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--gray-50, #f8fafc);
+  color: var(--gray-800);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* "Semua guru": taller cells for the initials */
+.calendar-grid.is-all .calendar-cell {
+  min-height: 74px;
+  justify-content: flex-start;
+  padding-top: 6px;
+}
+
+.calendar-cell:hover {
+  border-color: var(--primary);
+}
+
+.calendar-cell.is-hadir {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.calendar-cell.is-tidak {
+  background: #fdecea;
+  color: #8e1b12;
+}
+
+.calendar-cell.has-attendance {
+  background: #fff;
+  border-color: rgba(11, 59, 42, 0.12);
+}
+
+.calendar-cell.is-off {
+  background: transparent;
+  color: var(--gray-300);
+}
+
+.calendar-cell.is-off .cell-date {
+  text-decoration: line-through;
+  text-decoration-color: var(--gray-300);
+}
+
+.calendar-cell.is-today {
+  border-color: var(--primary);
+}
+
+.calendar-cell.is-selected {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.cell-date {
+  line-height: 1;
+}
+
+.cell-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 100%;
+}
+
+.calendar-grid .mini-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 0.5rem;
+  font-weight: 800;
+}
+
+.calendar-grid .more-indicator {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #5b6b62;
+}
+
+.mark {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-legend .mark {
+  position: static;
+  flex: none;
+}
+
+.mark-hadir,
+.mark-tidak {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mark-hadir {
+  background: #0a5c40;
+}
+
+.mark-tidak {
+  background: #b42318;
+}
+
+.mark-empty {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-400);
+}
+
+.cell-holiday-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #d9a21b;
+}
+
+.calendar-legend {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.72rem;
+  color: var(--gray-600);
+}
+
+.calendar-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-initial {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #0a5c40;
+  color: #fff;
+  font-size: 0.45rem;
+  font-weight: 800;
+}
+
+.swatch-off {
+  width: 12px;
+  height: 2px;
+  background: var(--gray-300);
+}
+
+.swatch-libur {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9a21b;
+}
+
+.calendar-tip {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* day detail: bottom sheet on phones, dialog on larger screens (same as the guru page) */
+.ta-day-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgba(3, 41, 29, 0.45);
+}
+
+.ta-day-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9991;
+  width: 100%;
+  max-height: 86dvh;
+  overflow-y: auto;
+  background: #fbf9f3;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.45);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 640px) {
+  .ta-day-sheet {
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    width: min(520px, calc(100vw - 48px));
+    transform: translate(-50%, -50%);
+    border-radius: 20px;
+    max-height: 82vh;
+  }
+}
+
+.ta-day-sheet .popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.ta-day-sheet .popup-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.sheet-close {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.15) !important;
+  background: #fff !important;
+  color: #2f4339;
+  display: grid !important;
+  place-items: center;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- per-teacher table: name cell layout lives inside */
+.ta-who {
+  display: table-cell;
+}
+
+.ta-who-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .ta-who {
+    display: block;
+  }
+
+  .ta-table tr {
+    gap: 4px 8px;
+    padding: 10px 0;
+  }
+
+  .ta-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.72rem;
+  }
+
+  .ta-who-text strong {
+    font-size: 0.92rem;
+  }
+
+  .ta-bar {
+    height: 6px;
+    margin: 2px 0;
+  }
+
+  .ta-num {
+    font-size: 0.92rem;
+  }
+
+  .ta-num::before {
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .calendar-container {
+    padding: 12px;
+  }
+
+  .calendar-grid.is-all .calendar-cell {
+    min-height: 62px;
+  }
+
+  .calendar-grid .mini-avatar {
+    width: 14px;
+    height: 14px;
+    font-size: 0;
+  }
+
+  .filter-section {
+    flex-wrap: wrap;
+  }
+
+  .select-wrapper {
+    max-width: none;
+  }
 }
 </style>
 

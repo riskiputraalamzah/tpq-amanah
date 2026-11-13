@@ -26,7 +26,7 @@
     <div v-if="isPeriodLocked" class="locked-period-banner glass-card">
       <div class="locked-icon">🔒</div>
       <div class="locked-text">
-        <strong>Administrasi Periode Ini Sedang Dikunci</strong>
+        <strong class="locked-title">Administrasi Periode Ini Sedang Dikunci</strong>
         <p>
           Laporan LPJ bulanan periode ini berstatus <strong>{{ lockedStatusText }}</strong>, jadi KBM bulan ini hanya
           bisa dilihat. Pakai panah di kalender untuk pindah ke bulan lain, atau hubungi admin bila perlu dikoreksi.
@@ -675,10 +675,15 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onEscape));
   flex-shrink: 0;
 }
 
-.locked-text strong {
+/* only the title is its own line; a bold word inside the sentence stays inline */
+.locked-text .locked-title {
   font-size: 0.9rem;
   color: #92400e;
   display: block;
+}
+
+.locked-text p strong {
+  color: #92400e;
 }
 
 .locked-text p {
