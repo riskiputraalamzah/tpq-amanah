@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const { summarizeStudentAttendance, resolveJournalInitialStatus, journalSaveButtonLabel, isJournalFilled, summarizeSessionWorkflow, JOURNAL_PLACEHOLDER } = await import("../src/utils/journalState.js");
+const { summarizeStudentAttendance, resolveJournalInitialStatus, journalSaveButtonLabel, isJournalFilled, summarizeSessionWorkflow, JOURNAL_PLACEHOLDER, nextStepAfterSave, kbmDayLink } = await import("../src/utils/journalState.js");
 
 test("journal summary counts display-only attendance", () => {
   const summary = summarizeStudentAttendance([
@@ -72,22 +72,44 @@ test("session workflow summary derives from server data only", () => {
   assert.equal(empty.journalFilled, false);
 });
 
-test("KBM history exposes Absensi and Jurnal actions with server states", () => {
+test("KBM day sheet exposes Absensi and Jurnal actions with server states", () => {
   const src = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/KbmView.vue"), "utf8");
-  // each history card carries two task blocks, both driven by the loaded session workflow
-  assert.match(src, /Presensi Santri/);
-  assert.match(src, /Jurnal Mengajar/);
+  // each KBM of the tapped day shows both halves, driven by the loaded session data
+  assert.match(src, /Absen santri/);
+  assert.match(src, /Jurnal/);
   assert.match(src, /workflowOf\(session\)\.attFilled/);
   assert.match(src, /workflowOf\(session\)\.journalFilled/);
-  assert.match(src, /Belum Diisi/);
-  assert.match(src, /Lengkap/);
-  assert.match(src, /Isi Absensi Santri/);
-  assert.match(src, /Ubah Absensi/);
-  assert.match(src, /Ubah Jurnal/);
+  assert.match(src, /Belum diisi/);
+  assert.match(src, /Isi Absensi/);
+  assert.match(src, /Isi Jurnal/);
   assert.match(src, /goAttendance\(session\.id\)/);
+  assert.match(src, /goJournal\(session\.id\)/);
   assert.match(src, /isWorkflowComplete/);
-  // filter by completeness
   assert.match(src, /Perlu Dilengkapi/);
+});
+
+test("after a save the next step is offered: the other half first, then back to the calendar on that day", () => {
+  const date = "2026-10-27";
+  const base = { date, studentAttendances: [], journal: { material: "KBM (Menunggu Update Jurnal)" } };
+  const afterAtt = nextStepAfterSave({ saved: "absensi", session: { ...base, studentAttendances: [{ status: "hadir" }] }, sessionId: "k1" });
+  assert.equal(afterAtt.primary.to, "/dashboard/kbm/k1/jurnal");
+  assert.equal(afterAtt.secondary.to, "/dashboard/kbm?date=2026-10-27");
+  assert.equal(afterAtt.secondary.label, "Kembali ke kalender Oktober");
+  const afterJournal = nextStepAfterSave({ saved: "jurnal", session: { ...base, journal: { material: "Halaman 5" } }, sessionId: "k1" });
+  assert.equal(afterJournal.primary.to, "/dashboard/kbm/k1/absensi");
+  const done = nextStepAfterSave({ saved: "jurnal", session: { date, studentAttendances: [{ status: "hadir" }], journal: { material: "Halaman 5" } }, sessionId: "k1" });
+  assert.deepEqual([done.primary.to, done.primary.label, done.title], ["/dashboard/kbm?date=2026-10-27", "Selesai, ke kalender Oktober", "Jurnal tersimpan, KBM ini lengkap"]);
+  assert.equal(kbmDayLink({ _seconds: Date.UTC(2026, 9, 27, 5) / 1000 }), "/dashboard/kbm?date=2026-10-27");
+  assert.equal(kbmDayLink(null), "/dashboard/kbm");
+});
+
+test("journal and student attendance return to the calendar on the session's day, not to the current month", () => {
+  for (const f of ["../src/views/dashboard/guru/JournalView.vue", "../src/views/dashboard/guru/StudentAttendanceView.vue"]) {
+    const src = fs.readFileSync(path.join(here, f), "utf8");
+    assert.ok(!src.includes("router.push('/dashboard/kbm')"), `${f}: no bare /dashboard/kbm`);
+    assert.ok(src.includes("router.push(kbmDayLink(session.date))"), `${f}: back to that day`);
+    assert.ok(src.includes("<KbmNextStep"), `${f}: next step after saving`);
+  }
 });
 
 test("KBM history adds no per-row API round-trip", () => {

@@ -25,8 +25,17 @@ test("Daily Workspace: the jilid follows the selected sesi and stops when that s
   assert.ok(ws.includes("if (selectedLevelId.value && isLevelSavedInSelectedSlot(selectedLevelId.value)) clearLevelSelection();"), "switching to a sesi where that jilid is saved clears it");
 });
 
-test("KBM page starts from the same scheduled sesi and ignores badal for the usual jilid", () => {
-  assert.ok(kbm.includes("const scheduled = kbmCalendar.value?.scheduledSlotId;"));
-  assert.ok(kbm.includes('.filter((s) => s.type === "teaching" && !s.substituteFor'));
-  assert.ok(kbm.includes("latestTeaching(pool, form.value.sessionSlotId) || latestTeaching(pool)"), "jilid of the latest KBM in that sesi");
+test("KBM page leaves sesi + jilid to the Daily Workspace, which also covers badal", () => {
+  assert.ok(!kbm.includes("form.value.sessionSlotId"), "no sesi selection on the KBM page any more");
+  assert.ok(kbm.includes("/dashboard/kbm/daily-workspace?date=${date}&from=kbm"));
+  assert.ok(ws.includes('v-model="isBadal"') && ws.includes('v-model="substituteFor"'), "badal moved to the workspace");
+  assert.ok(ws.includes("substituteFor: isBadal.value ? substituteFor.value : null"), "badal is sent with the KBM");
+  assert.ok(ws.includes("(!isBadal.value || !!substituteFor.value)"), "badal needs the replaced teacher before saving");
+});
+
+test("Daily Workspace: an earlier day of a fillable month is open to every teacher, and returns to the KBM calendar", () => {
+  assert.ok(ws.includes("data.canFill === false"), "the server decides (active period or an LPJ month)");
+  assert.ok(!ws.includes("Backfill Khusus Guru LPJ"), "no more LPJ-only block for an earlier day");
+  assert.ok(ws.includes("route.query.from === 'kbm' || targetDate.value < getTodayWibString()"));
+  assert.ok(ws.includes("`/dashboard/kbm?date=${targetDate.value}`"), "back to the calendar on that day");
 });

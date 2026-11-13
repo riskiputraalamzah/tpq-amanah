@@ -39,3 +39,41 @@ export function summarizeSessionWorkflow(session) {
     journalFilled: isJournalFilled(session?.journal?.material),
   };
 }
+
+const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+// "YYYY-MM-DD" of a session date (Firestore {_seconds}, Date or string), in the browser's day like the KBM calendar.
+export function sessionDateString(value) {
+  if (!value) return "";
+  if (typeof value === "string") return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : "";
+  let d = null;
+  if (value._seconds !== undefined) d = new Date(value._seconds * 1000);
+  else if (value.seconds !== undefined) d = new Date(value.seconds * 1000);
+  else if (value instanceof Date) d = value;
+  if (!d || isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// "Back to KBM" lands on the session's own day, so an earlier month being completed stays open.
+export function kbmDayLink(dateValue) {
+  const date = sessionDateString(dateValue);
+  return date ? `/dashboard/kbm?date=${date}` : "/dashboard/kbm";
+}
+
+// Right after saving one half of a KBM (student attendance or journal): what to do next.
+//   saved: "absensi" | "jurnal"; session: the saved session (with studentAttendances + journal)
+export function nextStepAfterSave({ saved, session, sessionId }) {
+  const w = summarizeSessionWorkflow(session);
+  const date = sessionDateString(session?.date);
+  const month = date ? MONTH_NAMES[Number(date.slice(5, 7)) - 1] : "";
+  const back = { label: month ? `Kembali ke kalender ${month}` : "Kembali ke kalender", to: kbmDayLink(date) };
+  const toJournal = `/dashboard/kbm/${sessionId}/jurnal`;
+  const toAttendance = `/dashboard/kbm/${sessionId}/absensi`;
+
+  if (saved === "absensi") {
+    if (!w.journalFilled) return { title: "Absensi santri tersimpan", primary: { label: "Lanjut isi Jurnal", to: toJournal }, secondary: back };
+    return { title: "Absensi tersimpan, KBM ini lengkap", primary: { label: month ? `Selesai, ke kalender ${month}` : "Selesai", to: back.to }, secondary: { label: "Buka Jurnal", to: toJournal } };
+  }
+  if (!w.attFilled) return { title: "Jurnal tersimpan", primary: { label: "Lanjut isi Absensi Santri", to: toAttendance }, secondary: back };
+  return { title: "Jurnal tersimpan, KBM ini lengkap", primary: { label: month ? `Selesai, ke kalender ${month}` : "Selesai", to: back.to }, secondary: { label: "Buka Absensi", to: toAttendance } };
+}

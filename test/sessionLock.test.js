@@ -30,20 +30,21 @@ test("a locked month keeps its calendar: nothing to fill, existing KBM still ope
   const day = (date, extra) => ({ date, weekday: new Date(`${date}T12:00:00Z`).getUTCDay(), kind: "active", attendance: "hadir", sessions: [], ...extra });
   const calendar = {
     period: "2026-09", firstPeriod: "2026-01", today: "2026-11-12", canFill: true,
-    days: [day("2026-09-29"), day("2026-09-30", { sessions: [{ id: "s30", sessionSlotId: "wave_2", levelId: "6" }] })],
+    days: [day("2026-09-29"), day("2026-09-30", { sessions: [{ id: "s30", sessionSlotId: "wave_2", levelId: "6", complete: true }] })],
   };
-  const view = buildCalendar(calendar, { slotId: "wave_2", classId: "6", locked: true });
-  assert.deepEqual(view.cells.map((c) => [c.state, c.selectable, c.openable]), [["off", false, false], ["filled", false, true]]);
+  const view = buildCalendar(calendar, { locked: true });
+  assert.deepEqual(view.cells.map((c) => [c.state, c.selectable, c.openable]), [["off", false, false], ["done", false, true]]);
   assert.deepEqual([view.prevPeriod, view.nextPeriod], ["2026-08", "2026-10"], "month arrows stay available");
   assert.deepEqual(view.needsDates, []);
 });
 
 test("KBM page: the calendar never disappears because of a lock, and locked months read as view-only", () => {
   const kbm = read("src/views/dashboard/guru/KbmView.vue");
-  assert.ok(kbm.includes("const useCalendar = computed(() => !!kbmCalendar.value && !isFromAttendance.value);"), "lock no longer hides the calendar");
+  assert.ok(kbm.includes('<KbmDatePicker v-if="kbmCalendar"'), "only a missing calendar hides it, never a lock");
   assert.ok(kbm.includes(':locked-reason="calendarLockedReason"'));
-  assert.ok(kbm.includes('isPeriodLocked ? "Lihat Absensi"') && kbm.includes('isPeriodLocked ? "Lihat Jurnal"'), "no 'Ubah' buttons in a locked month");
-  assert.ok(!/const setDateToday = \(\) => \{\s*if \(isFromAttendance\.value \|\| isPeriodLocked\.value\)/.test(kbm), "'Hari Ini' works from a locked month");
+  assert.ok(kbm.includes('isPeriodLocked ? "Lihat Absensi"') && kbm.includes('isPeriodLocked ? "Lihat Jurnal"'), "no edit buttons in a locked month");
+  assert.ok(kbm.includes('v-if="!isPeriodLocked" type="button" class="btn-delete-card"'), "no delete in a locked month");
+  assert.ok(kbm.includes("monthFillable.value && sheetDate.value <= todayString"), "no 'Tambah KBM' in a locked or closed month");
   assert.ok(kbm.includes("currentLpjReport.value = pickMonthReport(lpjRes?.data);"));
   const picker = read("src/components/KbmDatePicker.vue");
   assert.ok(picker.includes('v-if="lockedReason"') && picker.includes("locked: !!props.lockedReason"));

@@ -5,7 +5,7 @@
         <h1>Absensi Santri</h1>
         <p>Catat kehadiran santri untuk sesi mengajar yang dipilih</p>
       </div>
-      <button type="button" class="btn-link btn-back-kbm" @click="router.push('/dashboard/kbm')">
+      <button type="button" class="btn-link btn-back-kbm" @click="router.push(kbmDayLink(session.date))">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
@@ -51,7 +51,7 @@
         <strong>⚠️ Informasi:</strong> {{ loadError }}
       </div>
       <p class="mt-2 text-muted">Guru yang berstatus tidak hadir tidak perlu mengisi absensi santri untuk tanggal tersebut.</p>
-      <button type="button" class="btn btn-primary mt-3" @click="router.push('/dashboard/kbm')">
+      <button type="button" class="btn btn-primary mt-3" @click="router.push(kbmDayLink(session.date))">
         ← Kembali ke Riwayat KBM
       </button>
     </div>
@@ -513,11 +513,15 @@
         </div>
       </div>
     </Teleport>
+    <KbmNextStep :open="!!nextStep" :title="nextStep?.title || ''" :primary="nextStep?.primary || { label: '', to: '/dashboard/kbm' }"
+      :secondary="nextStep?.secondary || null" @close="nextStep = null" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import KbmNextStep from "@/components/KbmNextStep.vue";
+import { kbmDayLink, nextStepAfterSave } from "@/utils/journalState";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
@@ -559,6 +563,12 @@ const inactiveSantri = ref([]);
 const dirty = ref(false);
 const saving = ref(false);
 const saveMessage = ref("");
+// After a save: the next step (the other half of the KBM, or back to the calendar on this day).
+const nextStep = ref(null);
+// Editing again hides it until the next save.
+watch(dirty, (isDirty) => {
+  if (isDirty) nextStep.value = null;
+});
 const saveOk = ref(false);
 const saveStatus = ref("empty");
 const lastSavedAt = ref("");
@@ -787,6 +797,7 @@ const save = async () => {
     }, 2500);
     const sessionRes = await api.get(`/teaching_sessions/${sessionId}`);
     session.value = sessionRes.data;
+    nextStep.value = nextStepAfterSave({ saved: "absensi", session: session.value, sessionId });
   } catch (error) {
     saveOk.value = false;
     saveStatus.value = "error";

@@ -28,7 +28,7 @@
           {{ dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : '← Kembali ke KBM' }}
         </button>
         <button v-else type="button" class="btn btn-secondary btn-sm" @click="handleReturnDaily">
-          ← Kembali ke Absensi
+          {{ returnDailyLabel }}
         </button>
       </div>
     </header>
@@ -105,7 +105,7 @@
           {{ formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ' }}
         </button>
         <button v-else-if="!blockingError.actionLink" type="button" class="btn btn-secondary" @click="handleReturnDaily">
-          ← Kembali ke Absensi
+          {{ returnDailyLabel }}
         </button>
       </div>
     </div>
@@ -206,6 +206,22 @@
                 ✓ {{ getSavedSessionsForSlot('wave_2').length }} Sesi ({{ getSavedSessionsNamesForSlot('wave_2') }})
               </div>
             </button>
+          </div>
+        </section>
+
+        <!-- Badal: replacing another teacher (their attendance must not be "hadir"; the server checks it) -->
+        <section class="workspace-section glass-card badal-section">
+          <label class="badal-toggle">
+            <input v-model="isBadal" type="checkbox" />
+            <span>Menggantikan guru lain (badal)</span>
+          </label>
+          <div v-if="isBadal" class="badal-pick">
+            <label for="badal-teacher" class="sr-only">Guru yang digantikan</label>
+            <select id="badal-teacher" v-model="substituteFor" class="badal-select">
+              <option value="" disabled>{{ teachersLoading ? 'Memuat daftar guru…' : 'Pilih guru yang digantikan' }}</option>
+              <option v-for="t in otherTeachers" :key="t.id" :value="t.id">{{ t.displayName || t.name }}</option>
+            </select>
+            <p v-if="!substituteFor" class="badal-hint">Pilih dulu guru yang digantikan sebelum menyimpan.</p>
           </div>
         </section>
 
@@ -640,7 +656,7 @@
               class="btn btn-outline-secondary w-full mt-2" 
               @click="isBackfill ? handleReturnToLpj() : handleReturnDaily()"
             >
-              {{ isBackfill ? (dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : 'Kembali ke KBM') : '← Selesai & Kembali ke Absensi' }}
+              {{ isBackfill ? (dailyContext?.lpj?.eligible ? (formattedPeriodName ? `← Kembali ke LPJ ${formattedPeriodName}` : '← Kembali ke LPJ') : '← Kembali ke KBM') : (returnsToKbm ? '← Selesai & Kembali ke KBM' : '← Selesai & Kembali ke Absensi') }}
             </button>
           </div>
         </div>
@@ -714,8 +730,10 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
 import PageSkeleton from '@/components/PageSkeleton.vue';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
+const authStore = useAuthStore();
 const router = useRouter();
 const { success, error: showError, warning } = useToast();
 
@@ -732,8 +750,12 @@ const isBackfill = computed(() => route.query.isBackfill === 'true' && targetDat
 const reportId = computed(() => (typeof route.query.reportId === 'string' ? route.query.reportId : null));
 const effectiveReportId = computed(() => reportId.value || dailyContext.value?.lpj?.reportId || null);
 
+// Came from the KBM calendar (or fills an earlier day): back to that calendar on this day, else to the attendance page.
+const returnsToKbm = computed(() => route.query.from === 'kbm' || targetDate.value < getTodayWibString());
+const kbmDayLink = computed(() => `/dashboard/kbm?date=${targetDate.value}`);
+const returnDailyLabel = computed(() => (returnsToKbm.value ? '← Kembali ke KBM' : '← Kembali ke Absensi'));
 function handleReturnDaily() {
-  router.push('/dashboard/attendance');
+  router.push(returnsToKbm.value ? kbmDayLink.value : '/dashboard/attendance');
 }
 
 // State
@@ -1024,9 +1046,33 @@ const teacherPresenceLabel = computed(() => {
 });
 
 // Submission Validation
+// Badal
+const isBadal = ref(false);
+const substituteFor = ref('');
+const teachers = ref([]);
+const teachersLoading = ref(false);
+const otherTeachers = computed(() => teachers.value.filter((t) => t.id !== authStore.user?.id));
+watch(isBadal, async (on) => {
+  if (!on) {
+    substituteFor.value = '';
+    return;
+  }
+  if (teachers.value.length || teachersLoading.value) return;
+  teachersLoading.value = true;
+  try {
+    const { data } = await api.get('/users/teachers/public');
+    teachers.value = Array.isArray(data) ? data : [];
+  } catch {
+    showError('Gagal memuat daftar guru.');
+  } finally {
+    teachersLoading.value = false;
+  }
+});
+
 const canSubmit = computed(() => {
   return (
     isTeacherPresentForWorkspace.value &&
+    (!isBadal.value || !!substituteFor.value) &&
     !isAlreadySavedForCurrentSlot.value &&
     !!selectedSlotId.value &&
     !!selectedLevelId.value &&
@@ -1173,13 +1219,14 @@ async function loadDailyContext(isAddingNewSession = false) {
       return;
     }
 
-    if (data.isBackfill && !data.lpj?.eligible) {
+    // Older servers (no canFill) only allowed an earlier day to LPJ teachers.
+    if (data.canFill === false || (data.canFill === undefined && data.isBackfill && !data.lpj?.eligible)) {
       blockingError.value = {
         icon: 'ℹ️',
-        title: 'Backfill Khusus Guru LPJ',
-        message: 'Pengisian KBM tanggal lampau (backfill) khusus diperuntukkan bagi guru yang menyusun dokumen LPJ. Untuk KBM reguler, silakan isi pada hari mengajar berjalan.',
-        actionLink: '/dashboard/kbm',
-        actionLabel: 'Kembali ke KBM'
+        title: 'Bulan Ini Sudah Ditutup',
+        message: 'Tanggal ini sudah di luar periode aktif, jadi KBM-nya tidak bisa diisi lagi. KBM yang sudah ada tetap bisa dilihat di kalender KBM.',
+        actionLink: kbmDayLink.value,
+        actionLabel: 'Buka Kalender KBM'
       };
       return;
     }
@@ -1192,11 +1239,20 @@ async function loadDailyContext(isAddingNewSession = false) {
     if (!selectedLevelId.value) preselectLevelForSlot();
   } catch (err) {
     console.error('Failed to load daily context:', err);
-    blockingError.value = {
-      icon: '❌',
-      title: 'Gagal Memuat Konteks KBM',
-      message: err.response?.data?.error || 'Terjadi kesalahan sistem saat memuat data.'
-    };
+    // 403: the server refuses this date on purpose (month closed / LPJ locked) - say so, not "error"
+    blockingError.value = err.response?.status === 403
+      ? {
+          icon: '🔒',
+          title: 'Tanggal Ini Tidak Bisa Diisi',
+          message: err.response?.data?.error || 'KBM pada tanggal ini tidak dapat diisi lagi.',
+          actionLink: kbmDayLink.value,
+          actionLabel: 'Buka Kalender KBM'
+        }
+      : {
+          icon: '❌',
+          title: 'Gagal Memuat Konteks KBM',
+          message: err.response?.data?.error || 'Terjadi kesalahan sistem saat memuat data.'
+        };
   } finally {
     loadingContext.value = false;
   }
@@ -1250,6 +1306,7 @@ async function submitKbm() {
       classId: selectedLevelId.value,
       levelId: selectedLevelId.value,
       sessionSlotId: selectedSlotId.value,
+      substituteFor: isBadal.value ? substituteFor.value : null,
       journal: {
         material: journalForm.value.material.trim(),
         supportingMaterial: journalForm.value.supportingMaterial.trim(),
@@ -1292,6 +1349,7 @@ async function submitKbm() {
 // Multi-session: Add another session for another Jilid or slot
 async function handleAddNewSession() {
   showSuccessModal.value = false;
+  isBadal.value = false;
   clearLevelSelection();
   journalForm.value.notes = '';
   await loadDailyContext(true);
@@ -1301,7 +1359,7 @@ async function handleAddNewSession() {
 function handleReturnToLpj() {
   showSuccessModal.value = false;
   if (!dailyContext.value?.lpj?.eligible) {
-    router.push('/dashboard/kbm');
+    router.push(kbmDayLink.value);
     return;
   }
   const targetId = effectiveReportId.value;
@@ -3032,5 +3090,56 @@ onMounted(async () => {
   background: #fef3c7;
   color: #b45309;
   border: 1px solid #fde68a;
+}
+
+/* Badal */
+.badal-section {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.badal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 600;
+  color: var(--lp-ink, #0b3b2a);
+  cursor: pointer;
+}
+
+.badal-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: #0a5c40;
+}
+
+.badal-pick {
+  margin-top: 8px;
+}
+
+.badal-select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.25);
+  background: #fff;
+  font-size: 0.95rem;
+}
+
+.badal-hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: #b45309;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 </style>

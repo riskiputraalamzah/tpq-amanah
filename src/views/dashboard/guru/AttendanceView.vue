@@ -587,7 +587,8 @@ const todayDateString = computed(() => {
   return `${y}-${m}-${d}`
 })
 
-const todayKbmWorkspaceUrl = computed(() => `/dashboard/kbm?date=${todayDateString.value}&from=attendance`)
+// Today's KBM is filled in the Daily Workspace (it picks the sesi and jilid); it returns here afterwards.
+const todayKbmWorkspaceUrl = computed(() => `/dashboard/kbm/daily-workspace?date=${todayDateString.value}`)
 
 const fetchTodayKbm = async () => {
   if (!todayAttendance.value || todayAttendance.value.status !== 'hadir') {
@@ -1055,7 +1056,8 @@ const canCreateAttendanceForDay = (day) => {
 }
 
 const getKbmWorkspaceUrlForDay = (day) => {
-  return `/dashboard/kbm?date=${getDateStringForCalendarDay(day)}&from=attendance`
+  // the KBM calendar on that day: shows its KBM, or offers to fill it
+  return `/dashboard/kbm?date=${getDateStringForCalendarDay(day)}`
 }
 
 const openUpdateModal = () => {

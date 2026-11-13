@@ -17,14 +17,13 @@
         Bulan ini sudah di luar periode aktif dan Anda tidak termasuk LPJ yang memintanya, jadi belum bisa diisi.
         KBM yang sudah ada tetap bisa dibuka.
       </span>
-      <span v-else-if="!slotId || !classId" class="picker-hint">Pilih sesi &amp; jilid dulu agar tanggal yang sudah diisi terkunci.</span>
     </div>
 
     <div class="weekdays" aria-hidden="true">
       <span v-for="d in ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']" :key="d">{{ d }}</span>
     </div>
 
-    <div ref="gridEl" class="grid" :class="{ 'is-loading': loading }" :aria-busy="loading" role="group" :aria-label="`Pilih tanggal KBM, ${view.title}`" @keydown="onKeydown">
+    <div ref="gridEl" class="grid" :class="{ 'is-loading': loading }" :aria-busy="loading" role="group" :aria-label="`Kalender KBM, ${view.title}`" @keydown="onKeydown">
       <span v-for="n in view.leadingBlanks" :key="'blank-' + n" class="blank" aria-hidden="true"></span>
       <button v-for="(cell, index) in view.cells" :key="cell.date" type="button" class="cell"
         :class="[`is-${cell.state}`, { 'is-today': cell.isToday, 'is-selected': cell.isSelected }]"
@@ -32,32 +31,25 @@
         :aria-disabled="!(cell.selectable || cell.openable)" :aria-pressed="cell.isSelected"
         :aria-label="cell.ariaLabel" :title="cell.label" @click="choose(cell)">
         <span class="num">{{ cell.dayNumber }}</span>
-        <span v-if="cell.state === 'filled'" class="mark mark-filled" aria-hidden="true">
+        <span v-if="cell.state === 'done'" class="mark mark-done" aria-hidden="true">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg>
         </span>
+        <span v-else-if="cell.state === 'incomplete'" class="mark mark-incomplete" aria-hidden="true">!</span>
         <span v-else-if="cell.state === 'needs'" class="mark mark-needs" aria-hidden="true"></span>
-        <span v-else-if="cell.state === 'partial'" class="mark mark-partial" aria-hidden="true">{{ cell.count }}</span>
         <span v-else-if="cell.state === 'no-att'" class="mark mark-noatt" aria-hidden="true"></span>
+        <!-- more than one KBM that day (e.g. two jilid): how many -->
+        <span v-if="cell.count > 1" class="count" aria-hidden="true">{{ cell.count }} KBM</span>
       </button>
     </div>
 
     <ul class="legend" aria-label="Keterangan">
-      <li><span class="mark mark-filled"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg></span>Sudah diisi (ketuk untuk membuka)</li>
+      <li><span class="mark mark-done"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12" /></svg></span>KBM lengkap</li>
+      <li><span class="mark mark-incomplete">!</span>Absen santri / jurnal belum</li>
       <li><span class="mark mark-needs"></span>Hadir, KBM belum diisi</li>
-      <li><span class="mark mark-partial">1</span>Ada KBM jilid/sesi lain</li>
       <li><span class="mark mark-noatt"></span>Belum absen</li>
-      <li><span class="swatch-off"></span>Libur / izin / belum bisa diisi</li>
+      <li><span class="swatch-off"></span>Libur / izin</li>
     </ul>
-
-    <div v-if="view.needsDates.length" class="needs-box">
-      <span class="needs-title">{{ view.needsDates.length }} hari hadir belum ada KBM:</span>
-      <div class="needs-chips">
-        <button v-for="date in view.needsDates" :key="date" type="button" class="chip" :class="{ active: date === modelValue }"
-          @click="emit('update:modelValue', date)">
-          {{ shortDate(date) }}
-        </button>
-      </div>
-    </div>
+    <p class="picker-tip">Ketuk tanggal untuk melihat atau mengisi KBM hari itu.</p>
   </div>
 </template>
 
@@ -67,22 +59,20 @@ import { buildCalendar } from '@/utils/kbmCalendar'
 
 const props = defineProps({
   calendar: { type: Object, default: null },
+  // the date whose details are open (highlighted)
   modelValue: { type: String, default: '' },
-  slotId: { type: String, default: '' },
-  classId: { type: [String, Number], default: '' },
   minDate: { type: String, default: '' },
   maxDate: { type: String, default: '' },
   loading: { type: Boolean, default: false },
-  // Set when the month's monthly LPJ is submitted/approved: shown instead of the dates to fill.
+  // Set when the month's monthly LPJ is submitted/approved: nothing new can be filled.
   lockedReason: { type: String, default: '' },
 })
-const emit = defineEmits(['update:modelValue', 'open-session', 'change-month'])
+// pick: a tappable day ({ date, state, openable, selectable }); change-month: the month arrows
+const emit = defineEmits(['pick', 'change-month'])
 
 const gridEl = ref(null)
 const view = computed(() =>
   buildCalendar(props.calendar, {
-    slotId: props.slotId,
-    classId: props.classId ? String(props.classId) : '',
     selectedDate: props.modelValue,
     locked: !!props.lockedReason,
     minDate: props.minDate,
@@ -113,13 +103,7 @@ const onKeydown = async (event) => {
 }
 
 const choose = (cell) => {
-  if (cell.openable) emit('open-session', cell.sessionId)
-  else if (cell.selectable) emit('update:modelValue', cell.date)
-}
-
-const shortDate = (date) => {
-  const [y, m, d] = date.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })
+  if (cell.openable || cell.selectable) emit('pick', cell)
 }
 </script>
 
@@ -217,7 +201,7 @@ const shortDate = (date) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: 48px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: var(--gray-50, #f8fafc);
@@ -252,9 +236,14 @@ const shortDate = (date) => {
   color: var(--gray-400);
 }
 
-.cell.is-filled {
-  background: rgba(46, 125, 50, 0.1);
-  color: #2e7d32;
+.cell.is-done {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.cell.is-incomplete {
+  background: #fef3c7;
+  color: #7c3a0d;
 }
 
 .cell.is-needs {
@@ -286,12 +275,23 @@ const shortDate = (date) => {
   flex: none;
 }
 
-.mark-filled {
-  width: 12px;
-  height: 12px;
+.mark-done {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #2e7d32;
+  background: #0a5c40;
   color: #fff;
+}
+
+.mark-incomplete {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .mark-needs {
@@ -301,22 +301,23 @@ const shortDate = (date) => {
   background: #ea580c;
 }
 
-.mark-partial {
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
-  border-radius: 7px;
-  background: #0277bd;
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 700;
-}
 
 .mark-noatt {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: 1.5px solid var(--gray-400);
+}
+
+.count {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
 }
 
 .cell.is-selected .mark-needs,
@@ -348,43 +349,9 @@ const shortDate = (date) => {
   background: var(--gray-300);
 }
 
-.needs-box {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-}
-
-.needs-title {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #9a3412;
-  margin-bottom: 6px;
-}
-
-.needs-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chip {
-  min-height: 36px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid #fdba74;
-  background: #fff;
-  color: #9a3412;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.chip.active {
-  background: #ea580c;
-  border-color: #ea580c;
-  color: #fff;
+.picker-tip {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--gray-500);
 }
 </style>

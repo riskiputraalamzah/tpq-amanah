@@ -71,7 +71,8 @@ const { confirmState, handleConfirm, handleCancel } = useConfirm()
   position: fixed;
   top: 24px;
   right: 24px;
-  z-index: 999999;
+  /* above every dialog (global .modal-overlay is 999999, confirm dialog 1000000): a result is never hidden */
+  z-index: 1000010;
   display: flex;
   flex-direction: column;
   gap: 12px;
