@@ -236,39 +236,46 @@
             class="modal-overlay"
             @click.self="conflictSantri = null"
           >
-            <div class="modal glass-card conflict-modal-card">
+            <div class="modal glass-card conflict-modal-card" role="dialog" aria-modal="true" aria-labelledby="purge-title">
               <div class="modal-header-danger">
-                <span class="modal-danger-icon">⚠️</span>
                 <div>
-                  <h3 class="modal-title">
-                    Santri Memiliki Riwayat KBM / Absensi
-                  </h3>
+                  <h3 id="purge-title" class="modal-title">Hapus {{ conflictSantri.name }}?</h3>
                   <p class="modal-subtitle">
-                    Santri: <strong>{{ conflictSantri.name }}</strong>
+                    <template v-if="conflictSantri.preview?.santri?.nomorInduk">No. induk {{ conflictSantri.preview.santri.nomorInduk }} · </template>santri ini masih punya data terkait.
                   </p>
                 </div>
               </div>
+
               <p class="modal-text">
-                Santri ini memiliki catatan riwayat di sistem. Apakah data ini
-                data uji coba (test) yang ingin dibersihkan sepenuhnya, atau
-                santri yang ingin dinonaktifkan?
+                <strong>Santri keluar atau berhenti?</strong> Pilih <strong>Nonaktifkan</strong>: riwayat absen, nilai, dan tabungannya tetap tersimpan.
+                <br />Hapus permanen hanya untuk <strong>salah input, data ganda, atau uji coba</strong>.
               </p>
+
+              <div class="purge-list">
+                <p class="purge-list-title">Yang ikut terhapus bila hapus permanen:</p>
+                <ul>
+                  <li v-for="x in conflictSantri.preview?.items || []" :key="x.key"><span>{{ x.label }}</span><strong>{{ x.count }}</strong></li>
+                </ul>
+              </div>
+              <p v-if="conflictSantri.preview?.blocked" class="purge-blocked" role="alert">{{ conflictSantri.preview.reason }}</p>
+
               <div class="modal-action-buttons">
                 <button
                   type="button"
-                  class="btn btn-secondary"
+                  class="btn btn-primary"
                   :disabled="saving"
                   @click="softDeleteSantri(conflictSantri)"
                 >
-                  📁 Nonaktifkan Saja (Soft Delete)
+                  Nonaktifkan saja (riwayat tetap)
                 </button>
                 <button
+                  v-if="!conflictSantri.preview?.blocked"
                   type="button"
                   class="btn btn-danger"
                   :disabled="saving"
-                  @click="removeSantri(conflictSantri, true)"
+                  @click="purgeSantri(conflictSantri)"
                 >
-                  🗑️ Hapus Permanen &amp; Bersihkan Riwayat Test
+                  Hapus permanen beserta datanya
                 </button>
                 <button
                   type="button"
@@ -484,9 +491,11 @@ import { buildSantriWorkbook, santriFilename } from "@/utils/excelExports";
 import { useAuthStore } from "@/stores/auth";
 import { STATUS as PROFILE_STATUS } from "@/utils/santriProfile";
 import { useToast, useConfirm } from "@/composables/useToast";
+import { useDialog } from "@/composables/useDialog";
 
 const { success, error: showError, warning } = useToast();
 const { confirm } = useConfirm();
+const { ask } = useDialog();
 
 const props = defineProps({
   title: { type: String, default: "Kelola Santri" },
@@ -689,34 +698,67 @@ const statusBadgeClass = (status) => {
   return "badge-success";
 };
 
-const removeSantri = async (row, force = false) => {
-  if (!force) {
-    const ok = await confirm(
-      `Apakah Anda yakin ingin menghapus santri "${row.name}"?`,
-      {
-        title: "Hapus Santri",
-        type: "danger",
-        confirmText: "Ya, Hapus",
-        cancelText: "Batal",
-      },
-    );
-    if (!ok) return;
-  }
+// Delete: first see what hangs on the santri. Nothing: a plain delete. Something: deactivate (the usual choice)
+// or delete for good with everything that only exists because of them (see backend santri_purge_service.js).
+const removeSantri = async (row) => {
   listError.value = "";
+  let preview;
   try {
-    const url = force ? `/santri/${row.id}?force=true` : `/santri/${row.id}`;
-    await api.delete(url);
+    preview = (await api.get(`/santri/${row.id}/delete-preview`, { cache: false })).data;
+  } catch (error) {
+    const msg = error.response?.data?.error || "Gagal memeriksa data santri.";
+    listError.value = msg;
+    showError(msg);
+    return;
+  }
+  if (preview.total || preview.money) {
+    conflictSantri.value = { ...row, preview };
+    return;
+  }
+  const ok = await confirm(`"${row.name}" belum punya data lain di sistem dan akan dihapus.`, {
+    title: "Hapus santri?",
+    type: "danger",
+    confirmText: "Hapus",
+    cancelText: "Batal",
+  });
+  if (!ok) return;
+  try {
+    await api.delete(`/santri/${row.id}`);
+    santri.value = santri.value.filter((item) => item.id !== row.id);
+    success(`Santri "${row.name}" dihapus.`);
+  } catch (error) {
+    const msg = error.response?.data?.error || "Gagal menghapus data santri.";
+    listError.value = msg;
+    showError(msg);
+  }
+};
+
+const sameName = (a, b) => String(a || "").toLowerCase().replace(/\s+/g, " ").trim() === String(b || "").toLowerCase().replace(/\s+/g, " ").trim();
+const purgeSantri = async (row) => {
+  const typed = await ask({
+    title: "Hapus permanen?",
+    message: `Semua data terkait ${row.name} ikut terhapus dan tidak bisa dikembalikan. Ketik nama santri untuk memastikan.`,
+    tone: "danger",
+    confirmText: "Hapus permanen",
+    input: { label: "Nama santri", placeholder: row.name, required: true, maxlength: 120 },
+  });
+  if (typed === null) return;
+  if (!sameName(typed, row.name)) {
+    showError("Nama yang diketik tidak sama. Tidak ada yang dihapus.");
+    return;
+  }
+  saving.value = true;
+  try {
+    const { data } = await api.delete(`/santri/${row.id}`, { params: { force: "true", confirm: typed } });
     santri.value = santri.value.filter((item) => item.id !== row.id);
     conflictSantri.value = null;
-    success(`Santri "${row.name}" berhasil dihapus.`);
+    success(data.message || `Santri "${row.name}" dihapus permanen.`);
   } catch (error) {
-    if (error.response?.status === 409) {
-      conflictSantri.value = row;
-    } else {
-      const msg = error.response?.data?.error || "Gagal menghapus data santri.";
-      listError.value = msg;
-      showError(msg);
-    }
+    const msg = error.response?.data?.error || "Gagal menghapus data santri.";
+    listError.value = msg;
+    showError(msg);
+  } finally {
+    saving.value = false;
   }
 };
 
@@ -725,7 +767,9 @@ const softDeleteSantri = async (row) => {
   saving.value = true;
   try {
     await api.delete(`/santri/${row.id}?soft=true`);
-    row.status = "nonaktif";
+    // the dialog holds a copy: update the row in the table
+    const item = santri.value.find((s) => s.id === row.id);
+    if (item) item.status = "nonaktif";
     conflictSantri.value = null;
     success(`Santri "${row.name}" berhasil dinonaktifkan.`);
   } catch (error) {
@@ -1539,5 +1583,50 @@ onMounted(fetchData);
 .editing-name-input {
   min-width: 140px;
   max-width: 260px;
+}
+
+.purge-list {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fdf3f2;
+  border: 1px solid #f5c2bc;
+}
+
+.purge-list-title {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7a1810;
+}
+
+.purge-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+
+.purge-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: #4a1a14;
+}
+
+.purge-list strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.purge-blocked {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.88rem;
 }
 </style>
