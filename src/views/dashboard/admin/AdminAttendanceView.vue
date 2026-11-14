@@ -872,6 +872,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import api from "@/services/api";
 import { useToast } from "@/composables/useToast";
+import { useDialog } from "@/composables/useDialog";
 import {
   fetchHolidays,
   isTodayHoliday,
@@ -887,6 +888,7 @@ import LineIcon from "@/components/LineIcon.vue";
 import { useAuthStore } from "@/stores/auth";
 
 const { success, error: showError, warning } = useToast();
+const { ask } = useDialog();
 const authStore = useAuthStore();
 
 const isAdmin = computed(() => authStore.isAdmin);
@@ -1585,13 +1587,13 @@ const submitResetTesting = async () => {
     year: "numeric",
   });
 
-  if (
-    !confirm(
-      `Apakah Anda yakin ingin mereset/menghapus data testing ${teacherName} pada ${formattedDate}? Sesi KBM, presensi santri, absen guru, dan link WA yang dipilih akan dibersihkan.`,
-    )
-  ) {
-    return;
-  }
+  const okReset = await ask({
+    title: "Reset data testing?",
+    message: `Data ${teacherName} pada ${formattedDate} dihapus: sesi KBM, presensi santri, absen guru, dan link WA yang dipilih.`,
+    tone: "danger",
+    confirmText: "Reset data",
+  });
+  if (!okReset) return;
 
   resetSubmitting.value = true;
   try {
@@ -1990,8 +1992,13 @@ const dismissNationalHoliday = async (date) => {
   if (!holiday || holiday.isCustom) return;
 
   const fullDate = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-  const confirmMsg = `Yakin ingin menghapus libur nasional "${holiday.name}" pada tanggal ${formatFullDate(date)}?\n\nHari ini akan dianggap hari kerja biasa.`;
-  if (!confirm(confirmMsg)) return;
+  const okDismiss = await ask({
+    title: "Hapus libur nasional?",
+    message: `"${holiday.name}" pada ${formatFullDate(date)} dihapus. Hari ini dianggap hari kerja biasa.`,
+    tone: "danger",
+    confirmText: "Hapus libur",
+  });
+  if (!okDismiss) return;
 
   try {
     await api.post('/holidays/dismiss-national', {
@@ -2008,7 +2015,7 @@ const dismissNationalHoliday = async (date) => {
 };
 
 const restoreDismissedHoliday = async (dateStr) => {
-  if (!confirm('Yakin ingin mengembalikan libur nasional ini?')) return;
+  if (!(await ask({ title: "Kembalikan libur nasional?", message: "Hari ini kembali dihitung sebagai hari libur.", confirmText: "Kembalikan" }))) return;
   try {
     await api.delete(`/holidays/dismiss-national/${dateStr}`);
     success('Libur nasional berhasil dikembalikan');
@@ -2104,7 +2111,7 @@ const saveHoliday = async () => {
 };
 
 const deleteHoliday = async (id) => {
-  if (!confirm('Yakin ingin menghapus hari libur ini?')) return;
+  if (!(await ask({ title: "Hapus hari libur?", message: "Hari ini kembali dihitung sebagai hari kerja.", tone: "danger", confirmText: "Hapus" }))) return;
   try {
     await api.delete(`/holidays/${id}`);
     success('Hari libur berhasil dihapus');

@@ -45,292 +45,24 @@
           Dashboard
         </router-link>
 
-        <!-- ====================
-             ADMIN MENU GROUPING
-             ==================== -->
-        <template v-if="isAdmin">
-          <!-- Master Data & TPQ -->
-          <div class="sidebar-section">Master Data</div>
-          <router-link to="/dashboard/tpq-profile" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/tpq-profile') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 21h18" />
-              <path d="M5 21V7l8-4 6 3v15" />
-              <path d="M9 10h2" />
-              <path d="M9 14h2" />
-              <path d="M9 18h2" />
-            </svg>
-            Profil TPQ
-          </router-link>
-          <router-link to="/dashboard/users" class="sidebar-link" active-class="active" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Kelola Users
-          </router-link>
-          <router-link to="/dashboard/teachers" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/teachers') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            Kelola Pengajar
-          </router-link>
-          <router-link to="/dashboard/santri" class="sidebar-link" :class="{ active: isActive('/dashboard/santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Kelola Santri
-          </router-link>
-          <router-link to="/dashboard/pendaftaran" class="sidebar-link" :class="{ active: isActive('/dashboard/pendaftaran') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="12" y1="18" x2="12" y2="12" />
-              <line x1="9" y1="15" x2="15" y2="15" />
-            </svg>
-            Pendaftaran
-            <span v-if="newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
-          </router-link>
-          <router-link to="/dashboard/wali-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/wali-santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
-              <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
-            </svg>
-            Data Wali Santri
-          </router-link>
-          <router-link to="/dashboard/kegiatan" class="sidebar-link" :class="{ active: isActive('/dashboard/kegiatan') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />
-            </svg>
-            Kegiatan
-          </router-link>
-
-          <!-- Akademik & Laporan -->
-          <div class="sidebar-section">Akademik & Laporan</div>
-          <router-link to="/dashboard/admin-attendance" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-attendance') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <path d="M12 16v-4" />
-              <path d="M8 16v-2" />
-              <path d="M16 16v-3" />
-            </svg>
-            Rekap Absensi
-          </router-link>
-          <router-link to="/dashboard/absen-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/absen-santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <polyline points="16 11 18 13 22 9" />
-            </svg>
-            Absen Santri
-          </router-link>
-          <router-link to="/dashboard/kbm-monitor" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/kbm-monitor') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-              <polyline points="9 10 11 12 15 8" />
-            </svg>
-            Monitor KBM
-          </router-link>
-          <router-link to="/dashboard/admin-grading" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/admin-grading') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            Kelola Penilaian
-          </router-link>
-          <router-link to="/dashboard/lpj-insentif" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/lpj-insentif') || isActive('/dashboard/admin-lpj') || isActive('/dashboard/admin-documents') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            LPJ Insentif
-          </router-link>
-
-          <!-- Layanan & Informasi -->
-          <div class="sidebar-section">Layanan & Informasi</div>
-          <router-link to="/dashboard/admin-savings" class="sidebar-link" :class="{
-            active:
-              isActive('/dashboard/admin-savings') ||
-              isActive('/dashboard/savings'),
-          }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-              <path d="M8 14h8" />
-            </svg>
-            Tabungan Santri
-          </router-link>
-          <router-link to="/dashboard/wa-reminders" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/wa-reminders') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-            Notifikasi WA
-          </router-link>
-          <router-link to="/dashboard/content" class="sidebar-link" :class="{ active: isActive('/dashboard/content') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-            Kelola Konten
-          </router-link>
-          <router-link to="/dashboard/announcements" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/announcements') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />
-            </svg>
-            Pengumuman
-          </router-link>
-          <router-link to="/dashboard/broadcasts" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/broadcasts') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            Broadcast WA
-          </router-link>
-          <router-link to="/dashboard/wa-log" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/wa-log') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="9" />
-              <polyline points="12 7 12 12 15 14" />
-            </svg>
-            Riwayat WA Bot
-          </router-link>
-        </template>
-
-        <!-- ====================
-             GURU MENU GROUPING
-             ==================== -->
-        <template v-if="isGuru">
-          <!-- Pembelajaran / Aktivitas Harian -->
-          <div class="sidebar-section">Pembelajaran</div>
-          <router-link to="/dashboard/attendance" class="sidebar-link"
-            :class="{ active: isActive('/dashboard/attendance') }" @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <path d="M9 16l2 2 4-4" />
-            </svg>
-            Absensi
-          </router-link>
-          <router-link to="/dashboard/kbm" class="sidebar-link" :class="{ active: isActive('/dashboard/kbm') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-            KBM / Mengajar
-          </router-link>
-          <router-link to="/dashboard/absen-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/absen-santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <polyline points="16 11 18 13 22 9" />
-            </svg>
-            Absen Santri
-          </router-link>
-          <router-link to="/dashboard/santri" class="sidebar-link" :class="{ active: isActive('/dashboard/santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Data Santri
-          </router-link>
-          <router-link to="/dashboard/wali-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/wali-santri') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
-              <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
-            </svg>
-            Data Wali Santri
-          </router-link>
-          <router-link to="/dashboard/kegiatan" class="sidebar-link" :class="{ active: isActive('/dashboard/kegiatan') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />
-            </svg>
-            Kegiatan
-          </router-link>
-
-          <!-- Akademik & Laporan Bulanan -->
-          <div class="sidebar-section">Akademik & Laporan</div>
-          <router-link to="/dashboard/grading" class="sidebar-link" :class="{ active: isActive('/dashboard/grading') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            Penilaian
-          </router-link>
-
-          <!-- Layanan Santri -->
-          <div class="sidebar-section">Layanan</div>
-          <router-link to="/dashboard/savings" class="sidebar-link" :class="{ active: isActive('/dashboard/savings') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-              <path d="M8 14h8" />
-            </svg>
-            Tabungan
-          </router-link>
-
-          <!-- Akun Pengguna -->
-          <div class="sidebar-section">Akun</div>
-          <router-link to="/dashboard/profile" class="sidebar-link" :class="{ active: isActive('/dashboard/profile') }"
-            @click="closeSidebar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            Profil Saya
-          </router-link>
-
-          <!-- Akses Khusus: the pages the admin gave this guru (the list is SPECIAL_MENUS below) -->
-          <template v-if="specialMenus.length">
-            <div class="sidebar-section">{{ user?.permissions?.menuGroupName || 'Akses Khusus' }}</div>
-            <router-link v-for="m in specialMenus" :key="m.id" :to="m.to" class="sidebar-link"
-              :class="{ active: isActive(m.to) }" @click="closeSidebar">
+        <!-- Menu groups by job (admin: santri & wali, KBM, keuangan, WhatsApp, pengaturan; guru: mengajar, santri,
+             akses khusus, akun). A group folds; the one holding the open page is always open. -->
+        <template v-for="g in menuGroups" :key="g.key">
+          <button type="button" class="sidebar-section sidebar-group-toggle" :aria-expanded="isGroupOpen(g)"
+            :aria-controls="`menu-group-${g.key}`" @click="toggleGroup(g)">
+            <span class="sidebar-group-title">{{ g.title }}</span>
+            <span v-if="!isGroupOpen(g) && groupBadge(g)" class="sidebar-badge is-small">{{ groupBadge(g) }}</span>
+            <svg class="sidebar-chevron" :class="{ 'is-open': isGroupOpen(g) }" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+          <div v-show="isGroupOpen(g)" :id="`menu-group-${g.key}`" class="sidebar-group">
+            <router-link v-for="m in g.items" :key="m.to" :to="m.to" class="sidebar-link" :class="{ active: isItemActive(m) }"
+              @click="closeSidebar">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
               {{ m.label }}
-              <span v-if="m.id === 'pendaftaran' && newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
+              <span v-if="m.badge === 'pendaftaran' && newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
             </router-link>
-          </template>
+          </div>
         </template>
       </nav>
 
@@ -506,6 +238,142 @@ const SPECIAL_MENUS = [
   { id: 'pendaftaran', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />' },
   { id: 'wa-log', to: '/dashboard/wa-log', label: 'Riwayat WA Bot', icon: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />' },
 ];
+// ---- the side menu, grouped by what the person is doing ----
+const ICON = {
+  santri: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />',
+  daftar: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />',
+  wali: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />',
+  megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1Z" /><path d="M16 9a3 3 0 0 1 0 6" /><path d="M19 6a7 7 0 0 1 0 12" />',
+  star: '<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />',
+  absenSantri: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" />',
+  kbm: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />',
+  monitor: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /><polyline points="9 10 11 12 15 8" />',
+  rekap: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M12 16v-4" /><path d="M8 16v-2" /><path d="M16 16v-3" />',
+  absensi: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M9 16l2 2 4-4" />',
+  doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />',
+  coin: '<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /><path d="M8 14h8" />',
+  bell: '<path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />',
+  mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />',
+  chat: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />',
+  clock: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />',
+  building: '<path d="M3 21h18" /><path d="M5 21V7l8-4 6 3v15" /><path d="M9 10h2" /><path d="M9 14h2" /><path d="M9 18h2" />',
+  person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />',
+}
+const ADMIN_GROUPS = [
+  {
+    key: 'santri',
+    title: 'Santri & Wali',
+    items: [
+      { to: '/dashboard/santri', label: 'Kelola Santri', icon: ICON.santri },
+      { to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
+      { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali },
+      { to: '/dashboard/pengumuman-wali', label: 'Pengumuman Wali', icon: ICON.megaphone },
+      { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
+    ],
+  },
+  {
+    key: 'kbm',
+    title: 'Belajar Mengajar',
+    items: [
+      { to: '/dashboard/absen-santri', label: 'Absen Santri', icon: ICON.absenSantri },
+      { to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: ICON.monitor },
+      { to: '/dashboard/admin-attendance', label: 'Rekap Absensi Guru', icon: ICON.rekap },
+      { to: '/dashboard/admin-grading', label: 'Kelola Penilaian', icon: ICON.doc },
+    ],
+  },
+  {
+    key: 'uang',
+    title: 'Keuangan',
+    items: [
+      { to: '/dashboard/admin-savings', label: 'Tabungan Santri', icon: ICON.coin, also: ['/dashboard/savings'] },
+      { to: '/dashboard/lpj-insentif', label: 'LPJ Insentif Guru', icon: ICON.doc, also: ['/dashboard/admin-lpj', '/dashboard/admin-documents'] },
+    ],
+  },
+  {
+    key: 'wa',
+    title: 'WhatsApp & Info',
+    items: [
+      { to: '/dashboard/broadcasts', label: 'Broadcast WA', icon: ICON.mail },
+      { to: '/dashboard/announcements', label: 'Pengumuman Guru & Web', icon: ICON.bell },
+      { to: '/dashboard/wa-reminders', label: 'Pengingat WA Guru', icon: ICON.chat },
+      { to: '/dashboard/wa-log', label: 'Riwayat & Antrean WA', icon: ICON.clock },
+    ],
+  },
+  {
+    key: 'atur',
+    title: 'Pengaturan',
+    items: [
+      { to: '/dashboard/tpq-profile', label: 'Profil TPQ', icon: ICON.building },
+      { to: '/dashboard/teachers', label: 'Kelola Pengajar', icon: ICON.person },
+      { to: '/dashboard/users', label: 'Akun Pengguna', icon: ICON.santri },
+      { to: '/dashboard/content', label: 'Konten Website', icon: ICON.edit },
+    ],
+  },
+]
+const menuGroups = computed(() => {
+  if (isAdmin.value) return ADMIN_GROUPS
+  if (!isGuru.value) return []
+  const groups = [
+    {
+      key: 'mengajar',
+      title: 'Mengajar',
+      items: [
+        { to: '/dashboard/attendance', label: 'Absensi Saya', icon: ICON.absensi },
+        { to: '/dashboard/kbm', label: 'KBM / Mengajar', icon: ICON.kbm },
+        { to: '/dashboard/absen-santri', label: 'Absen Santri', icon: ICON.absenSantri },
+        { to: '/dashboard/grading', label: 'Penilaian', icon: ICON.doc },
+      ],
+    },
+    {
+      key: 'santri',
+      title: 'Santri & Wali',
+      items: [
+        { to: '/dashboard/santri', label: 'Data Santri', icon: ICON.santri },
+        { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali },
+        { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
+        { to: '/dashboard/savings', label: 'Tabungan', icon: ICON.coin },
+      ],
+    },
+  ]
+  if (specialMenus.value.length) {
+    groups.push({
+      key: 'khusus',
+      title: user.value?.permissions?.menuGroupName || 'Akses Khusus',
+      items: specialMenus.value.map((m) => ({ to: m.to, label: m.label, icon: m.icon, badge: m.id === 'pendaftaran' ? 'pendaftaran' : '' })),
+    })
+  }
+  groups.push({ key: 'akun', title: 'Akun', items: [{ to: '/dashboard/profile', label: 'Profil Saya', icon: ICON.person }] })
+  return groups
+})
+
+const isItemActive = (m) => isActive(m.to) || (m.also || []).some((p) => isActive(p))
+// folded groups, remembered on this device; the admin starts with only the open page's group unfolded
+const FOLD_KEY = 'sidebar_folded_groups'
+const readFolded = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem(FOLD_KEY) || 'null')
+    return Array.isArray(v) ? v : null
+  } catch {
+    return null
+  }
+}
+const folded = ref(readFolded())
+const isGroupOpen = (g) => g.items.some(isItemActive) || !(folded.value ?? (isAdmin.value ? ADMIN_GROUPS.map((x) => x.key) : [])).includes(g.key)
+function toggleGroup(g) {
+  const current = folded.value ?? (isAdmin.value ? ADMIN_GROUPS.map((x) => x.key) : [])
+  const open = isGroupOpen(g)
+  // the group of the open page stays open; folding it would hide where the person is
+  if (open && g.items.some(isItemActive)) return
+  folded.value = open ? [...new Set([...current, g.key])] : current.filter((k) => k !== g.key)
+  try {
+    localStorage.setItem(FOLD_KEY, JSON.stringify(folded.value))
+  } catch {
+    /* private mode: for this visit only */
+  }
+}
+const groupBadge = (g) => (g.items.some((m) => m.badge === 'pendaftaran') ? newRegistrations.value : 0)
+
 const specialMenus = computed(() =>
   isGuru.value ? SPECIAL_MENUS.filter((m) => user.value?.permissions?.features?.includes(m.id)) : [],
 );
@@ -774,6 +642,53 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(252, 211, 77, 0.8);
+}
+
+.sidebar-group-toggle {
+  width: 100%;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.sidebar-group-toggle:hover {
+  color: #fcd34d;
+}
+
+.sidebar-group-toggle:focus-visible {
+  outline: 2px solid #fcd34d;
+  outline-offset: 2px;
+}
+
+.sidebar-group-title {
+  flex: 1;
+}
+
+.sidebar-chevron {
+  flex: none;
+  opacity: 0.8;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.sidebar-chevron.is-open {
+  transform: rotate(0deg);
+}
+
+.sidebar-badge.is-small {
+  margin-left: 0;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.68rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-chevron {
+    transition: none;
+  }
 }
 
 .sidebar-section::before {

@@ -18,7 +18,7 @@ test("teachers no longer get the monthly LPJ menu; admin has one LPJ Insentif me
   assert.match(util, /fetchMyEligibility/);
   assert.doesNotMatch(layout, /LPJ Bulanan/);
   assert.doesNotMatch(layout, /fetchMyEligibility/, "no eligibility request on every dashboard load");
-  assert.match(layout, /to="\/dashboard\/lpj-insentif"/);
+  assert.match(layout, /to[=:]\s*["']\/dashboard\/lpj-insentif["']/);
   assert.doesNotMatch(layout, />\s*Dokumen LPJ\s*</, "old admin menus are now archive links inside LPJ Insentif");
 });
 

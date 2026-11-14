@@ -52,6 +52,15 @@ export const OPTIONS = {
     { value: 'berbakat', label: 'Berbakat / kecerdasan luar biasa' },
     { value: 'lain', label: 'Lainnya' },
   ],
+  sumberInfo: [
+    { value: 'teman', label: 'Teman / keluarga' },
+    { value: 'tetangga', label: 'Tetangga' },
+    { value: 'spanduk', label: 'Spanduk / banner' },
+    { value: 'medsos', label: 'Media sosial (IG, FB, WA)' },
+    { value: 'sekolah', label: 'Sekolah' },
+    { value: 'santri', label: 'Kakak / saudara santri di sini' },
+    { value: 'lain', label: 'Lainnya' },
+  ],
   disabilitas: [
     { value: 'tidak', label: 'Tidak ada' },
     { value: 'netra', label: 'Tuna netra (penglihatan)' },
@@ -146,6 +155,8 @@ export const STEPS = [
       { path: 'tambahan.disabilitas', label: 'Disabilitas', type: 'select', options: 'disabilitas' },
       { path: 'tambahan.disabilitasLain', label: 'Disabilitas lainnya', max: 120, when: { path: 'tambahan.disabilitas', is: 'lain' } },
       { path: 'tambahan.catatan', label: 'Catatan untuk ustadz/ustadzah', type: 'textarea', max: 500, placeholder: 'Alergi, kebiasaan, atau hal lain yang perlu diketahui' },
+      { path: 'tambahan.sumberInfo', label: 'Tahu TPQ Amanah dari mana?', type: 'select', options: 'sumberInfo' },
+      { path: 'tambahan.sumberInfoLain', label: 'Dari mana', max: 80, when: { path: 'tambahan.sumberInfo', is: 'lain' } },
     ],
   },
 ]

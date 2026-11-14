@@ -10,6 +10,51 @@
       </button>
     </header>
 
+    <!-- what was sent / what still waits -->
+    <div class="wl-tabs" role="tablist" aria-label="Riwayat atau antrean">
+      <button type="button" role="tab" :aria-selected="tab === 'riwayat'" :class="{ active: tab === 'riwayat' }" @click="setTab('riwayat')">Riwayat terkirim</button>
+      <button type="button" role="tab" :aria-selected="tab === 'antrean'" :class="{ active: tab === 'antrean' }" @click="setTab('antrean')">
+        Antrean <span v-if="queue?.summary.total" class="wl-count" :class="{ 'is-held': queue.summary.morning }">{{ queue.summary.total }}</span>
+      </button>
+    </div>
+
+    <!-- ============ the queue: written for the bot, not sent yet ============ -->
+    <section v-if="tab === 'antrean'" class="wl-card" aria-labelledby="wl-q-title">
+      <div class="wl-day-head">
+        <div>
+          <h2 id="wl-q-title">Antrean pesan</h2>
+          <p class="wl-sub">Pesan yang sudah dibuat tetapi belum terkirim. Bot memeriksa antrean setiap menit.</p>
+        </div>
+      </div>
+      <p v-if="queue?.summary.morning" class="wl-note is-warn">
+        <strong>{{ queue.summary.morning }} pesan ditahan</strong> karena dibuat pada jam tenang ({{ queue.quietHours.from }}-{{ queue.quietHours.until }})
+        dan akan dikirim otomatis pukul {{ queue.quietHours.until }}. Bisa dikirim sekarang bila perlu segera.
+      </p>
+      <PageSkeleton v-if="queueLoading && !queue" :rows="4" label="Memuat antrean" />
+      <p v-else-if="queueError" class="wl-note is-danger" role="alert">{{ queueError }}</p>
+      <p v-else-if="!queue?.items.length" class="wl-empty">Tidak ada antrean. Semua pesan sudah terkirim.</p>
+      <ul v-else class="wl-list">
+        <li v-for="q in queue.items" :key="`${q.source}:${q.id}`" class="wl-row wl-qrow">
+          <div class="wl-qmain">
+            <span class="wl-main">
+              <strong>{{ q.name || 'Tanpa nama' }}</strong>
+              <span class="wl-number">{{ displayPhone(q.phone) }}</span>
+              <span class="wl-what">
+                <span class="wl-pill" :class="`is-${SOURCE_CAT[q.source]}`">{{ SOURCE[q.source] }}</span>
+                <span class="wl-label">{{ q.label || q.kind }}</span>
+              </span>
+            </span>
+            <span class="wl-when" :class="q.sendAt === 'now' ? 'is-now' : 'is-held'">{{ whenText(q) }}</span>
+          </div>
+          <div v-if="isAdmin && q.canControl" class="wl-qactions">
+            <button v-if="q.sendAt !== 'now'" type="button" class="wl-btn wl-qbtn" :disabled="queueBusy" @click="control(q, 'send-now')">Kirim sekarang</button>
+            <button type="button" class="wl-btn wl-qbtn is-danger" :disabled="queueBusy" @click="control(q, 'cancel')">Batalkan</button>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <template v-else>
     <!-- the last 14 days: pick a day; failures stand out -->
     <nav class="wl-days" aria-label="Pilih hari">
       <button v-for="d in days" :key="d.day" type="button" class="wl-day" :class="{ 'is-active': d.day === selectedDay, 'is-empty': !d.total }"
@@ -80,6 +125,8 @@
       </button>
     </section>
 
+    </template>
+
     <p class="wl-foot">Riwayat disimpan 90 hari. Isi kode masuk wali tidak pernah disimpan.</p>
   </div>
 </template>
@@ -91,9 +138,60 @@ import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { displayPhone } from '@/utils/santriProfile'
 import { useAuthStore } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
+import { useToast } from '@/composables/useToast'
+import { useDialog } from '@/composables/useDialog'
 
 // the guru layout has its own top bar: no room for the admin's floating menu button
 const isGuru = useAuthStore().user?.role === 'guru'
+const isAdmin = useAuthStore().user?.role === 'admin'
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
+const { ask } = useDialog()
+
+// the queue (Antrean)
+const SOURCE = { pendaftaran: 'Pendaftaran', pengumuman: 'Pengumuman wali', alfa: 'Kabar alfa' }
+const SOURCE_CAT = { pendaftaran: 'pendaftaran', pengumuman: 'pengumuman', alfa: 'wali_alfa' }
+const tab = ref(route.query.tab === 'antrean' ? 'antrean' : 'riwayat')
+const queue = ref(null)
+const queueLoading = ref(false)
+const queueError = ref('')
+const queueBusy = ref(false)
+const whenText = (q) => (q.sendAt === 'now' ? (q.status === 'sending' ? 'Sedang dikirim' : 'Segera (≤ 1 menit)') : q.sendAt === 'morning_tomorrow' ? 'Besok 06:30' : 'Hari ini 06:30')
+async function loadQueue() {
+  queueLoading.value = true
+  queueError.value = ''
+  try {
+    const { data: d } = await api.get('/wa-log/queue', { cache: false })
+    queue.value = d
+  } catch (err) {
+    queueError.value = err.response?.data?.error || 'Antrean belum bisa dimuat.'
+  } finally {
+    queueLoading.value = false
+  }
+}
+function setTab(t) {
+  tab.value = t
+  router.replace({ query: t === 'antrean' ? { tab: 'antrean' } : {} })
+  if (t === 'antrean') loadQueue()
+}
+async function control(q, action) {
+  if (action === 'cancel') {
+    const ok = await ask({ title: 'Batalkan pesan ini?', message: `${q.label || 'Pesan'} ke ${q.name || displayPhone(q.phone)} tidak akan dikirim.`, tone: 'danger', confirmText: 'Batalkan pesan', cancelText: 'Kembali' })
+    if (!ok) return
+  }
+  queueBusy.value = true
+  try {
+    const { data: d } = await api.post(`/wa-log/queue/${q.source}/${encodeURIComponent(q.id)}/${action}`)
+    queue.value = d
+    toast.success(action === 'cancel' ? 'Pesan dibatalkan' : 'Pesan dikirim dalam 1 menit')
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Belum berhasil.')
+  } finally {
+    queueBusy.value = false
+  }
+}
 
 const CATEGORY = {
   guru: 'Guru',
@@ -102,6 +200,7 @@ const CATEGORY = {
   wali_kode: 'Kode masuk wali',
   wali_alfa: 'Kabar alfa',
   pendaftaran: 'Pendaftaran',
+  wali_info: 'Info wali',
   tes: 'Tes',
   lainnya: 'Lainnya',
 }
@@ -181,6 +280,7 @@ function selectDay(day) {
 function refresh() {
   loadDays()
   loadDay()
+  loadQueue()
 }
 
 // today's list refreshes by itself while the page is open and visible
@@ -195,6 +295,100 @@ onBeforeUnmount(() => clearInterval(timer))
 </script>
 
 <style scoped>
+.wl-tabs {
+  display: flex;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 12px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(11, 59, 42, 0.06);
+}
+
+.wl-tabs button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: #3b4a42;
+  cursor: pointer;
+}
+
+.wl-tabs button.active {
+  background: #fff;
+  color: #0b3b2a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.wl-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #0a5c40;
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.wl-count.is-held {
+  background: #b45309;
+}
+
+.wl-qrow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.wl-qmain {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wl-when {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wl-when.is-now {
+  background: #e6f0fb;
+  color: #1d4f8a;
+}
+
+.wl-when.is-held {
+  background: #fef3c7;
+  color: #7c3a0d;
+}
+
+.wl-qactions {
+  display: flex;
+  gap: 8px;
+}
+
+.wl-qbtn {
+  min-height: 36px;
+  font-size: 0.82rem;
+}
+
+.wl-qbtn.is-danger {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.35);
+}
+
 .wl {
   --ink: #0b3b2a;
   --body: #475a50;
@@ -504,6 +698,7 @@ onBeforeUnmount(() => clearInterval(timer))
 .wl-pill.is-wali_kode { background: #fef3c7; color: #7c3a0d; }
 .wl-pill.is-wali_alfa { background: #fdecea; color: #8e1b12; }
 .wl-pill.is-pendaftaran { background: #fef3c7; color: #7c3a0d; }
+.wl-pill.is-wali_info { background: #e6f0fb; color: #1d4f8a; }
 
 .wl-status {
   padding: 3px 10px;
@@ -542,6 +737,13 @@ onBeforeUnmount(() => clearInterval(timer))
 .wl-note.is-danger {
   background: #fdecea;
   color: #7a1810;
+}
+
+.wl-note.is-warn {
+  margin: 8px 0 10px;
+  background: #fffbeb;
+  color: #5b3a06;
+  border: 1px solid #f3d58b;
 }
 
 .wl-empty {

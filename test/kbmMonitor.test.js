@@ -54,7 +54,7 @@ test("Monitor KBM is an admin-only page with one data request", () => {
   const layout = read("views/dashboard/DashboardLayout.vue");
   const view = read("views/dashboard/admin/KbmMonitorView.vue");
   assert.match(router, /path: "kbm-monitor",[\s\S]*?KbmMonitorView\.vue[\s\S]*?meta: \{ role: "admin" \}/);
-  assert.ok(layout.includes('to="/dashboard/kbm-monitor"'));
+  assert.match(layout, /to[=:]\s*["']\/dashboard\/kbm-monitor["']/, "in the side menu");
   assert.equal((view.match(/api\.get\('\/kbm-monitor'/g) || []).length, 1, "the page loads with a single request");
   assert.ok(view.includes("api.post(`/kbm-monitor/${detail.value.guru.id}/nudge`"), "nudge button");
   assert.ok(view.includes("PageSkeleton"), "shared skeleton while loading");

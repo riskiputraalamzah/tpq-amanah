@@ -243,6 +243,12 @@ const routes = [
         meta: { role: ["guru", "admin"] },
       },
       {
+        path: "pengumuman-wali",
+        name: "WaliAnnouncements",
+        component: () => import("../views/dashboard/admin/WaliAnnouncementsView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "pendaftaran",
         name: "Pendaftaran",
         component: () => import("../views/dashboard/admin/PendaftaranView.vue"),
@@ -292,12 +298,18 @@ const routes = [
     meta: { requiresAuth: true, wali: true },
     children: [
       { path: "", name: "WaliHome", component: () => import("../views/wali/WaliHome.vue") },
-      { path: "tautkan", name: "WaliLink", component: () => import("../views/wali/WaliLink.vue") },
-      { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue") },
+      // the forms hide the bottom navigation (they have their own bar at the bottom)
+      { path: "tautkan", name: "WaliLink", component: () => import("../views/wali/WaliLink.vue"), meta: { hideNav: true } },
+      { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue"), meta: { hideNav: true } },
+      { path: "izin", name: "WaliIzinPick", component: () => import("../views/wali/WaliIzinPick.vue") },
+      { path: "pengumuman", name: "WaliPengumuman", component: () => import("../views/wali/WaliPengumuman.vue") },
+      { path: "akun", name: "WaliAkun", component: () => import("../views/wali/WaliAkun.vue") },
       { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
+      { path: "santri/:santriId/rapor", name: "WaliRapor", component: () => import("../views/wali/WaliRapor.vue") },
+      { path: "santri/:santriId/izin", name: "WaliIzin", component: () => import("../views/wali/WaliIzin.vue") },
       // pendaftaran santri baru ("baru" starts one, or continues the unfinished one)
-      { path: "daftar/:id", name: "WaliDaftar", component: () => import("../views/wali/WaliDaftar.vue") },
+      { path: "daftar/:id", name: "WaliDaftar", component: () => import("../views/wali/WaliDaftar.vue"), meta: { hideNav: true } },
     ],
   },
   // the short link on the landing page, posters and WhatsApp: tpqamanahsawotratap.com/daftar

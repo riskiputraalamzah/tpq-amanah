@@ -29,6 +29,12 @@
         <router-link v-if="/absen kehadiran/.test(sheet.reason)" to="/dashboard/attendance" class="as-inline-link">Buka Absensi</router-link>
       </p>
 
+      <!-- the parents told the TPQ ahead through the portal -->
+      <p v-if="fromWali.length" class="as-note as-wali-note" role="status">
+        <strong>{{ fromWali.length }} izin/sakit dari wali</strong> di sesi ini:
+        {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat, tidak perlu diubah.
+      </p>
+
       <!-- what is recorded, and whether it is saved -->
       <div class="as-summary" role="status" aria-live="polite">
         <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
@@ -55,7 +61,10 @@
           <li v-for="s in g.items" :key="s.id" class="as-row">
             <div class="as-name">
               <strong>{{ s.name }}</strong>
-              <span v-if="recordOf(s.id)?.byName" class="as-by">
+              <span v-if="recordOf(s.id)?.source === 'wali'" class="as-by is-wali">
+                {{ recordOf(s.id).status === 'sakit' ? 'Sakit' : 'Izin' }} dari {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).reason">: "{{ recordOf(s.id).reason }}"</template>
+              </span>
+              <span v-else-if="recordOf(s.id)?.byName" class="as-by">
                 {{ recordOf(s.id).source === 'kbm' ? 'dari KBM' : 'oleh' }} {{ recordOf(s.id).byName }}
               </span>
             </div>
@@ -120,6 +129,13 @@ const opened = ref({})
 const saveState = ref('idle')
 
 const recordOf = (id) => records.value[id] || null
+// izin / sakit the parents sent from the wali portal
+const fromWali = computed(() =>
+  Object.entries(records.value)
+    .filter(([, r]) => r?.source === 'wali')
+    .map(([id, r]) => ({ id, status: r.status, name: sheet.value?.santri.find((s) => s.id === id)?.name || '' }))
+    .filter((x) => x.name),
+)
 const statusOf = (id) => records.value[id]?.status || null
 
 const groups = computed(() => {
@@ -500,6 +516,17 @@ onBeforeUnmount(() => {
 .as-by {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.as-by.is-wali {
+  color: #1d4f8a;
+  font-weight: 600;
+}
+
+.as-wali-note {
+  background: #e6f0fb;
+  color: #173f6e;
+  border: 1px solid #b9d3f0;
 }
 
 .as-choices {

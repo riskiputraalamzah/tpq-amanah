@@ -633,6 +633,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import api from "@/services/api";
 import { useToast } from "@/composables/useToast";
+import { useDialog } from "@/composables/useDialog";
 import SkeletonLoader from "@/components/SkeletonLoader.vue";
 import SignedDocumentUpload from "@/components/SignedDocumentUpload.vue";
 import {
@@ -645,6 +646,7 @@ import {
 const { success: showSuccess, error: showError, warning: showWarning } = useToast();
 
 const route = useRoute();
+const { ask } = useDialog();
 const router = useRouter();
 const authStore = useAuthStore();
 const reportId = route.params.id;
@@ -998,7 +1000,7 @@ const submit = async () => {
 };
 
 const approve = async () => {
-  if (!confirm("Apakah Anda yakin ingin menyetujui laporan LPJ ini? Data akan disahkan dan dikunci.")) return;
+  if (!(await ask({ title: "Setujui laporan LPJ?", message: "Data akan disahkan dan dikunci.", confirmText: "Setujui" }))) return;
   acting.value = true;
   actionMessage.value = "";
   try {
@@ -1018,7 +1020,7 @@ const approve = async () => {
 };
 
 const reopen = async () => {
-  if (!confirm("Kembalikan laporan ini ke status Draft? Guru akan dapat mengubah kembali rincian KBM dan jurnal.")) return;
+  if (!(await ask({ title: "Kembalikan ke Draft?", message: "Guru bisa mengubah lagi rincian KBM dan jurnal.", confirmText: "Kembalikan ke Draft" }))) return;
   acting.value = true;
   actionMessage.value = "";
   try {

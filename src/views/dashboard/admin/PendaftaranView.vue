@@ -50,6 +50,7 @@
             <strong>{{ r.childName }}</strong>
             <span class="pd-pill" :class="`is-${statusOf(r).tone}`">{{ statusOf(r).label }}</span>
             <span v-if="r.similarTo?.length" class="pd-pill is-twin" :title="`Mirip ${r.similarTo.join(', ')}`">Mungkin ganda</span>
+            <span v-if="r.fixRequest && isOpen(r)" class="pd-pill is-warn">Menunggu perbaikan wali</span>
           </span>
           <span class="pd-sub">
             {{ r.number }} · {{ genderShort(r.gender) }}{{ r.age !== null ? `, ${r.age} th` : '' }} · {{ sesiName(r.sesi) }}<template v-if="r.desa"> · {{ r.desa }}</template>
@@ -121,12 +122,26 @@
             <span class="pd-sub">Saat menerima, Antum bisa menggabungkan pendaftar ini dengan santri tersebut.</span>
           </div>
 
+          <p v-if="detail.fixRequest && isOpen(detail)" class="pd-note is-warn">
+            <strong>Menunggu perbaikan dari wali:</strong> "{{ detail.fixRequest.note }}"<template v-if="detail.fixRequest.byName"> · diminta {{ detail.fixRequest.byName }}</template>
+          </p>
+
           <!-- accepted / cancelled -->
           <p v-if="detail.status === 'accepted'" class="pd-note">
             Diterima di <strong>{{ levelName(detail.classId) }}</strong><template v-if="detail.nomorInduk"> · No. induk <strong>{{ detail.nomorInduk }}</strong></template>
             <template v-if="detail.acceptedByName"> · oleh {{ detail.acceptedByName }}</template>.
             Wali sudah tertaut dan tinggal melengkapi NIK &amp; KK.
           </p>
+
+          <!-- daftar ulang and books -->
+          <fieldset v-if="detail.status === 'accepted'" class="pd-merge pd-pay">
+            <legend>Pembayaran awal</legend>
+            <label v-for="p in PAYMENTS" :key="p.key" class="pd-check">
+              <input type="checkbox" :checked="!!detail.payments?.[p.key]" :disabled="busy" @change="togglePayment(p.key, $event.target.checked)" />
+              {{ p.label }} <span class="pd-sub">{{ p.amount }}</span>
+            </label>
+            <span v-if="detail.payments?.byName" class="pd-sub">Terakhir diubah {{ detail.payments.byName }}</span>
+          </fieldset>
           <div v-else-if="detail.status === 'cancelled'" class="pd-note is-danger">
             <span>{{ detail.cancelledBy === 'wali' ? 'Dibatalkan oleh wali.' : `Dibatalkan${detail.cancelledByName ? ` oleh ${detail.cancelledByName}` : ''}.` }}
               <template v-if="detail.cancelReason && detail.cancelledBy !== 'wali'"> Alasan: {{ detail.cancelReason }}</template></span>
@@ -145,6 +160,9 @@
             <div class="pd-steps">
               <button v-if="detail.status === 'submitted'" type="button" class="pd-btn pd-btn-ghost" :disabled="busy" @click="setStatus('contacted')">
                 <LineIcon name="check" :size="16" /> Tandai sudah dihubungi
+              </button>
+              <button type="button" class="pd-btn pd-btn-ghost" :disabled="busy" @click="askFix">
+                <LineIcon name="pencil" :size="16" /> Minta perbaikan data
               </button>
               <button type="button" class="pd-btn pd-btn-ghost" :aria-expanded="panel === 'schedule'" @click="togglePanel('schedule')">
                 <LineIcon name="calendar" :size="16" /> {{ detail.schedule ? 'Ubah jadwal penempatan' : 'Jadwalkan penempatan' }}
@@ -189,12 +207,43 @@
                   <input v-model="acc.existing" type="radio" :value="d.id" /> Gabungkan dengan {{ d.name }} ({{ levelName(d.classId) || 'tanpa jilid' }})
                 </label>
               </fieldset>
-              <p class="pd-sub">Santri masuk Kelola Santri{{ acc.existing ? '' : ' dengan nomor induk baru' }}, wali langsung tertaut, data pendaftaran disalin ke Data Wali Santri, dan wali diberi tahu lewat WhatsApp.</p>
+              <fieldset class="pd-merge">
+                <legend>Sudah dibayar (boleh diisi nanti)</legend>
+                <label v-for="p in PAYMENTS" :key="p.key" class="pd-check">
+                  <input v-model="acc.payments[p.key]" type="checkbox" /> {{ p.label }} <span class="pd-sub">{{ p.amount }}</span>
+                </label>
+              </fieldset>
+              <p class="pd-sub">Santri masuk Kelola Santri{{ acc.existing ? '' : ' dengan nomor induk baru' }}, wali langsung tertaut, data pendaftaran disalin ke Data Wali Santri, wali diberi tahu lewat WhatsApp, dan guru jilidnya juga.</p>
               <button type="submit" class="pd-btn pd-btn-primary" :disabled="busy || !acc.classId || !acc.sesi">{{ busy ? 'Memproses…' : `Terima di ${levelName(acc.classId) || '…'}` }}</button>
             </form>
 
             <button type="button" class="pd-btn pd-btn-ghost is-danger" :disabled="busy" @click="cancel">Batalkan pendaftaran</button>
           </template>
+
+          <!-- every WhatsApp of this registration: sent, waiting for 06:30, failed -->
+          <div v-if="detail.messages?.length" class="pd-group">
+            <strong>Pesan WhatsApp</strong>
+            <p v-if="detail.messages.some((m) => m.status === 'held')" class="pd-note is-warn pd-held-note">
+              Pesan yang dibuat pukul {{ detail.quietHours?.from || '21:00' }}-{{ detail.quietHours?.until || '06:30' }} ditahan sampai {{ detail.quietHours?.until || '06:30' }} agar tidak mengganggu malam hari.
+              Ketuk <strong>Kirim sekarang</strong> bila perlu segera.
+              <router-link to="/dashboard/wa-log?tab=antrean" class="pd-queue-link">Lihat semua antrean pesan ›</router-link>
+            </p>
+            <ul class="pd-msgs">
+              <li v-for="m in detail.messages" :key="m.id" class="pd-msg">
+                <div class="pd-msg-main">
+                  <span class="pd-msg-kind">{{ KIND[m.kind] || m.label }}</span>
+                  <span class="pd-sub">ke {{ m.name || 'Wali' }} · {{ displayPhone(m.phone) }} · {{ ago(m.createdAt) }}</span>
+                </div>
+                <span class="pd-pill" :class="`is-${MSG[m.status]?.tone || 'idle'}`">{{ MSG[m.status]?.label || m.status }}</span>
+                <span v-if="['held', 'queued', 'failed'].includes(m.status)" class="pd-msg-actions">
+                  <button v-if="m.status !== 'queued'" type="button" class="pd-btn pd-btn-ghost pd-msg-btn" :disabled="busy" @click="noticeAction(m, 'send-now')">
+                    {{ m.status === 'failed' ? 'Kirim ulang' : 'Kirim sekarang' }}
+                  </button>
+                  <button type="button" class="pd-btn pd-btn-ghost is-danger pd-msg-btn" :disabled="busy" @click="noticeAction(m, 'cancel')">Batalkan</button>
+                </span>
+              </li>
+            </ul>
+          </div>
 
           <!-- the admin's own note -->
           <div class="pd-group">
@@ -273,6 +322,31 @@ const TABS = [
 ]
 const CLASSES = ['1', '2', '3', '4', '5', '6', '7']
 const RELATION = { ayah: 'Ayah', ibu: 'Ibu', wali: 'Wali' }
+// the WhatsApp messages of a registration
+const KIND = {
+  diterima_sistem: 'Konfirmasi pendaftaran',
+  pendaftar_baru: 'Kabar pendaftar baru (koordinator)',
+  jadwal: 'Jadwal penempatan jilid',
+  jadwal_besok: 'Pengingat H-1 penempatan',
+  perbaikan: 'Minta perbaikan data',
+  diterima: 'Diterima sebagai santri',
+  guru_santri_baru: 'Kabar santri baru (guru jilid)',
+  dibatalkan: 'Pendaftaran dibatalkan',
+  draft_ingat: 'Pengingat formulir belum dikirim',
+}
+const MSG = {
+  queued: { label: 'Dalam antrean', tone: 'info' },
+  sending: { label: 'Sedang dikirim', tone: 'info' },
+  held: { label: 'Ditahan sampai 06:30', tone: 'warn' },
+  sent: { label: 'Terkirim', tone: 'ok' },
+  failed: { label: 'Gagal', tone: 'danger' },
+  cancelled: { label: 'Dibatalkan', tone: 'idle' },
+}
+const PAYMENTS = [
+  { key: 'daftarUlang', label: 'Daftar ulang', amount: 'Rp35.000' },
+  { key: 'bukuPrestasi', label: 'Buku Prestasi', amount: 'Rp5.000' },
+  { key: 'bukuTartil', label: 'Buku Tartil', amount: 'Rp13.000' },
+]
 const today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
 const siteLink = `${window.location.origin}/daftar`
 
@@ -291,7 +365,7 @@ const busy = ref(false)
 const panel = ref('')
 const note = ref('')
 const sched = ref({ date: '', time: '15:30', note: '', notify: true })
-const acc = ref({ classId: '', sesi: '', existing: '' })
+const acc = ref({ classId: '', sesi: '', existing: '', payments: {} })
 
 const settingsOpen = ref(false)
 const notify = ref([])
@@ -366,7 +440,7 @@ async function openDetail(id) {
     applyDetail(data)
     // the other parent's registration was accepted already: join the same santri by default
     const twin = (data.similar || []).find((s) => s.status === 'accepted' && s.santriId && (data.duplicates || []).some((d) => d.id === s.santriId))
-    acc.value = { classId: twin?.classId || '', sesi: data.sesi || 'sore', existing: twin?.santriId || '' }
+    acc.value = { classId: twin?.classId || '', sesi: data.sesi || 'sore', existing: twin?.santriId || '', payments: { daftarUlang: false, bukuPrestasi: false, bukuTartil: false } }
     sched.value = {
       date: data.schedule?.date || '',
       time: data.schedule?.time || (data.sesi === 'malam' ? '18:00' : '15:30'),
@@ -394,13 +468,22 @@ function togglePanel(name) {
   panel.value = panel.value === name ? '' : name
 }
 
+let warnedHeld = ''
 async function act(fn, success) {
   busy.value = true
+  const heldBefore = new Set((detail.value?.messages || []).filter((m) => m.status === 'held').map((m) => m.id))
   try {
     const { data } = await fn()
     applyDetail(data)
     panel.value = ''
     if (success) toast.success(typeof success === 'function' ? success(data) : success)
+    // a message this action created waits for the morning: say so, the admin may want it sent now
+    const newlyHeld = (data.messages || []).filter((m) => m.status === 'held' && !heldBefore.has(m.id))
+    // once per registration: after that the "Pesan WhatsApp" list shows it
+    if (newlyHeld.length && warnedHeld !== data.id) {
+      warnedHeld = data.id
+      toast.warning(`${newlyHeld.length} pesan WhatsApp ditahan sampai ${data.quietHours?.until || '06:30'} (jam tenang). Bisa dikirim sekarang di bagian Pesan WhatsApp.`, { duration: 7000 })
+    }
     load({ quiet: true })
     refreshCount({ force: true })
     return data
@@ -433,7 +516,7 @@ async function accept() {
   })
   if (!ok) return
   await act(
-    () => api.post(`/pendaftaran/admin/${detail.value.id}/accept`, { classId: acc.value.classId, sesi: acc.value.sesi, existingSantriId: acc.value.existing || undefined }),
+    () => api.post(`/pendaftaran/admin/${detail.value.id}/accept`, { classId: acc.value.classId, sesi: acc.value.sesi, existingSantriId: acc.value.existing || undefined, payments: acc.value.payments }),
     (data) => `${data.santri?.name || detail.value.childName} diterima${data.santri?.nomorInduk ? `, nomor induk ${data.santri.nomorInduk}` : ''}`,
   )
 }
@@ -450,6 +533,26 @@ async function cancel() {
   if (reason === null) return
   await act(() => api.post(`/pendaftaran/admin/${detail.value.id}/cancel`, { reason }), 'Pendaftaran dibatalkan')
 }
+
+const noticeAction = (m, action) =>
+  act(
+    () => api.post(`/pendaftaran/admin/notices/${m.id}/${action}`),
+    action === 'cancel' ? 'Pesan dibatalkan' : 'Pesan dikirim sekarang (dalam 1 menit)',
+  )
+
+async function askFix() {
+  const note = await ask({
+    title: 'Minta perbaikan data?',
+    message: `Pesan ini dikirim ke WhatsApp wali ${detail.value.childName}. Wali memperbaiki sendiri lewat portal.`,
+    confirmText: 'Kirim ke wali',
+    input: { label: 'Yang perlu diperbaiki', value: detail.value.fixRequest?.note || '', placeholder: 'Contoh: tanggal lahir berbeda dengan akta, mohon dicek', required: true, maxlength: 300 },
+  })
+  if (note === null) return
+  await act(() => api.post(`/pendaftaran/admin/${detail.value.id}/fix`, { note }), 'Permintaan perbaikan dikirim ke wali')
+}
+
+const togglePayment = (key, value) =>
+  act(() => api.put(`/pendaftaran/admin/${detail.value.id}/payments`, { ...Object.fromEntries(PAYMENTS.map((p) => [p.key, !!detail.value.payments?.[p.key]])), [key]: value }), 'Pembayaran tersimpan')
 
 async function removeForGood() {
   const ok = await ask({
@@ -902,6 +1005,65 @@ textarea.pd-input {
   gap: 8px;
   background: #fdecea;
   color: #7a1810;
+}
+
+.pd-held-note {
+  margin: 6px 0;
+}
+
+.pd-queue-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-weight: 700;
+  color: #7c3a0d;
+}
+
+.pd-msgs {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.pd-msg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.pd-msg-main {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pd-msg-kind {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0b3b2a;
+}
+
+.pd-msg-actions {
+  display: flex;
+  gap: 6px;
+  flex-basis: 100%;
+}
+
+.pd-msg-btn {
+  min-height: 36px;
+  font-size: 0.82rem;
+}
+
+.pd-pay {
+  display: grid;
+  gap: 2px;
 }
 
 .pd-pill.is-twin {

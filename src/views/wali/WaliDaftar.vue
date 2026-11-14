@@ -47,6 +47,13 @@
         <p class="st-sub">{{ sesiName(reg.data?.riwayat?.sesi) }} · didaftarkan {{ fmtDate(reg.submittedAt) }}</p>
       </div>
 
+      <!-- the admin asked for a correction -->
+      <div v-if="reg.fixRequest" class="fix-card" role="alert">
+        <p class="fix-title">Mohon perbaiki data pendaftaran</p>
+        <p class="fix-note">"{{ reg.fixRequest.note }}"</p>
+        <button type="button" class="w-btn w-btn-primary" @click="startEdit">Perbaiki sekarang</button>
+      </div>
+
       <!-- accepted -->
       <div v-if="reg.status === 'accepted'" class="w-card accepted-card">
         <p class="accepted-title">Alhamdulillah, ananda diterima</p>
@@ -115,6 +122,7 @@
         <span v-if="reg.number" class="form-number">{{ reg.number }}</span>
       </div>
       <h1 class="w-title">{{ editingSent ? 'Ubah data pendaftaran' : 'Pendaftaran santri baru' }}</h1>
+      <p v-if="editingSent && reg.fixRequest" class="w-note is-warn"><span><strong>Yang perlu diperbaiki:</strong> {{ reg.fixRequest.note }}</span></p>
       <p v-if="copied" class="w-note"><span>Data orang tua dan alamat sudah terisi dari pendaftaran sebelumnya. Periksa lagi, lalu isi data ananda.</span></p>
       <p v-else-if="resumed" class="w-note"><span>Melanjutkan pendaftaran yang belum dikirim. Isian sebelumnya sudah tersimpan.</span></p>
 
@@ -1261,6 +1269,30 @@ select.w-input {
 .journey-text span {
   font-size: 0.85rem;
   color: #5b6b62;
+}
+
+.fix-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fffbeb;
+  border: 1.5px solid #f3d58b;
+}
+
+.fix-title {
+  margin: 0;
+  font-weight: 800;
+  color: #5b3a06;
+}
+
+.fix-note {
+  margin: 0 0 4px;
+  color: #5b3a06;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .accepted-card {

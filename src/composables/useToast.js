@@ -1,4 +1,5 @@
 import { ref, reactive } from 'vue'
+import { useDialog } from '@/composables/useDialog'
 
 // Global toast state
 const toasts = reactive([])
@@ -62,18 +63,18 @@ const confirmState = reactive({
     resolve: null
 })
 
+// The older confirm() of the app: it now opens the app's one dialog (DialogHost.vue), so every page looks the same.
+// confirmState and its handlers stay for anything still reading them.
 export function useConfirm() {
-    const confirm = (message, options = {}) => {
-        return new Promise((resolve) => {
-            confirmState.visible = true
-            confirmState.message = message
-            confirmState.title = options.title || 'Konfirmasi'
-            confirmState.type = options.type || 'warning'
-            confirmState.confirmText = options.confirmText || 'Ya, Lanjutkan'
-            confirmState.cancelText = options.cancelText || 'Batal'
-            confirmState.resolve = resolve
+    const { ask } = useDialog()
+    const confirm = (message, options = {}) =>
+        ask({
+            title: options.title || 'Konfirmasi',
+            message,
+            tone: options.type === 'danger' ? 'danger' : 'default',
+            confirmText: options.confirmText || 'Ya, Lanjutkan',
+            cancelText: options.cancelText || 'Batal',
         })
-    }
 
     const handleConfirm = () => {
         confirmState.visible = false

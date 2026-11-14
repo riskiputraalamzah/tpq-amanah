@@ -12,7 +12,7 @@ const layout = read("views/dashboard/DashboardLayout.vue");
 
 test("Notifikasi WA page is admin-only and in the sidebar", () => {
   assert.match(router, /path: "wa-reminders",[\s\S]*?WaReminderView\.vue[\s\S]*?meta: \{ role: "admin" \}/);
-  assert.ok(layout.includes('to="/dashboard/wa-reminders"'));
+  assert.match(layout, /to[=:]\s*["']\/dashboard\/wa-reminders["']/, "in the side menu");
 });
 
 test("admin manages numbers, sessions and message types", () => {
