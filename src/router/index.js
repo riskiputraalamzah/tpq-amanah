@@ -237,6 +237,12 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "absen-santri",
+        name: "AbsenSantri",
+        component: () => import("../views/dashboard/guru/AbsenSantriView.vue"),
+        meta: { role: ["guru", "admin"] },
+      },
+      {
         path: "wa-log",
         name: "WaLog",
         component: () => import("../views/dashboard/admin/WaLogView.vue"),

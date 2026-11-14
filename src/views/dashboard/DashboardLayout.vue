@@ -113,6 +113,15 @@
             </svg>
             Rekap Absensi
           </router-link>
+          <router-link to="/dashboard/absen-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/absen-santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <polyline points="16 11 18 13 22 9" />
+            </svg>
+            Absen Santri
+          </router-link>
           <router-link to="/dashboard/kbm-monitor" class="sidebar-link"
             :class="{ active: isActive('/dashboard/kbm-monitor') }" @click="closeSidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -222,6 +231,15 @@
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             KBM / Mengajar
+          </router-link>
+          <router-link to="/dashboard/absen-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/absen-santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <polyline points="16 11 18 13 22 9" />
+            </svg>
+            Absen Santri
           </router-link>
           <router-link to="/dashboard/santri" class="sidebar-link" :class="{ active: isActive('/dashboard/santri') }"
             @click="closeSidebar">

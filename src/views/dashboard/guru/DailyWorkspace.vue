@@ -309,7 +309,16 @@
                 <h2>Absensi Santri — {{ currentLevelName }}</h2>
                 <span class="roster-count-badge">{{ roster.length }} Santri</span>
               </div>
-              <p>Default seluruh santri hadir. Ubah hanya bila ada santri yang berhalangan.</p>
+              <p v-if="presenceNote">
+                Status awal diambil dari <router-link to="/dashboard/absen-santri" class="presence-link">Absen Santri</router-link>
+                ({{ presenceNote.count }} dari {{ presenceNote.of }} santri<template v-if="presenceNote.by.length">, dicatat {{ presenceNote.by.join(', ') }}</template>).
+                Periksa lagi, ubah bila ada yang datang terlambat.
+              </p>
+              <p v-else>
+                Default seluruh santri hadir. Ubah hanya bila ada santri yang berhalangan.
+                Absen semua jilid sekaligus (misalnya saat doa pembukaan) bisa lewat
+                <router-link to="/dashboard/absen-santri" class="presence-link">Absen Santri</router-link>.
+              </p>
             </div>
           </div>
 
@@ -779,6 +788,7 @@ const selectedLevelId = ref('');
 const slotPickerOpen = ref(false);
 const roster = ref([]);
 const inactiveSantri = ref([]);
+const presenceNote = ref(null);
 const curriculum = ref(null);
 const searchQuery = ref('');
 
@@ -1145,6 +1155,8 @@ function chooseSlot(slotId) {
   if (!changed) return;
   if (selectedLevelId.value && isLevelSavedInSelectedSlot(selectedLevelId.value)) clearLevelSelection();
   if (!selectedLevelId.value) preselectLevelForSlot();
+  // the roster starts from Absen Santri of the sesi: reload it for the new sesi
+  else loadLevelContext(selectedLevelId.value);
 }
 
 // Select Level
@@ -1270,7 +1282,7 @@ async function loadLevelContext(levelId) {
   loadingLevelContext.value = true;
   try {
     const { data } = await api.get('/teaching_sessions/level-context', {
-      params: { date: targetDate.value, levelId }
+      params: { date: targetDate.value, levelId, slotId: selectedSlotId.value }
     });
 
     roster.value = (data.roster || []).map(s => ({
@@ -1280,6 +1292,7 @@ async function loadLevelContext(levelId) {
     }));
 
     inactiveSantri.value = data.inactiveSantri || [];
+    presenceNote.value = data.presenceNote || null;
 
     curriculum.value = data.curriculum || null;
 
@@ -1383,6 +1396,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.presence-link {
+  color: #0a5c40;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .daily-workspace-view {
   width: 100%;
   max-width: 1200px;

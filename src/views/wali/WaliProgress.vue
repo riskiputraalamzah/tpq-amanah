@@ -37,10 +37,11 @@
       <ul v-else class="meetings">
         <li v-for="(m, i) in data.meetings" :key="`${m.date}-${i}`" class="w-card meeting">
           <div class="meeting-head">
-            <span class="meeting-date">{{ shortDate(m.date) }}</span>
+            <span class="meeting-date">{{ shortDate(m.date) }}<span class="meeting-slot"> · {{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }}</span></span>
             <span class="w-pill" :class="`is-${STATUS_META[m.status].tone}`">{{ STATUS_META[m.status].label }}</span>
           </div>
           <p v-if="m.material" class="meeting-material">{{ m.material }}</p>
+          <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
           <p v-if="m.supportingMaterial" class="meeting-support">Pendukung: {{ m.supportingMaterial }}</p>
           <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
         </li>
@@ -256,6 +257,11 @@ onMounted(load)
 .meeting-date {
   font-weight: 800;
   color: #0b3b2a;
+}
+
+.meeting-slot {
+  font-weight: 600;
+  color: #5b6b62;
 }
 
 .meeting-material {
