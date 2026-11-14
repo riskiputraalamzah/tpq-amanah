@@ -35,9 +35,49 @@
         <p class="nik-badge warning-badge" v-else>NIK: Belum diisi</p>
         <p v-if="teacher.bio" class="bio">{{ teacher.bio }}</p>
         <p class="email">{{ teacher.email || teacher.username || '-' }}</p>
+        <div class="jilid-box">
+          <div class="jilid-head">
+            <span class="jilid-label">Jilid diampu</span>
+            <button type="button" class="jilid-edit" :aria-label="`Atur jilid ${teacher.displayName}`" @click="openJilid(teacher)">Atur</button>
+          </div>
+          <div v-if="scopeOf(teacher).source === 'admin'" class="jilid-tags">
+            <span v-for="id in scopeOf(teacher).classIds" :key="id" class="jilid-tag">{{ levelName(id) }}</span>
+          </div>
+          <p v-else-if="scopeOf(teacher).source === 'kbm'" class="jilid-hint">
+            Belum ditetapkan · dari riwayat KBM: {{ scopeOf(teacher).classIds.map(levelName).join(', ') }}
+          </p>
+          <p v-else-if="scopesLoaded" class="jilid-hint is-warn">Belum ditetapkan dan belum ada riwayat KBM</p>
+          <p v-if="scopeOf(teacher).unassignedTaught?.length" class="jilid-hint is-warn">
+            Ada KBM di {{ scopeOf(teacher).unassignedTaught.map(levelName).join(', ') }} tapi belum ditetapkan
+          </p>
+        </div>
         <div class="teacher-actions">
           <button class="btn btn-sm btn-secondary" @click="openEditModal(teacher)">Edit Info</button>
           <button class="btn btn-sm btn-danger" @click="confirmDelete(teacher)">Hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jilid diampu -->
+    <div v-if="jilidFor" class="modal-overlay" @click.self="jilidFor = null">
+      <div class="modal jilid-modal glass-card animate-fadeInUp" role="dialog" aria-modal="true" aria-labelledby="jilid-title">
+        <div class="modal-header">
+          <h3 id="jilid-title">Jilid yang diampu</h3>
+          <p class="modal-subtitle">{{ jilidFor.displayName }}. Guru hanya bisa membuka Data Wali Santri dari jilid ini.</p>
+        </div>
+        <div class="jilid-choices" role="group" aria-label="Pilih jilid">
+          <button v-for="c in CLASS_OPTIONS" :key="c.value" type="button" class="jilid-choice"
+            :aria-pressed="jilidPick.includes(c.value)" @click="toggleJilid(c.value)">{{ c.label }}</button>
+        </div>
+        <div v-if="scopeOf(jilidFor).suggested?.length" class="jilid-suggest">
+          <span>Riwayat KBM 60 hari: {{ scopeOf(jilidFor).suggested.map((x) => `${levelName(x.classId)} (${x.count}x)`).join(', ') }}</span>
+          <button type="button" class="btn btn-sm btn-secondary" @click="useSuggestion">Pakai usulan</button>
+        </div>
+        <p v-else class="jilid-hint">Belum ada riwayat KBM dalam 60 hari terakhir.</p>
+        <p class="jilid-hint">Bila tidak ada yang dipilih, sistem memakai riwayat KBM guru ini.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" :disabled="saving" @click="jilidFor = null">Batal</button>
+          <button type="button" class="btn btn-primary" :disabled="saving" @click="saveJilid">{{ saving ? 'Menyimpan...' : 'Simpan' }}</button>
         </div>
       </div>
     </div>
@@ -113,7 +153,14 @@ import { useToast, useConfirm } from '@/composables/useToast'
 const { success, error: showError, warning } = useToast()
 const { confirm } = useConfirm()
 
+const CLASS_OPTIONS = [...[1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: `Jilid ${n}` })), { value: '7', label: 'Marhalah' }]
+const levelName = (id) => (String(id) === '7' ? 'Marhalah' : `Jilid ${id}`)
+
 const teachers = ref([])
+const scopes = ref({})
+const scopesLoaded = ref(false)
+const jilidFor = ref(null)
+const jilidPick = ref([])
 const loading = ref(true)
 const showModal = ref(false)
 const saving = ref(false)
@@ -144,6 +191,42 @@ const fetchTeachers = async () => {
     console.error('Failed to fetch guru users:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// Jilid diampu: what the admin set, else the KBM history (the same rule the server applies)
+const fetchScopes = async () => {
+  try {
+    const { data } = await api.get('/guru-classes', { cache: false })
+    scopes.value = Object.fromEntries((data || []).map((g) => [g.guruId, g]))
+  } catch (error) {
+    console.error('Failed to fetch guru classes:', error)
+  } finally {
+    scopesLoaded.value = true
+  }
+}
+const scopeOf = (teacher) => scopes.value[teacher.id] || { classIds: [], source: scopesLoaded.value ? 'none' : '', suggested: [], unassignedTaught: [] }
+const openJilid = (teacher) => {
+  jilidFor.value = teacher
+  jilidPick.value = scopeOf(teacher).source === 'admin' ? [...scopeOf(teacher).classIds] : []
+}
+const toggleJilid = (id) => {
+  jilidPick.value = jilidPick.value.includes(id) ? jilidPick.value.filter((x) => x !== id) : [...jilidPick.value, id]
+}
+const useSuggestion = () => {
+  jilidPick.value = [...new Set(scopeOf(jilidFor.value).suggested.map((x) => x.classId))]
+}
+const saveJilid = async () => {
+  saving.value = true
+  try {
+    await api.put(`/guru-classes/${jilidFor.value.id}`, { classIds: jilidPick.value })
+    success(jilidPick.value.length ? 'Jilid pengajar disimpan' : 'Jilid dikosongkan, memakai riwayat KBM')
+    jilidFor.value = null
+    await fetchScopes()
+  } catch (error) {
+    showError(error.response?.data?.error || 'Gagal menyimpan jilid')
+  } finally {
+    saving.value = false
   }
 }
 
@@ -214,6 +297,7 @@ const confirmDelete = async (teacher) => {
 
 onMounted(() => {
   fetchTeachers()
+  fetchScopes()
 })
 </script>
 
@@ -335,8 +419,128 @@ onMounted(() => {
   margin-bottom: var(--space-md);
 }
 
+.jilid-box {
+  margin: 0 0 var(--space-md);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4f8f5;
+  text-align: left;
+}
+
+.jilid-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.jilid-edit {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(10, 92, 64, 0.35);
+  background: #fff;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jilid-edit:hover {
+  background: #e3f1ea;
+}
+
+.jilid-edit:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.jilid-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-600);
+}
+
+.jilid-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.jilid-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e3f1ea;
+  color: #0a5c40;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.jilid-hint {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+}
+
+.jilid-hint.is-warn {
+  color: #92400e;
+}
+
+.modal.jilid-modal {
+  max-width: 520px;
+}
+
+.jilid-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.jilid-choice {
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(11, 59, 42, 0.2);
+  background: #fff;
+  color: #0b3b2a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.jilid-choice[aria-pressed="true"] {
+  border-color: #0a5c40;
+  background: #e3f1ea;
+  color: #0a5c40;
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.12);
+}
+
+.jilid-choice:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.jilid-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  color: #5b3a06;
+  font-size: 0.85rem;
+}
+
 .teacher-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   justify-content: center;
 }

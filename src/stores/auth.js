@@ -85,6 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
     const isAdmin = computed(() => user.value?.role === 'admin')
     const isGuru = computed(() => user.value?.role === 'guru')
     const isSantri = computed(() => user.value?.role === 'santri')
+    const isWali = computed(() => user.value?.role === 'wali')
 
     // Set token to API headers
     const setToken = (newToken) => {
@@ -196,26 +197,21 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    // Login dengan Google (untuk Santri) - Firebase loaded lazily
-    async function loginWithGoogle() {
+    // Wali santri: the 6-digit code the TPQ WhatsApp bot sent to their number
+    async function loginWithWaliOtp(phone, code) {
         loading.value = true
         error.value = null
         try {
-            const { auth: firebaseAuth, googleProvider: provider } = await getFirebase()
-            const { signInWithPopup } = await import('firebase/auth')
-
-            const result = await signInWithPopup(firebaseAuth, provider)
-            const fbToken = await result.user.getIdToken()
-            api.defaults.headers.common['Authorization'] = `Bearer ${fbToken}`
-            const { data } = await api.get('/users/me')
-            user.value = data
-            firebaseUser.value = result.user
+            const { data } = await api.post('/wali/auth/verify-otp', { phone, code })
+            setToken(data.token)
+            user.value = data.user
             authChecked.value = true
+            sessionVerified = true
             return { success: true }
         } catch (err) {
-            console.error('Login error:', err)
-            error.value = err.code || err.message
-            return { success: false, error: { code: err.code, message: err.message } }
+            const message = err.response?.data?.error || 'Gagal masuk. Coba lagi.'
+            error.value = message
+            return { success: false, error: message }
         } finally {
             loading.value = false
         }
@@ -254,10 +250,11 @@ export const useAuthStore = defineStore('auth', () => {
         isAdmin,
         isGuru,
         isSantri,
+        isWali,
         checkAuth,
         revalidateSession,
         loginWithCredentials,
-        loginWithGoogle,
+        loginWithWaliOtp,
         logout,
         refreshToken
     }

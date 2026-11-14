@@ -7,8 +7,8 @@
         <!-- The mihrab dome carries the brand -->
         <div class="login-dome">
           <img :src="logoUrl" alt="TPQ AMANAH" width="64" height="64" class="w-16 h-16" />
-          <h1 class="mt-3 text-2xl font-extrabold tracking-tight lp-ink">Login Dashboard</h1>
-          <p class="mt-1 text-sm lp-body">Masuk untuk mengakses dashboard</p>
+          <h1 class="mt-3 text-2xl font-extrabold tracking-tight lp-ink">{{ activeTab === 'wali' ? 'Masuk Wali Santri' : 'Login Dashboard' }}</h1>
+          <p class="mt-1 text-sm lp-body">{{ activeTab === 'wali' ? 'Untuk orang tua / wali santri TPQ Amanah' : 'Masuk untuk mengakses dashboard' }}</p>
         </div>
 
         <div class="px-6 pb-8 sm:px-9">
@@ -38,15 +38,15 @@
               Admin / Guru
             </button>
             <button
-              id="tab-google"
+              id="tab-wali"
               type="button"
               role="tab"
-              :aria-selected="activeTab === 'google'"
-              aria-controls="panel-google"
-              @click="activeTab = 'google'"
-              :class="{ 'is-active': activeTab === 'google' }"
+              :aria-selected="activeTab === 'wali'"
+              aria-controls="panel-wali"
+              @click="activeTab = 'wali'"
+              :class="{ 'is-active': activeTab === 'wali' }"
             >
-              Santri
+              Wali Santri
             </button>
           </div>
 
@@ -107,39 +107,48 @@
             </button>
           </form>
 
-          <!-- Google Login - Santri -->
-          <div
-            v-else
-            id="panel-google"
-            role="tabpanel"
-            aria-labelledby="tab-google"
-            class="mt-6 space-y-5"
-          >
-            <p class="text-sm font-medium text-center lp-body">
-              Santri gunakan akun Google untuk login
-            </p>
-
-            <button
-              type="button"
-              @click="handleGoogleLogin"
-              class="w-full google-login-btn"
-              :disabled="loading"
-            >
-              <div class="google-btn-inner">
-                <div class="google-icon-wrapper">
-                  <svg v-if="!loading" class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true"> <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /> <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /> <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /> <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /> </svg>
-                  <svg v-else class="w-5 h-5 text-gray-600 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /> </svg>
-                </div>
-                <span class="google-btn-text">{{
-                  loading ? "Memproses..." : "Masuk dengan Google"
-                }}</span>
-                <svg class="w-5 h-5 text-amber-700 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /> </svg>
+          <!-- Wali santri: a code sent to their WhatsApp -->
+          <div v-else id="panel-wali" role="tabpanel" aria-labelledby="tab-wali" class="mt-6">
+            <!-- step 1: the number -->
+            <form v-if="waliStep === 'phone'" class="space-y-4" @submit.prevent="requestWaliCode">
+              <p class="text-sm text-center lp-body">
+                Masuk dengan nomor WhatsApp Bapak/Ibu. Kode masuk akan dikirim lewat WhatsApp TPQ Amanah.
+              </p>
+              <div>
+                <label for="wali-phone" class="login-label">Nomor WhatsApp</label>
+                <input id="wali-phone" v-model="waliPhone" type="tel" inputmode="tel" autocomplete="tel"
+                  class="login-input wali-phone-input" placeholder="0812 3456 7890" required />
               </div>
-            </button>
+              <button type="submit" class="w-full lp-btn-gold" :disabled="waliBusy || !waliPhone.trim()">
+                {{ waliBusy ? 'Mengirim kode…' : 'Kirim kode lewat WhatsApp' }}
+              </button>
+            </form>
 
-            <p class="text-xs text-center lp-body">
-              Login menggunakan akun Google yang terdaftar di TPQ
-            </p>
+            <!-- step 2: the code -->
+            <form v-else class="space-y-4" @submit.prevent="verifyWaliCode">
+              <p class="text-sm text-center lp-body">
+                Kode 6 angka dikirim ke <strong class="lp-ink">{{ waliPhoneShown }}</strong>
+                <button type="button" class="wali-link" @click="changeWaliPhone">Ubah</button>
+              </p>
+              <p class="wali-delivery" :class="`is-${waliDelivery}`" role="status" aria-live="polite">
+                {{ waliDeliveryText }}
+              </p>
+              <div>
+                <label for="wali-code" class="login-label">Kode dari WhatsApp</label>
+                <input id="wali-code" ref="waliCodeInput" v-model="waliCode" type="text" inputmode="numeric"
+                  autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" class="login-input wali-code-input"
+                  placeholder="••••••" @input="onWaliCodeInput" />
+              </div>
+              <button type="submit" class="w-full lp-btn-gold" :disabled="loading || waliCode.length !== 6">
+                {{ loading ? 'Memeriksa…' : 'Masuk' }}
+              </button>
+              <p class="text-xs text-center lp-body">
+                Belum menerima kode?
+                <button type="button" class="wali-link" :disabled="waliResendIn > 0 || waliBusy" @click="requestWaliCode">
+                  {{ waliResendIn > 0 ? `Kirim ulang (${waliResendIn} dtk)` : 'Kirim ulang' }}
+                </button>
+              </p>
+            </form>
           </div>
 
           <!-- Error Message -->
@@ -169,7 +178,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import api from "@/services/api";
+import { normalizePhone, displayPhone } from "@/utils/santriProfile";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { prefetchWhenIdle } from "@/utils/prefetch";
@@ -190,7 +201,8 @@ onMounted(() => {
   ]);
 });
 
-const activeTab = ref("credentials");
+// ?as=wali (a link from the wali portal or a WhatsApp message) opens the wali tab
+const activeTab = ref(route.query.as === "wali" ? "wali" : "credentials");
 const username = ref("");
 const password = ref("");
 const showPassword = ref(false);
@@ -228,19 +240,103 @@ const handleCredentialsLogin = async () => {
   }
 };
 
-// Login dengan Google
-const handleGoogleLogin = async () => {
-  error.value = null;
-  const result = await authStore.loginWithGoogle();
+/* ---- wali santri: WhatsApp code ---- */
+const waliStep = ref("phone");
+const waliPhone = ref("");
+const waliCode = ref("");
+const waliBusy = ref(false);
+const waliResendIn = ref(0);
+const waliDelivery = ref("pending");
+const waliCodeInput = ref(null);
+let resendTimer = null;
+let statusTimer = null;
 
-  if (result.success) {
-    router.push(getSafeRedirect());
-  } else {
-    // Ignore popup-closed error
-    if (result.error?.code !== "auth/popup-closed-by-user") {
-      error.value = "Login gagal. Silakan coba lagi.";
+const waliPhoneShown = computed(() => displayPhone(normalizePhone(waliPhone.value)));
+const waliDeliveryText = computed(() => ({
+  pending: "Mengirim kode ke WhatsApp…",
+  sending: "Mengirim kode ke WhatsApp…",
+  sent: "Kode sudah terkirim. Buka WhatsApp Anda.",
+  failed: "Kode gagal terkirim. Coba kirim ulang sebentar lagi.",
+  slow: "Kode belum terkirim. Bila tidak sampai dalam 1 menit, hubungi admin TPQ.",
+  expired: "Kode sudah kedaluwarsa. Kirim ulang kode.",
+}[waliDelivery.value] || ""));
+
+function stopTimers() {
+  clearInterval(resendTimer);
+  clearTimeout(statusTimer);
+}
+onBeforeUnmount(stopTimers);
+
+function startResendCountdown(seconds) {
+  clearInterval(resendTimer);
+  waliResendIn.value = seconds;
+  resendTimer = setInterval(() => {
+    waliResendIn.value = Math.max(0, waliResendIn.value - 1);
+    if (!waliResendIn.value) clearInterval(resendTimer);
+  }, 1000);
+}
+
+// Follow the code on its way (bot online?) for about a minute.
+function watchDelivery(startedAt = Date.now()) {
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(async () => {
+    try {
+      const { data } = await api.get("/wali/auth/otp-status", { params: { phone: waliPhone.value }, cache: false });
+      if (data.status === "sent" || data.status === "failed" || data.status === "expired") {
+        waliDelivery.value = data.status;
+        return;
+      }
+    } catch {
+      /* keep waiting */
     }
+    if (Date.now() - startedAt > 30000) waliDelivery.value = "slow";
+    if (Date.now() - startedAt < 90000) watchDelivery(startedAt);
+  }, 2500);
+}
+
+const requestWaliCode = async () => {
+  error.value = null;
+  waliBusy.value = true;
+  try {
+    const { data } = await api.post("/wali/auth/request-otp", { phone: waliPhone.value });
+    waliStep.value = "code";
+    waliCode.value = "";
+    waliDelivery.value = "pending";
+    startResendCountdown(data.resendInSeconds || 60);
+    watchDelivery();
+    await nextTick();
+    waliCodeInput.value?.focus();
+  } catch (err) {
+    error.value = err.response?.data?.error || "Gagal mengirim kode. Coba lagi.";
+    if (err.response?.data?.retryAfter && waliStep.value === "code") startResendCountdown(Math.min(err.response.data.retryAfter, 3600));
+  } finally {
+    waliBusy.value = false;
   }
+};
+
+const verifyWaliCode = async () => {
+  error.value = null;
+  const result = await authStore.loginWithWaliOtp(waliPhone.value, waliCode.value);
+  if (result.success) {
+    stopTimers();
+    const redirect = getSafeRedirect();
+    router.push(redirect.startsWith("/wali") ? redirect : "/wali");
+  } else {
+    error.value = result.error;
+  }
+};
+
+// digits only; six digits sign in by themselves
+const onWaliCodeInput = () => {
+  waliCode.value = waliCode.value.replace(/\D/g, "").slice(0, 6);
+  if (waliCode.value.length === 6 && !loading.value) verifyWaliCode();
+};
+
+const changeWaliPhone = () => {
+  stopTimers();
+  waliStep.value = "phone";
+  waliCode.value = "";
+  error.value = null;
 };
 </script>
 
@@ -383,61 +479,6 @@ const handleGoogleLogin = async () => {
   transform: none;
 }
 
-.google-login-btn {
-  width: 100%;
-  border: 1px solid rgba(180, 83, 9, 0.32);
-  border-radius: 0.9rem;
-  padding: 3px;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
-}
-
-.google-login-btn:hover:not(:disabled) {
-  border-color: #047857;
-  box-shadow: 0 14px 28px -16px rgba(5, 61, 44, 0.55);
-  transform: translateY(-1px);
-}
-
-.google-login-btn:focus-visible {
-  outline: 2px solid var(--lp-gold-deep);
-  outline-offset: 3px;
-}
-
-.google-login-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.google-btn-inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 16px;
-  border-radius: 0.7rem;
-  background: #fff;
-}
-
-.google-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: var(--lp-ivory);
-  box-shadow: 0 0 0 1px rgba(180, 83, 9, 0.18);
-}
-
-.google-btn-text {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--lp-ink);
-  text-align: left;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .login-rise {
     animation: login-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -453,5 +494,60 @@ const handleGoogleLogin = async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* wali santri tab */
+.wali-phone-input {
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.wali-code-input {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  padding-left: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wali-link {
+  margin-left: 4px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: #065f46;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.wali-link:disabled {
+  color: #7c8a83;
+  text-decoration: none;
+  cursor: default;
+}
+
+.wali-delivery {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  text-align: center;
+  background: #f3f4f1;
+  color: #3b4a42;
+}
+
+.wali-delivery.is-sent {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.wali-delivery.is-failed,
+.wali-delivery.is-slow,
+.wali-delivery.is-expired {
+  background: #fff7ed;
+  color: #7c3a0d;
 }
 </style>

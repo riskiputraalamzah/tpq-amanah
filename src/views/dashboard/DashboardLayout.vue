@@ -89,6 +89,14 @@
             </svg>
             Kelola Santri
           </router-link>
+          <router-link to="/dashboard/wali-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/wali-santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+              <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+            </svg>
+            Data Wali Santri
+          </router-link>
 
           <!-- Akademik & Laporan -->
           <div class="sidebar-section">Akademik & Laporan</div>
@@ -216,6 +224,14 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
             Data Santri
+          </router-link>
+          <router-link to="/dashboard/wali-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/wali-santri') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" />
+              <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" />
+            </svg>
+            Data Wali Santri
           </router-link>
 
           <!-- Akademik & Laporan Bulanan -->

@@ -127,6 +127,14 @@
             {{ previewLoading ? "Menyiapkan..." : "Buat Nomor Induk" }}
           </button>
         </div>
+        <!-- a guru sees the santri of the jilid they look after -->
+        <p v-if="scope && !adminMode && scope.source === 'none'" class="scope-note is-warn" role="status">
+          Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
+        </p>
+        <p v-else-if="scope && !adminMode" class="scope-note">
+          Menampilkan santri <strong>{{ scopeLabel }}</strong>.
+          <template v-if="scope.source === 'kbm'"> Jilid diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan admin.</template>
+        </p>
         <div class="filters">
           <input
             v-model="search"
@@ -134,9 +142,9 @@
             placeholder="Cari nama atau nomor induk..."
           />
           <select v-model="levelFilter" class="form-input filter-select">
-            <option value="">Semua Jilid / Marhalah</option>
-            <option value="__none">Belum ditentukan</option>
-            <option v-for="c in classes" :key="c.id" :value="String(c.id)">
+            <option value="">{{ adminMode ? "Semua Jilid / Marhalah" : "Semua jilid saya" }}</option>
+            <option v-if="adminMode" value="__none">Belum ditentukan</option>
+            <option v-for="c in filterClasses" :key="c.id" :value="String(c.id)">
               {{ c.name }}
             </option>
           </select>
@@ -732,6 +740,30 @@ const marhalahList = computed(() =>
   ),
 );
 
+// Guru: only the jilid they look after (the admin sets it in Kelola Pengajar, else their KBM history).
+const scope = ref(null);
+const normLevel = (v) => {
+  const s = String(v ?? "").trim().toLowerCase();
+  return ["7", "8", "9", "marhalah"].includes(s) ? "7" : s;
+};
+const scopeIds = computed(() => (props.adminMode || !scope.value ? null : scope.value.classIds || []));
+const scopedSantri = computed(() =>
+  scopeIds.value ? santri.value.filter((row) => scopeIds.value.includes(normLevel(row.currentClassId))) : santri.value,
+);
+const filterClasses = computed(() =>
+  scopeIds.value ? classes.value.filter((c) => scopeIds.value.includes(normLevel(c.id))) : classes.value,
+);
+const scopeLabel = computed(() => filterClasses.value.map((c) => c.name).join(", "));
+const loadScope = async () => {
+  if (props.adminMode) return;
+  try {
+    const { data } = await api.get("/guru-classes/me", { cache: false });
+    scope.value = data;
+  } catch {
+    scope.value = { classIds: [], source: "none" };
+  }
+};
+
 const levelName = (classId) => {
   if (!classId) return "Belum ditentukan";
   const found = classes.value.find((c) => String(c.id) === String(classId));
@@ -741,7 +773,7 @@ const levelName = (classId) => {
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase();
   const qDigits = q.replace(/\D/g, "");
-  return santri.value.filter((row) => {
+  return scopedSantri.value.filter((row) => {
     if (q) {
       const nomorInduk = String(row.nomorInduk || "");
       const matches =
@@ -792,6 +824,7 @@ const fetchData = async () => {
       api.get("/santri"),
       api.get("/classes"),
       loadNspq(),
+      loadScope(),
     ]);
     santri.value = santriRes.data;
     classes.value = classesRes.data;
@@ -1307,6 +1340,22 @@ onMounted(fetchData);
   font-size: 0.88rem;
   line-height: 1.45;
   color: var(--gray-700);
+}
+
+.scope-note {
+  margin: var(--space-md) 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  background: #eef6f1;
+  color: #0a4a34;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.scope-note.is-warn {
+  background: #fffbeb;
+  color: #5b3a06;
+  border: 1px solid #f3d58b;
 }
 
 .ni-banner {

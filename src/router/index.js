@@ -86,6 +86,12 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "wali-santri",
+        name: "WaliSantriAdmin",
+        component: () => import("../views/dashboard/admin/AdminWaliView.vue"),
+        meta: { role: ["admin", "guru"] },
+      },
+      {
         path: "santri",
         name: "SantriManagement",
         component: () =>
@@ -249,6 +255,17 @@ const routes = [
       },
     ],
   },
+  // Wali santri portal (login with a WhatsApp code). Mobile-first, separate from the staff dashboard.
+  {
+    path: "/wali",
+    component: () => import("../views/wali/WaliLayout.vue"),
+    meta: { requiresAuth: true, wali: true },
+    children: [
+      { path: "", name: "WaliHome", component: () => import("../views/wali/WaliHome.vue") },
+      { path: "tautkan", name: "WaliLink", component: () => import("../views/wali/WaliLink.vue") },
+      { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue") },
+    ],
+  },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
@@ -267,6 +284,9 @@ const router = createRouter({
     }
   },
 });
+
+// Where a signed-in person belongs: wali santri have their own portal, staff the dashboard.
+const homeFor = (user) => (user?.role === "wali" ? "/wali" : "/dashboard");
 
 function getSafeRedirect(redirect, fallback = "/dashboard") {
   if (typeof redirect !== "string") return fallback;
@@ -318,10 +338,19 @@ router.beforeEach(async (to, from, next) => {
     revalidateCachedSession(authStore);
   }
 
+  const isWali = authStore.user?.role === "wali";
+  const inWaliPortal = to.matched.some((r) => r.meta.wali);
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next({ name: "Login", query: { redirect: to.fullPath } });
+    // a wali coming from a WhatsApp link: open the login on the wali tab
+    const query = { redirect: to.fullPath };
+    if (inWaliPortal) query.as = "wali";
+    next({ name: "Login", query });
   } else if (to.name === "Login" && authStore.isAuthenticated) {
-    next(getSafeRedirect(to.query.redirect));
+    const target = getSafeRedirect(to.query.redirect, homeFor(authStore.user));
+    next(isWali && !target.startsWith("/wali") ? "/wali" : !isWali && target.startsWith("/wali") ? "/dashboard" : target);
+  } else if (authStore.isAuthenticated && to.meta.requiresAuth && isWali !== inWaliPortal) {
+    // a wali never sees the staff dashboard, staff never the wali portal
+    next(homeFor(authStore.user));
   } else if (to.meta.role) {
     const requiredRoles = Array.isArray(to.meta.role)
       ? to.meta.role
