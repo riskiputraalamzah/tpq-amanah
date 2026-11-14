@@ -1,5 +1,5 @@
 <template>
-  <div class="wv">
+  <div class="wv" :class="{ 'is-guru': !isAdmin }">
     <header class="wv-head">
       <div>
         <h1>Data Wali Santri</h1>
@@ -59,7 +59,10 @@
           @click="statusFilter = f.value">{{ f.label }} <span>{{ countFor(f.value) }}</span></button>
       </div>
 
-      <p v-if="!visibleRows.length" class="wv-empty">Tidak ada santri yang cocok.</p>
+      <p v-if="statusFilter === 'remind' && visibleRows.length" class="wv-note">
+        Wali sudah tertaut, tapi datanya belum diisi, belum selesai, atau perlu diperbaiki. Tekan <strong>Ingatkan</strong> untuk menjapri wali dari WhatsApp Antum.
+      </p>
+      <p v-if="!visibleRows.length" class="wv-empty">{{ statusFilter === 'remind' ? 'Tidak ada wali yang perlu diingatkan.' : 'Tidak ada santri yang cocok.' }}</p>
       <ul v-else class="wv-list">
         <li v-for="r in visibleRows" :key="r.santriId" class="wv-row">
           <div class="wv-row-main">
@@ -69,6 +72,7 @@
               Wali: <template v-for="(g, i) in r.guardians" :key="g.waliId">{{ i ? ', ' : '' }}{{ relationLabel(g.relation) }} {{ displayPhone(g.phone) }}</template>
             </span>
             <span v-else class="wv-sub is-muted">Belum ada wali tertaut</span>
+            <span v-if="r.lastReminder" class="wv-sub wv-reminded">{{ reminderText(r.lastReminder) }}</span>
           </div>
           <div class="wv-row-side">
             <span class="wv-pill" :class="`is-${(STATUS[r.profileStatus] || STATUS.empty).tone}`">
@@ -78,6 +82,9 @@
             <div class="wv-actions">
               <button v-if="r.guardians.length < 2" type="button" class="wv-btn wv-btn-ghost" @click="makeCode(r)">
                 <LineIcon name="link" :size="16" /> Kode
+              </button>
+              <button v-if="needsReminder(r)" type="button" class="wv-btn wv-btn-ghost wv-btn-remind" @click="openRemind(r)">
+                Ingatkan
               </button>
               <button v-if="r.profileStatus !== 'empty'" type="button" class="wv-btn wv-btn-primary" @click="openReview(r)">
                 Tinjau
@@ -111,6 +118,32 @@
         </div>
       </article>
     </template>
+
+    <!-- reminder to a linked wali, sent from the teacher's own WhatsApp -->
+    <Teleport to="body">
+      <div v-if="remind" class="wv-overlay" @click.self="remind = null">
+        <section class="wv-sheet" role="dialog" aria-modal="true" aria-labelledby="remind-title">
+          <header class="wv-sheet-head">
+            <div>
+              <h3 id="remind-title">Ingatkan wali {{ remind.name }}</h3>
+              <span class="wv-pill" :class="`is-${(STATUS[remind.profileStatus] || STATUS.empty).tone}`">{{ (STATUS[remind.profileStatus] || STATUS.empty).label }}</span>
+            </div>
+            <button type="button" class="wv-close" aria-label="Tutup" @click="remind = null"><LineIcon name="x" :size="18" /></button>
+          </header>
+          <div class="wv-sheet-body">
+            <p v-if="remind.lastReminder" class="wv-note is-warn">{{ reminderText(remind.lastReminder) }}. Beri jeda beberapa hari sebelum mengingatkan lagi.</p>
+            <p class="wv-label">Pesan</p>
+            <p class="wv-message">{{ remindMessage }}</p>
+            <a v-for="g in remind.guardians" :key="g.waliId" class="wv-btn wv-btn-wa" :href="waTo(g.phone, remindMessage)"
+              target="_blank" rel="noopener" @click="logReminder(remind)">
+              Kirim ke {{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}
+            </a>
+            <button type="button" class="wv-btn wv-btn-ghost" @click="copyText(remindMessage)">{{ copied ? 'Pesan tersalin ✓' : 'Salin pesan' }}</button>
+            <p class="wv-sub wv-center">Pesan terkirim dari WhatsApp di HP Antum, langsung ke wali.</p>
+          </div>
+        </section>
+      </div>
+    </Teleport>
 
     <!-- code for one santri -->
     <Teleport to="body">
@@ -231,7 +264,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
-import { STATUS, STEPS, RELATIONS, getPath, displayPhone, linkCodeMessage } from '@/utils/santriProfile'
+import { STATUS, STEPS, RELATIONS, REMIND_STATUSES, getPath, displayPhone, linkCodeMessage, reminderMessage } from '@/utils/santriProfile'
 import { loadPdfLibs } from '@/utils/pdf'
 import { renderSlips } from '@/utils/waliSlips'
 import { loadExcelLib, downloadWorkbook } from '@/utils/excel'
@@ -241,6 +274,7 @@ const CLASS_OPTIONS = [...[1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), lab
 const STATUS_FILTERS = [
   { value: 'all', label: 'Semua' },
   { value: 'unlinked', label: 'Belum tertaut' },
+  { value: 'remind', label: 'Perlu diingatkan' },
   { value: 'tocheck', label: 'Menunggu dicek' },
   { value: 'needs_fix', label: 'Perlu diperbaiki' },
   { value: 'verified', label: 'Terverifikasi' },
@@ -272,6 +306,7 @@ const fixNote = ref('')
 const syncName = ref(true)
 const reviewError = ref('')
 const scope = ref(null)
+const remind = ref(null)
 const exporting = ref(false)
 
 // Admin: every jilid. Guru: the jilid they look after (from the server, which enforces the same rule).
@@ -305,6 +340,7 @@ const shownValue = (f, v) => {
 const matchStatus = (r, f) => {
   if (f === 'all') return true
   if (f === 'unlinked') return r.guardians.length === 0
+  if (f === 'remind') return needsReminder(r)
   if (f === 'tocheck') return r.profileStatus === 'submitted' || r.hasPendingIdentity
   return r.profileStatus === f
 }
@@ -371,6 +407,50 @@ async function exportExcel() {
     showError(err.response?.data?.error || 'Gagal mengekspor Excel. Coba lagi.')
   } finally {
     exporting.value = false
+  }
+}
+
+/* ---- reminders: the teacher japri's the wali from their own WhatsApp; the page only records that it happened */
+function needsReminder(r) {
+  return r.guardians.length > 0 && REMIND_STATUSES.includes(r.profileStatus)
+}
+function reminderText(rem) {
+  const at = rem?.at?._seconds ? new Date(rem.at._seconds * 1000) : rem?.at ? new Date(rem.at) : null
+  if (!at || Number.isNaN(at.getTime())) return ''
+  const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(at).setHours(0, 0, 0, 0)) / 86400000)
+  const when = days <= 0 ? 'hari ini' : days === 1 ? 'kemarin' : `${days} hari lalu`
+  return `Diingatkan ${when}${rem.byName ? ` oleh ${rem.byName}` : ''}${rem.count > 1 ? ` (${rem.count}x)` : ''}`
+}
+const remindMessage = computed(() => remind.value
+  ? reminderMessage({
+    santriName: remind.value.name,
+    status: remind.value.profileStatus,
+    note: remind.value.adminNote,
+    siteUrl,
+    senderName: authStore.user?.displayName || '',
+  })
+  : '')
+const waTo = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
+function openRemind(r) {
+  copied.value = false
+  remind.value = r
+}
+async function logReminder(r) {
+  // the link opens WhatsApp by itself; this only records it
+  try {
+    const { data } = await api.post('/wali/admin/reminders', { santriId: r.santriId })
+    const row = rows.value.find((x) => x.santriId === r.santriId)
+    if (row) row.lastReminder = data.lastReminder
+  } catch {
+    /* not recorded: the message itself still went out */
+  }
+}
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.value = true
+  } catch {
+    showError('Tidak bisa menyalin otomatis. Tekan lama pada pesan untuk menyalin.')
   }
 }
 
@@ -511,6 +591,21 @@ onMounted(load)
 </script>
 
 <style scoped>
+/* on a phone the admin's menu button floats top-left (like the other admin pages); the guru layout has its own top bar */
+.wv {
+  padding-top: 60px;
+}
+
+.wv.is-guru {
+  padding-top: 0;
+}
+
+@media (min-width: 1024px) {
+  .wv {
+    padding-top: 0;
+  }
+}
+
 .wv-head {
   display: flex;
   align-items: flex-start;
@@ -820,6 +915,27 @@ textarea.wv-input {
 .wv-request-head strong {
   color: var(--lp-ink, #0b3b2a);
   font-size: 1rem;
+}
+
+.wv-message {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f4f8f5;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+  color: var(--lp-ink, #0b3b2a);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.wv-reminded {
+  color: #92400e;
+}
+
+.wv-sheet-body .wv-btn-wa + .wv-btn-wa {
+  margin-top: 8px;
 }
 
 .wv-quote {

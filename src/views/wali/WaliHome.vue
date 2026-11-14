@@ -4,7 +4,7 @@
 
     <template v-else>
       <h1 class="w-title">Assalamu'alaikum{{ wali?.name ? `, ${wali.name}` : '' }}</h1>
-      <p class="w-lead">Lengkapi data ananda agar data di TPQ lengkap dan benar, dan TPQ mudah menghubungi Bapak/Ibu.</p>
+      <p class="w-lead">Lihat kehadiran dan materi ananda, dan lengkapi datanya agar TPQ mudah menghubungi Bapak/Ibu.</p>
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
@@ -47,6 +47,15 @@
           </p>
           <p v-else-if="s.hasPendingIdentity" class="w-note is-warn child-note">Perubahan identitas sedang dicek admin.</p>
 
+          <!-- this month's attendance; tap for the meetings and material -->
+          <router-link :to="`/wali/santri/${s.santriId}/progres`" class="month-strip" :aria-label="`Kehadiran dan materi ${s.name}`">
+            <span class="month-strip-title">Kehadiran {{ monthName(s.thisMonth?.month) }}</span>
+            <span class="month-strip-counts">
+              <span v-for="t in TILES" :key="t.key" :class="`is-${t.key}`"><strong>{{ s.thisMonth?.[t.key] ?? 0 }}</strong> {{ t.label }}</span>
+            </span>
+            <span class="month-strip-more">Lihat kehadiran &amp; materi ›</span>
+          </router-link>
+
           <router-link :to="`/wali/santri/${s.santriId}`" class="w-btn" :class="actionClass(s)">
             {{ actionLabel(s) }}
           </router-link>
@@ -84,6 +93,17 @@ const requests = ref([])
 const nameInput = ref('')
 const savingName = ref(false)
 
+const TILES = [
+  { key: 'hadir', label: 'hadir' },
+  { key: 'izin', label: 'izin' },
+  { key: 'sakit', label: 'sakit' },
+  { key: 'alfa', label: 'alfa' },
+]
+const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+const monthName = (ym) => {
+  const m = Number(String(ym || '').split('-')[1])
+  return m ? MONTHS[m - 1] : 'bulan ini'
+}
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
 const initials = (name) => String(name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
 const status = (s) => STATUS[s.profileStatus] || STATUS.empty
@@ -177,6 +197,53 @@ onMounted(load)
 
 .child-note {
   margin: 0;
+}
+
+.month-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f4f8f5;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+  color: #0b3b2a;
+  text-decoration: none;
+}
+
+.month-strip:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.month-strip-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #5b6b62;
+}
+
+.month-strip-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.9rem;
+  color: #475a50;
+}
+
+.month-strip-counts strong {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-strip-counts .is-hadir strong { color: #0a5c40; }
+.month-strip-counts .is-izin strong { color: #1d4f8a; }
+.month-strip-counts .is-sakit strong { color: #7c3a0d; }
+.month-strip-counts .is-alfa strong { color: #8e1b12; }
+
+.month-strip-more {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0a5c40;
 }
 
 .add-child {

@@ -264,6 +264,7 @@ const routes = [
       { path: "", name: "WaliHome", component: () => import("../views/wali/WaliHome.vue") },
       { path: "tautkan", name: "WaliLink", component: () => import("../views/wali/WaliLink.vue") },
       { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue") },
+      { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
     ],
   },
   {

@@ -159,6 +159,40 @@ export function formatLinkCode(raw) {
 }
 
 // The private WhatsApp message a teacher sends to one parent (never to a group).
+// Statuses where the wali still has something to do: the teacher can remind them.
+export const REMIND_STATUSES = ['empty', 'draft', 'needs_fix']
+
+// The teacher's private WA reminder to a linked wali, worded for where they are.
+export function reminderMessage({ santriName, status, note = '', siteUrl, senderName = '' }) {
+  const link = `${siteUrl}/wali`
+  const body = {
+    empty: [
+      `TPQ Amanah sedang memperbarui data santri. Data ananda belum diisi. Mohon Bapak/Ibu mengisinya, cukup sekitar 5 menit:`,
+      link,
+      'Masuk dengan nomor WhatsApp ini, lalu pilih nama ananda.',
+    ],
+    draft: [
+      'Data ananda sudah mulai diisi, tinggal dilanjutkan sampai tombol *Kirim data*. Isian sebelumnya sudah tersimpan:',
+      link,
+    ],
+    needs_fix: [
+      'Ada data ananda yang perlu diperbaiki:',
+      note ? `_${note}_` : '',
+      '',
+      'Mohon diperbaiki lalu dikirim lagi lewat:',
+      link,
+    ],
+  }[status] || []
+  return [
+    `Assalamu'alaikum Bapak/Ibu wali dari *${santriName}*.`,
+    '',
+    ...body,
+    '',
+    'Jazakumullahu khairan.',
+    senderName ? `${senderName}, TPQ Amanah` : 'TPQ Amanah',
+  ].filter((line, i, all) => line !== '' || (all[i - 1] !== '' && i > 0)).join('\n')
+}
+
 export function linkCodeMessage({ santriName, code, expiresAt, siteUrl }) {
   const until = expiresAt ? new Date(expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
   return [

@@ -54,6 +54,23 @@ test("the teacher's private WA message carries the child, the link with the code
   assert.equal(slip.steps[0], "1. Buka tpqamanahsawotratap.com/wali");
 });
 
+test("teacher's reminder: worded for the status, quotes the admin's fix note, signed by the teacher, link to the portal", async () => {
+  const { reminderMessage, REMIND_STATUSES } = await import("../src/utils/santriProfile.js");
+  assert.deepEqual(REMIND_STATUSES, ["empty", "draft", "needs_fix"]);
+  const base = { santriName: "Ahmad Fauzi", siteUrl: "https://tpqamanahsawotratap.com", senderName: "Ustadz Riski" };
+  const empty = reminderMessage({ ...base, status: "empty" });
+  assert.match(empty, /^Assalamu'alaikum Bapak\/Ibu wali dari \*Ahmad Fauzi\*\./);
+  assert.match(empty, /belum diisi/);
+  assert.match(empty, /https:\/\/tpqamanahsawotratap\.com\/wali\n/);
+  assert.match(empty, /Ustadz Riski, TPQ Amanah$/);
+  assert.match(reminderMessage({ ...base, status: "draft" }), /tinggal dilanjutkan/);
+  const fix = reminderMessage({ ...base, status: "needs_fix", note: "NIK mohon dicek" });
+  assert.match(fix, /perlu diperbaiki:\n_NIK mohon dicek_\n\nMohon diperbaiki/);
+  const noNote = reminderMessage({ ...base, status: "needs_fix", senderName: "" });
+  assert.ok(!noNote.includes("\n\n\n") && !noNote.includes("__"), "no empty gaps when there is no note");
+  assert.match(noNote, /\nTPQ Amanah$/);
+});
+
 test("routing: wali portal is separate; login has a Wali Santri tab instead of Google", () => {
   const router = read("src/router/index.js");
   assert.ok(router.includes('path: "/wali"') && router.includes("meta: { requiresAuth: true, wali: true }"));
