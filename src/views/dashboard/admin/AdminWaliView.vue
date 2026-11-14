@@ -38,6 +38,7 @@
       <button type="button" role="tab" :aria-selected="tab === 'requests'" :class="{ active: tab === 'requests' }" @click="tab = 'requests'">
         Pengajuan tautan <span v-if="requests.length" class="wv-count">{{ requests.length }}</span>
       </button>
+      <button v-if="isAdmin" type="button" role="tab" :aria-selected="tab === 'alfa'" :class="{ active: tab === 'alfa' }" @click="openAlfa">Kabar alfa</button>
     </div>
 
     <PageSkeleton v-if="loading" :rows="6" label="Memuat data wali santri" />
@@ -93,6 +94,53 @@
           </div>
         </li>
       </ul>
+    </template>
+
+    <!-- kabar alfa: the bot tells the wali when their child was alfa (admin) -->
+    <template v-else-if="tab === 'alfa'">
+      <PageSkeleton v-if="!alfa" :rows="3" label="Memuat kabar alfa" />
+      <template v-else>
+        <section class="wv-card wv-alfa-switch" aria-labelledby="alfa-title">
+          <div class="wv-alfa-head">
+            <div>
+              <h2 id="alfa-title">Kabar alfa ke wali</h2>
+              <span class="wv-pill" :class="alfa.enabled ? 'is-ok' : 'is-idle'">{{ alfa.enabled ? 'Aktif' : 'Dijeda' }}</span>
+            </div>
+            <button type="button" class="wv-btn" :class="alfa.enabled ? 'wv-btn-ghost' : 'wv-btn-primary'" :disabled="alfaBusy" @click="toggleAlfa">
+              {{ alfa.enabled ? 'Jeda pengiriman' : 'Aktifkan' }}
+            </button>
+          </div>
+          <p class="wv-sub">
+            Bot TPQ mengirim WhatsApp ke wali yang tertaut bila ananda tercatat <strong>alfa</strong> di KBM:
+            {{ alfa.rules.graceMinutes }} menit setelah guru terakhir menyimpan KBM (koreksi status membatalkan),
+            tidak di jam {{ alfa.rules.quietFrom }}–{{ alfa.rules.quietUntil }}, untuk KBM paling lama {{ alfa.rules.lookbackDays }} hari lalu,
+            maksimal {{ alfa.today.cap }} pesan sehari.
+          </p>
+          <p class="wv-alfa-today"><strong>{{ alfa.today.used }}/{{ alfa.today.cap }}</strong> pesan hari ini</p>
+        </section>
+
+        <h2 class="wv-section">7 hari terakhir</h2>
+        <p v-if="!alfa.notices.length" class="wv-empty">Belum ada kabar alfa.</p>
+        <ul v-else class="wv-list">
+          <li v-for="n in alfa.notices" :key="n.id" class="wv-row wv-alfa-row">
+            <div class="wv-row-main">
+              <strong>{{ n.santriName }}</strong>
+              <span class="wv-sub">KBM {{ dateText(`${n.sessionDate}T12:00:00`) }}<template v-if="n.classId"> · {{ levelName(n.classId) }}</template><template v-if="n.guruName"> · {{ n.guruName }}</template></span>
+              <span class="wv-sub">
+                <template v-for="(rc, i) in n.recipients" :key="rc.phone">{{ i ? ', ' : '' }}{{ relationLabel(rc.relation) }} {{ displayPhone(rc.phone) }}<template v-if="rc.status === 'failed'"> (gagal)</template></template>
+              </span>
+            </div>
+            <div class="wv-row-side">
+              <span class="wv-pill" :class="`is-${(ALFA_STATUS[n.status] || ALFA_STATUS.queued).tone}`">{{ (ALFA_STATUS[n.status] || ALFA_STATUS.queued).label }}</span>
+              <!-- not sent by the bot: the admin can send the same message by hand -->
+              <div v-if="['skipped_cap', 'failed', 'partial'].includes(n.status)" class="wv-actions">
+                <a v-for="rc in n.recipients.filter((x) => x.status !== 'sent')" :key="rc.phone" class="wv-btn wv-btn-ghost"
+                  :href="waTo(rc.phone, n.text)" target="_blank" rel="noopener">Kirim manual ke {{ relationLabel(rc.relation) }}</a>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </template>
     </template>
 
     <!-- link requests -->
@@ -307,6 +355,16 @@ const syncName = ref(true)
 const reviewError = ref('')
 const scope = ref(null)
 const remind = ref(null)
+const alfa = ref(null)
+const alfaBusy = ref(false)
+const ALFA_STATUS = {
+  queued: { label: 'Menunggu dikirim', tone: 'info' },
+  sent: { label: 'Terkirim', tone: 'ok' },
+  partial: { label: 'Sebagian gagal', tone: 'warn' },
+  failed: { label: 'Gagal terkirim', tone: 'danger' },
+  cancelled: { label: 'Dibatalkan (status dikoreksi)', tone: 'idle' },
+  skipped_cap: { label: 'Melewati batas harian', tone: 'warn' },
+}
 const exporting = ref(false)
 
 // Admin: every jilid. Guru: the jilid they look after (from the server, which enforces the same rule).
@@ -407,6 +465,32 @@ async function exportExcel() {
     showError(err.response?.data?.error || 'Gagal mengekspor Excel. Coba lagi.')
   } finally {
     exporting.value = false
+  }
+}
+
+/* ---- kabar alfa (admin) */
+async function loadAlfa() {
+  try {
+    const { data } = await api.get('/wali/admin/alfa', { cache: false })
+    alfa.value = data
+  } catch (err) {
+    showError(err.response?.data?.error || 'Kabar alfa belum bisa dimuat')
+  }
+}
+function openAlfa() {
+  tab.value = 'alfa'
+  loadAlfa()
+}
+async function toggleAlfa() {
+  alfaBusy.value = true
+  try {
+    const { data } = await api.put('/wali/admin/alfa', { enabled: !alfa.value.enabled })
+    alfa.value = { ...alfa.value, enabled: data.enabled }
+    showSuccess(data.enabled ? 'Kabar alfa aktif' : 'Kabar alfa dijeda')
+  } catch (err) {
+    showError(err.response?.data?.error || 'Belum bisa diubah')
+  } finally {
+    alfaBusy.value = false
   }
 }
 
@@ -674,6 +758,7 @@ onMounted(load)
 
 .wv-tabs {
   display: flex;
+  overflow-x: auto;
   gap: 6px;
   margin-bottom: 12px;
   padding: 4px;
@@ -684,6 +769,8 @@ onMounted(load)
 }
 
 .wv-tabs button {
+  flex: none;
+  white-space: nowrap;
   min-height: 42px;
   padding: 0 14px;
   border: 0;
@@ -915,6 +1002,45 @@ textarea.wv-input {
 .wv-request-head strong {
   color: var(--lp-ink, #0b3b2a);
   font-size: 1rem;
+}
+
+.wv-alfa-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.wv-alfa-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wv-alfa-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
+}
+
+.wv-alfa-switch .wv-sub {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.wv-alfa-today {
+  margin: 0;
+  color: var(--lp-body, #475a50);
+}
+
+.wv-section {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--lp-ink, #0b3b2a);
 }
 
 .wv-message {
