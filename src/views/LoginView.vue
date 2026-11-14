@@ -112,8 +112,14 @@
             :class="linkingMode ? 'mt-1' : 'mt-6'">
             <!-- step 1: the number -->
             <form v-if="waliStep === 'phone'" class="space-y-4" @submit.prevent="requestWaliCode">
+              <!-- the code from the link was checked first: used / replaced / expired / unknown is said at once -->
+              <div v-if="linkingMode && codeProblem" class="link-problem" role="alert">
+                <p class="link-problem-title">{{ codeProblem.title }}</p>
+                <p>{{ codeProblem.text }}</p>
+                <p class="link-problem-hint">{{ codeProblem.hint }}</p>
+              </div>
               <!-- from the teacher's link: this page is the first step of linking the child -->
-              <div v-if="linkingMode" class="link-steps" role="note">
+              <div v-else-if="linkingMode" class="link-steps" role="note">
                 <p class="link-steps-lead">Bapak/Ibu membuka tautan dari TPQ untuk menautkan data ananda. Caranya:</p>
                 <ol>
                   <li class="is-now">
@@ -142,7 +148,7 @@
                 Kode 6 angka dikirim ke <strong class="lp-ink">{{ waliPhoneShown }}</strong>
                 <button type="button" class="wali-link" @click="changeWaliPhone">Ubah</button>
               </p>
-              <p v-if="linkingMode" class="link-otp-note">Ini kode untuk <strong>masuk</strong>. Kode tautan ananda
+              <p v-if="linkingMode && !codeProblem" class="link-otp-note">Ini kode untuk <strong>masuk</strong>. Kode tautan ananda
                 <template v-if="linkCode">(<strong>{{ linkCode }}</strong>) </template>sudah tersimpan, tidak perlu diketik lagi.</p>
               <p class="wali-delivery" :class="`is-${waliDelivery}`" role="status" aria-live="polite">
                 {{ waliDeliveryText }}
@@ -227,7 +233,45 @@ const linkCode = (() => {
   }
 })().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 9);
 const activeTab = ref(linkingMode || route.query.as === "wali" ? "wali" : "credentials");
+
+// The code in the link is checked before anything else (only its state; the child is never named here)
+const codeState = ref(linkingMode ? "checking" : "");
+const CODE_PROBLEMS = {
+  used: {
+    title: "Kode ini sudah dipakai",
+    text: "Kode tautan ini sudah digunakan untuk menautkan ananda.",
+    hint: "Kalau Bapak/Ibu yang menautkannya, cukup masuk di bawah: data ananda sudah ada di akun Bapak/Ibu. Kalau belum pernah, minta kode baru ke ustadz/ustadzah.",
+  },
+  revoked: {
+    title: "Kode ini sudah diganti",
+    text: "Ustadz/ustadzah sudah membuat kode yang lebih baru untuk ananda.",
+    hint: "Minta kode terbaru ke ustadz/ustadzah. Kalau ananda sudah tertaut, cukup masuk di bawah.",
+  },
+  expired: {
+    title: "Kode sudah kedaluwarsa",
+    text: "Masa berlaku kode tautan ini sudah habis.",
+    hint: "Minta kode baru ke ustadz/ustadzah. Kalau ananda sudah tertaut, cukup masuk di bawah.",
+  },
+  unknown: {
+    title: "Kode tidak dikenal",
+    text: "Kode di tautan ini tidak ditemukan. Mungkin terpotong saat disalin.",
+    hint: "Buka lagi tautan dari pesan ustadz/ustadzah, atau masuk lalu ketik kodenya sendiri.",
+  },
+};
+CODE_PROBLEMS.invalid = CODE_PROBLEMS.unknown;
+const codeProblem = computed(() => CODE_PROBLEMS[codeState.value] || null);
+onMounted(async () => {
+  if (!linkingMode) return;
+  try {
+    const { data } = await api.get("/wali/auth/code-status", { params: { code: linkCode }, cache: false });
+    codeState.value = data?.status || "valid";
+  } catch {
+    codeState.value = "valid"; // could not check (offline, too many checks): the link page checks again after sign-in
+  }
+});
+
 const heading = computed(() => {
+  if (linkingMode && codeProblem.value) return { title: "Masuk Wali Santri", sub: "Untuk orang tua / wali santri TPQ Amanah" };
   if (linkingMode) return { title: "Tautkan Data Ananda", sub: "Langkah pertama: masuk dengan nomor WhatsApp Bapak/Ibu" };
   if (activeTab.value === "wali") return { title: "Masuk Wali Santri", sub: "Untuk orang tua / wali santri TPQ Amanah" };
   return { title: "Login Dashboard", sub: "Masuk untuk mengakses dashboard" };
@@ -349,7 +393,8 @@ const verifyWaliCode = async () => {
   if (result.success) {
     stopTimers();
     const redirect = getSafeRedirect();
-    router.push(redirect.startsWith("/wali") ? redirect : "/wali");
+    // a code that can no longer link: go to the wali home, where an already linked child is shown
+    router.push(redirect.startsWith("/wali") && !(linkingMode && codeProblem.value) ? redirect : "/wali");
   } else {
     error.value = result.error;
   }
@@ -457,6 +502,32 @@ const changeWaliPhone = () => {
   line-height: 1.5;
   color: var(--lp-body);
   text-align: center;
+}
+
+.link-problem {
+  padding: 14px 16px;
+  border-radius: 0.9rem;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.link-problem p {
+  margin: 0;
+}
+
+.link-problem-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #7c3a0d;
+  margin-bottom: 4px !important;
+}
+
+.link-problem-hint {
+  margin-top: 8px !important;
+  color: var(--lp-ink);
 }
 
 .link-code {
