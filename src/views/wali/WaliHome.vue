@@ -4,7 +4,7 @@
 
     <template v-else>
       <h1 class="w-title">Assalamu'alaikum{{ wali?.name ? `, ${wali.name}` : '' }}</h1>
-      <p class="w-lead">Lengkapi data ananda agar TPQ bisa menghubungi Bapak/Ibu dan mengirim kabar absensi.</p>
+      <p class="w-lead">Lengkapi data ananda agar data di TPQ lengkap dan benar, dan TPQ mudah menghubungi Bapak/Ibu.</p>
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 

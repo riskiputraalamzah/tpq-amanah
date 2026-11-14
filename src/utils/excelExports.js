@@ -271,3 +271,132 @@ export function buildAttendanceWorkbook(ExcelJS, { period, teachers, records, ho
 
   return workbook
 }
+
+/* ------------------------------------------------------------------ Data Wali Santri: the full data */
+
+export const santriDataFilename = ({ filtered = false, date = new Date() } = {}) =>
+  `Data-Santri-Lengkap-${dateStamp(date)}${filtered ? '-filter' : ''}.xlsx`
+
+const PROFILE_STATUS_FILL = { idle: COLORS.muted, warn: COLORS.warn, info: COLORS.info, danger: COLORS.danger, ok: COLORS.ok }
+const levelLabel = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Tanpa jilid')
+const valueAt = (data, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), data)
+const tsToDate = (v) => {
+  if (!v) return null
+  const d = v._seconds !== undefined ? new Date(v._seconds * 1000) : v.seconds !== undefined ? new Date(v.seconds * 1000) : new Date(v)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+const phoneText = (v) => {
+  const s = String(v || '').replace(/\D/g, '')
+  if (!s) return ''
+  const local = s.startsWith('62') ? `0${s.slice(2)}` : s
+  return local.replace(/(\d{4})(\d{4})(\d+)/, '$1 $2 $3')
+}
+const fieldColumn = (f) => {
+  const header = f.label.replace(/\s*\((opsional|bila ada)\)/i, '')
+  if (f.type === 'date') return { header, width: 14, numFmt: 'dd/mm/yyyy', align: 'center' }
+  if (f.type === 'digits16') return { header, width: 20, text: true }
+  if (f.type === 'phone') return { header, width: 16, text: true }
+  if (f.type === 'digits') return { header, width: 9, text: true, align: 'center' }
+  if (f.type === 'gender') return { header, width: 12 }
+  if (f.type === 'textarea') return { header, width: 40, wrap: true }
+  return { header }
+}
+const fieldValue = (f, raw) => {
+  if (raw === undefined || raw === null || raw === '') return ''
+  if (f.type === 'gender') return raw === 'L' ? 'Laki-laki' : raw === 'P' ? 'Perempuan' : raw
+  if (f.type === 'phone') return phoneText(raw)
+  if (f.type === 'date') {
+    const [y, m, d] = String(raw).split('-').map(Number)
+    return y && m && d ? new Date(Date.UTC(y, m - 1, d)) : raw
+  }
+  return raw
+}
+
+/**
+ * rows:   from GET /wali/admin/export, already narrowed to what is on screen
+ * steps:  STEPS of santriProfile.js (the columns follow the form, so a new field shows up here too)
+ * status: STATUS of santriProfile.js; relations: RELATIONS
+ */
+export function buildSantriDataWorkbook(ExcelJS, { rows, steps, status, relations, exportedAt = new Date(), filterLabel = '' }) {
+  const workbook = createWorkbook(ExcelJS, { subject: 'Data Santri Lengkap TPQ AMANAH', createdAt: exportedAt })
+  const fields = steps.flatMap((s) => s.fields)
+  const relationLabel = (r) => relations.find((x) => x.value === r)?.label || r || ''
+  const statusOf = (r) => status[r.profileStatus] || status.empty
+
+  addTableSheet(workbook, 'Data Santri', {
+    title: 'Data Santri Lengkap - TPQ AMANAH',
+    lines: [
+      `Diekspor pada ${timeStamp(exportedAt)}${filterLabel ? ` · ${filterLabel}` : ''} · ${rows.length} santri`,
+      'Berisi data pribadi (NIK dan KK). Simpan dengan aman dan jangan dibagikan.',
+    ],
+    columns: [
+      { header: 'No', width: 6, align: 'center' },
+      { header: 'No. Induk', width: 24, text: true },
+      { header: 'Nama (data TPQ)', width: 28 },
+      { header: 'Jilid / Marhalah', width: 16 },
+      { header: 'Status data', width: 22 },
+      ...fields.map(fieldColumn),
+      { header: 'Wali tertaut', width: 34 },
+      { header: 'Foto KK', width: 10, align: 'center' },
+      { header: 'Perubahan identitas', width: 20 },
+      { header: 'Dikirim', width: 14, numFmt: 'dd/mm/yyyy', align: 'center' },
+      { header: 'Diverifikasi', width: 14, numFmt: 'dd/mm/yyyy', align: 'center' },
+      { header: 'Diverifikasi oleh', width: 20 },
+    ],
+    rows: rows.map((r, i) => {
+      const st = statusOf(r)
+      return [
+        i + 1,
+        r.nomorInduk || '',
+        r.name,
+        levelLabel(r.classId),
+        { v: st.label, fill: PROFILE_STATUS_FILL[st.tone] },
+        ...fields.map((f) => fieldValue(f, valueAt(r.data || {}, f.path))),
+        (r.guardians || []).map((g) => `${relationLabel(g.relation)} ${phoneText(g.phone)}`.trim()).join('; '),
+        r.hasKkPhoto ? 'Ada' : '',
+        r.hasPendingIdentity ? { v: 'Menunggu admin', fill: COLORS.warn } : '',
+        tsToDate(r.submittedAt),
+        tsToDate(r.verifiedAt),
+        r.verifiedByName || '',
+      ]
+    }),
+    freezeColumns: 3,
+  })
+
+  // Progress per jilid: where to follow up
+  const keys = ['total', 'linked', 'empty', 'draft', 'submitted', 'needs_fix', 'verified']
+  const byLevel = new Map()
+  for (const r of rows) {
+    const key = r.classId || ''
+    if (!byLevel.has(key)) byLevel.set(key, Object.fromEntries(keys.map((k) => [k, 0])))
+    const e = byLevel.get(key)
+    e.total += 1
+    if ((r.guardians || []).length) e.linked += 1
+    e[status[r.profileStatus] ? r.profileStatus : 'empty'] += 1
+  }
+  const order = [...byLevel.keys()].sort((a, b) => (a || '99').localeCompare(b || '99', undefined, { numeric: true }))
+  const total = Object.fromEntries(keys.map((k) => [k, order.reduce((n, id) => n + byLevel.get(id)[k], 0)]))
+  const line = (label, e, bold = false) => [
+    bold ? { v: label, bold: true } : label,
+    ...keys.map((k) => (bold ? { v: e[k], bold: true, align: 'center' } : e[k])),
+  ]
+  addTableSheet(workbook, 'Ringkasan per jilid', {
+    title: 'Ringkasan pengisian data per jilid',
+    lines: [`Diekspor pada ${timeStamp(exportedAt)}`],
+    columns: [
+      { header: 'Jilid / Marhalah', width: 18 },
+      { header: 'Santri', width: 10, align: 'center' },
+      { header: 'Tertaut wali', width: 13, align: 'center' },
+      { header: status.empty.label, width: 13, align: 'center' },
+      { header: status.draft.label, width: 15, align: 'center' },
+      { header: status.submitted.label, width: 22, align: 'center' },
+      { header: status.needs_fix.label, width: 17, align: 'center' },
+      { header: status.verified.label, width: 15, align: 'center' },
+    ],
+    rows: [...order.map((id) => line(levelLabel(id), byLevel.get(id))), line('Jumlah', total, true)],
+    filter: false,
+    zebra: false,
+    landscape: false,
+  })
+  return workbook
+}

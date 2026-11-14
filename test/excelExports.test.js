@@ -193,3 +193,42 @@ test("the three pages offer Excel export, and exceljs is only loaded on click", 
     assert.ok(!/from ['"]exceljs['"]/.test(source), `${name} never imports exceljs statically`);
   }
 });
+
+test("full santri data: NIK/KK stay text, birth date is a real date, columns follow the form, summary per jilid", async () => {
+  const { STEPS, STATUS, RELATIONS } = await import("../src/utils/santriProfile.js");
+  const { buildSantriDataWorkbook, santriDataFilename } = await import("../src/utils/excelExports.js");
+  const rows = [
+    {
+      santriId: "s1", name: "Ahmad", classId: "1", nomorInduk: "411235151939-26-001", profileStatus: "verified",
+      data: { santri: { namaLengkap: "Ahmad Fauzi", jenisKelamin: "L", tanggalLahir: "2016-03-21", nik: "3515016103160002" }, keluarga: { noKK: "3515010101160099" }, ibu: { hp: "6281298765432" } },
+      guardians: [{ relation: "ibu", phone: "6281298765432" }], hasKkPhoto: true, hasPendingIdentity: false,
+      submittedAt: { _seconds: 1794000000 }, verifiedAt: { _seconds: 1794100000 }, verifiedByName: "Admin TPQ",
+    },
+    { santriId: "s2", name: "Budi", classId: "1", nomorInduk: "", profileStatus: "empty", data: {}, guardians: [] },
+    { santriId: "s3", name: "Citra", classId: "7", nomorInduk: "", profileStatus: "submitted", data: {}, guardians: [{ relation: "ayah", phone: "6285711112222" }], hasPendingIdentity: true },
+  ];
+  assert.equal(santriDataFilename({ date: new Date("2026-11-14T05:00:00Z"), filtered: true }), "Data-Santri-Lengkap-2026-11-14-filter.xlsx");
+  const wb = await roundTrip(buildSantriDataWorkbook(ExcelJS, { rows, steps: STEPS, status: STATUS, relations: RELATIONS, filterLabel: "Jilid 1" }));
+  const sheet = wb.getWorksheet("Data Santri");
+  const headerRow = 5;
+  const headers = sheet.getRow(headerRow).values.slice(1);
+  const col = (name) => headers.indexOf(name) + 1;
+  assert.ok(col("NIK anak") > 0 && col("Nomor Kartu Keluarga (KK)") > 0 && col("Catatan kesehatan") > 0, headers.join(" | "));
+  const first = sheet.getRow(headerRow + 1);
+  assert.equal(first.getCell(col("NIK anak")).value, "3515016103160002");
+  assert.equal(first.getCell(col("NIK anak")).numFmt, "@");
+  assert.equal(first.getCell(col("Nomor Kartu Keluarga (KK)")).value, "3515010101160099");
+  assert.ok(first.getCell(col("Tanggal lahir")).value instanceof Date);
+  assert.equal(first.getCell(col("Jenis kelamin")).value, "Laki-laki");
+  assert.equal(first.getCell(col("No. HP ibu")).value, "0812 9876 5432");
+  assert.equal(first.getCell(col("Wali tertaut")).value, "Ibu 0812 9876 5432");
+  assert.equal(first.getCell(col("Status data")).value, "Terverifikasi");
+  assert.equal(fill(first.getCell(col("Status data"))), "FFC8E6C9");
+  assert.equal(sheet.getRow(headerRow + 3).getCell(col("Perubahan identitas")).value, "Menunggu admin");
+  assert.match(String(sheet.getCell(3, 1).value), /data pribadi/);
+  const summary = wb.getWorksheet("Ringkasan per jilid");
+  const sumRows = [5, 6, 7].map((r) => summary.getRow(r).values.slice(1, 9));
+  assert.deepEqual(sumRows[0], ["Jilid 1", 2, 1, 1, 0, 0, 0, 1]);
+  assert.deepEqual(sumRows[1], ["Marhalah", 1, 1, 0, 0, 1, 0, 0]);
+  assert.deepEqual(sumRows[2], ["Jumlah", 3, 2, 1, 0, 1, 0, 1]);
+});

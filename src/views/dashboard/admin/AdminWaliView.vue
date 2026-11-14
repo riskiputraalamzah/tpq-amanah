@@ -5,9 +5,15 @@
         <h1>Data Wali Santri</h1>
         <p>Tautkan wali dengan santri lewat kode, lalu cek data yang mereka isi.</p>
       </div>
-      <button v-if="classOptions.length" type="button" class="wv-btn wv-btn-primary" @click="openSlips">
-        <LineIcon name="file" :size="17" /> Cetak slip kode
-      </button>
+      <div class="wv-head-actions">
+        <!-- the full data (NIK / KK in full): admin only -->
+        <button v-if="isAdmin" type="button" class="wv-btn wv-btn-ghost" :disabled="exporting || !visibleRows.length" @click="exportExcel">
+          <LineIcon name="table" :size="17" /> {{ exporting ? 'Menyiapkan…' : 'Export Excel' }}
+        </button>
+        <button v-if="classOptions.length" type="button" class="wv-btn wv-btn-primary" @click="openSlips">
+          <LineIcon name="file" :size="17" /> Cetak slip kode
+        </button>
+      </div>
     </header>
 
     <!-- a guru works with the jilid they look after; say which and where that comes from -->
@@ -228,6 +234,8 @@ import LineIcon from '@/components/LineIcon.vue'
 import { STATUS, STEPS, RELATIONS, getPath, displayPhone, linkCodeMessage } from '@/utils/santriProfile'
 import { loadPdfLibs } from '@/utils/pdf'
 import { renderSlips } from '@/utils/waliSlips'
+import { loadExcelLib, downloadWorkbook } from '@/utils/excel'
+import { buildSantriDataWorkbook, santriDataFilename } from '@/utils/excelExports'
 
 const CLASS_OPTIONS = [...[1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: `Jilid ${n}` })), { value: '7', label: 'Marhalah' }]
 const STATUS_FILTERS = [
@@ -264,6 +272,7 @@ const fixNote = ref('')
 const syncName = ref(true)
 const reviewError = ref('')
 const scope = ref(null)
+const exporting = ref(false)
 
 // Admin: every jilid. Guru: the jilid they look after (from the server, which enforces the same rule).
 const classOptions = computed(() => {
@@ -331,6 +340,37 @@ async function load() {
     loadError.value = err.response?.data?.error || 'Data belum bisa dimuat.'
   } finally {
     loading.value = false
+  }
+}
+
+/* ---- Excel: the rows on screen (jilid, status and search applied), with everything the wali filled in */
+async function exportExcel() {
+  if (exporting.value || !visibleRows.value.length) return
+  exporting.value = true
+  try {
+    const exportedAt = new Date()
+    const [{ data }, ExcelJS] = await Promise.all([
+      api.get('/wali/admin/export', { params: { classId: classFilter.value || undefined }, cache: false }),
+      loadExcelLib(),
+    ])
+    const order = new Map(visibleRows.value.map((r, i) => [r.santriId, i]))
+    const rows = (data || []).filter((r) => order.has(r.santriId)).sort((a, b) => order.get(a.santriId) - order.get(b.santriId))
+    const parts = [
+      classFilter.value && levelName(classFilter.value),
+      statusFilter.value !== 'all' && STATUS_FILTERS.find((f) => f.value === statusFilter.value)?.label,
+      search.value.trim() && `cari "${search.value.trim()}"`,
+    ].filter(Boolean)
+    const workbook = buildSantriDataWorkbook(ExcelJS, {
+      rows, steps: STEPS, status: STATUS, relations: RELATIONS, exportedAt,
+      filterLabel: parts.length ? `Filter: ${parts.join(', ')}` : 'Semua santri aktif',
+    })
+    const filename = santriDataFilename({ filtered: parts.length > 0, date: exportedAt })
+    await downloadWorkbook(workbook, filename)
+    showSuccess(`${rows.length} santri diekspor ke ${filename}`)
+  } catch (err) {
+    showError(err.response?.data?.error || 'Gagal mengekspor Excel. Coba lagi.')
+  } finally {
+    exporting.value = false
   }
 }
 
@@ -478,6 +518,12 @@ onMounted(load)
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 14px;
+}
+
+.wv-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .wv-head h1 {
@@ -1019,8 +1065,13 @@ textarea.wv-input {
     margin-left: auto;
   }
 
-  .wv-head .wv-btn {
+  .wv-head-actions {
     width: 100%;
+  }
+
+  .wv-head .wv-btn {
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 </style>
