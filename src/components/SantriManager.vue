@@ -131,6 +131,9 @@
         <p v-if="scope && !adminMode && scope.source === 'none'" class="scope-note is-warn" role="status">
           Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
         </p>
+        <p v-else-if="scope && !adminMode && scope.source === 'feature'" class="scope-note">
+          Antum diberi akses ke <strong>semua jilid</strong> oleh admin.
+        </p>
         <p v-else-if="scope && !adminMode" class="scope-note">
           Menampilkan santri <strong>{{ scopeLabel }}</strong>.
           <template v-if="scope.source === 'kbm'"> Jilid diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan admin.</template>
@@ -767,7 +770,7 @@ const normLevel = (v) => {
   const s = String(v ?? "").trim().toLowerCase();
   return ["7", "8", "9", "marhalah"].includes(s) ? "7" : s;
 };
-const scopeIds = computed(() => (props.adminMode || !scope.value ? null : scope.value.classIds || []));
+const scopeIds = computed(() => (props.adminMode || !scope.value || scope.value.classIds === null ? null : scope.value.classIds || []));
 const scopedSantri = computed(() =>
   scopeIds.value ? santri.value.filter((row) => scopeIds.value.includes(normLevel(row.currentClassId))) : santri.value,
 );

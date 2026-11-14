@@ -371,7 +371,8 @@ const requestWaliCode = async () => {
   error.value = null;
   waliBusy.value = true;
   try {
-    const { data } = await api.post("/wali/auth/request-otp", { phone: waliPhone.value });
+    // from a teacher's link: the code goes along, so the WhatsApp message can name the child being linked
+    const { data } = await api.post("/wali/auth/request-otp", { phone: waliPhone.value, ...(linkingMode && linkCode ? { code: linkCode } : {}) });
     waliStep.value = "code";
     waliCode.value = "";
     waliDelivery.value = "pending";

@@ -71,7 +71,7 @@
                   <span class="action-icon">🔑</span> Credentials
                 </button>
                 <button v-if="user.role === 'guru'" class="action-item" @click="openPermissionsModal(user)">
-                  <span class="action-icon">⚙️</span> Permissions
+                  <span class="action-icon">⚙️</span> Akses Khusus
                 </button>
                 <button class="action-item" @click="openRoleModal(user)" :disabled="user.id === currentUser?.uid">
                   <span class="action-icon">👤</span> Ubah Role
@@ -130,8 +130,8 @@
     <!-- Permissions Modal -->
       <div v-if="showPermissionsModal" class="modal-overlay" @click.self="closePermissionsModal">
         <div class="modal glass-card animate-fadeInUp permissions-modal">
-          <h3>⚙️ Atur Permissions</h3>
-          <p>Mengatur akses khusus untuk: <strong>{{ selectedUser?.displayName }}</strong></p>
+          <h3>⚙️ Akses Khusus</h3>
+          <p>Halaman dan hak tambahan untuk: <strong>{{ selectedUser?.displayName }}</strong>. Berlaku langsung setelah disimpan.</p>
   
           <div class="form-group">
             <label class="form-label">Nama Grup Menu:</label>
@@ -485,8 +485,19 @@ const getFeatureLabel = (featureId) => {
   return feature?.label || featureId
 }
 
+// The features come from the server (backend utils/guru_features.js), so a new one shows up here by itself
+const loadFeatures = async () => {
+  try {
+    const { data } = await api.get('/users/available-features', { cache: false })
+    if (Array.isArray(data) && data.length) availableFeatures.value = data
+  } catch (error) {
+    console.error('Failed to load features:', error)
+  }
+}
+
 onMounted(() => {
   fetchUsers()
+  loadFeatures()
 })
 </script>
 

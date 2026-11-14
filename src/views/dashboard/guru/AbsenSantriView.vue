@@ -16,6 +16,9 @@
         <input type="date" class="as-input" :value="date" :min="minDate" :max="today" @change="setDate($event.target.value)" />
       </label>
     </div>
+    <p v-if="sheet && sheet.daysBack" class="as-hint">
+      Guru bisa mengisi sampai {{ sheet.daysBack }} hari ke belakang. Hari yang lebih lama hanya bisa diubah admin.
+    </p>
 
     <PageSkeleton v-if="loading && !sheet" :rows="6" label="Memuat daftar santri" />
     <p v-else-if="loadError" class="as-note is-danger" role="alert">{{ loadError }}</p>
@@ -99,7 +102,9 @@ const SAVE_TEXT = { idle: '', saving: 'Menyimpan…', saved: 'Tersimpan ✓', er
 
 const wibNow = () => new Date(Date.now() + 7 * 3600 * 1000)
 const today = wibNow().toISOString().slice(0, 10)
-const minDate = new Date(Date.now() + 7 * 3600 * 1000 - 2 * 86400000).toISOString().slice(0, 10)
+const defaultMin = new Date(Date.now() + 7 * 3600 * 1000 - 2 * 86400000).toISOString().slice(0, 10)
+// the admin (or a guru given "Absen Santri tanpa batas hari") may open any past day
+const minDate = computed(() => (sheet.value && sheet.value.daysBack === null ? undefined : defaultMin))
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
 
 const date = ref(today)
@@ -316,6 +321,12 @@ onBeforeUnmount(() => {
 
 .as-date {
   flex: 1 1 160px;
+}
+
+.as-hint {
+  margin: -4px 0 12px;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
 .as-search {

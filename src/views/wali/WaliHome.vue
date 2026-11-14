@@ -45,6 +45,18 @@
             <span class="month-strip-more">Lihat kehadiran &amp; materi ›</span>
           </router-link>
 
+          <!-- munaqosyah and the like (open ones), and the tabungan -->
+          <router-link :to="`/wali/santri/${s.santriId}/kegiatan`" class="month-strip" :aria-label="`Kegiatan dan tabungan ${s.name}`">
+            <span class="month-strip-title">Kegiatan &amp; tabungan</span>
+            <span v-if="s.activities?.length" class="act-lines">
+              <span v-for="k in s.activities" :key="k.id" class="act-line">
+                <strong>{{ k.title }}</strong>
+                <span class="w-pill" :class="`is-${k.paymentState === 'lunas' || k.paymentState === 'gratis' ? 'ok' : k.paymentState === 'sebagian' ? 'warn' : 'danger'}`">{{ k.payment }}</span>
+              </span>
+            </span>
+            <span class="month-strip-more">{{ s.activities?.length ? 'Lihat rincian, persyaratan & tabungan' : 'Lihat kegiatan & tabungan' }} ›</span>
+          </router-link>
+
           <router-link :to="`/wali/santri/${s.santriId}`" class="w-btn" :class="actionClass(s)">
             {{ actionLabel(s) }}
           </router-link>
@@ -251,6 +263,22 @@ onMounted(load)
 .month-strip-counts .is-izin strong { color: #1d4f8a; }
 .month-strip-counts .is-sakit strong { color: #7c3a0d; }
 .month-strip-counts .is-alfa strong { color: #8e1b12; }
+
+.act-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.act-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  font-size: 0.92rem;
+  color: #0b3b2a;
+}
 
 .month-strip-more {
   font-size: 0.88rem;

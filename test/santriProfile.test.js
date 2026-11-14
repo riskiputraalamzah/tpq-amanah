@@ -82,3 +82,23 @@ test("routing: wali portal is separate; login has a Wali Santri tab instead of G
   assert.ok(form.includes("w-actionbar"), "the next/back buttons stay within thumb reach");
   assert.ok(form.includes("shrinkImage"), "KK photo is made smaller on the phone before upload");
 });
+
+test("kegiatan helpers: rupiah, dates, the payment line a parent reads, the summary tiles", async () => {
+  const { formatRupiah, dayLabel, paymentLine, summarize } = await import("../src/utils/kegiatan.js");
+  assert.equal(formatRupiah(150000), "Rp150.000");
+  assert.equal(formatRupiah("abc"), "Rp0");
+  assert.equal(dayLabel("2026-12-07"), "Senin, 7 Desember 2026");
+  assert.equal(dayLabel(""), "");
+  assert.equal(dayLabel("07-12-2026"), "");
+  assert.equal(paymentLine({ state: "gratis" }), "Tanpa biaya");
+  assert.equal(paymentLine({ state: "lunas", paid: 150000, fee: 150000 }), "Lunas (Rp150.000)");
+  assert.equal(paymentLine({ state: "lunas", manual: true, manualNote: "tunai ke admin", fee: 150000 }), "Lunas (dicatat manual: tunai ke admin)");
+  assert.equal(paymentLine({ state: "sebagian", paid: 40000, fee: 150000, remaining: 110000 }), "Rp40.000 dari Rp150.000, kurang Rp110.000");
+  assert.equal(paymentLine({ state: "belum", fee: 150000 }), "Belum ada setoran, biaya Rp150.000");
+  const s = summarize([
+    { status: "siap", payment: { state: "lunas" }, requirementsDone: 3, requirementsTotal: 3 },
+    { status: "terdaftar", payment: { state: "sebagian" }, requirementsDone: 1, requirementsTotal: 3 },
+    { status: "batal", payment: { state: "belum" }, requirementsDone: 0, requirementsTotal: 3 },
+  ]);
+  assert.deepEqual([s.total, s.lunas, s.belum, s.lengkap, s.withRequirements], [2, 1, 1, 1, true]);
+});

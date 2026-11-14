@@ -151,7 +151,7 @@
               :title="`${longDate(day.date)}: ${cellInfo(detail.guru, day).label}`">{{ cellInfo(detail.guru, day).symbol }}</span>
           </div>
 
-          <div class="nudge">
+          <div v-if="isAdmin" class="nudge">
             <button type="button" class="btn btn-primary" :disabled="!canNudge || nudge.sending" @click="sendNudge">
               {{ nudge.sending ? 'Mengirim...' : 'Kirim pengingat WA' }}
             </button>
@@ -204,6 +204,7 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api, { clearApiCache } from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { loadExcelLib, downloadWorkbook } from '@/utils/excel'
 import { buildKbmMonitorWorkbook, monitorFilename } from '@/utils/excelExports'
 import {
@@ -274,6 +275,8 @@ const completedDays = computed(() =>
     : [],
 )
 
+// a guru given "Monitor KBM" only looks; sending the WA nudge stays with the admin
+const isAdmin = computed(() => useAuthStore().user?.role === 'admin')
 const canNudge = computed(() => !!detail.value?.guru.wa?.canNudge && detail.value.issues.length > 0)
 const nudgeNote = computed(() => {
   const guru = detail.value?.guru

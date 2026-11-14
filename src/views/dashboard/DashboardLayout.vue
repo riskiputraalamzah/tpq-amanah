@@ -97,6 +97,13 @@
             </svg>
             Data Wali Santri
           </router-link>
+          <router-link to="/dashboard/kegiatan" class="sidebar-link" :class="{ active: isActive('/dashboard/kegiatan') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />
+            </svg>
+            Kegiatan
+          </router-link>
 
           <!-- Akademik & Laporan -->
           <div class="sidebar-section">Akademik & Laporan</div>
@@ -259,6 +266,13 @@
             </svg>
             Data Wali Santri
           </router-link>
+          <router-link to="/dashboard/kegiatan" class="sidebar-link" :class="{ active: isActive('/dashboard/kegiatan') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />
+            </svg>
+            Kegiatan
+          </router-link>
 
           <!-- Akademik & Laporan Bulanan -->
           <div class="sidebar-section">Akademik & Laporan</div>
@@ -296,21 +310,13 @@
             Profil Saya
           </router-link>
 
-          <!-- Akses Khusus jika guru punya permission -->
-          <template v-if="hasCustomPermissions">
-            <div class="sidebar-section">Akses Khusus</div>
-            <router-link v-if="hasPermission('admin-attendance-view')" to="/dashboard/admin-attendance"
-              class="sidebar-link" :class="{ active: isActive('/dashboard/admin-attendance') }" @click="closeSidebar">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-                <path d="M12 16v-4" />
-                <path d="M8 16v-2" />
-                <path d="M16 16v-3" />
-              </svg>
-              Rekap Absensi
+          <!-- Akses Khusus: the pages the admin gave this guru (the list is SPECIAL_MENUS below) -->
+          <template v-if="specialMenus.length">
+            <div class="sidebar-section">{{ user?.permissions?.menuGroupName || 'Akses Khusus' }}</div>
+            <router-link v-for="m in specialMenus" :key="m.id" :to="m.to" class="sidebar-link"
+              :class="{ active: isActive(m.to) }" @click="closeSidebar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
+              {{ m.label }}
             </router-link>
           </template>
         </template>
@@ -480,10 +486,15 @@ const user = computed(() => authStore.user);
 const isAdmin = computed(() => authStore.isAdmin);
 const isGuru = computed(() => authStore.isGuru);
 
-// Check if guru has custom permissions
-const hasCustomPermissions = computed(() => {
-  return isGuru.value && user.value?.permissions?.features?.length > 0;
-});
+// Pages a guru can be given as "akses khusus" (feature ids: backend utils/guru_features.js; routes: meta.feature)
+const SPECIAL_MENUS = [
+  { id: 'admin-attendance-view', to: '/dashboard/admin-attendance', label: 'Rekap Absensi', icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M12 16v-4" /><path d="M8 16v-2" /><path d="M16 16v-3" />' },
+  { id: 'kbm-monitor', to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: '<rect x="3" y="4" width="18" height="16" rx="2" /><polyline points="7 13 10 16 17 9" />' },
+  { id: 'wa-log', to: '/dashboard/wa-log', label: 'Riwayat WA Bot', icon: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />' },
+];
+const specialMenus = computed(() =>
+  isGuru.value ? SPECIAL_MENUS.filter((m) => user.value?.permissions?.features?.includes(m.id)) : [],
+);
 
 // Check if user has specific permission
 const hasPermission = (permissionId) => {

@@ -20,6 +20,9 @@
     <p v-if="scope && !isAdmin && scope.source === 'none'" class="wv-note is-warn wv-scope" role="status">
       Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
     </p>
+    <p v-else-if="scope && !isAdmin && scope.source === 'feature'" class="wv-note wv-scope">
+      Antum diberi akses ke <strong>semua jilid</strong> oleh admin. NIK, KK, dan verifikasi data tetap khusus admin.
+    </p>
     <p v-else-if="scope && !isAdmin" class="wv-note wv-scope">
       Jilid Antum: <strong>{{ scopeLabel }}</strong>.
       <template v-if="scope.source === 'kbm'"> Diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan admin.</template>
@@ -316,6 +319,7 @@ import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { useDialog } from '@/composables/useDialog'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { STATUS, STEPS, RELATIONS, REMIND_STATUSES, getPath, displayPhone, linkCodeMessage, reminderMessage } from '@/utils/santriProfile'
@@ -335,6 +339,7 @@ const STATUS_FILTERS = [
 ]
 
 const authStore = useAuthStore()
+const { ask } = useDialog()
 const route = useRoute()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 const { success: showSuccess, error: showError, warning: showWarning } = useToast()
@@ -376,7 +381,8 @@ const exporting = ref(false)
 
 // Admin: every jilid. Guru: the jilid they look after (from the server, which enforces the same rule).
 const classOptions = computed(() => {
-  if (isAdmin.value || !scope.value) return isAdmin.value ? CLASS_OPTIONS : []
+  if (isAdmin.value || scope.value?.classIds === null) return CLASS_OPTIONS // admin, or a guru given "Semua jilid"
+  if (!scope.value) return []
   return CLASS_OPTIONS.filter((c) => (scope.value.classIds || []).includes(c.value))
 })
 const scopeLabel = computed(() => classOptions.value.map((c) => c.label).join(', '))
@@ -617,7 +623,13 @@ function candidatesFor(q) {
 async function decide(q, approve) {
   let reason = ''
   if (!approve) {
-    reason = window.prompt('Alasan menolak (akan dilihat wali):', 'Nama santri tidak ditemukan') ?? null
+    reason = await ask({
+      title: 'Tolak pengajuan?',
+      message: `Pengajuan tautan untuk ${q.childName}. Alasan ini akan dilihat oleh wali.`,
+      tone: 'danger',
+      confirmText: 'Tolak pengajuan',
+      input: { label: 'Alasan', value: 'Nama santri tidak ditemukan', required: true },
+    })
     if (reason === null) return
   }
   busy.value = true
@@ -684,7 +696,13 @@ async function openKk() {
   }
 }
 async function unlink(g) {
-  if (!window.confirm(`Lepas tautan ${relationLabel(g.relation)} (WA ${displayPhone(g.phone)}) dari santri ini?`)) return
+  const ok = await ask({
+    title: 'Lepas tautan wali?',
+    message: `${relationLabel(g.relation)} (WA ${displayPhone(g.phone)}) tidak lagi terhubung dengan ${review.value.santri.name}. Wali bisa menautkan lagi dengan kode baru.`,
+    tone: 'danger',
+    confirmText: 'Lepas tautan',
+  })
+  if (!ok) return
   try {
     await api.delete(`/wali/admin/guardians/${review.value.santri.id}/${g.waliId}`)
     review.value = { ...review.value, guardians: review.value.guardians.filter((x) => x.waliId !== g.waliId) }

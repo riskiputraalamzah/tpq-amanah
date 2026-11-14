@@ -10,8 +10,20 @@
         <strong>{{ linked.santriName }}</strong>
         {{ linked.alreadyLinked ? 'sudah terhubung dengan akun Bapak/Ibu sebelumnya.' : 'sekarang terhubung dengan akun Bapak/Ibu.' }}
       </p>
-      <router-link :to="`/wali/santri/${linked.santriId}`" class="w-btn w-btn-primary">Isi data ananda sekarang</router-link>
-      <router-link to="/wali" class="w-btn w-btn-ghost done-secondary">Nanti saja</router-link>
+
+      <!-- the data was already sent (by the other parent): nothing to fill, show what is useful instead -->
+      <template v-if="dataSent">
+        <p class="w-note data-note">
+          <span>{{ linked.profileStatus === 'verified' ? 'Data ananda sudah lengkap dan terverifikasi.' : 'Data ananda sudah diisi dan sedang dicek admin.' }}
+            Bapak/Ibu <strong>tidak perlu mengisinya lagi</strong>.</span>
+        </p>
+        <router-link :to="`/wali/santri/${linked.santriId}/progres`" class="w-btn w-btn-primary">Lihat kehadiran &amp; materi ananda</router-link>
+        <router-link :to="`/wali/santri/${linked.santriId}`" class="w-btn w-btn-ghost done-secondary">Lihat data ananda</router-link>
+      </template>
+      <template v-else>
+        <router-link :to="`/wali/santri/${linked.santriId}`" class="w-btn w-btn-primary">{{ fillLabel }}</router-link>
+        <router-link to="/wali" class="w-btn w-btn-ghost done-secondary">Nanti saja</router-link>
+      </template>
     </div>
 
     <!-- request sent -->
@@ -114,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import { RELATIONS, formatLinkCode } from '@/utils/santriProfile'
@@ -129,6 +141,8 @@ const error = ref('')
 const linked = ref(null)
 const requestSent = ref(false)
 const req = ref({ childName: '', classId: '', relation: '', note: '' })
+const dataSent = computed(() => ['submitted', 'verified'].includes(linked.value?.profileStatus))
+const fillLabel = computed(() => ({ needs_fix: 'Perbaiki data ananda', draft: 'Lanjutkan mengisi data ananda' }[linked.value?.profileStatus] || 'Isi data ananda sekarang'))
 const preview = ref(null)
 const checking = ref(false)
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
@@ -180,6 +194,11 @@ async function submitRequest() {
 </script>
 
 <style scoped>
+.data-note {
+  margin: 0 0 14px;
+  text-align: left;
+}
+
 .code-for {
   margin: 0 0 16px;
 }

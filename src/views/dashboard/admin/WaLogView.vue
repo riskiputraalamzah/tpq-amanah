@@ -1,5 +1,5 @@
 <template>
-  <div class="wl">
+  <div class="wl" :class="{ 'is-guru': isGuru }">
     <header class="wl-head">
       <div>
         <h1>Riwayat WA Bot</h1>
@@ -90,6 +90,10 @@ import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { displayPhone } from '@/utils/santriProfile'
+import { useAuthStore } from '@/stores/auth'
+
+// the guru layout has its own top bar: no room for the admin's floating menu button
+const isGuru = useAuthStore().user?.role === 'guru'
 
 const CATEGORY = {
   guru: 'Guru',
@@ -204,6 +208,10 @@ onBeforeUnmount(() => clearInterval(timer))
   .wl {
     padding-top: 0;
   }
+}
+
+.wl.is-guru {
+  padding-top: 0;
 }
 
 .wl-head {

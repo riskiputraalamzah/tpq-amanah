@@ -1,6 +1,7 @@
 <script setup>
 import { RouterView } from 'vue-router'
 import GlobalToast from '@/components/GlobalToast.vue'
+import DialogHost from '@/components/DialogHost.vue'
 </script>
 
 <template>
@@ -10,6 +11,7 @@ import GlobalToast from '@/components/GlobalToast.vue'
     </transition>
   </RouterView>
   <GlobalToast />
+  <DialogHost />
 </template>
 
 <style>

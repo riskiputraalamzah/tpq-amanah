@@ -62,7 +62,7 @@ const routes = [
         name: "KbmMonitor",
         component: () =>
           import("../views/dashboard/admin/KbmMonitorView.vue"),
-        meta: { role: "admin" },
+        meta: { role: "admin", feature: "kbm-monitor" },
       },
       {
         path: "wa-reminders",
@@ -103,7 +103,7 @@ const routes = [
         name: "AdminAttendance",
         component: () =>
           import("../views/dashboard/admin/AdminAttendanceView.vue"),
-        meta: { role: "admin" },
+        meta: { role: "admin", feature: "admin-attendance-view" },
       },
       // Note: TeacherAttendanceDetail route removed - all info now on main page
       {
@@ -246,7 +246,19 @@ const routes = [
         path: "wa-log",
         name: "WaLog",
         component: () => import("../views/dashboard/admin/WaLogView.vue"),
-        meta: { role: "admin" },
+        meta: { role: "admin", feature: "wa-log" },
+      },
+      {
+        path: "kegiatan",
+        name: "Kegiatan",
+        component: () => import("../views/dashboard/guru/KegiatanView.vue"),
+        meta: { role: ["guru", "admin"] },
+      },
+      {
+        path: "kegiatan/:id",
+        name: "KegiatanDetail",
+        component: () => import("../views/dashboard/guru/KegiatanDetailView.vue"),
+        meta: { role: ["guru", "admin"] },
       },
       {
         path: "tpq-profile",
@@ -277,6 +289,7 @@ const routes = [
       { path: "tautkan", name: "WaliLink", component: () => import("../views/wali/WaliLink.vue") },
       { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue") },
       { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
+      { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
     ],
   },
   {
@@ -375,11 +388,11 @@ router.beforeEach(async (to, from, next) => {
     if (requiredRoles.includes(userRole)) {
       next();
     }
-    // Special case: guru with admin-attendance-view permission can access admin-attendance
+    // A guru the admin gave this page as "akses khusus" (meta.feature, see backend utils/guru_features.js)
     else if (
       userRole === "guru" &&
-      to.name === "AdminAttendance" &&
-      userPermissions.includes("admin-attendance-view")
+      to.meta.feature &&
+      userPermissions.includes(to.meta.feature)
     ) {
       next();
     } else {
