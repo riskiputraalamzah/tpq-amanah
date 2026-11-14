@@ -188,6 +188,14 @@
             </svg>
             Broadcast WA
           </router-link>
+          <router-link to="/dashboard/wa-log" class="sidebar-link"
+            :class="{ active: isActive('/dashboard/wa-log') }" @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 7 12 12 15 14" />
+            </svg>
+            Riwayat WA Bot
+          </router-link>
         </template>
 
         <!-- ====================

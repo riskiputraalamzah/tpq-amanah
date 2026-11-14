@@ -237,6 +237,12 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "wa-log",
+        name: "WaLog",
+        component: () => import("../views/dashboard/admin/WaLogView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "tpq-profile",
         name: "TpqProfile",
         component: () => import("../views/dashboard/admin/TpqProfileView.vue"),
