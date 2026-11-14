@@ -373,6 +373,10 @@
                   </template>
                   <template v-else>
                     {{ row.name }}
+                    <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
+                      class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
+                      Data wali: {{ waliStatus[row.id].label }}
+                    </router-link>
                   </template>
                 </td>
                 <td>
@@ -475,6 +479,7 @@ import { sortSantri } from "@/utils/santriSort";
 import { loadExcelLib, downloadWorkbook } from "@/utils/excel";
 import { buildSantriWorkbook, santriFilename } from "@/utils/excelExports";
 import { useAuthStore } from "@/stores/auth";
+import { STATUS as PROFILE_STATUS } from "@/utils/santriProfile";
 import { useToast, useConfirm } from "@/composables/useToast";
 
 const { success, error: showError, warning } = useToast();
@@ -740,6 +745,22 @@ const marhalahList = computed(() =>
   ),
 );
 
+// What the wali filled in (Data Wali Santri), shown under each name with a link to it. Only santri whose wali is
+// linked or whose data was started; the rest has nothing to open yet.
+const waliStatus = ref({});
+const loadWaliStatus = async () => {
+  try {
+    const { data } = await api.get("/wali/admin/progress", { cache: false });
+    waliStatus.value = Object.fromEntries(
+      (data || [])
+        .filter((r) => r.guardians?.length || r.profileStatus !== "empty")
+        .map((r) => [r.santriId, PROFILE_STATUS[r.profileStatus] || PROFILE_STATUS.empty]),
+    );
+  } catch {
+    waliStatus.value = {};
+  }
+};
+
 // Guru: only the jilid they look after (the admin sets it in Kelola Pengajar, else their KBM history).
 const scope = ref(null);
 const normLevel = (v) => {
@@ -825,6 +846,7 @@ const fetchData = async () => {
       api.get("/classes"),
       loadNspq(),
       loadScope(),
+      loadWaliStatus(),
     ]);
     santri.value = santriRes.data;
     classes.value = classesRes.data;
@@ -1341,6 +1363,25 @@ onMounted(fetchData);
   line-height: 1.45;
   color: var(--gray-700);
 }
+
+.wali-data-link {
+  display: block;
+  width: fit-content;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #5b6b62;
+}
+
+.wali-data-link:hover {
+  text-decoration: underline;
+}
+
+.wali-data-link.is-ok { color: #0a5c40; }
+.wali-data-link.is-info { color: #1d4f8a; }
+.wali-data-link.is-warn { color: #92400e; }
+.wali-data-link.is-danger { color: #b42318; }
 
 .scope-note {
   margin: var(--space-md) 0;

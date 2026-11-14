@@ -183,7 +183,7 @@
             <p class="wv-label">Pesan</p>
             <p class="wv-message">{{ remindMessage }}</p>
             <a v-for="g in remind.guardians" :key="g.waliId" class="wv-btn wv-btn-wa" :href="waTo(g.phone, remindMessage)"
-              target="_blank" rel="noopener" @click="logReminder(remind)">
+              target="_blank" rel="noopener" @click="sendReminder(remind, g)">
               Kirim ke {{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}
             </a>
             <button type="button" class="wv-btn wv-btn-ghost" @click="copyText(remindMessage)">{{ copied ? 'Pesan tersalin ✓' : 'Salin pesan' }}</button>
@@ -287,7 +287,12 @@
               <div class="wv-group">
                 <label v-if="nameDiffers" class="wv-check">
                   <input v-model="syncName" type="checkbox" /> Pakai nama "{{ valueAt(review.profile.data, 'santri.namaLengkap') }}" sebagai nama santri di sistem
+                  (ikut berubah di absensi, nilai, dan tabungan)
                 </label>
+                <p class="wv-sub">
+                  Saat diverifikasi, jenis kelamin, tempat dan tanggal lahir<template v-if="nameDiffers && syncName">, serta nama</template>
+                  ikut tersimpan di data santri (Kelola Santri). NIK, KK, alamat, dan data orang tua tetap di sini, hanya admin yang bisa melihat.
+                </p>
                 <label class="wv-label" for="fix-note">Catatan perbaikan untuk wali</label>
                 <textarea id="fix-note" v-model="fixNote" class="wv-input" rows="2" placeholder="Contoh: NIK belum sesuai KK"></textarea>
               </div>
@@ -307,6 +312,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
@@ -329,8 +335,9 @@ const STATUS_FILTERS = [
 ]
 
 const authStore = useAuthStore()
+const route = useRoute()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
-const { success: showSuccess, error: showError } = useToast()
+const { success: showSuccess, error: showError, warning: showWarning } = useToast()
 const siteUrl = window.location.origin
 
 const loading = ref(true)
@@ -418,8 +425,9 @@ const nameDiffers = computed(() => {
   return !!formName && formName !== review.value?.santri?.name
 })
 
-async function load() {
-  loading.value = true
+// quiet: refresh after an action without the skeleton, so the list keeps its scroll position
+async function load({ quiet = false } = {}) {
+  if (!quiet) loading.value = true
   loadError.value = ''
   try {
     const [p, q, sc] = await Promise.all([
@@ -515,9 +523,20 @@ const remindMessage = computed(() => remind.value
   })
   : '')
 const waTo = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
+const remindedTo = new Set()
 function openRemind(r) {
   copied.value = false
+  remindedTo.clear()
   remind.value = r
+}
+// the link opens WhatsApp by itself; record once, close when every wali of this santri was messaged
+function sendReminder(r, g) {
+  if (!remindedTo.size) logReminder(r)
+  remindedTo.add(g.waliId)
+  if (r.guardians.every((x) => remindedTo.has(x.waliId))) {
+    remind.value = null
+    showSuccess('Pesan pengingat dibuka di WhatsApp')
+  }
 }
 async function logReminder(r) {
   // the link opens WhatsApp by itself; this only records it
@@ -605,7 +624,7 @@ async function decide(q, approve) {
   try {
     await api.post(`/wali/admin/link-requests/${q.id}/decide`, { approve, santriId: choice.value[q.id], reason })
     showSuccess(approve ? 'Wali sudah ditautkan' : 'Pengajuan ditolak')
-    await load()
+    await load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal memproses pengajuan')
   } finally {
@@ -630,9 +649,12 @@ async function decideReview(decision) {
   reviewError.value = ''
   try {
     const { data } = await api.post(`/wali/admin/santri/${review.value.santri.id}/review`, { decision, note: fixNote.value, syncName: nameDiffers.value && syncName.value })
-    review.value = data
-    showSuccess(decision === 'verified' ? 'Data terverifikasi' : 'Permintaan perbaikan dikirim ke wali')
-    load()
+    review.value = null
+    showSuccess(decision === 'verified'
+      ? (data?.sync?.name ? `Data terverifikasi. Nama santri sekarang "${data.sync.name}".` : 'Data terverifikasi')
+      : 'Permintaan perbaikan dikirim ke wali')
+    if (data?.sync?.nameSkipped) showWarning(data.sync.nameSkipped)
+    load({ quiet: true })
   } catch (err) {
     reviewError.value = err.response?.data?.error || 'Gagal menyimpan'
   } finally {
@@ -643,9 +665,10 @@ async function decideIdentity(approve) {
   busy.value = true
   try {
     const { data } = await api.post(`/wali/admin/santri/${review.value.santri.id}/identity`, { approve, syncName: approve })
-    review.value = data
+    review.value = null
     showSuccess(approve ? 'Perubahan identitas disetujui' : 'Perubahan identitas ditolak')
-    load()
+    if (data?.sync?.nameSkipped) showWarning(data.sync.nameSkipped)
+    load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal menyimpan')
   } finally {
@@ -665,13 +688,23 @@ async function unlink(g) {
   try {
     await api.delete(`/wali/admin/guardians/${review.value.santri.id}/${g.waliId}`)
     review.value = { ...review.value, guardians: review.value.guardians.filter((x) => x.waliId !== g.waliId) }
-    load()
+    showSuccess('Tautan wali dilepas')
+    load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal melepas tautan')
   }
 }
 
-onMounted(load)
+// /dashboard/wali-santri?santri=ID (from Kelola Santri): open that santri right away
+onMounted(async () => {
+  await load()
+  const id = typeof route.query.santri === 'string' ? route.query.santri : ''
+  const row = id && rows.value.find((r) => r.santriId === id)
+  if (row) {
+    search.value = row.name
+    if (row.profileStatus !== 'empty') openReview(row)
+  }
+})
 </script>
 
 <style scoped>

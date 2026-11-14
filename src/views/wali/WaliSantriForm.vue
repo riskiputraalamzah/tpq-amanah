@@ -80,6 +80,15 @@
                 {{ field.help }} <strong>{{ String(value(field)).length }}/16</strong>
               </span>
               <span v-else-if="field.help" class="w-help">{{ field.help }}</span>
+              <!-- the name comes from the TPQ records, often a short or nick name: say it can (and should) be completed -->
+              <template v-if="field.path === 'santri.namaLengkap' && santri.name">
+                <p v-if="sameAsRecord(value(field))" class="w-note is-warn name-note">
+                  Nama ini dari catatan TPQ. Bila belum lengkap atau ejaannya keliru, ubah sesuai <strong>akta kelahiran</strong>.
+                </p>
+                <p v-else-if="value(field)" class="w-help">
+                  Di catatan TPQ tertulis "{{ santri.name }}". Setelah dicek admin, nama lengkap ini yang dipakai di TPQ.
+                </p>
+              </template>
               <span v-if="errors[field.path]" :id="`${idOf(field)}-err`" class="w-error" role="alert">{{ errors[field.path] }}</span>
             </div>
           </template>
@@ -196,6 +205,9 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
 const idOf = (field) => `f-${field.path.replace('.', '-')}`
 const value = (field) => getPath(form.value, field.path) ?? ''
 const isMasked = (v) => /^\d{4}\*{8}\d{4}$/.test(String(v || ''))
+// same name as in the TPQ records (ignoring case and spaces)
+const norm = (v) => String(v || '').toLowerCase().replace(/\s+/g, ' ').trim()
+const sameAsRecord = (v) => !!v && norm(v) === norm(santri.value.name)
 const shown = (f) => {
   const v = value(f)
   if (f.type === 'gender') return v === 'L' ? 'Laki-laki' : 'Perempuan'
@@ -381,6 +393,12 @@ onMounted(load)
 
 .santri-sub {
   margin-bottom: 12px;
+}
+
+.name-note {
+  display: block; /* .w-note is a flex row: keep the sentence flowing around the bold words */
+  margin: 6px 0 0;
+  font-size: 0.85rem;
 }
 
 .step-hint {

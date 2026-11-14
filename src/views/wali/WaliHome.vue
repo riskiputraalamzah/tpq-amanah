@@ -8,17 +8,6 @@
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
-      <!-- Ask the parent's name once: the admin sees who filled the data -->
-      <form v-if="!wali?.name" class="w-card name-card" @submit.prevent="saveName">
-        <div class="w-field">
-          <label for="wali-name">Nama Bapak/Ibu</label>
-          <input id="wali-name" v-model="nameInput" class="w-input" autocomplete="name" placeholder="Contoh: Ibu Aminah" />
-        </div>
-        <button type="submit" class="w-btn w-btn-ghost" :disabled="!nameInput.trim() || savingName">
-          {{ savingName ? 'Menyimpan…' : 'Simpan nama' }}
-        </button>
-      </form>
-
       <!-- No child linked yet -->
       <div v-if="!santri.length" class="w-card w-center">
         <div class="w-empty-icon" aria-hidden="true">
@@ -41,9 +30,9 @@
             </div>
           </div>
 
-          <span class="w-pill" :class="`is-${status(s).tone}`">{{ status(s).label }}</span>
+          <p class="data-status">Data ananda: <span class="w-pill" :class="`is-${status(s).tone}`">{{ status(s).label }}</span></p>
           <p v-if="s.profileStatus === 'needs_fix' && s.adminNote" class="w-note is-danger child-note">
-            <strong>Catatan admin:</strong> {{ s.adminNote }}
+            <span><strong>Catatan admin:</strong> {{ s.adminNote }}</span>
           </p>
           <p v-else-if="s.hasPendingIdentity" class="w-note is-warn child-note">Perubahan identitas sedang dicek admin.</p>
 
@@ -63,6 +52,18 @@
 
         <router-link to="/wali/tautkan" class="w-btn w-btn-ghost add-child">+ Tautkan anak lain</router-link>
       </template>
+
+      <!-- Ask the parent's name once, after the children: the teachers see who filled the data -->
+      <form v-if="!wali?.name" class="w-card name-card" @submit.prevent="saveName">
+        <div class="w-field">
+          <label for="wali-name">Nama Bapak/Ibu</label>
+          <input id="wali-name" v-model="nameInput" class="w-input" autocomplete="name" placeholder="Contoh: Ibu Aminah" />
+          <span class="w-help">Agar ustadz/ustadzah tahu siapa yang mengisi data ananda.</span>
+        </div>
+        <button type="submit" class="w-btn w-btn-ghost" :disabled="!nameInput.trim() || savingName">
+          {{ savingName ? 'Menyimpan…' : 'Simpan nama' }}
+        </button>
+      </form>
 
       <!-- Requests while the code was lost -->
       <template v-if="requests.length">
@@ -148,7 +149,18 @@ onMounted(load)
 
 <style scoped>
 .name-card {
-  margin-bottom: 4px;
+  margin-top: 20px;
+}
+
+.data-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #475a50;
 }
 
 .child-card {
@@ -191,8 +203,8 @@ onMounted(load)
   color: #5b6b62;
 }
 
-.child-card .w-pill {
-  align-self: flex-start;
+.data-status .w-pill {
+  align-self: center;
 }
 
 .child-note {
