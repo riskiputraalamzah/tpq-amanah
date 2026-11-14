@@ -101,6 +101,7 @@ const CATEGORY = {
   broadcast: 'Broadcast',
   wali_kode: 'Kode masuk wali',
   wali_alfa: 'Kabar alfa',
+  pendaftaran: 'Pendaftaran',
   tes: 'Tes',
   lainnya: 'Lainnya',
 }
@@ -502,6 +503,7 @@ onBeforeUnmount(() => clearInterval(timer))
 .wl-pill.is-broadcast { background: #efe9fb; color: #5b3a9a; }
 .wl-pill.is-wali_kode { background: #fef3c7; color: #7c3a0d; }
 .wl-pill.is-wali_alfa { background: #fdecea; color: #8e1b12; }
+.wl-pill.is-pendaftaran { background: #fef3c7; color: #7c3a0d; }
 
 .wl-status {
   padding: 3px 10px;

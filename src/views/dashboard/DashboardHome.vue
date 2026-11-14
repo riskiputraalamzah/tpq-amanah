@@ -5,6 +5,16 @@
       <p>Selamat datang, {{ user?.displayName }}!</p>
     </header>
 
+    <!-- New registrants waiting to be contacted (admin, or a guru given "Pendaftaran santri") -->
+    <router-link v-if="seesRegistrations && newRegistrations" to="/dashboard/pendaftaran" class="reg-alert">
+      <span class="reg-alert-num">{{ newRegistrations }}</span>
+      <span class="reg-alert-text">
+        <strong>Pendaftar baru menunggu dihubungi</strong>
+        <span>Hubungi wali lewat WhatsApp, lalu jadwalkan penempatan jilid.</span>
+      </span>
+      <span class="reg-alert-go" aria-hidden="true">›</span>
+    </router-link>
+
     <!-- Kelengkapan LPJ (hanya guru yang masuk LPJ) -->
     <LpjStatusCard v-if="isGuru" />
 
@@ -325,6 +335,7 @@
 </template>
 
 <script setup>
+import { usePendaftaranCount } from '@/composables/usePendaftaranCount'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
@@ -339,6 +350,11 @@ const authStore = useAuthStore()
 
 const user = computed(() => authStore.user)
 const isAdmin = computed(() => authStore.isAdmin)
+const { count: newRegistrations, refresh: refreshRegistrations } = usePendaftaranCount()
+const seesRegistrations = computed(() => isAdmin.value || (authStore.user?.permissions?.features || []).includes('pendaftaran'))
+onMounted(() => {
+  if (seesRegistrations.value) refreshRegistrations()
+})
 const isGuru = computed(() => authStore.isGuru)
 const isSantri = computed(() => authStore.isSantri)
 
@@ -573,6 +589,62 @@ watch(
 </script>
 
 <style scoped>
+.reg-alert {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #3b2404;
+  text-decoration: none;
+}
+
+.reg-alert:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.reg-alert-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border-radius: 12px;
+  background: #b45309;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.reg-alert-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reg-alert-text strong {
+  font-size: 0.98rem;
+}
+
+.reg-alert-text span {
+  font-size: 0.85rem;
+  color: #6b4a12;
+}
+
+.reg-alert-go {
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #b45309;
+}
+
 /* Operate surface: the ornament stays in the details (gold hairline, emerald/gold tiles); cards never move on hover. */
 .dashboard-home {
   padding-top: 60px;

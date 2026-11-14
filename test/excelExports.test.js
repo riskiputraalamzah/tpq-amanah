@@ -232,3 +232,36 @@ test("full santri data: NIK/KK stay text, birth date is a real date, columns fol
   assert.deepEqual(sumRows[1], ["Marhalah", 1, 1, 0, 0, 1, 0, 0]);
   assert.deepEqual(sumRows[2], ["Jumlah", 3, 2, 1, 0, 1, 0, 1]);
 });
+
+test("pendaftaran: one row per registrant, the form's answers as text, dates as real dates", async () => {
+  const { STEPS, REG_STATUS, shownValue } = await import("../src/utils/pendaftaran.js");
+  const { buildRegistrationWorkbook, registrationFilename } = await import("../src/utils/excelExports.js");
+  assert.equal(registrationFilename({ date: new Date("2026-11-14T05:00:00Z") }), "Pendaftaran-Santri-Baru-2026-11-14.xlsx");
+  const rows = [
+    {
+      number: "PSB-2026-001",
+      status: "scheduled",
+      submittedAt: { _seconds: Date.UTC(2026, 10, 14, 3) / 1000 },
+      phone: "6281234567890",
+      schedule: { date: "2026-11-17", time: "15:30" },
+      data: {
+        santri: { namaLengkap: "Muhammad Rizky", jenisKelamin: "L", tanggalLahir: "2019-01-07" },
+        riwayat: { pernahTpq: "baru", sesi: "sore" },
+        ayah: { nama: "Ahmad", status: "hidup" },
+      },
+    },
+  ];
+  const wb = await roundTrip(buildRegistrationWorkbook(ExcelJS, { rows, steps: STEPS, shown: shownValue, status: REG_STATUS, exportedAt: new Date("2026-11-14T05:00:00Z") }));
+  const sheet = wb.getWorksheet("Pendaftar");
+  const header = sheet.getRow(5).values.slice(1);
+  const at = (label) => header.indexOf(label) + 1;
+  const row = sheet.getRow(6);
+  assert.equal(row.getCell(at("No. Pendaftaran")).value, "PSB-2026-001");
+  assert.equal(row.getCell(at("Status")).value, "Jadwal penempatan");
+  assert.equal(row.getCell(at("No. WhatsApp")).value, "0812 3456 7890");
+  assert.equal(row.getCell(at("Jenis kelamin")).value, "Laki-laki");
+  assert.equal(row.getCell(at("Pilihan sesi mengaji")).value, "Sesi Sore");
+  assert.equal(row.getCell(at("Status ayah")).value, "Masih hidup");
+  assert.ok(row.getCell(at("Tanggal lahir")).value instanceof Date);
+  assert.equal(row.getCell(at("Jadwal penempatan")).value, "17/11/2026 15:30");
+});

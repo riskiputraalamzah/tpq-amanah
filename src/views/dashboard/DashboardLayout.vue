@@ -89,6 +89,17 @@
             </svg>
             Kelola Santri
           </router-link>
+          <router-link to="/dashboard/pendaftaran" class="sidebar-link" :class="{ active: isActive('/dashboard/pendaftaran') }"
+            @click="closeSidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+            Pendaftaran
+            <span v-if="newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
+          </router-link>
           <router-link to="/dashboard/wali-santri" class="sidebar-link" :class="{ active: isActive('/dashboard/wali-santri') }"
             @click="closeSidebar">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -317,6 +328,7 @@
               :class="{ active: isActive(m.to) }" @click="closeSidebar">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
               {{ m.label }}
+              <span v-if="m.id === 'pendaftaran' && newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
             </router-link>
           </template>
         </template>
@@ -463,6 +475,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { usePendaftaranCount } from "@/composables/usePendaftaranCount";
 import "@/styles/landing.css";
 import "@/styles/dashboard.css";
 import { useRouter, useRoute } from "vue-router";
@@ -490,6 +503,7 @@ const isGuru = computed(() => authStore.isGuru);
 const SPECIAL_MENUS = [
   { id: 'admin-attendance-view', to: '/dashboard/admin-attendance', label: 'Rekap Absensi', icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M12 16v-4" /><path d="M8 16v-2" /><path d="M16 16v-3" />' },
   { id: 'kbm-monitor', to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: '<rect x="3" y="4" width="18" height="16" rx="2" /><polyline points="7 13 10 16 17 9" />' },
+  { id: 'pendaftaran', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />' },
   { id: 'wa-log', to: '/dashboard/wa-log', label: 'Riwayat WA Bot', icon: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />' },
 ];
 const specialMenus = computed(() =>
@@ -545,11 +559,16 @@ const handleLogout = async () => {
   router.push("/");
 };
 
+// New registrants nobody has contacted yet (admin, or a guru given "Pendaftaran santri")
+const { count: newRegistrations, refresh: refreshRegistrations } = usePendaftaranCount();
+const seesRegistrations = computed(() => isAdmin.value || hasPermission("pendaftaran"));
+
 watch(
   () => route.path,
   () => {
     closeSidebar();
     showProfileMenu.value = false;
+    if (seesRegistrations.value) refreshRegistrations();
   }
 );
 
@@ -587,6 +606,7 @@ onMounted(() => {
   }
   prefetchDashboardRoutes(router, authStore.user?.role);
   if (authStore.isAuthenticated) loadTpqIdentity();
+  if (seesRegistrations.value) refreshRegistrations({ force: true });
 });
 </script>
 
@@ -776,6 +796,21 @@ onMounted(() => {
   color: rgba(209, 250, 229, 0.85);
   font-weight: 500;
   transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sidebar-badge {
+  margin-left: auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fcd34d;
+  color: #3b2404;
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .sidebar-link:hover {

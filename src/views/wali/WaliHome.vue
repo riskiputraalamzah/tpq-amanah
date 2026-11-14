@@ -8,14 +8,41 @@
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
-      <!-- No child linked yet -->
-      <div v-if="!santri.length" class="w-card w-center">
-        <div class="w-empty-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg>
-        </div>
-        <h2 class="w-title" style="font-size: 1.15rem">Tautkan ananda dulu</h2>
-        <p class="w-lead">Masukkan kode dari slip TPQ atau pesan WhatsApp dari ustadz/ustadzah.</p>
-        <router-link to="/wali/tautkan" class="w-btn w-btn-primary">Masukkan kode</router-link>
+      <!-- Registrations of new children (until accepted: then the child is listed under Ananda) -->
+      <template v-if="registrations.length">
+        <h2 class="w-section-title">Pendaftaran santri baru</h2>
+        <router-link v-for="r in registrations" :key="r.id" :to="`/wali/daftar/${r.id}`" class="w-card reg-card"
+          :aria-label="`Pendaftaran ${r.childName || 'belum diberi nama'}: ${regStatus(r).label}`">
+          <span class="reg-top">
+            <strong>{{ r.childName || 'Belum diberi nama' }}</strong>
+            <span class="w-pill" :class="`is-${regStatus(r).tone}`">{{ regStatus(r).label }}</span>
+          </span>
+          <span class="reg-line">{{ regLine(r) }}</span>
+          <span class="reg-more">{{ r.status === 'draft' ? 'Lanjutkan mengisi ›' : 'Lihat status ›' }}</span>
+        </router-link>
+      </template>
+
+      <!-- No child linked yet: a new family registers, a family already at the TPQ links with the code -->
+      <div v-if="!santri.length" class="start">
+        <h2 class="w-section-title">{{ registrations.length ? 'Lainnya' : 'Mulai dari sini' }}</h2>
+        <router-link to="/wali/daftar/baru" class="start-card is-new">
+          <span class="start-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>
+          </span>
+          <span class="start-text">
+            <strong>Daftarkan santri baru</strong>
+            <span>Ananda belum mengaji di TPQ Amanah</span>
+          </span>
+        </router-link>
+        <router-link to="/wali/tautkan" class="start-card">
+          <span class="start-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg>
+          </span>
+          <span class="start-text">
+            <strong>Tautkan dengan kode</strong>
+            <span>Ananda sudah mengaji di sini: masukkan kode dari slip atau ustadz/ustadzah</span>
+          </span>
+        </router-link>
       </div>
 
       <!-- The children -->
@@ -62,7 +89,10 @@
           </router-link>
         </article>
 
-        <router-link to="/wali/tautkan" class="w-btn w-btn-ghost add-child">+ Tautkan anak lain</router-link>
+        <div class="add-row">
+          <router-link to="/wali/tautkan" class="w-btn w-btn-ghost">+ Tautkan anak lain</router-link>
+          <router-link to="/wali/daftar/baru" class="w-btn w-btn-ghost">+ Daftarkan santri baru</router-link>
+        </div>
       </template>
 
       <!-- Ask the parent's name once, after the children: the teachers see who filled the data -->
@@ -97,12 +127,14 @@ import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { STATUS } from '@/utils/santriProfile'
+import { REG_STATUS, longDate } from '@/utils/pendaftaran'
 
 const loading = ref(true)
 const loadError = ref('')
 const wali = ref(null)
 const santri = ref([])
 const requests = ref([])
+const registrations = ref([])
 const nameInput = ref('')
 const savingName = ref(false)
 
@@ -127,16 +159,30 @@ const actionLabel = (s) => ({
   submitted: 'Lihat / ubah data',
   verified: 'Lihat / perbarui data',
 }[s.profileStatus] || 'Isi data sekarang')
+const regStatus = (r) => REG_STATUS[r.status] || REG_STATUS.submitted
+const regLine = (r) => {
+  if (r.status === 'draft') return 'Belum dikirim. Isian sudah tersimpan.'
+  if (r.status === 'scheduled' && r.schedule) return `Penempatan jilid: ${longDate(r.schedule.date, { weekday: true })}${r.schedule.time ? `, ${r.schedule.time}` : ''}`
+  if (r.status === 'cancelled') return r.cancelReason ? `Alasan: ${r.cancelReason}` : 'Pendaftaran tidak dilanjutkan.'
+  if (r.status === 'contacted') return `${r.number} · Sudah dihubungi, menunggu jadwal penempatan`
+  return `${r.number} · Ustadz/ustadzah akan menghubungi Bapak/Ibu`
+}
 const actionClass = (s) => (['submitted', 'verified'].includes(s.profileStatus) ? 'w-btn-ghost' : 'w-btn-primary')
 
 async function load() {
   loading.value = true
   loadError.value = ''
   try {
-    const { data } = await api.get('/wali/me', { cache: false })
+    const [{ data }, regs] = await Promise.all([
+      api.get('/wali/me', { cache: false }),
+      // a failure here must not hide the children
+      api.get('/pendaftaran/mine', { cache: false }).then((r) => r.data || []).catch(() => []),
+    ])
     wali.value = data.wali
     santri.value = data.santri || []
     requests.value = data.requests || []
+    // accepted: the child is under Ananda now; cancelled by the parent themselves: nothing to show
+    registrations.value = regs.filter((r) => r.status !== 'accepted' && !(r.status === 'cancelled' && r.cancelledBy === 'wali'))
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Data belum bisa dimuat. Periksa koneksi lalu muat ulang.'
   } finally {
@@ -286,8 +332,112 @@ onMounted(load)
   color: #0a5c40;
 }
 
-.add-child {
+.add-row {
+  display: grid;
+  gap: 10px;
   margin-top: 14px;
+}
+
+.reg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #0b3b2a;
+  text-decoration: none;
+  background: #fffdf7;
+  border-color: rgba(180, 83, 9, 0.28);
+}
+
+.reg-card:focus-visible,
+.start-card:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.reg-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.reg-top strong {
+  font-size: 1.02rem;
+}
+
+.reg-line {
+  font-size: 0.88rem;
+  color: #475a50;
+}
+
+.reg-more {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0a5c40;
+}
+
+.start {
+  display: grid;
+  gap: 10px;
+}
+
+.start .w-section-title {
+  margin-bottom: 0;
+}
+
+.start-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1.5px solid rgba(11, 59, 42, 0.14);
+  color: #0b3b2a;
+  text-decoration: none;
+  box-shadow: 0 10px 24px -18px rgba(3, 41, 29, 0.35);
+}
+
+.start-card.is-new {
+  background: linear-gradient(150deg, #0a5c40, #053d2c);
+  border-color: transparent;
+  color: #fff;
+}
+
+.start-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.start-card.is-new .start-icon {
+  background: #fcd34d;
+  color: #053d2c;
+}
+
+.start-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.start-text strong {
+  font-size: 1.02rem;
+}
+
+.start-text span {
+  font-size: 0.86rem;
+  color: #5b6b62;
+}
+
+.start-card.is-new .start-text span {
+  color: rgba(209, 250, 229, 0.85);
 }
 
 .request-card {

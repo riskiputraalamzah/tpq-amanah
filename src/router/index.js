@@ -243,6 +243,12 @@ const routes = [
         meta: { role: ["guru", "admin"] },
       },
       {
+        path: "pendaftaran",
+        name: "Pendaftaran",
+        component: () => import("../views/dashboard/admin/PendaftaranView.vue"),
+        meta: { role: "admin", feature: "pendaftaran" },
+      },
+      {
         path: "wa-log",
         name: "WaLog",
         component: () => import("../views/dashboard/admin/WaLogView.vue"),
@@ -290,8 +296,12 @@ const routes = [
       { path: "santri/:santriId", name: "WaliSantriForm", component: () => import("../views/wali/WaliSantriForm.vue") },
       { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
+      // pendaftaran santri baru ("baru" starts one, or continues the unfinished one)
+      { path: "daftar/:id", name: "WaliDaftar", component: () => import("../views/wali/WaliDaftar.vue") },
     ],
   },
+  // the short link on the landing page, posters and WhatsApp: tpqamanahsawotratap.com/daftar
+  { path: "/daftar", redirect: "/wali/daftar/baru" },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",

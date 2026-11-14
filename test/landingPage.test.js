@@ -14,12 +14,9 @@ const navbarSrc = fs.readFileSync(
   "utf8"
 );
 
-test("HomeView integrates official Google Form registration link & contacts", () => {
-  const formUrlSnippet = "docs.google.com/forms";
-  assert.ok(
-    homeViewSrc.includes(formUrlSnippet),
-    "HomeView must include Google Form registration link"
-  );
+test("HomeView sends registration to the web form (/daftar), not the old Google Form", () => {
+  assert.ok(!homeViewSrc.includes("docs.google.com/forms"), "the Google Form link is gone");
+  assert.ok((homeViewSrc.match(/to="\/daftar"/g) || []).length >= 4, "hero, registration section, contact and floating buttons go to /daftar");
   assert.ok(
     homeViewSrc.includes("0895-3039-7058"),
     "Must include official contact for Ustadzah Ella (0895-3039-7058)"

@@ -25,7 +25,7 @@
           </div>
 
           <!-- Account type (hidden when a parent arrives from a link with a code: only the wali login makes sense) -->
-          <div v-if="!linkingMode" role="tablist" aria-label="Jenis akun" class="login-tabs">
+          <div v-if="!linkingMode && !daftarMode" role="tablist" aria-label="Jenis akun" class="login-tabs">
             <button
               id="tab-credentials"
               type="button"
@@ -108,8 +108,8 @@
           </form>
 
           <!-- Wali santri: a code sent to their WhatsApp -->
-          <div v-else id="panel-wali" :role="linkingMode ? undefined : 'tabpanel'" :aria-labelledby="linkingMode ? undefined : 'tab-wali'"
-            :class="linkingMode ? 'mt-1' : 'mt-6'">
+          <div v-else id="panel-wali" :role="linkingMode || daftarMode ? undefined : 'tabpanel'" :aria-labelledby="linkingMode || daftarMode ? undefined : 'tab-wali'"
+            :class="linkingMode || daftarMode ? 'mt-1' : 'mt-6'">
             <!-- step 1: the number -->
             <form v-if="waliStep === 'phone'" class="space-y-4" @submit.prevent="requestWaliCode">
               <!-- the code from the link was checked first: used / replaced / expired / unknown is said at once -->
@@ -127,6 +127,17 @@
                   </li>
                   <li>Ananda <strong>langsung tertaut</strong><template v-if="linkCode"> dengan kode <strong class="link-code">{{ linkCode }}</strong></template>.</li>
                   <li>Isi data ananda, sekitar 5 menit.</li>
+                </ol>
+              </div>
+              <!-- from "Daftar santri baru": this sign-in is the first of three short steps -->
+              <div v-else-if="daftarMode" class="link-steps" role="note">
+                <p class="link-steps-lead">Pendaftaran santri baru TPQ Amanah, dari HP, sekitar 5 menit:</p>
+                <ol>
+                  <li class="is-now">
+                    <strong>Masuk dengan nomor WhatsApp</strong> Bapak/Ibu. Nomor ini yang nanti dihubungi ustadz/ustadzah. Tidak perlu membuat akun.
+                  </li>
+                  <li>Isi formulir pendaftaran ananda. Bisa disimpan dan dilanjutkan nanti.</li>
+                  <li>Ustadz/ustadzah menghubungi untuk penempatan jilid.</li>
                 </ol>
               </div>
               <p v-else class="text-sm text-center lp-body">
@@ -232,7 +243,9 @@ const linkCode = (() => {
     return "";
   }
 })().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 9);
-const activeTab = ref(linkingMode || route.query.as === "wali" ? "wali" : "credentials");
+// A parent who tapped "Daftar santri baru" (/daftar -> /wali/daftar/baru) and signs in first
+const daftarMode = typeof route.query.redirect === "string" && route.query.redirect.startsWith("/wali/daftar");
+const activeTab = ref(linkingMode || daftarMode || route.query.as === "wali" ? "wali" : "credentials");
 
 // The code in the link is checked before anything else (only its state; the child is never named here)
 const codeState = ref(linkingMode ? "checking" : "");
@@ -273,6 +286,7 @@ onMounted(async () => {
 const heading = computed(() => {
   if (linkingMode && codeProblem.value) return { title: "Masuk Wali Santri", sub: "Untuk orang tua / wali santri TPQ Amanah" };
   if (linkingMode) return { title: "Tautkan Data Ananda", sub: "Langkah pertama: masuk dengan nomor WhatsApp Bapak/Ibu" };
+  if (daftarMode) return { title: "Daftar Santri Baru", sub: "Langkah pertama: masuk dengan nomor WhatsApp Bapak/Ibu" };
   if (activeTab.value === "wali") return { title: "Masuk Wali Santri", sub: "Untuk orang tua / wali santri TPQ Amanah" };
   return { title: "Login Dashboard", sub: "Masuk untuk mengakses dashboard" };
 });
@@ -372,7 +386,11 @@ const requestWaliCode = async () => {
   waliBusy.value = true;
   try {
     // from a teacher's link: the code goes along, so the WhatsApp message can name the child being linked
-    const { data } = await api.post("/wali/auth/request-otp", { phone: waliPhone.value, ...(linkingMode && linkCode ? { code: linkCode } : {}) });
+    const { data } = await api.post("/wali/auth/request-otp", {
+      phone: waliPhone.value,
+      ...(linkingMode && linkCode ? { code: linkCode } : {}),
+      ...(daftarMode ? { purpose: "daftar" } : {}),
+    });
     waliStep.value = "code";
     waliCode.value = "";
     waliDelivery.value = "pending";

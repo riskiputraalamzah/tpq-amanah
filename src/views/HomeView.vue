@@ -76,10 +76,8 @@
           class="hero-rise mt-8 flex w-full max-w-sm flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center"
           style="--d: 300ms"
         >
-          <a
-            :href="googleFormUrl"
-            target="_blank"
-            rel="noopener noreferrer"
+          <router-link
+            to="/daftar"
             class="hero-cta group inline-flex items-center justify-center gap-2.5 px-7 py-3.5 text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 rounded-xl shadow-[0_14px_30px_-10px_rgba(251,191,36,0.6)] hover:shadow-[0_18px_34px_-10px_rgba(251,191,36,0.75)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-200"
           >
             <span>Daftar Santri Baru</span>
@@ -92,7 +90,7 @@
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-          </a>
+          </router-link>
 
           <a
             :href="contactElla.waLink"
@@ -115,7 +113,7 @@
             <span class="w-2 h-2 rounded-full bg-amber-400 motion-safe:animate-pulse" aria-hidden="true"></span>
             Penerimaan Santri Baru &middot; Sawotratap, Sidoarjo
           </span>
-          <span>Isi formulir sekitar 3 menit dari HP. Tanpa biaya formulir.</span>
+          <span>Daftar online sekitar 5 menit dari HP. Tanpa biaya formulir.</span>
         </p>
       </div>
 
@@ -323,7 +321,7 @@
     </section>
 
     <!-- ================================================================= -->
-    <!-- 3. PENDAFTARAN: timeline on the left, a mihrab-topped hub on the right -->
+    <!-- 3. PENDAFTARAN: four steps on the left, the mihrab panel (sesi, biaya, the button) on the right -->
     <!-- ================================================================= -->
     <section
       id="pendaftaran"
@@ -331,120 +329,53 @@
       class="lp-section lp-ivory scroll-mt-28 !pt-12 lg:!pt-16"
     >
       <div class="lp-wrap">
-        <SectionHeading title="Alur Pendaftaran Calon Santri &amp; Santriwati">
-          Pendaftaran bisa diselesaikan dari rumah lewat
-          <strong class="font-semibold lp-ink">Formulir Google Form resmi</strong>,
-          lalu dikonfirmasi lewat WhatsApp. Tidak ada tes yang menggugurkan:
-          calon santri hanya ditempatkan di jilid yang sesuai dengan
-          kesiapannya.
+        <SectionHeading title="Daftar Santri Baru, Langsung dari HP">
+          Tanpa antre dan tanpa membuat akun: cukup
+          <strong class="font-semibold lp-ink">nomor WhatsApp</strong> Bapak/Ibu.
+          Tidak ada tes yang menggugurkan, ananda ditempatkan di jilid yang sesuai
+          dengan kesiapannya.
         </SectionHeading>
 
         <div class="grid items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
           <!-- Steps -->
-          <div class="flex flex-col justify-between p-7 lp-card sm:p-10 lg:col-span-7">
-            <div>
-              <div
-                class="flex flex-col gap-3 pb-6 mb-8 border-b sm:flex-row sm:items-center sm:justify-between border-amber-700/15"
-              >
-                <div>
-                  <h3 class="text-xl font-bold sm:text-2xl lp-ink">
-                    3 Langkah Mudah Mendaftar
-                  </h3>
-                  <p class="text-sm lp-body mt-0.5">Dari rumah, tanpa antre</p>
-                </div>
-                <span
-                  class="self-start px-3.5 py-1.5 text-xs font-bold whitespace-nowrap border rounded-full sm:self-auto border-amber-700/35 text-amber-800 bg-amber-50"
-                >
-                  Estimasi 3 menit
-                </span>
+          <div class="flex flex-col p-6 lp-card sm:p-10 lg:col-span-7">
+            <div class="flex flex-col gap-3 pb-6 mb-8 border-b sm:flex-row sm:items-center sm:justify-between border-amber-700/15">
+              <div>
+                <h3 class="text-xl font-bold sm:text-2xl lp-ink">Alur pendaftaran</h3>
+                <p class="text-sm lp-body mt-0.5">Dari mengisi formulir sampai mulai mengaji</p>
               </div>
-
-              <ol class="space-y-9">
-                <li class="relative pl-[4.5rem]">
-                  <StarBadge class="!absolute left-0 top-0">1</StarBadge>
-                  <span
-                    class="absolute left-[1.625rem] top-[3.5rem] -bottom-9 w-px bg-gradient-to-b from-amber-700/50 to-amber-700/10"
-                    aria-hidden="true"
-                  ></span>
-                  <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">
-                    Isi formulir online
-                  </h4>
-                  <p class="mb-1 text-sm leading-relaxed lp-body">
-                    Lengkapi data calon santri dan orang tua/wali di Google Form
-                    resmi TPQ Amanah. Bisa dibuka langsung dari HP.
-                  </p>
-                  <a
-                    :href="googleFormUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center text-sm font-bold underline transition-colors min-h-11 text-emerald-700 hover:text-emerald-900 underline-offset-4"
-                  >
-                    Buka formulir pendaftaran ↗
-                  </a>
-                </li>
-
-                <li class="relative pl-[4.5rem]">
-                  <StarBadge class="!absolute left-0 top-0">2</StarBadge>
-                  <span
-                    class="absolute left-[1.625rem] top-[3.5rem] -bottom-9 w-px bg-gradient-to-b from-amber-700/50 to-amber-700/10"
-                    aria-hidden="true"
-                  ></span>
-                  <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">
-                    Konfirmasi lewat WhatsApp &amp; pilih sesi
-                  </h4>
-                  <p class="mb-3 text-sm leading-relaxed lp-body">
-                    Kirim nama santri ke koordinator agar kuota kelas dan jadwal
-                    tercatat. Pilihan sesi: Sesi Sore pukul 15:30 atau Sesi
-                    Malam pukul 18:00.
-                  </p>
-                  <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                    <a
-                      :href="contactElla.waLink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="lp-btn-line"
-                    >
-                      <span
-                        >WA Ustadzah Ella
-                        <span class="whitespace-nowrap"
-                          >({{ contactElla.phone }}) ↗</span
-                        ></span
-                      >
-                    </a>
-                    <a
-                      :href="contactRiski.waLink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="lp-btn-line"
-                    >
-                      <span
-                        >WA Ustadz Riski
-                        <span class="whitespace-nowrap"
-                          >({{ contactRiski.phone }}) ↗</span
-                        ></span
-                      >
-                    </a>
-                  </div>
-                </li>
-
-                <li class="relative pl-[4.5rem]">
-                  <StarBadge class="!absolute left-0 top-0">3</StarBadge>
-                  <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">
-                    Penempatan jilid yang santai, lalu mulai belajar
-                  </h4>
-                  <p class="text-sm leading-relaxed lp-body">
-                    Calon santri diajak berbincang santai untuk menentukan jilid
-                    At-Tartil yang tepat (Jilid 1 sampai 6). Tidak ada tes yang
-                    menegangkan, suasana dibuat nyaman dan ceria sejak hari
-                    pertama.
-                  </p>
-                </li>
-              </ol>
+              <span class="self-start px-3.5 py-1.5 text-xs font-bold whitespace-nowrap border rounded-full sm:self-auto border-amber-700/35 text-amber-800 bg-amber-50">
+                Formulir &plusmn; 5 menit
+              </span>
             </div>
 
-            <div
-              class="flex flex-wrap items-center justify-between pt-6 mt-9 text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body"
-            >
+            <ol class="space-y-8">
+              <li v-for="(s, i) in registrationSteps" :key="s.title" class="relative pl-[4.5rem]">
+                <StarBadge class="!absolute left-0 top-0">{{ i + 1 }}</StarBadge>
+                <span
+                  v-if="i < registrationSteps.length - 1"
+                  class="absolute left-[1.625rem] top-[3.5rem] -bottom-8 w-px bg-gradient-to-b from-amber-700/50 to-amber-700/10"
+                  aria-hidden="true"
+                ></span>
+                <p class="mb-0.5 text-xs font-bold tracking-wide uppercase text-amber-700">{{ s.who }}</p>
+                <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">{{ s.title }}</h4>
+                <p class="text-sm leading-relaxed lp-body">{{ s.text }}</p>
+              </li>
+            </ol>
+
+            <!-- what to have at hand, so nobody stops halfway -->
+            <div class="p-5 mt-9 rounded-2xl bg-emerald-50/70 border border-emerald-900/10">
+              <p class="mb-3 text-sm font-bold lp-ink">Siapkan sebelum mengisi:</p>
+              <ul class="grid gap-2 text-sm sm:grid-cols-2 lp-body">
+                <li v-for="item in registrationNeeds" :key="item" class="flex items-start gap-2">
+                  <svg class="w-4 h-4 mt-0.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                  <span>{{ item }}</span>
+                </li>
+              </ul>
+              <p class="mt-3 text-xs lp-body">NIK ananda dan nomor KK diminta nanti, setelah ananda diterima.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between pt-6 mt-auto text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body lg:mt-8">
               <span class="inline-flex items-center gap-2 font-semibold text-emerald-800">
                 <i class="lp-diamond text-amber-600"></i>
                 Terbuka untuk usia 4 tahun sampai SMP
@@ -454,64 +385,54 @@
           </div>
 
           <!-- Hub: mihrab-topped panel -->
-          <div
-            class="flex flex-col justify-between px-6 pt-24 pb-7 lp-dark-panel rounded-t-[14rem] sm:px-9 sm:pb-9 lg:col-span-5"
-          >
+          <div class="flex flex-col px-6 pt-24 pb-7 lp-dark-panel rounded-t-[14rem] sm:px-9 sm:pb-9 lg:col-span-5">
             <div class="text-center">
-              <span
-                class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold border rounded-full whitespace-nowrap border-amber-200/40 text-amber-100 bg-white/5"
-              >
+              <span class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold border rounded-full whitespace-nowrap border-amber-200/40 text-amber-100 bg-white/5">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 motion-safe:animate-pulse" aria-hidden="true"></span>
                 Pendaftaran Dibuka
               </span>
-              <p class="mt-2 text-xs font-medium text-emerald-200/80">Sawotratap, Sidoarjo</p>
-
-              <h3 class="mt-5 mb-3 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[1.7rem] text-balance">
-                Daftar Mandiri via Formulir Online Resmi
+              <h3 class="mt-5 mb-2 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[1.7rem] text-balance">
+                Formulir Pendaftaran Online
               </h3>
-              <p class="mb-7 text-sm leading-relaxed text-emerald-100/85">
-                Daftarkan putra-putri Anda dari rumah, tanpa antre, lewat
-                Formulir Google Form resmi TPQ Amanah.
+              <p class="mb-6 text-sm leading-relaxed text-emerald-100/85">
+                Bisa diisi kapan saja, disimpan, dan dilanjutkan nanti.
+                Status pendaftaran juga bisa dicek dari HP.
               </p>
             </div>
 
-            <ul class="mb-8 text-sm lp-check is-dark">
-              <li>
-                <i class="lp-diamond"></i>
-                <span><strong class="block font-bold text-white">100% Praktis</strong>
-                  <span class="text-emerald-200/80">Cukup isi 3 menit dari HP</span></span>
-              </li>
-              <li>
-                <i class="lp-diamond"></i>
-                <span><strong class="block font-bold text-white">Metode At-Tartil</strong>
-                  <span class="text-emerald-200/80">Kurikulum 6 Jilid terarah</span></span>
-              </li>
-              <li>
-                <i class="lp-diamond"></i>
-                <span><strong class="block font-bold text-white">2 Pilihan Sesi</strong>
-                  <span class="text-emerald-200/80">Sore (15:30) &amp; Malam (18:00)</span></span>
-              </li>
-              <li>
-                <i class="lp-diamond"></i>
-                <span><strong class="block font-bold text-white">Bebas Biaya Form</strong>
-                  <span class="text-emerald-200/80">Tanpa pungutan formulir awal</span></span>
+            <!-- the two sesi -->
+            <p class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300">Pilihan sesi</p>
+            <div class="grid grid-cols-2 gap-2 mb-6">
+              <div v-for="s in sessions" :key="s.name" class="p-3 border rounded-xl border-white/15 bg-white/5">
+                <p class="text-sm font-bold text-white">{{ s.name }}</p>
+                <p class="text-xs font-semibold text-amber-200 tabular-nums">{{ s.time }}</p>
+                <p class="mt-1 text-xs leading-snug text-emerald-100/75">{{ s.note }}</p>
+              </div>
+            </div>
+
+            <!-- fees, as in the TPQ's terms -->
+            <p class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300">Rincian biaya</p>
+            <ul class="mb-2 text-sm">
+              <li v-for="f in fees" :key="f.label" class="flex items-baseline justify-between gap-3 py-2 border-b border-white/10">
+                <span class="text-emerald-50">{{ f.label }} <span class="text-xs text-emerald-200/70">{{ f.note }}</span></span>
+                <strong class="font-bold text-white tabular-nums">{{ f.amount }}</strong>
               </li>
             </ul>
+            <p class="mb-7 text-xs text-emerald-200/80">Mengisi formulir gratis. Pembayaran setelah ananda diterima.</p>
 
-            <div class="pt-6 space-y-4 border-t border-amber-200/20">
-              <a
-                :href="googleFormUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="w-full lp-btn-gold"
-              >
-                <span>Buka Formulir Google Form ↗</span>
-              </a>
+            <div class="pt-6 mt-auto space-y-4 border-t border-amber-200/20">
+              <router-link to="/daftar" class="w-full lp-btn-gold">
+                <span>Daftar Sekarang</span>
+              </router-link>
+              <p class="text-xs text-center text-emerald-100/80">
+                Sudah mendaftar?
+                <router-link to="/wali" class="font-bold underline text-amber-200 underline-offset-2 hover:text-amber-100">Cek status pendaftaran</router-link>
+              </p>
 
               <div>
                 <div class="flex flex-wrap items-center justify-between mb-2.5 text-xs gap-x-3 gap-y-0.5">
-                  <span class="text-white/80">Butuh bantuan pendaftaran?</span>
-                  <span class="font-bold text-amber-300">Asatidz Pendamping</span>
+                  <span class="text-white/80">Butuh bantuan mengisi?</span>
+                  <span class="font-bold text-amber-300">Koordinator pendaftaran</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                   <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer" class="lp-btn-ghost">
@@ -1540,17 +1461,12 @@
               <div>
                 <h3 class="text-base font-bold text-white">Formulir Pendaftaran Online</h3>
                 <p class="text-xs text-emerald-100/80 mt-0.5">
-                  Daftarkan santri baru kapan saja melalui Google Form
+                  Daftarkan santri baru kapan saja dari HP, cukup dengan nomor WhatsApp
                 </p>
               </div>
-              <a
-                :href="googleFormUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="px-6 lp-btn-gold"
-              >
-                Buka Form ↗
-              </a>
+              <router-link to="/daftar" class="px-6 lp-btn-gold">
+                Daftar Sekarang
+              </router-link>
             </div>
           </div>
 
@@ -1609,13 +1525,11 @@
           : 'opacity-0 translate-y-4 invisible'
       "
     >
-      <!-- Floating Google Form CTA -->
-      <a
-        :href="googleFormUrl"
-        target="_blank"
-        rel="noopener noreferrer"
+      <!-- Floating registration CTA -->
+      <router-link
+        to="/daftar"
         class="flex items-center gap-2 px-4 text-sm font-bold transition-all border rounded-full shadow-lg min-h-11 bg-amber-400 hover:bg-amber-300 text-slate-950 hover:scale-105 active:scale-95 border-white/60"
-        title="Daftar via Google Form"
+        title="Daftar santri baru online"
       >
         <svg
           class="w-4 h-4 text-slate-950 shrink-0"
@@ -1631,7 +1545,7 @@
           />
         </svg>
         <span>Daftar Santri Baru</span>
-      </a>
+      </router-link>
 
       <!-- Floating WhatsApp CTA -->
       <a
@@ -1672,9 +1586,29 @@ import StarBadge from "@/components/landing/StarBadge.vue";
 import "@/styles/landing.css";
 import api from "@/services/api";
 
-// Google Form Official Registration Link
-const googleFormUrl =
-  "https://docs.google.com/forms/d/e/1FAIpQLSeWnJ4biVA-l842Xk21cChVIEGzdB65XiH27w2wtm8Z-ynT6g/viewform?usp=send_form";
+// Pendaftaran santri baru: the form on this site (/daftar -> wali portal), replacing the Google Form
+const registrationSteps = [
+  { who: "Bapak/Ibu", title: "Masuk dengan nomor WhatsApp", text: "Kode masuk dikirim lewat WhatsApp TPQ. Tidak perlu membuat akun atau mengingat kata sandi." },
+  { who: "Bapak/Ibu", title: "Isi formulir pendaftaran", text: "Data ananda, orang tua, dan pilihan sesi. Sekitar 5 menit, bisa disimpan lalu dilanjutkan nanti." },
+  { who: "Ustadz/ustadzah", title: "Dihubungi & penempatan jilid", text: "Kami menghubungi lewat WhatsApp untuk jadwal bincang santai di TPQ, tanpa tes yang menegangkan." },
+  { who: "Ananda", title: "Diterima & mulai mengaji", text: "Kehadiran dan materi ananda bisa dipantau dari HP lewat portal wali santri." },
+];
+const registrationNeeds = [
+  "Nomor WhatsApp yang aktif",
+  "Tanggal lahir ananda (akta kelahiran)",
+  "Nama lengkap ayah & ibu (sesuai KK)",
+  "Alamat rumah",
+];
+const sessions = [
+  { name: "Sesi Sore", time: "15:30 - 17:00", note: "Usia dini, TK, SD kelas 1-4" },
+  { name: "Sesi Malam", time: "18:00 - 19:30", note: "Sekolah seharian & kelas lanjutan" },
+];
+const fees = [
+  { label: "Daftar ulang", note: "sekali", amount: "Rp35.000" },
+  { label: "Buku Prestasi", note: "", amount: "Rp5.000" },
+  { label: "Buku Tartil", note: "", amount: "Rp13.000" },
+  { label: "SPP", note: "per bulan", amount: "Rp20.000" },
+];
 
 // Official Asatidz Contacts
 const contactElla = {
@@ -1835,7 +1769,7 @@ const faqs = [
   },
   {
     q: "Bagaimana cara mendaftar?",
-    a: 'Isi Formulir Pendaftaran Google Form lewat tombol "Daftar Santri Baru" di halaman ini, lalu konfirmasi nama santri ke Ustadzah Ella (0895-3039-7058) atau Ustadz Riski (0822-3336-1877) lewat WhatsApp.',
+    a: 'Tekan tombol "Daftar Santri Baru" di halaman ini, masuk dengan nomor WhatsApp, lalu isi formulirnya (sekitar 5 menit). Ustadz/ustadzah akan menghubungi Bapak/Ibu untuk penempatan jilid. Bila ada kendala, hubungi Ustadzah Ella (0895-3039-7058) atau Ustadz Riski (0822-3336-1877) lewat WhatsApp.',
   },
   {
     q: "Bolehkah saya melihat lokasi TPQ dulu sebelum mendaftar?",

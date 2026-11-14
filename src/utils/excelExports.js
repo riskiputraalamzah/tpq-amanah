@@ -400,3 +400,71 @@ export function buildSantriDataWorkbook(ExcelJS, { rows, steps, status, relation
   })
   return workbook
 }
+
+/* ------------------------------------------------------------------ pendaftaran santri baru */
+
+export const registrationFilename = ({ date = new Date(), filtered = false } = {}) =>
+  `Pendaftaran-Santri-Baru-${dateStamp(date)}${filtered ? '-filter' : ''}.xlsx`
+
+const REG_FILL = { idle: COLORS.muted, warn: COLORS.warn, info: COLORS.info, danger: COLORS.danger, ok: COLORS.ok }
+const regColumn = (f) => {
+  const header = f.label.replace(/\s*\((opsional|bila berkenan)\)/i, '').replace(/\?$/, '')
+  if (f.type === 'date') return { header, width: 14, numFmt: 'dd/mm/yyyy', align: 'center' }
+  if (f.type === 'phone') return { header, width: 16, text: true }
+  if (f.type === 'digits') return { header, width: 9, text: true, align: 'center' }
+  if (f.type === 'textarea') return { header, width: 40, wrap: true }
+  if (f.type === 'chips' || f.type === 'cards' || f.type === 'select') return { header, width: 20 }
+  return { header }
+}
+
+/**
+ * rows:    from GET /pendaftaran/admin?full=1 (summary + data), already narrowed to what is on screen
+ * steps:   STEPS of pendaftaran.js; shown: (field, data) -> text (shownValue), status: REG_STATUS
+ */
+export function buildRegistrationWorkbook(ExcelJS, { rows, steps, shown, status, exportedAt = new Date(), filterLabel = '' }) {
+  const workbook = createWorkbook(ExcelJS, { subject: 'Pendaftaran Santri Baru TPQ AMANAH', createdAt: exportedAt })
+  const fields = steps.flatMap((s) => s.fields)
+  const cellOf = (f, data) => {
+    if (f.type === 'date') return fieldValue({ type: 'date' }, valueAt(data, f.path))
+    return shown(f, data) || ''
+  }
+  addTableSheet(workbook, 'Pendaftar', {
+    title: 'Pendaftaran Santri Baru - TPQ AMANAH',
+    lines: [
+      `Diekspor pada ${timeStamp(exportedAt)}${filterLabel ? ` · ${filterLabel}` : ''} · ${rows.length} pendaftar`,
+      'Berisi data pribadi calon santri dan orang tua. Simpan dengan aman dan jangan dibagikan.',
+    ],
+    columns: [
+      { header: 'No', width: 6, align: 'center' },
+      { header: 'No. Pendaftaran', width: 16, text: true },
+      { header: 'Status', width: 18 },
+      { header: 'Tanggal daftar', width: 14, numFmt: 'dd/mm/yyyy', align: 'center' },
+      { header: 'No. WhatsApp', width: 16, text: true },
+      ...fields.map(regColumn),
+      { header: 'Jadwal penempatan', width: 22 },
+      { header: 'Diterima di', width: 14 },
+      { header: 'No. Induk', width: 24, text: true },
+      { header: 'Alasan batal', width: 30 },
+      { header: 'Catatan admin', width: 30, wrap: true },
+    ],
+    rows: rows.map((r, i) => {
+      const st = status[r.status] || status.submitted
+      const data = r.data || {}
+      return [
+        i + 1,
+        r.number || '',
+        { v: st.label, fill: REG_FILL[st.tone] },
+        tsToDate(r.submittedAt),
+        phoneText(r.phone),
+        ...fields.map((f) => cellOf(f, data)),
+        r.schedule ? `${r.schedule.date.split('-').reverse().join('/')}${r.schedule.time ? ` ${r.schedule.time}` : ''}` : '',
+        r.status === 'accepted' ? levelLabel(r.classId) : '',
+        r.nomorInduk || '',
+        r.status === 'cancelled' ? r.cancelReason || '' : '',
+        r.adminNote || '',
+      ]
+    }),
+    freezeColumns: 2,
+  })
+  return workbook
+}
