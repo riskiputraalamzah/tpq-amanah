@@ -7,8 +7,8 @@
         <!-- The mihrab dome carries the brand -->
         <div class="login-dome">
           <img :src="logoUrl" alt="TPQ AMANAH" width="64" height="64" class="w-16 h-16" />
-          <h1 class="mt-3 text-2xl font-extrabold tracking-tight lp-ink">{{ activeTab === 'wali' ? 'Masuk Wali Santri' : 'Login Dashboard' }}</h1>
-          <p class="mt-1 text-sm lp-body">{{ activeTab === 'wali' ? 'Untuk orang tua / wali santri TPQ Amanah' : 'Masuk untuk mengakses dashboard' }}</p>
+          <h1 class="mt-3 text-2xl font-extrabold tracking-tight lp-ink">{{ heading.title }}</h1>
+          <p class="mt-1 text-sm lp-body">{{ heading.sub }}</p>
         </div>
 
         <div class="px-6 pb-8 sm:px-9">
@@ -24,8 +24,8 @@
             <span>Anda telah logout dari sesi sebelumnya. Silakan login dengan akun yang sesuai.</span>
           </div>
 
-          <!-- Account type -->
-          <div role="tablist" aria-label="Jenis akun" class="login-tabs">
+          <!-- Account type (hidden when a parent arrives from a link with a code: only the wali login makes sense) -->
+          <div v-if="!linkingMode" role="tablist" aria-label="Jenis akun" class="login-tabs">
             <button
               id="tab-credentials"
               type="button"
@@ -108,10 +108,22 @@
           </form>
 
           <!-- Wali santri: a code sent to their WhatsApp -->
-          <div v-else id="panel-wali" role="tabpanel" aria-labelledby="tab-wali" class="mt-6">
+          <div v-else id="panel-wali" :role="linkingMode ? undefined : 'tabpanel'" :aria-labelledby="linkingMode ? undefined : 'tab-wali'"
+            :class="linkingMode ? 'mt-1' : 'mt-6'">
             <!-- step 1: the number -->
             <form v-if="waliStep === 'phone'" class="space-y-4" @submit.prevent="requestWaliCode">
-              <p class="text-sm text-center lp-body">
+              <!-- from the teacher's link: this page is the first step of linking the child -->
+              <div v-if="linkingMode" class="link-steps" role="note">
+                <p class="link-steps-lead">Bapak/Ibu membuka tautan dari TPQ untuk menautkan data ananda. Caranya:</p>
+                <ol>
+                  <li class="is-now">
+                    <strong>Masuk dengan nomor WhatsApp</strong> Bapak/Ibu di bawah ini. Tidak perlu daftar, kode masuk dikirim lewat WhatsApp TPQ.
+                  </li>
+                  <li>Ananda <strong>langsung tertaut</strong><template v-if="linkCode"> dengan kode <strong class="link-code">{{ linkCode }}</strong></template>.</li>
+                  <li>Isi data ananda, sekitar 5 menit.</li>
+                </ol>
+              </div>
+              <p v-else class="text-sm text-center lp-body">
                 Masuk dengan nomor WhatsApp Bapak/Ibu. Kode masuk akan dikirim lewat WhatsApp TPQ Amanah.
               </p>
               <div>
@@ -130,6 +142,8 @@
                 Kode 6 angka dikirim ke <strong class="lp-ink">{{ waliPhoneShown }}</strong>
                 <button type="button" class="wali-link" @click="changeWaliPhone">Ubah</button>
               </p>
+              <p v-if="linkingMode" class="link-otp-note">Ini kode untuk <strong>masuk</strong>. Kode tautan ananda
+                <template v-if="linkCode">(<strong>{{ linkCode }}</strong>) </template>sudah tersimpan, tidak perlu diketik lagi.</p>
               <p class="wali-delivery" :class="`is-${waliDelivery}`" role="status" aria-live="polite">
                 {{ waliDeliveryText }}
               </p>
@@ -202,7 +216,22 @@ onMounted(() => {
 });
 
 // ?as=wali (a link from the wali portal or a WhatsApp message) opens the wali tab
-const activeTab = ref(route.query.as === "wali" ? "wali" : "credentials");
+// A parent who opened the teacher's link (/wali/tautkan?kode=...) and was sent here to sign in first
+const linkRedirect = typeof route.query.redirect === "string" && route.query.redirect.startsWith("/wali/tautkan") ? route.query.redirect : "";
+const linkingMode = !!linkRedirect;
+const linkCode = (() => {
+  try {
+    return new URLSearchParams(linkRedirect.split("?")[1] || "").get("kode") || "";
+  } catch {
+    return "";
+  }
+})().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 9);
+const activeTab = ref(linkingMode || route.query.as === "wali" ? "wali" : "credentials");
+const heading = computed(() => {
+  if (linkingMode) return { title: "Tautkan Data Ananda", sub: "Langkah pertama: masuk dengan nomor WhatsApp Bapak/Ibu" };
+  if (activeTab.value === "wali") return { title: "Masuk Wali Santri", sub: "Untuk orang tua / wali santri TPQ Amanah" };
+  return { title: "Login Dashboard", sub: "Masuk untuk mengakses dashboard" };
+});
 const username = ref("");
 const password = ref("");
 const showPassword = ref(false);
@@ -380,6 +409,59 @@ const changeWaliPhone = () => {
   align-items: center;
   padding: 3.25rem 1.5rem 0;
   text-align: center;
+}
+
+.link-steps {
+  padding: 14px 16px;
+  border-radius: 0.9rem;
+  background: rgba(255, 251, 235, 0.85);
+  border: 1px solid rgba(180, 83, 9, 0.22);
+  color: var(--lp-ink);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.link-steps-lead {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.link-steps ol {
+  margin: 0;
+  list-style: decimal; /* Tailwind resets lists: keep the 1-2-3 */
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 6px;
+}
+
+.link-steps li {
+  color: var(--lp-body);
+}
+
+.link-steps li.is-now {
+  color: var(--lp-ink);
+}
+
+.link-steps li::marker {
+  font-weight: 800;
+  color: var(--lp-gold-deep);
+}
+
+.link-otp-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 0.75rem;
+  background: rgba(255, 251, 235, 0.85);
+  border: 1px solid rgba(180, 83, 9, 0.22);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--lp-body);
+  text-align: center;
+}
+
+.link-code {
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 .login-tabs {
