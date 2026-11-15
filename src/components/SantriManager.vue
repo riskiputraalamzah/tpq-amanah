@@ -129,7 +129,7 @@
             placeholder="Cari nama atau nomor induk..."
           />
           <select v-if="adminMode || filterClasses.length > 1" v-model="levelFilter" class="form-input filter-select" aria-label="Jilid">
-            <option value="">{{ adminMode ? "Semua Jilid / Marhalah" : "Semua jilid saya" }}</option>
+            <option value="">{{ adminMode ? "Semua jilid" : "Semua jilid saya" }}</option>
             <option v-if="adminMode" value="__none">Belum ditentukan</option>
             <option v-for="c in filterClasses" :key="c.id" :value="String(c.id)">
               {{ c.name }}
@@ -1038,9 +1038,6 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.santri-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .santri-view {

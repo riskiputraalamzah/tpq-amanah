@@ -302,9 +302,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.teacher-management {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .teacher-management {

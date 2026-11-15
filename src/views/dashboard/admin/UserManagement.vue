@@ -502,9 +502,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-management {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .user-management {

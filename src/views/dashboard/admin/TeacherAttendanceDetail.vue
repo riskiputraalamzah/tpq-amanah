@@ -478,9 +478,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.teacher-attendance-detail {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .teacher-attendance-detail {

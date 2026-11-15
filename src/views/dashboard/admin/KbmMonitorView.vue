@@ -399,9 +399,6 @@ onBeforeUnmount(stopPolling)
 </script>
 
 <style scoped>
-.monitor-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .monitor-view {

@@ -1,9 +1,9 @@
 <template>
-  <div class="dashboard-layout" :class="{ 'guru-layout': isGuru }">
+  <div class="dashboard-layout">
     <!-- Announcement Banner (global, rendered via Teleport in component) -->
     <AnnouncementBanner />
     <!-- Sidebar -->
-    <aside class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
+    <aside class="sidebar">
       <div class="sidebar-brand">
         <router-link to="/" class="sidebar-header">
           <img :src="logoUrl" alt="TPQ AMANAH" class="sidebar-logo" />
@@ -37,7 +37,7 @@
 
       <nav class="sidebar-nav">
         <!-- Beranda / Utama -->
-        <router-link to="/dashboard" class="sidebar-link" exact-active-class="active" @click="closeSidebar">
+        <router-link to="/dashboard" class="sidebar-link" exact-active-class="active">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
@@ -56,8 +56,7 @@
               stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
           </button>
           <div v-show="isGroupOpen(g)" :id="`menu-group-${g.key}`" class="sidebar-group">
-            <router-link v-for="m in g.items" :key="m.to" :to="m.to" class="sidebar-link" :class="{ active: isItemActive(m) }"
-              @click="closeSidebar">
+            <router-link v-for="m in g.items" :key="m.to" :to="m.to" class="sidebar-link" :class="{ active: isItemActive(m) }">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
               {{ m.label }}
               <span v-if="m.badge === 'pendaftaran' && newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
@@ -88,18 +87,6 @@
       </div>
     </aside>
 
-    <!-- Mobile Sidebar Toggle (Admin Only) -->
-    <button v-if="isAdmin" type="button" class="sidebar-toggle" aria-label="Buka menu navigasi" :aria-expanded="isSidebarOpen" @click="toggleSidebar">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="18" x2="21" y2="18" />
-      </svg>
-    </button>
-
-    <!-- Overlay -->
-    <div class="sidebar-overlay" :class="{ active: isSidebarOpen }" @click="closeSidebar"></div>
-
     <!-- Main Content -->
     <main class="dashboard-main">
       <div class="dashboard-content">
@@ -114,94 +101,16 @@
       </div>
     </main>
 
-    <!-- Mobile Top Header Bar (Guru Only) -->
-    <header v-if="isGuru" class="mobile-header">
-      <button type="button" class="mobile-menu-btn" @click="toggleSidebar" aria-label="Buka Menu Navigasi">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-
-      <div class="mobile-header-brand" @click="router.push('/')">
-        <img :src="logoUrl" alt="TPQ" class="mobile-logo" />
-        <span class="mobile-title">TPQ AMANAH</span>
-      </div>
-
-      <button class="mobile-profile-btn" @click="showProfileMenu = !showProfileMenu" aria-label="Menu Profil">
-        <img v-if="user?.photoURL" :src="user.photoURL" class="mobile-avatar" />
-        <div v-else class="mobile-avatar-placeholder">
-          {{ getInitials(user?.displayName) }}
-        </div>
-      </button>
-
-      <!-- Profile Dropdown Menu -->
-      <Transition name="slide-down">
-        <div v-if="showProfileMenu" class="profile-menu glass-card">
-          <div class="profile-header">
-            <img v-if="user?.photoURL" :src="user.photoURL" class="profile-menu-avatar" />
-            <div v-else class="profile-menu-avatar-placeholder">
-              {{ getInitials(user?.displayName) }}
-            </div>
-            <div class="profile-info">
-              <h4>{{ user?.displayName }}</h4>
-              <p>{{ getRoleLabel(user?.role) }}</p>
-            </div>
-          </div>
-          <div class="profile-menu-actions">
-            <router-link to="/dashboard/profile" class="profile-menu-item" @click="showProfileMenu = false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Profil Saya
-            </router-link>
-            <button class="logout-btn" @click="handleLogout">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Keluar
-            </button>
-          </div>
-        </div>
-      </Transition>
-
-      <!-- Profile Menu Overlay -->
-      <div v-if="showProfileMenu" class="profile-overlay" @click="showProfileMenu = false"></div>
-    </header>
-
-    <!-- Mobile Bottom Navigation (Guru Only) - 3 Items Symmetric -->
-    <nav v-if="isGuru" class="bottom-nav">
-      <router-link to="/dashboard" class="bottom-nav-item" exact-active-class="active">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-        <span>Home</span>
-      </router-link>
-
-      <router-link to="/dashboard/attendance" class="bottom-nav-item cta"
-        :class="{ active: isActive('/dashboard/attendance') }">
-        <div class="cta-button">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M9 11l3 3L22 4" />
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-          </svg>
-        </div>
-        <span>Absensi</span>
-      </router-link>
-
-      <router-link to="/dashboard/kbm" class="bottom-nav-item" :class="{ active: isActive('/dashboard/kbm') }">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        </svg>
-        <span>KBM</span>
-      </router-link>
-    </nav>
+    <!-- Phone frame for admin and guru: top bar (context), bottom bar (main places) and the Menu sheet -->
+    <MobileChrome
+      :groups="menuGroups"
+      :role="isAdmin ? 'admin' : 'guru'"
+      :user="user"
+      :badge-count="newRegistrations"
+      :menu-badge="isAdmin ? 0 : seesRegistrations ? newRegistrations : 0"
+      :nspq="tpqIdentity"
+      @logout="handleLogout"
+    />
   </div>
 </template>
 
@@ -214,6 +123,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useAnnouncementStore } from "@/stores/announcements";
 import AnnouncementBanner from "@/components/AnnouncementBanner.vue";
+import MobileChrome from "@/components/MobileChrome.vue";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
 import { prefetchDashboardRoutes } from "@/utils/prefetch";
@@ -385,9 +295,6 @@ const hasPermission = (permissionId) => {
 
 const { tpqIdentity, loadTpqIdentity } = useTpqIdentity();
 
-const isSidebarOpen = ref(false);
-const showProfileMenu = ref(false);
-
 
 // Check if current route matches or starts with the given path
 const isActive = (path) => {
@@ -413,14 +320,6 @@ const getRoleLabel = (role) => {
   return labels[role] || role;
 };
 
-const toggleSidebar = () => {
-  isSidebarOpen.value = !isSidebarOpen.value;
-};
-
-const closeSidebar = () => {
-  isSidebarOpen.value = false;
-};
-
 const handleLogout = async () => {
   announcementStore.reset();
   await authStore.logout();
@@ -434,8 +333,6 @@ const seesRegistrations = computed(() => isAdmin.value || hasPermission("pendaft
 watch(
   () => route.path,
   () => {
-    closeSidebar();
-    showProfileMenu.value = false;
     if (seesRegistrations.value) refreshRegistrations();
   }
 );
@@ -495,15 +392,13 @@ onMounted(() => {
   left: 0;
   bottom: 0;
   z-index: var(--z-fixed);
-  display: flex;
+  display: none; /* phones and tablets use the top bar, bottom bar and Menu sheet (MobileChrome) */
   flex-direction: column;
   isolation: isolate;
   color: #d1fae5;
   background: linear-gradient(180deg, #03291d 0%, #04231a 62%, #021c13 100%);
   border-right: 1px solid rgba(252, 211, 77, 0.2);
   box-shadow: 10px 0 34px -14px rgba(2, 28, 19, 0.55);
-  transform: translateX(-100%);
-  transition: transform var(--transition-normal);
 }
 
 .sidebar::before {
@@ -522,15 +417,11 @@ onMounted(() => {
 
 @media (min-width: 1024px) {
   .sidebar {
-    transform: translateX(0);
+    display: flex;
     position: sticky;
     top: 0;
     height: 100vh;
   }
-}
-
-.sidebar-open {
-  transform: translateX(0);
 }
 
 .sidebar-brand {
@@ -837,60 +728,6 @@ onMounted(() => {
   outline-offset: -2px;
 }
 
-/* Mobile Toggle (admin) */
-.sidebar-toggle {
-  position: fixed;
-  top: var(--space-md);
-  left: var(--space-md);
-  z-index: var(--z-fixed);
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #03291d;
-  border: 1px solid rgba(252, 211, 77, 0.4);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 10px 24px -10px rgba(2, 28, 19, 0.7);
-  color: #fcd34d;
-}
-
-.sidebar-toggle:focus-visible {
-  outline: 2px solid #fcd34d;
-  outline-offset: 2px;
-}
-
-@media (min-width: 1024px) {
-  .sidebar-toggle {
-    display: none;
-  }
-}
-
-/* Overlay */
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(2, 28, 19, 0.6);
-  z-index: calc(var(--z-fixed) - 1);
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--transition-normal);
-}
-
-.sidebar-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-@media (min-width: 1024px) {
-  .sidebar-overlay {
-    display: none;
-  }
-}
-
 /* ------------------------------------------------------------ main work area */
 .dashboard-main {
   position: relative;
@@ -917,9 +754,20 @@ onMounted(() => {
   pointer-events: none;
 }
 
-@media (max-width: 768px) {
+/* phones and tablets: the content starts under the top bar and ends above the bottom bar */
+.dashboard-layout {
+  --appbar-h: 0px;
+  --nav-h: 0px;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-layout {
+    --appbar-h: calc(56px + env(safe-area-inset-top, 0px) + var(--banner-h, 0px));
+    --nav-h: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
   .dashboard-main {
-    padding: var(--space-md);
+    padding: calc(var(--appbar-h) + var(--space-md)) var(--space-md) calc(var(--nav-h) + var(--space-xl));
   }
 }
 
@@ -997,395 +845,6 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* ====================================
-   MOBILE HEADER BAR (Guru Only)
-   ==================================== */
-.mobile-header {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(3, 41, 29, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(252, 211, 77, 0.3);
-  box-shadow: 0 10px 26px -14px rgba(2, 28, 19, 0.6);
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 var(--space-lg);
-  z-index: var(--z-fixed);
-}
-
-.mobile-header-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.mobile-header-brand:hover {
-  opacity: 0.85;
-}
-
-.mobile-logo {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-
-.mobile-title {
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-  color: #fff;
-}
-
-.mobile-menu-btn {
-  background: none;
-  border: none;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 8px;
-  border-radius: var(--radius-md);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.mobile-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fcd34d;
-}
-
-.mobile-menu-btn:focus-visible,
-.mobile-profile-btn:focus-visible {
-  outline: 2px solid #fcd34d;
-  outline-offset: 2px;
-}
-
-.mobile-profile-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.mobile-avatar,
-.mobile-avatar-placeholder {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(252, 211, 77, 0.65);
-}
-
-.mobile-avatar-placeholder {
-  background: linear-gradient(135deg, #0b6b4a, #065f46);
-  color: #fcd34d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-/* Profile menu positioned from header */
-.mobile-header .profile-menu {
-  position: fixed;
-  top: 70px;
-  right: var(--space-md);
-  bottom: auto;
-}
-
-/* ====================================
-   MOBILE BOTTOM NAVIGATION (Guru Only)
-   ==================================== */
-.bottom-nav {
-  display: none;
-}
-
-@media (max-width: 1023px) {
-
-  /* Only show bottom nav for guru layout on mobile */
-  .guru-layout .bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 70px;
-    background: rgba(251, 249, 243, 0.97);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 -10px 30px -14px rgba(2, 28, 19, 0.35);
-    border-top: 1px solid rgba(180, 83, 9, 0.28);
-    justify-content: space-around;
-    align-items: center;
-    padding: 0 var(--space-lg);
-    z-index: var(--z-fixed);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Add padding to main content for bottom nav and top header */
-  .guru-layout .dashboard-main {
-    padding-top: 70px;
-    padding-bottom: 90px;
-  }
-
-  /* Allow sidebar drawer for guru on mobile */
-  .guru-layout .sidebar {
-    display: flex;
-  }
-
-  /* Show mobile header for guru */
-  .guru-layout .mobile-header {
-    display: flex;
-  }
-}
-
-.bottom-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  text-decoration: none;
-  color: #5b6b62;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: var(--radius-lg);
-  transition: color 0.2s ease;
-  position: relative;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.bottom-nav-item span {
-  white-space: nowrap;
-}
-
-.bottom-nav-item svg {
-  stroke: currentColor;
-}
-
-.bottom-nav-item:focus-visible {
-  outline: 2px solid #b45309;
-  outline-offset: 2px;
-}
-
-.bottom-nav-item.active {
-  color: #065f46;
-}
-
-.bottom-nav-item.active::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 26px;
-  height: 3px;
-  background: linear-gradient(90deg, #d97706, #fcd34d, #d97706);
-  border-radius: 0 0 3px 3px;
-}
-
-/* CTA Button (Absensi) - Floating Style */
-.bottom-nav-item.cta {
-  position: relative;
-}
-
-.bottom-nav-item.cta .cta-button {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(145deg, #0b6b4a 0%, #065f46 55%, #03291d 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fcd34d;
-  box-shadow: 0 0 0 3px #fbf9f3, 0 0 0 4px rgba(180, 83, 9, 0.55), 0 12px 24px -8px rgba(3, 41, 29, 0.65);
-  margin-top: -24px;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-}
-
-.bottom-nav-item.cta:hover .cta-button,
-.bottom-nav-item.cta.active .cta-button {
-  transform: scale(1.05);
-  box-shadow: 0 0 0 3px #fbf9f3, 0 0 0 4px rgba(180, 83, 9, 0.8), 0 16px 28px -8px rgba(3, 41, 29, 0.75);
-}
-
-.bottom-nav-item.cta span {
-  color: #065f46;
-  font-weight: 700;
-}
-
-/* Profile Avatar in Bottom Nav */
-.profile-btn {
-  flex-direction: column;
-}
-
-.profile-avatar,
-.profile-avatar-placeholder {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-avatar-placeholder {
-  background: linear-gradient(135deg, #0b6b4a, #065f46);
-  color: #fcd34d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 700;
-}
-
-/* Profile Menu Dropdown */
-.profile-menu {
-  position: fixed;
-  bottom: 85px;
-  right: var(--space-md);
-  width: 280px;
-  padding: var(--space-lg);
-  background: var(--lp-ivory);
-  border: 1px solid rgba(180, 83, 9, 0.28);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 24px 50px -16px rgba(2, 28, 19, 0.5);
-  z-index: calc(var(--z-fixed) + 1);
-}
-
-.profile-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid rgba(180, 83, 9, 0.18);
-  margin-bottom: var(--space-md);
-}
-
-.profile-menu-avatar,
-.profile-menu-avatar-placeholder {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 2px rgba(180, 83, 9, 0.5);
-}
-
-.profile-menu-avatar-placeholder {
-  background: linear-gradient(135deg, #0b6b4a, #065f46);
-  color: #fcd34d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.profile-info h4 {
-  color: var(--lp-ink);
-  margin: 0 0 4px 0;
-  font-size: 1rem;
-}
-
-.profile-info p {
-  margin: 0;
-  color: #5b6b62;
-  font-size: 0.8rem;
-}
-
-.profile-menu-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.profile-menu-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  min-height: 44px;
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  background: #fff;
-  border: 1px solid rgba(180, 83, 9, 0.16);
-  color: var(--lp-ink);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  text-decoration: none;
-}
-
-.profile-menu-item:hover {
-  background: #fffbeb;
-  border-color: rgba(180, 83, 9, 0.4);
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  min-height: 44px;
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.logout-btn:hover {
-  background: rgba(220, 38, 38, 0.16);
-}
-
-.profile-overlay {
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  z-index: var(--z-fixed);
-}
-
-/* Slide Up Animation */
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.25s ease;
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-/* Slide Down Animation */
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: all 0.25s ease;
-}
-
-.slide-down-enter-from,
-.slide-down-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
 /* Standard Dashboard Page Header (Admin & Guru) */
 :deep(.page-header) {
   margin-bottom: var(--space-xl);
@@ -1417,10 +876,4 @@ onMounted(() => {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .sidebar-overlay {
-    transition: none;
-  }
-}
 </style>

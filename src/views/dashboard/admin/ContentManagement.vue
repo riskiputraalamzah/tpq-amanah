@@ -208,9 +208,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.content-management {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .content-management {

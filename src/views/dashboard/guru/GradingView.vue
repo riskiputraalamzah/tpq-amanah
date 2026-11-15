@@ -77,7 +77,6 @@ onMounted(fetchPeriods)
 </script>
 
 <style scoped>
-.grading-view { padding-top: 60px; }
 @media (min-width: 1024px) { .grading-view { padding-top: 0; } }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl); }
 .page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }

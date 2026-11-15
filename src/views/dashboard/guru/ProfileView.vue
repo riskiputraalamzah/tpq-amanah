@@ -255,9 +255,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .profile-view {

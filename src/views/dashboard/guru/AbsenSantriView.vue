@@ -268,9 +268,6 @@ onBeforeUnmount(() => {
 }
 
 /* the admin's menu button floats top-left on a phone (the guru layout has its own top bar) */
-.as.is-admin {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .as.is-admin {
@@ -377,7 +374,7 @@ onBeforeUnmount(() => {
 /* the tally stays in view while scrolling a long list */
 .as-summary {
   position: sticky;
-  top: 64px;
+  top: calc(var(--appbar-h, 0px) + 8px); /* under the phone top bar */
   z-index: 5;
   display: flex;
   flex-wrap: wrap;

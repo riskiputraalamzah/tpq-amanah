@@ -405,7 +405,7 @@
       <!-- Mobile Segmented View Tabs (< 1024px) -->
       <div
         class="mobile-view-tabs mobile-only"
-        style="z-index: 99; position: sticky; top: 0"
+        style="z-index: 99; position: sticky; top: var(--appbar-h, 0px)"
       >
         <button
           v-if="book?.status === 'active'"
@@ -2716,9 +2716,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.savings-detail {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .savings-detail {

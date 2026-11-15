@@ -1070,9 +1070,6 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.lpj-detail-view {
-  padding-top: 60px;
-}
 @media (min-width: 1024px) {
   .lpj-detail-view {
     padding-top: 0;

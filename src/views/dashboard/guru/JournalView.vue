@@ -493,7 +493,6 @@ onMounted(fetchData);
 }
 
 .journal-view {
-  padding-top: 60px;
   display: flex;
   flex-direction: column;
   max-width: 100%;

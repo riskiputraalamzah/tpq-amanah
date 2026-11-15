@@ -658,9 +658,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.savings-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .savings-view {

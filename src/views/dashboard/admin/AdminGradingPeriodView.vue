@@ -186,7 +186,6 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.admin-grading-period-view { padding-top: 60px; }
 @media (min-width: 1024px) { .admin-grading-period-view { padding-top: 0; } }
 
 .page-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-lg); }

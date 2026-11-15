@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <TransitionGroup name="banner-slide" tag="div" class="banners-wrapper">
+    <TransitionGroup ref="wrap" name="banner-slide" tag="div" class="banners-wrapper">
       <div
         v-for="ann in store.activeAnnouncements"
         :key="ann.id"
@@ -48,11 +48,29 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useAnnouncementStore } from '@/stores/announcements'
 import { useRouter } from 'vue-router'
 
 const store = useAnnouncementStore()
 const router = useRouter()
+
+// The banner is fixed at the top of the screen. Its height is shared as --banner-h so the phone top bar and the
+// page content start below it instead of under it.
+const wrap = ref(null)
+let observer = null
+const publish = (h) => document.documentElement.style.setProperty('--banner-h', `${Math.round(h)}px`)
+onMounted(() => {
+  const el = wrap.value?.$el || wrap.value
+  if (!el || typeof ResizeObserver === 'undefined') return
+  observer = new ResizeObserver(() => publish(el.getBoundingClientRect().height))
+  observer.observe(el)
+  publish(el.getBoundingClientRect().height)
+})
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  document.documentElement.style.removeProperty('--banner-h')
+})
 
 const dismiss = (id) => store.dismiss(id)
 

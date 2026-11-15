@@ -652,9 +652,6 @@ watch(() => route.query.id, (id) => {
 </script>
 
 <style scoped>
-.pd {
-  padding-top: 60px;
-}
 
 .pd.is-guru {
   padding-top: 0;

@@ -882,7 +882,6 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onEscape));
   min-width: 0;
   box-sizing: border-box;
 
-  padding-top: 60px;
 }
 
 @media (min-width: 1024px) {

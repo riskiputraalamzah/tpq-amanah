@@ -830,9 +830,6 @@ onMounted(fetchData);
   opacity: 0.6;
 }
 
-.student-attendance-view {
-  padding-top: 60px;
-}
 @media (min-width: 1024px) {
   .student-attendance-view {
     padding-top: 0;

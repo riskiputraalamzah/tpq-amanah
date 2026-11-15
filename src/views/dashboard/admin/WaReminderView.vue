@@ -534,7 +534,6 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .wa-view {
-  padding-top: 60px;
   padding-bottom: 96px;
 }
 

@@ -209,9 +209,6 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.sptjm-view {
-  padding-top: 60px;
-}
 @media (min-width: 1024px) {
   .sptjm-view {
     padding-top: 0;

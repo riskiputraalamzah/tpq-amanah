@@ -215,9 +215,6 @@ onMounted(load)
 </script>
 
 <style scoped>
-.pa {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .pa {

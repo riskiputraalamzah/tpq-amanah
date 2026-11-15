@@ -380,9 +380,6 @@ watch(
 }
 
 /* Operate surface: the ornament stays in the details (gold hairline, emerald/gold tiles); cards never move on hover. */
-.dashboard-home {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .dashboard-home {

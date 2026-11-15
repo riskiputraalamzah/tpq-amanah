@@ -246,9 +246,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tpq-profile-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .tpq-profile-view {

@@ -395,7 +395,6 @@ onBeforeUnmount(() => clearInterval(timer))
   --muted: #5b6b62;
   --emerald: #0a5c40;
   --line: rgba(11, 59, 42, 0.12);
-  padding-top: 60px;
   color: var(--ink);
 }
 

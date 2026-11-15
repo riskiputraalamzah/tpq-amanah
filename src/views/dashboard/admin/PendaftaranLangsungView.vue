@@ -765,7 +765,6 @@ onBeforeRouteLeave(async () => {
 
 <style scoped>
 .dl {
-  padding-top: 60px;
   color: #0b3b2a;
 }
 

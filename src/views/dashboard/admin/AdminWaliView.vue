@@ -727,9 +727,6 @@ onMounted(async () => {
 
 <style scoped>
 /* on a phone the admin's menu button floats top-left (like the other admin pages); the guru layout has its own top bar */
-.wv {
-  padding-top: 60px;
-}
 
 .wv.is-guru {
   padding-top: 0;

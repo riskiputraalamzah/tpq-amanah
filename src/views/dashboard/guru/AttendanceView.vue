@@ -1173,9 +1173,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.attendance-view {
-  padding-top: 60px;
-}
 
 @media (min-width: 1024px) {
   .attendance-view {
