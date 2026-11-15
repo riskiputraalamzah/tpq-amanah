@@ -29,7 +29,7 @@
 
           <div class="kg-field">
             <label class="kg-label" for="kg-fee">Biaya per santri (Rp, 0 bila tanpa biaya)</label>
-            <input id="kg-fee" v-model.number="form.fee" type="number" inputmode="numeric" min="0" step="1000" class="kg-input" />
+            <MoneyInput id="kg-fee" v-model="form.fee" input-class="kg-input" placeholder="0" :max="100000000" />
             <span v-if="errors.fee" class="kg-error">{{ errors.fee }}</span>
           </div>
 
@@ -75,6 +75,7 @@
 </template>
 
 <script setup>
+import MoneyInput from '@/components/MoneyInput.vue'
 import { reactive } from 'vue'
 import { ACTIVITY_TYPES } from '@/utils/kegiatan'
 

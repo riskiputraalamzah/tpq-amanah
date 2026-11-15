@@ -593,13 +593,11 @@
                     ? "Jumlah Pengeluaran (Rp) *"
                     : "Jumlah Pemasukan (Rp) *"
                 }}</label>
-                <input
+                <MoneyInput
                   v-model="newTx.amount"
-                  type="text"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  class="form-input"
-                  placeholder="cth: 5000"
+                  input-class="form-input"
+                  placeholder="cth: 5.000"
+                  :aria-label="newTx.type === 'expense' ? 'Jumlah pengeluaran' : 'Jumlah pemasukan'"
                 />
               </div>
 
@@ -980,12 +978,10 @@
                 ? "Jumlah Pengeluaran (Rp)"
                 : "Jumlah Pemasukan (Rp)"
             }}</label>
-            <input
+            <MoneyInput
               v-model="editForm.amount"
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              class="form-input"
+              input-class="form-input"
+              :aria-label="isEditingExpense ? 'Jumlah pengeluaran' : 'Jumlah pemasukan'"
             />
           </div>
         <div class="form-group">
@@ -1373,6 +1369,7 @@ import { ref, computed, onBeforeUnmount, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
+import MoneyInput from "@/components/MoneyInput.vue";
 import { loadPdfLibs } from "@/utils/pdf";
 import { prefetchWhenIdle } from "@/utils/prefetch";
 import { useToast } from "@/composables/useToast";
@@ -1877,12 +1874,6 @@ const goToSavingsList = () => {
   router.push(
     authStore.isAdmin ? "/dashboard/admin-savings" : "/dashboard/savings",
   );
-};
-
-const sanitizeAmount = (e) => {
-  // Hapus karakter bukan digit, lalu parse integer
-  const raw = String(e.target.value).replace(/[^0-9]/g, "");
-  newTx.value.amount = raw ? parseInt(raw, 10) : "";
 };
 
 const setTransactionType = (type) => {
