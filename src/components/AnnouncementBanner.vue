@@ -69,7 +69,8 @@ const handleClick = (ann) => {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9998;
+  /* above the header and menus (300), below every sheet/popup (8999+) so an open sheet is never covered */
+  z-index: 8000;
   display: flex;
   flex-direction: column;
   pointer-events: none;

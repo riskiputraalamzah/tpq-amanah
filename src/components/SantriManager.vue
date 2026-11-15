@@ -65,29 +65,6 @@
         </div>
       </section>
 
-      <!-- Info Banner Ramah untuk Guru -->
-      <div v-else class="info-note-card glass-card">
-        <div class="info-note-content">
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              margin-bottom: 10px;
-            "
-          >
-            <span class="info-icon">💡</span>
-            <h3 class="info-title">Pusat Data Santri</h3>
-          </div>
-          <p class="info-desc">
-            Pendaftaran santri baru dan penetapan kelas dikelola secara terpusat
-            oleh <strong>Admin TPQ</strong>. Anda dapat melihat daftar santri
-            serta memperbaiki ejaan nama jika terdapat kekeliruan (typo) melalui
-            tombol <strong>Ubah Nama</strong> di bawah.
-          </p>
-        </div>
-      </div>
-
       <section class="glass-card">
         <div class="roster-toolbar">
           <h2>Daftar Santri ({{ filtered.length }})</h2>
@@ -146,21 +123,29 @@
         <div class="filters">
           <input
             v-model="search"
-            class="form-input"
+            class="form-input filter-search"
+            type="search"
+            aria-label="Cari santri"
             placeholder="Cari nama atau nomor induk..."
           />
-          <select v-model="levelFilter" class="form-input filter-select">
+          <select v-if="adminMode || filterClasses.length > 1" v-model="levelFilter" class="form-input filter-select" aria-label="Jilid">
             <option value="">{{ adminMode ? "Semua Jilid / Marhalah" : "Semua jilid saya" }}</option>
             <option v-if="adminMode" value="__none">Belum ditentukan</option>
             <option v-for="c in filterClasses" :key="c.id" :value="String(c.id)">
               {{ c.name }}
             </option>
           </select>
-          <select v-model="statusFilter" class="form-input filter-select">
+          <select v-model="statusFilter" class="form-input filter-select" aria-label="Status">
             <option value="">Semua Status</option>
             <option value="aktif">Aktif</option>
             <option value="nonaktif">Nonaktif</option>
             <option value="lulus">Lulus</option>
+          </select>
+          <select v-model="sortChoice" class="form-input filter-select sort-select" aria-label="Urutkan">
+            <option value="name:asc">Urut: Nama A–Z</option>
+            <option value="name:desc">Urut: Nama Z–A</option>
+            <option value="nomorInduk:asc">Urut: No. induk</option>
+            <option value="level:asc">Urut: Jilid</option>
           </select>
         </div>
 
@@ -299,7 +284,7 @@
           Tidak ada santri yang cocok.
         </div>
 
-        <div v-else class="table-responsive">
+        <div v-else-if="!isPhone" class="table-responsive roster-table">
           <table class="data-table">
             <thead>
               <tr>
@@ -374,113 +359,113 @@
                   </template>
                   <span v-else class="ni-empty">Belum ada</span>
                 </td>
-                <td>
-                  <template v-if="editingId === row.id">
-                    <input
-                      v-model="editingName"
-                      type="text"
-                      class="form-input editing-name-input"
-                      placeholder="Nama santri..."
-                      required
-                      @keyup.enter="saveSantri(row)"
-                      @keyup.esc="cancelEdit"
-                    />
-                  </template>
-                  <template v-else>
-                    {{ row.name }}
-                    <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
-                      class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
-                      Data wali: {{ waliStatus[row.id].label }}
-                    </router-link>
-                  </template>
+                <td class="name-cell">
+                  {{ row.name }}
+                  <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
+                    class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
+                    Data wali: {{ waliStatus[row.id].label }}
+                  </router-link>
                 </td>
+                <td>{{ levelName(row.currentClassId) }}</td>
                 <td>
-                  <template v-if="editingId === row.id && adminMode">
-                    <select
-                      v-model="editingLevel"
-                      class="form-input status-select"
-                    >
-                      <option value="">Belum ditentukan</option>
-                      <optgroup label="JILID">
-                        <option
-                          v-for="c in jilidList"
-                          :key="c.id"
-                          :value="String(c.id)"
-                        >
-                          {{ c.name }}
-                        </option>
-                      </optgroup>
-                      <optgroup label="MARHALAH" v-if="marhalahList.length > 0">
-                        <option
-                          v-for="c in marhalahList"
-                          :key="c.id"
-                          :value="String(c.id)"
-                        >
-                          {{ c.name }}
-                        </option>
-                      </optgroup>
-                    </select>
-                  </template>
-                  <template v-else>
-                    {{ levelName(row.currentClassId) }}
-                  </template>
+                  <span class="badge" :class="statusBadgeClass(row.status)">{{ statusLabel(row.status) }}</span>
                 </td>
-                <td>
-                  <template v-if="editingId === row.id && adminMode">
-                    <select
-                      v-model="editingStatus"
-                      class="form-input status-select"
-                    >
-                      <option value="aktif">Aktif</option>
-                      <option value="nonaktif">Nonaktif</option>
-                      <option value="lulus">Lulus</option>
-                    </select>
-                  </template>
-                  <template v-else>
-                    <span class="badge" :class="statusBadgeClass(row.status)">
-                      {{ statusLabel(row.status) }}
-                    </span>
-                  </template>
-                </td>
-                <td>
-                  <template v-if="editingId === row.id">
-                    <button
-                      type="button"
-                      class="action-link"
-                      :disabled="saving"
-                      @click="saveSantri(row)"
-                    >
-                      {{ saving ? "Menyimpan..." : "Simpan" }}
-                    </button>
-                    <button
-                      type="button"
-                      class="action-link muted"
-                      @click="cancelEdit"
-                    >
-                      Batal
-                    </button>
-                  </template>
-                  <button
-                    v-else-if="canEdit(row)"
-                    type="button"
-                    class="action-link"
-                    @click="startEdit(row)"
-                  >
-                    {{ adminMode ? "Ubah" : "Ubah Nama" }}
+                <td class="action-cell">
+                  <button type="button" class="action-link" @click="openEdit(row)">
+                    {{ adminMode ? "Ubah" : "Ubah nama" }}
                   </button>
-                  <button
-                    v-if="adminMode && editingId !== row.id"
-                    type="button"
-                    class="action-link danger"
-                    @click="removeSantri(row)"
-                  >
-                    Hapus
-                  </button>
+                  <button v-if="adminMode" type="button" class="action-link danger" @click="removeSantri(row)">Hapus</button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- phones: one card per santri, the action within thumb reach -->
+        <ul v-else class="santri-cards" aria-label="Daftar santri">
+          <li v-for="row in sortedRows" :key="row.id" class="s-card">
+            <div class="s-main">
+              <p class="s-name">{{ row.name }}</p>
+              <p class="s-meta">
+                <span class="s-level">{{ levelName(row.currentClassId) }}</span>
+                <span class="badge" :class="statusBadgeClass(row.status)">{{ statusLabel(row.status) }}</span>
+              </p>
+              <p v-if="row.nomorInduk" class="s-ni">
+                <span class="ni-number">{{ row.nomorInduk }}</span>
+                <button type="button" class="ni-copy" :aria-label="`Salin nomor induk ${row.name} dengan strip`"
+                  :title="copiedKey === `${row.id}:dash` ? 'Tersalin' : 'Salin dengan strip'" @click="copyNomorInduk(row)">
+                  <svg v-if="copiedKey === `${row.id}:dash`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                </button>
+                <button type="button" class="ni-copy ni-copy-plain" :aria-label="`Salin nomor induk ${row.name} tanpa strip`"
+                  :title="copiedKey === `${row.id}:plain` ? 'Tersalin' : 'Salin tanpa strip'" @click="copyNomorInduk(row, { stripped: true })">
+                  <svg v-if="copiedKey === `${row.id}:plain`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                  <span v-else aria-hidden="true">123</span>
+                </button>
+              </p>
+              <p v-else class="s-ni ni-empty">Belum ada nomor induk</p>
+              <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
+                class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
+                Data wali: {{ waliStatus[row.id].label }}
+              </router-link>
+            </div>
+            <div class="s-actions">
+              <button type="button" class="s-btn" :aria-label="`${adminMode ? 'Ubah data' : 'Ubah nama'} ${row.name}`" @click="openEdit(row)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                <span>{{ adminMode ? "Ubah" : "Ubah nama" }}</span>
+              </button>
+              <button v-if="adminMode" type="button" class="s-btn is-danger" :aria-label="`Hapus ${row.name}`" @click="removeSantri(row)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
+              </button>
+            </div>
+          </li>
+        </ul>
+
+        <!-- edit: one sheet for every screen (from the bottom on phones) -->
+        <Teleport to="body">
+          <div v-if="editRow" class="es-overlay" @click.self="closeEdit" @keydown.esc="closeEdit">
+            <form class="es-sheet" role="dialog" aria-modal="true" aria-labelledby="es-title" novalidate @submit.prevent="saveEdit">
+              <span class="es-grab" aria-hidden="true"></span>
+              <h3 id="es-title" class="es-title">{{ adminMode ? "Ubah data santri" : "Ubah nama santri" }}</h3>
+              <p class="es-sub">{{ levelName(editRow.currentClassId) }}<template v-if="editRow.nomorInduk"> · {{ editRow.nomorInduk }}</template></p>
+
+              <label for="es-name" class="es-label">Nama lengkap</label>
+              <input id="es-name" ref="editInput" v-model="editingName" class="es-input" type="text" maxlength="120"
+                autocomplete="off" autocapitalize="words" spellcheck="false" :aria-invalid="!!editError" />
+              <p v-if="nameChanged" class="es-help">Sebelumnya: <s>{{ editRow.name }}</s></p>
+              <p v-else class="es-help">Tulis sesuai akta. Huruf besar di awal kata diatur otomatis; nama baru ikut ke absen, nilai, dan tabungan.</p>
+
+              <div v-if="adminMode" class="es-grid">
+                <div>
+                  <label for="es-level" class="es-label">Jilid / Marhalah</label>
+                  <select id="es-level" v-model="editingLevel" class="es-input">
+                    <option value="">Belum ditentukan</option>
+                    <optgroup label="JILID">
+                      <option v-for="c in jilidList" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                    </optgroup>
+                    <optgroup v-if="marhalahList.length > 0" label="MARHALAH">
+                      <option v-for="c in marhalahList" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div>
+                  <label for="es-status" class="es-label">Status</label>
+                  <select id="es-status" v-model="editingStatus" class="es-input">
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                    <option value="lulus">Lulus</option>
+                  </select>
+                </div>
+              </div>
+
+              <p v-if="editError" class="es-error" role="alert">{{ editError }}</p>
+              <div class="es-actions">
+                <button type="button" class="btn btn-ghost" :disabled="saving" @click="closeEdit">Batal</button>
+                <button type="submit" class="btn btn-primary" :disabled="saving || !editDirty">{{ saving ? "Menyimpan…" : "Simpan" }}</button>
+              </div>
+            </form>
+          </div>
+        </Teleport>
       </section>
     </div>
   </div>
@@ -957,13 +942,71 @@ const cancelEdit = () => {
   editingStatus.value = "aktif";
 };
 
+// One edit sheet for every screen (guru: the name; admin: name, jilid, status)
+const editRow = ref(null);
+const editInput = ref(null);
+const editError = ref("");
+const nameChanged = computed(() => !!editRow.value && editingName.value.trim().replace(/\s+/g, " ") !== String(editRow.value.name || ""));
+const editDirty = computed(() => {
+  if (!editRow.value) return false;
+  if (nameChanged.value) return true;
+  if (!props.adminMode) return false;
+  return (
+    (editingLevel.value || "") !== (editRow.value.currentClassId ? String(editRow.value.currentClassId) : "") ||
+    editingStatus.value !== (editRow.value.status || "aktif")
+  );
+});
+const openEdit = async (row) => {
+  startEdit(row);
+  editRow.value = row;
+  editError.value = "";
+  document.body.style.overflow = "hidden";
+  await nextTick();
+  editInput.value?.focus();
+};
+const closeEdit = () => {
+  if (saving.value) return;
+  editRow.value = null;
+  editError.value = "";
+  document.body.style.overflow = "";
+  cancelEdit();
+};
+const saveEdit = () => {
+  if (!editRow.value || !editDirty.value) return;
+  return saveSantri(editRow.value);
+};
+onBeforeUnmount(() => {
+  document.body.style.overflow = "";
+});
+
+// phones get cards, wider screens the table (only one of them is rendered)
+const phoneQuery = typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 767px)") : null;
+const isPhone = ref(!!phoneQuery?.matches);
+const onPhoneChange = (e) => {
+  isPhone.value = e.matches;
+};
+phoneQuery?.addEventListener?.("change", onPhoneChange);
+onBeforeUnmount(() => phoneQuery?.removeEventListener?.("change", onPhoneChange));
+
+// sort for phones (the table headers do the same on wide screens)
+const sortChoice = computed({
+  get: () => `${sortKey.value}:${sortDir.value}`,
+  set: (v) => {
+    const [key, dir] = String(v).split(":");
+    sortKey.value = key;
+    sortDir.value = dir === "desc" ? "desc" : "asc";
+  },
+});
+
 const saveSantri = async (row) => {
   if (saving.value) return;
-  const trimmedName = editingName.value.trim();
+  const trimmedName = editingName.value.trim().replace(/\s+/g, " ");
   if (!trimmedName || trimmedName.length < 2) {
-    showError("Nama santri wajib diisi (minimal 2 karakter).");
+    editError.value = "Nama santri wajib diisi (minimal 2 karakter).";
+    editInput.value?.focus();
     return;
   }
+  editError.value = "";
   saving.value = true;
   try {
     const payload = {
@@ -979,16 +1022,13 @@ const saveSantri = async (row) => {
       row.currentClassId = editingLevel.value || null;
       row.status = editingStatus.value;
     }
-    editingId.value = null;
-    editingName.value = "";
-    editingLevel.value = "";
-    editingStatus.value = "aktif";
+    saving.value = false;
+    closeEdit();
     success(`Data santri "${row.name}" berhasil diperbarui.`);
   } catch (error) {
-    const msg =
-      error.response?.data?.error || "Gagal menyimpan perubahan santri.";
-    listError.value = msg;
-    showError(msg);
+    // shown in the sheet, next to the name, so it can be corrected right there
+    editError.value = error.response?.data?.error || "Gagal menyimpan perubahan santri.";
+    editInput.value?.focus();
   } finally {
     saving.value = false;
   }
@@ -1123,6 +1163,303 @@ onMounted(fetchData);
 
 .table-responsive {
   overflow-x: auto;
+}
+
+.name-cell {
+  font-weight: 600;
+  color: var(--gray-800, #1f2937);
+}
+
+.action-cell {
+  white-space: nowrap;
+}
+
+/* phones: cards instead of the wide table */
+.santri-cards {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sort-select {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .roster-table {
+    display: none;
+  }
+  .santri-cards {
+    display: grid;
+    gap: 10px;
+  }
+  .sort-select {
+    display: block;
+  }
+  .glass-card {
+    padding: 16px 14px;
+    border-radius: 18px;
+    margin-bottom: 14px;
+  }
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .filters .filter-search {
+    grid-column: 1 / -1;
+  }
+
+  /* an odd one out at the end (admin: jilid, status, sort) takes the whole row */
+  .filters .form-input:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+  .filters .form-input {
+    min-height: 44px;
+    font-size: 16px; /* no zoom on focus (iOS) */
+  }
+  .roster-toolbar h2 {
+    font-size: 1.05rem;
+  }
+}
+
+.s-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+}
+
+.s-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.s-name {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0b3b2a;
+  overflow-wrap: anywhere;
+}
+
+.s-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+
+.s-level {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3b4a42;
+}
+
+.s-meta .badge {
+  font-size: 0.72rem;
+}
+
+.s-ni {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 4px;
+}
+
+.s-ni .ni-number {
+  font-size: 0.8rem;
+}
+
+.s-card .wali-data-link {
+  margin-top: 2px;
+}
+
+.s-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: none;
+}
+
+.s-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0 12px;
+  border-radius: 11px;
+  border: 1px solid rgba(10, 92, 64, 0.3);
+  background: #f0f8f4;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.s-btn.is-danger {
+  padding: 0;
+  border-color: rgba(180, 35, 24, 0.25);
+  background: #fff;
+  color: #b42318;
+}
+
+.s-btn:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+/* the edit sheet */
+.es-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990; /* like the other sheets: above the announcement banner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.es-sheet {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 22px 20px 20px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  animation: es-in 0.18s ease-out;
+}
+
+.es-grab {
+  display: none;
+}
+
+.es-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0b3b2a;
+}
+
+.es-sub {
+  margin: 2px 0 16px;
+  font-size: 0.85rem;
+  color: #5b6b62;
+  font-variant-numeric: tabular-nums;
+}
+
+.es-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1f3a2f;
+}
+
+.es-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.25);
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  color: #0b3b2a;
+  box-sizing: border-box;
+}
+
+.es-input:focus {
+  outline: none;
+  border-color: #0a5c40;
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.15);
+}
+
+.es-input[aria-invalid="true"] {
+  border-color: #b42318;
+}
+
+.es-help {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #5b6b62;
+}
+
+.es-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.es-error {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b42318;
+}
+
+.es-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.es-actions .btn {
+  min-height: 48px;
+  justify-content: center;
+}
+
+@keyframes es-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 600px) {
+  .es-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .es-sheet {
+    max-width: none;
+    border-radius: 22px 22px 0 0;
+    padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
+    animation: es-up 0.22s ease-out;
+  }
+  .es-grab {
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 14px;
+    border-radius: 999px;
+    background: #d6dcd9;
+  }
+}
+
+@keyframes es-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .es-sheet {
+    animation: none;
+  }
 }
 
 .data-table {
@@ -1387,47 +1724,6 @@ onMounted(fetchData);
   background: var(--gray-100);
 }
 
-.info-note-card {
-  padding: 16px 20px;
-  margin-bottom: var(--space-xl);
-  background: linear-gradient(
-    135deg,
-    rgba(240, 253, 244, 0.95) 0%,
-    rgba(255, 255, 255, 0.95) 100%
-  );
-  border: 1px solid rgba(134, 239, 172, 0.5);
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.05);
-}
-
-/* .info-note-content {
-  display: flex;
-  align-items: start;
-  gap: 14px;
-} */
-
-.info-icon {
-  font-size: 1.4rem;
-  line-height: 1;
-  padding: 10px;
-  background: rgba(34, 197, 94, 0.12);
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-}
-
-.info-title {
-  margin: 0 0 3px 0;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--primary-dark);
-}
-
-.info-desc {
-  margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--gray-700);
-}
-
 .wali-data-link {
   display: block;
   width: fit-content;
@@ -1595,11 +1891,6 @@ onMounted(fetchData);
 .ni-preview-list .data-table th,
 .ni-preview-list .data-table td {
   padding: 8px 12px;
-}
-
-.editing-name-input {
-  min-width: 140px;
-  max-width: 260px;
 }
 
 .purge-list {

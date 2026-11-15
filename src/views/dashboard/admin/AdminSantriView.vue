@@ -1,7 +1,7 @@
 <template>
   <SantriManager
     :title="isAdmin ? 'Kelola Santri' : 'Data Santri'"
-    :subtitle="isAdmin ? 'Lihat, tambah, tetapkan Jilid / Marhalah, dan hapus data santri' : 'Daftar santri TPQ Amanah, pencarian, dan pembaruan nama santri'"
+    :subtitle="isAdmin ? 'Lihat, tambah, tetapkan Jilid / Marhalah, dan hapus data santri' : 'Santri jilid Antum. Ada nama yang salah ketik? Ketuk Ubah nama. Pendaftaran dan jilid diatur admin.'"
     :admin-mode="isAdmin"
   />
 </template>
