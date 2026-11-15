@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pickMonthReport, lockMessage, isLockedStatus, sessionPeriod } from "../src/utils/lpjLock.js";
 import { buildCalendar } from "../src/utils/kbmCalendar.js";
+import { squash, has } from "./helpers/sourceText.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const read = (p) => fs.readFileSync(path.join(here, "..", p), "utf8");
@@ -39,15 +40,15 @@ test("a locked month keeps its calendar: nothing to fill, existing KBM still ope
 });
 
 test("KBM page: the calendar never disappears because of a lock, and locked months read as view-only", () => {
-  const kbm = read("src/views/dashboard/guru/KbmView.vue");
-  assert.ok(kbm.includes('<KbmDatePicker v-if="kbmCalendar"'), "only a missing calendar hides it, never a lock");
-  assert.ok(kbm.includes(':locked-reason="calendarLockedReason"'));
-  assert.ok(kbm.includes('isPeriodLocked ? "Lihat Absensi"') && kbm.includes('isPeriodLocked ? "Lihat Jurnal"'), "no edit buttons in a locked month");
-  assert.ok(kbm.includes('v-if="!isPeriodLocked" type="button" class="btn-delete-card"'), "no delete in a locked month");
-  assert.ok(kbm.includes("monthFillable.value && sheetDate.value <= todayString"), "no 'Tambah KBM' in a locked or closed month");
-  assert.ok(kbm.includes("currentLpjReport.value = pickMonthReport(lpjRes?.data);"));
-  const picker = read("src/components/KbmDatePicker.vue");
-  assert.ok(picker.includes('v-if="lockedReason"') && picker.includes("locked: !!props.lockedReason"));
+  const kbm = squash(read("src/views/dashboard/guru/KbmView.vue")); // formatting-proof
+  assert.ok(has(kbm, '<KbmDatePicker v-if="kbmCalendar"'), "only a missing calendar hides it, never a lock");
+  assert.ok(has(kbm, ':locked-reason="calendarLockedReason"'));
+  assert.ok(has(kbm, 'isPeriodLocked ? "Lihat Absensi"') && has(kbm, 'isPeriodLocked ? "Lihat Jurnal"'), "no edit buttons in a locked month");
+  assert.ok(has(kbm, 'v-if="!isPeriodLocked" type="button" class="btn-delete-card"'), "no delete in a locked month");
+  assert.ok(has(kbm, "monthFillable.value && sheetDate.value <= todayString"), "no 'Tambah KBM' in a locked or closed month");
+  assert.ok(has(kbm, "currentLpjReport.value = pickMonthReport(lpjRes?.data);"));
+  const picker = squash(read("src/components/KbmDatePicker.vue"));
+  assert.ok(has(picker, 'v-if="lockedReason"') && has(picker, "locked: !!props.lockedReason"));
 });
 
 test("journal and student attendance pages are read-only in a locked month", () => {

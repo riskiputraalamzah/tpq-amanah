@@ -4,10 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildCalendar, dayState, normalizeLevel, longDate, shiftPeriod } from "../src/utils/kbmCalendar.js";
+import { squash, has } from "./helpers/sourceText.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const kbmView = fs.readFileSync(path.join(here, "../src/views/dashboard/guru/KbmView.vue"), "utf8");
-const picker = fs.readFileSync(path.join(here, "../src/components/KbmDatePicker.vue"), "utf8");
+// formatting-proof (see helpers/sourceText.js)
+const kbmView = squash(fs.readFileSync(path.join(here, "../src/views/dashboard/guru/KbmView.vue"), "utf8"));
+const picker = squash(fs.readFileSync(path.join(here, "../src/components/KbmDatePicker.vue"), "utf8"));
 
 const day = (date, extra = {}) => ({
   date,
@@ -69,7 +71,7 @@ test("month grid starts on Sunday like the attendance calendar; empty days are f
   assert.equal(view.leadingBlanks, 0, "1 Nov 2026 is a Sunday: first column");
   const oct = buildCalendar({ period: "2026-10", today: "2026-11-04", days: [day("2026-10-01")] });
   assert.equal(oct.leadingBlanks, 4, "1 Oct 2026 is a Thursday: after Min, Sen, Sel, Rab");
-  assert.ok(picker.includes("['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"), "headers in the same order");
+  assert.ok(has(picker, "['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"), "headers in the same order");
   assert.deepEqual(view.needsDates, ["2026-11-02"]);
   assert.deepEqual(view.incompleteDates, ["2026-11-05"]);
   const [sun, mon, tue, wed, thu] = view.cells;
@@ -113,38 +115,38 @@ test("a month the teacher can no longer fill: nothing to fill, existing KBM stil
 });
 
 test("KBM page: no sesi/jilid form any more; the calendar is the page and filling goes to the Daily Workspace", () => {
-  assert.ok(!kbmView.includes('id="input-kbm-slot"') && !kbmView.includes('id="input-kbm-class"'), "no sesi / jilid dropdowns");
-  assert.ok(!kbmView.includes("submitSession"), "KBM is not created from this page");
-  assert.ok(kbmView.includes("<KbmDatePicker"), "uses the KBM calendar");
-  assert.ok(kbmView.includes('@pick="pickDay"'), "a tap on a day is handled by the page");
-  assert.ok(kbmView.includes("/dashboard/kbm/daily-workspace?date=${date}&from=kbm"), "an empty day opens the Daily Workspace on that date");
-  assert.ok(kbmView.includes('role="dialog"') && kbmView.includes("sheetSessions"), "a day with KBM opens its own sheet");
-  assert.ok(kbmView.includes("Tambah KBM lain di tanggal ini"), "a second class the same day is still possible");
-  assert.ok(kbmView.includes("Perlu Dilengkapi") && kbmView.includes("todoItems"), "short to-do list instead of the full history");
-  assert.ok(!kbmView.includes("filteredHistory"), "the full history list is gone");
+  assert.ok(!has(kbmView, 'id="input-kbm-slot"') && !has(kbmView, 'id="input-kbm-class"'), "no sesi / jilid dropdowns");
+  assert.ok(!has(kbmView, "submitSession"), "KBM is not created from this page");
+  assert.ok(has(kbmView, "<KbmDatePicker"), "uses the KBM calendar");
+  assert.ok(has(kbmView, '@pick="pickDay"'), "a tap on a day is handled by the page");
+  assert.ok(has(kbmView, "/dashboard/kbm/daily-workspace?date=${date}&from=kbm"), "an empty day opens the Daily Workspace on that date");
+  assert.ok(has(kbmView, 'role="dialog"') && has(kbmView, "sheetSessions"), "a day with KBM opens its own sheet");
+  assert.ok(has(kbmView, "Tambah KBM lain di tanggal ini"), "a second class the same day is still possible");
+  assert.ok(has(kbmView, "Perlu Dilengkapi") && has(kbmView, "todoItems"), "short to-do list instead of the full history");
+  assert.ok(!has(kbmView, "filteredHistory"), "the full history list is gone");
 });
 
 test("KBM page: the viewed month moves with the arrows and with ?date from links, and reloads its data", () => {
-  assert.ok(kbmView.includes('@change-month="changeMonth"'), "picker arrows change the month");
-  assert.ok(kbmView.includes("viewedMonth = ref((contextualDate || todayString).slice(0, 7))"), "?date opens that month");
-  assert.ok(kbmView.includes('api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } })'), "calendar of the viewed month");
-  assert.ok(kbmView.includes("if (request !== monthRequest) return;"), "fast taps: the latest month wins");
-  assert.ok(kbmView.includes("openSheet(contextualDate)"), "coming back to a day with KBM shows that day again");
+  assert.ok(has(kbmView, '@change-month="changeMonth"'), "picker arrows change the month");
+  assert.ok(has(kbmView, "viewedMonth = ref((contextualDate || todayString).slice(0, 7))"), "?date opens that month");
+  assert.ok(has(kbmView, 'api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } })'), "calendar of the viewed month");
+  assert.ok(has(kbmView, "if (request !== monthRequest) return;"), "fast taps: the latest month wins");
+  assert.ok(has(kbmView, "openSheet(contextualDate)"), "coming back to a day with KBM shows that day again");
 });
 
 test("delete: the dialog closes itself after deleting (the old guard kept it open)", () => {
-  const confirm = kbmView.slice(kbmView.indexOf("const confirmDeleteSession"), kbmView.indexOf("// The calendar's own month changes"));
-  assert.ok(confirm.includes("deletingSession.value = null;"), "closed directly, not through closeDeleteModal()");
-  assert.ok(!confirm.includes("closeDeleteModal()"), "closeDeleteModal refuses while deletingLoading is on");
-  assert.ok(confirm.indexOf("deletingSession.value = null;") < confirm.indexOf("showSuccess("), "closed before the message shows");
+  const confirm = kbmView.slice(kbmView.indexOf(squash("const confirmDeleteSession")), kbmView.indexOf(squash("// The calendar's own month changes")));
+  assert.ok(has(confirm, "deletingSession.value = null;"), "closed directly, not through closeDeleteModal()");
+  assert.ok(!has(confirm, "closeDeleteModal()"), "closeDeleteModal refuses while deletingLoading is on");
+  assert.ok(confirm.indexOf(squash("deletingSession.value = null;")) < confirm.indexOf(squash("showSuccess(")), "closed before the message shows");
 });
 
 test("calendar legend explains every mark; no selection-dependent hint left", () => {
   for (const text of ["KBM lengkap", "Absen santri / jurnal belum", "Hadir, KBM belum diisi", "Belum absen", "Tidak hadir (izin / sakit)", "Hari libur", "Akhir pekan / belum tiba"]) {
-    assert.ok(picker.includes(text), text);
+    assert.ok(has(picker, text), text);
   }
-  assert.ok(!picker.includes("Pilih sesi &amp; jilid dulu"), "the old hint is gone");
-  assert.ok(!picker.includes("Ada KBM jilid/sesi lain"), "the confusing '1' badge is gone");
+  assert.ok(!has(picker, "Pilih sesi &amp; jilid dulu"), "the old hint is gone");
+  assert.ok(!has(picker, "Ada KBM jilid/sesi lain"), "the confusing '1' badge is gone");
 });
 
 test("KBM calendar marks like the attendance calendar: a cross for izin/sakit/alfa, a gold dot for holidays", () => {
@@ -152,7 +154,7 @@ test("KBM calendar marks like the attendance calendar: a cross for izin/sakit/al
   const view = buildCalendar({ period: "2026-11", today: "2026-11-25", days }, opts);
   assert.deepEqual([view.cells[0].state, view.cells[0].isHoliday], ["absent", false]);
   assert.deepEqual([view.cells[1].state, view.cells[1].isHoliday], ["off", true]);
-  assert.ok(picker.includes("cell.state === 'absent'\" class=\"mark mark-absent\""), "cross on absent days");
-  assert.ok(picker.includes('v-if="cell.isHoliday" class="holiday-dot"'), "gold dot on holidays");
-  assert.ok(picker.includes("Tidak hadir (izin / sakit)") && picker.includes("Hari libur"), "legend says it");
+  assert.ok(has(picker, "cell.state === 'absent'\" class=\"mark mark-absent\""), "cross on absent days");
+  assert.ok(has(picker, 'v-if="cell.isHoliday" class="holiday-dot"'), "gold dot on holidays");
+  assert.ok(has(picker, "Tidak hadir (izin / sakit)") && has(picker, "Hari libur"), "legend says it");
 });
