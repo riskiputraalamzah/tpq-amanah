@@ -764,7 +764,6 @@
               <p v-if="nameChanged" class="es-help">
                 Sebelumnya: <s>{{ editRow.name }}</s>
               </p>
-              <p v-else class="es-help">''</p>
 
               <div v-if="adminMode" class="es-grid">
                 <div>
