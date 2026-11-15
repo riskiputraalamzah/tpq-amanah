@@ -9,12 +9,25 @@
             📅 {{ activePeriodLabel }}
           </span>
         </div>
-        <p class="header-subtitle">Ketuk tanggal di kalender untuk melihat atau mengisi KBM hari itu</p>
+        <p class="header-subtitle">
+          Ketuk tanggal di kalender untuk melihat atau mengisi KBM hari itu
+        </p>
       </div>
 
       <div v-if="canFillToday" class="header-action">
-        <router-link :to="workspaceLink(todayString)" class="btn btn-primary btn-sm btn-fill-today">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+        <router-link
+          :to="workspaceLink(todayString)"
+          class="btn btn-primary btn-sm btn-fill-today"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            aria-hidden="true"
+          >
             <path d="M12 5v14M5 12h14" />
           </svg>
           <span>Isi KBM Hari Ini</span>
@@ -26,36 +39,63 @@
     <div v-if="isPeriodLocked" class="locked-period-banner glass-card">
       <div class="locked-icon">🔒</div>
       <div class="locked-text">
-        <strong class="locked-title">Administrasi Periode Ini Sedang Dikunci</strong>
+        <strong class="locked-title"
+          >Administrasi Periode Ini Sedang Dikunci</strong
+        >
         <p>
-          Laporan LPJ bulanan periode ini berstatus <strong>{{ lockedStatusText }}</strong>, jadi KBM bulan ini hanya
-          bisa dilihat. Pakai panah di kalender untuk pindah ke bulan lain, atau hubungi admin bila perlu dikoreksi.
+          Laporan LPJ bulanan periode ini berstatus
+          <strong>{{ lockedStatusText }}</strong
+          >, jadi KBM bulan ini hanya bisa dilihat. Pakai panah di kalender
+          untuk pindah ke bulan lain, atau hubungi admin bila perlu dikoreksi.
         </p>
       </div>
     </div>
 
     <!-- Loading State -->
-    <PageSkeleton v-if="loadingInitial" :stats="4" :rows="6" label="Memuat data KBM" />
+    <PageSkeleton
+      v-if="loadingInitial"
+      :stats="4"
+      :rows="6"
+      label="Memuat data KBM"
+    />
 
     <template v-else>
       <!-- Quick Metrics Summary -->
       <section class="kbm-metrics-grid" aria-label="Ringkasan KBM bulan ini">
         <div class="kbm-metric-card glass-card">
           <div class="metric-icon total">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              <path
+                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+              />
             </svg>
           </div>
           <div class="metric-info">
             <span class="metric-label">Total KBM</span>
-            <strong class="metric-value">{{ totalSessions }} <span class="metric-unit">Sesi</span></strong>
+            <strong class="metric-value"
+              >{{ totalSessions }} <span class="metric-unit">Sesi</span></strong
+            >
           </div>
         </div>
 
         <div class="kbm-metric-card glass-card">
           <div class="metric-icon complete">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
@@ -68,9 +108,22 @@
           </div>
         </div>
 
-        <div class="kbm-metric-card glass-card" :class="{ 'card-attention': pendingSessionsCount > 0 }">
-          <div class="metric-icon" :class="pendingSessionsCount > 0 ? 'pending' : 'neutral'">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div
+          class="kbm-metric-card glass-card"
+          :class="{ 'card-attention': pendingSessionsCount > 0 }"
+        >
+          <div
+            class="metric-icon"
+            :class="pendingSessionsCount > 0 ? 'pending' : 'neutral'"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -78,15 +131,31 @@
           </div>
           <div class="metric-info">
             <span class="metric-label">Belum Lengkap</span>
-            <strong class="metric-value" :class="pendingSessionsCount > 0 ? 'text-warning-bold' : ''">
+            <strong
+              class="metric-value"
+              :class="pendingSessionsCount > 0 ? 'text-warning-bold' : ''"
+            >
               {{ pendingSessionsCount }} <span class="metric-unit">Sesi</span>
             </strong>
           </div>
         </div>
 
-        <div class="kbm-metric-card glass-card" :class="{ 'card-attention': needsDays.length > 0 }">
-          <div class="metric-icon" :class="needsDays.length > 0 ? 'pending' : 'neutral'">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div
+          class="kbm-metric-card glass-card"
+          :class="{ 'card-attention': needsDays.length > 0 }"
+        >
+          <div
+            class="metric-icon"
+            :class="needsDays.length > 0 ? 'pending' : 'neutral'"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -94,8 +163,13 @@
             </svg>
           </div>
           <div class="metric-info">
-            <span class="metric-label" title="Hadir, tetapi KBM belum diisi">Belum Ada KBM</span>
-            <strong class="metric-value" :class="needsDays.length > 0 ? 'text-warning-bold' : ''">
+            <span class="metric-label" title="Hadir, tetapi KBM belum diisi"
+              >Belum Ada KBM</span
+            >
+            <strong
+              class="metric-value"
+              :class="needsDays.length > 0 ? 'text-warning-bold' : ''"
+            >
               {{ needsDays.length }} <span class="metric-unit">Hari</span>
             </strong>
           </div>
@@ -104,27 +178,52 @@
 
       <div class="content-grid">
         <!-- The calendar is the page: every day shows its own state, tap it to see or fill that day -->
-        <section class="kbm-calendar-card glass-card" aria-labelledby="calendar-heading">
+        <section
+          class="kbm-calendar-card glass-card"
+          style="position: sticky; top: 12px"
+          aria-labelledby="calendar-heading"
+        >
           <h2 id="calendar-heading" class="sr-only">Kalender KBM</h2>
-          <KbmDatePicker v-if="kbmCalendar" :calendar="kbmCalendar" :model-value="selectedDate" :max-date="todayString"
-            :loading="monthLoading" :locked-reason="calendarLockedReason" @pick="pickDay" @change-month="changeMonth" />
-          <p v-else class="calendar-error">Kalender belum bisa dimuat. Muat ulang halaman ini.</p>
+          <KbmDatePicker
+            v-if="kbmCalendar"
+            :calendar="kbmCalendar"
+            :model-value="selectedDate"
+            :max-date="todayString"
+            :loading="monthLoading"
+            :locked-reason="calendarLockedReason"
+            @pick="pickDay"
+            @change-month="changeMonth"
+          />
+          <p v-else class="calendar-error">
+            Kalender belum bisa dimuat. Muat ulang halaman ini.
+          </p>
         </section>
 
         <!-- Only what still needs action this month -->
         <section class="kbm-todo glass-card" aria-labelledby="todo-heading">
           <div class="todo-head">
             <h2 id="todo-heading">Perlu Dilengkapi</h2>
-            <span class="todo-count" v-if="todoItems.length">{{ todoItems.length }}</span>
+            <span class="todo-count" v-if="todoItems.length">{{
+              todoItems.length
+            }}</span>
           </div>
 
           <p v-if="!todoItems.length" class="todo-empty">
             <span class="todo-empty-icon" aria-hidden="true">✓</span>
-            {{ totalSessions ? `Semua KBM ${activePeriodLabel} sudah lengkap.` : `Belum ada KBM yang perlu dilengkapi di ${activePeriodLabel}.` }}
+            {{
+              totalSessions
+                ? `Semua KBM ${activePeriodLabel} sudah lengkap.`
+                : `Belum ada KBM yang perlu dilengkapi di ${activePeriodLabel}.`
+            }}
           </p>
 
           <ul v-else class="todo-list">
-            <li v-for="item in todoItems" :key="item.key" class="todo-item" :class="`todo-${item.kind}`">
+            <li
+              v-for="item in todoItems"
+              :key="item.key"
+              class="todo-item"
+              :class="`todo-${item.kind}`"
+            >
               <div class="todo-text">
                 <strong>{{ item.dateLabel }}</strong>
                 <span>{{ item.detail }}</span>
@@ -142,14 +241,34 @@
     <Teleport to="body">
       <Transition name="sheet">
         <div v-if="sheetDate" class="sheet-overlay" @click.self="closeSheet">
-          <section ref="sheetEl" class="day-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+          <section
+            ref="sheetEl"
+            class="day-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sheet-title"
+            tabindex="-1"
+          >
             <header class="sheet-head">
               <div>
                 <h3 id="sheet-title">{{ longDate(sheetDate) }}</h3>
                 <p class="sheet-sub">{{ sheetSummary }}</p>
               </div>
-              <button type="button" class="sheet-close" aria-label="Tutup" @click="closeSheet">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+              <button
+                type="button"
+                class="sheet-close"
+                aria-label="Tutup"
+                @click="closeSheet"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.4"
+                  aria-hidden="true"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -157,38 +276,105 @@
             </header>
 
             <div class="sheet-body">
-              <article v-for="session in sheetSessions" :key="session.id" class="sheet-kbm"
-                :class="isWorkflowComplete(session) ? 'is-complete' : 'is-pending'">
+              <article
+                v-for="session in sheetSessions"
+                :key="session.id"
+                class="sheet-kbm"
+                :class="
+                  isWorkflowComplete(session) ? 'is-complete' : 'is-pending'
+                "
+              >
                 <div class="sheet-kbm-head">
-                  <span class="slot-pill">{{ getSessionSlotIcon(session.sessionSlotId) }} {{ getSessionName(session.sessionSlotId) }}
-                    <span v-if="getSessionTime(session.sessionSlotId)" class="slot-time-text">({{ getSessionTime(session.sessionSlotId) }})</span>
+                  <span class="slot-pill"
+                    >{{ getSessionSlotIcon(session.sessionSlotId) }}
+                    {{ getSessionName(session.sessionSlotId) }}
+                    <span
+                      v-if="getSessionTime(session.sessionSlotId)"
+                      class="slot-time-text"
+                      >({{ getSessionTime(session.sessionSlotId) }})</span
+                    >
                   </span>
                   <span class="level-pill">{{ getLevelName(session) }}</span>
-                  <span v-if="session.meetingNumber" class="activity-pill">Pertemuan ke-{{ session.meetingNumber }}</span>
-                  <span v-if="session.substituteFor" class="badal-pill">Badal</span>
+                  <span v-if="session.meetingNumber" class="activity-pill"
+                    >Pertemuan ke-{{ session.meetingNumber }}</span
+                  >
+                  <span v-if="session.substituteFor" class="badal-pill"
+                    >Badal</span
+                  >
                 </div>
 
                 <dl class="sheet-kbm-rows">
-                  <div class="sheet-row" :class="workflowOf(session).attFilled ? 'ok' : 'todo'">
+                  <div
+                    class="sheet-row"
+                    :class="workflowOf(session).attFilled ? 'ok' : 'todo'"
+                  >
                     <dt>Absen santri</dt>
-                    <dd>{{ workflowOf(session).attFilled ? `${workflowOf(session).attHadir} dari ${workflowOf(session).attTotal} hadir` : 'Belum diisi' }}</dd>
+                    <dd>
+                      {{
+                        workflowOf(session).attFilled
+                          ? `${workflowOf(session).attHadir} dari ${workflowOf(session).attTotal} hadir`
+                          : "Belum diisi"
+                      }}
+                    </dd>
                   </div>
-                  <div class="sheet-row" :class="workflowOf(session).journalFilled ? 'ok' : 'todo'">
+                  <div
+                    class="sheet-row"
+                    :class="workflowOf(session).journalFilled ? 'ok' : 'todo'"
+                  >
                     <dt>Jurnal</dt>
-                    <dd>{{ workflowOf(session).journalFilled ? session.journal?.material : 'Belum diisi' }}</dd>
+                    <dd>
+                      {{
+                        workflowOf(session).journalFilled
+                          ? session.journal?.material
+                          : "Belum diisi"
+                      }}
+                    </dd>
                   </div>
                 </dl>
 
                 <div class="sheet-kbm-actions">
-                  <button type="button" class="btn-task-action" :class="workflowOf(session).attFilled ? 'btn-task-edit' : 'btn-task-submit'"
-                    @click="goAttendance(session.id)">
-                    {{ isPeriodLocked ? "Lihat Absensi" : workflowOf(session).attFilled ? "Absensi" : "Isi Absensi" }}
+                  <button
+                    type="button"
+                    class="btn-task-action"
+                    :class="
+                      workflowOf(session).attFilled
+                        ? 'btn-task-edit'
+                        : 'btn-task-submit'
+                    "
+                    @click="goAttendance(session.id)"
+                  >
+                    {{
+                      isPeriodLocked
+                        ? "Lihat Absensi"
+                        : workflowOf(session).attFilled
+                          ? "Absensi"
+                          : "Isi Absensi"
+                    }}
                   </button>
-                  <button type="button" class="btn-task-action" :class="workflowOf(session).journalFilled ? 'btn-task-edit' : 'btn-task-submit'"
-                    @click="goJournal(session.id)">
-                    {{ isPeriodLocked ? "Lihat Jurnal" : workflowOf(session).journalFilled ? "Jurnal" : "Isi Jurnal" }}
+                  <button
+                    type="button"
+                    class="btn-task-action"
+                    :class="
+                      workflowOf(session).journalFilled
+                        ? 'btn-task-edit'
+                        : 'btn-task-submit'
+                    "
+                    @click="goJournal(session.id)"
+                  >
+                    {{
+                      isPeriodLocked
+                        ? "Lihat Jurnal"
+                        : workflowOf(session).journalFilled
+                          ? "Jurnal"
+                          : "Isi Jurnal"
+                    }}
                   </button>
-                  <button v-if="!isPeriodLocked" type="button" class="btn-delete-card" @click="openDeleteModal(session)">
+                  <button
+                    v-if="!isPeriodLocked"
+                    type="button"
+                    class="btn-delete-card"
+                    @click="openDeleteModal(session)"
+                  >
                     Hapus
                   </button>
                 </div>
@@ -207,8 +393,17 @@
 
     <!-- Delete confirmation -->
     <Teleport to="body">
-      <div v-if="deletingSession" class="modal-overlay delete-overlay" @click.self="closeDeleteModal">
-        <div class="modal glass-card delete-modal-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
+      <div
+        v-if="deletingSession"
+        class="modal-overlay delete-overlay"
+        @click.self="closeDeleteModal"
+      >
+        <div
+          class="modal glass-card delete-modal-card"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="delete-title"
+        >
           <div class="modal-danger-header">
             <span class="danger-icon" aria-hidden="true">⚠️</span>
             <h3 id="delete-title">Hapus Sesi Mengajar?</h3>
@@ -216,22 +411,37 @@
 
           <div class="modal-danger-body">
             <p>
-              Apakah Anda yakin ingin menghapus sesi <strong>{{ getLevelName(deletingSession) }}</strong> ({{
-                getSessionName(deletingSession.sessionSlotId) }}) pada <strong>{{ formatDate(deletingSession.date)
-                }}</strong>?
+              Apakah Anda yakin ingin menghapus sesi
+              <strong>{{ getLevelName(deletingSession) }}</strong> ({{
+                getSessionName(deletingSession.sessionSlotId)
+              }}) pada <strong>{{ formatDate(deletingSession.date) }}</strong
+              >?
             </p>
-            <div class="alert alert-warning mt-3">
-              Materi jurnal dan presensi santri pada sesi ini akan dihapus permanen.
+            <div class="mt-3 alert alert-warning">
+              Materi jurnal dan presensi santri pada sesi ini akan dihapus
+              permanen.
             </div>
           </div>
 
           <div class="modal-danger-actions">
-            <button type="button" class="btn btn-secondary" :disabled="deletingLoading" @click="closeDeleteModal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              :disabled="deletingLoading"
+              @click="closeDeleteModal"
+            >
               Batal
             </button>
-            <button type="button" class="btn btn-danger" :disabled="deletingLoading" @click="confirmDeleteSession">
-              <span v-if="deletingLoading" class="inline-spinner mr-2"></span>
-              <span>{{ deletingLoading ? "Menghapus..." : "Ya, Hapus Sesi" }}</span>
+            <button
+              type="button"
+              class="btn btn-danger"
+              :disabled="deletingLoading"
+              @click="confirmDeleteSession"
+            >
+              <span v-if="deletingLoading" class="mr-2 inline-spinner"></span>
+              <span>{{
+                deletingLoading ? "Menghapus..." : "Ya, Hapus Sesi"
+              }}</span>
             </button>
           </div>
         </div>
@@ -241,7 +451,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  watch,
+  nextTick,
+} from "vue";
 import api from "@/services/api";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import KbmDatePicker from "@/components/KbmDatePicker.vue";
@@ -292,7 +509,10 @@ const viewedPeriod = () => {
 const activePeriodLabel = computed(() => {
   const p = viewedPeriod();
   const dateObj = new Date(p.year, p.month - 1, 1);
-  return dateObj.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  return dateObj.toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
 });
 
 const isPeriodLocked = computed(() => {
@@ -305,29 +525,39 @@ const isPeriodLocked = computed(() => {
 
 const lockedStatusText = computed(() => {
   if (currentLpjReport.value?.status === "approved") return "Disetujui";
-  if (currentLpjReport.value?.status === "submitted") return "Menunggu Persetujuan";
+  if (currentLpjReport.value?.status === "submitted")
+    return "Menunggu Persetujuan";
   return "Terkunci";
 });
 
-const calendarLockedReason = computed(() => (isPeriodLocked.value ? lockMessage(currentLpjReport.value?.status) : ""));
+const calendarLockedReason = computed(() =>
+  isPeriodLocked.value ? lockMessage(currentLpjReport.value?.status) : "",
+);
 
 // The same view the calendar draws, for the to-do list and the header button.
 const calendarView = computed(() =>
-  buildCalendar(kbmCalendar.value, { locked: isPeriodLocked.value, maxDate: todayString }),
+  buildCalendar(kbmCalendar.value, {
+    locked: isPeriodLocked.value,
+    maxDate: todayString,
+  }),
 );
 const monthFillable = computed(() => calendarView.value.canFill);
 
 // Filling always goes through the Daily Workspace: it picks the teacher's sesi (admin schedule) and jilid by itself.
-const workspaceLink = (date) => `/dashboard/kbm/daily-workspace?date=${date}&from=kbm`;
+const workspaceLink = (date) =>
+  `/dashboard/kbm/daily-workspace?date=${date}&from=kbm`;
 const canFillToday = computed(() => {
-  if (viewedMonth.value !== todayString.slice(0, 7) || !monthFillable.value) return false;
+  if (viewedMonth.value !== todayString.slice(0, 7) || !monthFillable.value)
+    return false;
   const cell = calendarView.value.cells.find((c) => c.date === todayString);
   return !!cell && (cell.selectable || cell.openable);
 });
 
 const loadCalendar = async () => {
   try {
-    const { data } = await api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } });
+    const { data } = await api.get("/teaching_sessions/calendar", {
+      params: { period: viewedMonth.value },
+    });
     kbmCalendar.value = data;
   } catch {
     kbmCalendar.value = null;
@@ -342,8 +572,14 @@ const loadMonthData = async () => {
   try {
     const [historyRes, lpjRes, calendarRes] = await Promise.all([
       api.get("/teaching_sessions", { params: viewedPeriod() }),
-      api.get("/ljp/reports", { params: { period: viewedMonth.value } }).catch(() => null),
-      api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } }).catch(() => null),
+      api
+        .get("/ljp/reports", { params: { period: viewedMonth.value } })
+        .catch(() => null),
+      api
+        .get("/teaching_sessions/calendar", {
+          params: { period: viewedMonth.value },
+        })
+        .catch(() => null),
     ]);
     if (request !== monthRequest) return;
     history.value = historyRes.data || [];
@@ -360,7 +596,8 @@ const loadMonthData = async () => {
 
 // Month arrows. The URL keeps the month, so coming back from a KBM lands here again.
 const changeMonth = (period) => {
-  if (!/^\d{4}-\d{2}$/.test(period || "") || period === viewedMonth.value) return;
+  if (!/^\d{4}-\d{2}$/.test(period || "") || period === viewedMonth.value)
+    return;
   viewedMonth.value = period;
   closeSheet();
   router.replace({ query: { ...route.query, date: undefined, month: period } });
@@ -381,7 +618,11 @@ const dateOf = (val) => {
 
 const shortDate = (date) => {
   const [y, m, d] = String(date).split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short" });
+  return new Date(y, m - 1, d).toLocaleDateString("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 };
 
 // KBM of the viewed month, per date (full records: students, journal).
@@ -394,7 +635,11 @@ const sessionsByDate = computed(() => {
     map.get(date).push(s);
   }
   for (const list of map.values()) {
-    list.sort((a, b) => String(a.sessionSlotId || "").localeCompare(String(b.sessionSlotId || "")));
+    list.sort((a, b) =>
+      String(a.sessionSlotId || "").localeCompare(
+        String(b.sessionSlotId || ""),
+      ),
+    );
   }
   return map;
 });
@@ -403,16 +648,24 @@ const sessionsByDate = computed(() => {
 const selectedDate = ref("");
 const sheetDate = ref("");
 const sheetEl = ref(null);
-const sheetSessions = computed(() => sessionsByDate.value.get(sheetDate.value) || []);
+const sheetSessions = computed(
+  () => sessionsByDate.value.get(sheetDate.value) || [],
+);
 const sheetSummary = computed(() => {
   const list = sheetSessions.value;
   const open = list.filter((s) => !isWorkflowComplete(s)).length;
   if (!list.length) return "";
-  if (open === 0) return list.length > 1 ? `${list.length} KBM, semua lengkap` : "KBM lengkap";
+  if (open === 0)
+    return list.length > 1
+      ? `${list.length} KBM, semua lengkap`
+      : "KBM lengkap";
   return `${list.length} KBM, ${open} belum lengkap`;
 });
 // Another class the same day (badal, a second jilid) - only while the month can still be filled.
-const canAddOnSheetDate = computed(() => !!sheetDate.value && monthFillable.value && sheetDate.value <= todayString);
+const canAddOnSheetDate = computed(
+  () =>
+    !!sheetDate.value && monthFillable.value && sheetDate.value <= todayString,
+);
 
 const openSheet = async (date) => {
   selectedDate.value = date;
@@ -438,7 +691,8 @@ const pickDay = (cell) => {
 };
 
 const onEscape = (event) => {
-  if (event.key === "Escape" && sheetDate.value && !deletingSession.value) closeSheet();
+  if (event.key === "Escape" && sheetDate.value && !deletingSession.value)
+    closeSheet();
 };
 
 // --- to-do list --------------------------------------------------------------------------------------------------------
@@ -449,7 +703,12 @@ const todoItems = computed(() => {
   for (const s of history.value) {
     if (isWorkflowComplete(s)) continue;
     const w = workflowOf(s);
-    const missing = [!w.attFilled && "absen santri", !w.journalFilled && "jurnal"].filter(Boolean).join(" & ");
+    const missing = [
+      !w.attFilled && "absen santri",
+      !w.journalFilled && "jurnal",
+    ]
+      .filter(Boolean)
+      .join(" & ");
     const date = dateOf(s.date);
     items.push({
       key: `s-${s.id}`,
@@ -479,14 +738,21 @@ const todoItems = computed(() => {
 const fetchInitialData = async () => {
   try {
     const periodObj = viewedPeriod();
-    const [classesRes, slotsRes, historyRes, lpjRes, kbmCalendarRes] = await Promise.all([
-      api.get("/classes"),
-      api.get("/teaching_sessions/slots"),
-      api.get("/teaching_sessions", { params: periodObj }),
-      // Optional data: a failure here must not block the rest of the page
-      api.get("/ljp/reports", { params: { period: viewedMonth.value } }).catch(() => null),
-      api.get("/teaching_sessions/calendar", { params: { period: viewedMonth.value } }).catch(() => null),
-    ]);
+    const [classesRes, slotsRes, historyRes, lpjRes, kbmCalendarRes] =
+      await Promise.all([
+        api.get("/classes"),
+        api.get("/teaching_sessions/slots"),
+        api.get("/teaching_sessions", { params: periodObj }),
+        // Optional data: a failure here must not block the rest of the page
+        api
+          .get("/ljp/reports", { params: { period: viewedMonth.value } })
+          .catch(() => null),
+        api
+          .get("/teaching_sessions/calendar", {
+            params: { period: viewedMonth.value },
+          })
+          .catch(() => null),
+      ]);
 
     classes.value = classesRes.data || [];
     sessionSlots.value = slotsRes.data || [];
@@ -502,7 +768,8 @@ const fetchInitialData = async () => {
   // Back from a KBM of that day (or a link to it): show that day again.
   if (contextualDate) {
     selectedDate.value = contextualDate;
-    if (sessionsByDate.value.get(contextualDate)?.length) openSheet(contextualDate);
+    if (sessionsByDate.value.get(contextualDate)?.length)
+      openSheet(contextualDate);
   }
 };
 
@@ -510,7 +777,11 @@ const formatDate = (val) => {
   const date = dateOf(val);
   if (!date) return "-";
   const [y, m, d] = date.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 const getSessionName = (id) => resolveSessionSlotName(id, sessionSlots.value);
@@ -539,13 +810,19 @@ const isWorkflowComplete = (session) => {
   return w.attFilled && w.journalFilled;
 };
 
-const goAttendance = (sessionId) => router.push(`/dashboard/kbm/${sessionId}/absensi`);
-const goJournal = (sessionId) => router.push(`/dashboard/kbm/${sessionId}/jurnal`);
+const goAttendance = (sessionId) =>
+  router.push(`/dashboard/kbm/${sessionId}/absensi`);
+const goJournal = (sessionId) =>
+  router.push(`/dashboard/kbm/${sessionId}/jurnal`);
 
 // Metrics
 const totalSessions = computed(() => history.value.length);
-const completeSessionsCount = computed(() => history.value.filter((s) => isWorkflowComplete(s)).length);
-const pendingSessionsCount = computed(() => history.value.filter((s) => !isWorkflowComplete(s)).length);
+const completeSessionsCount = computed(
+  () => history.value.filter((s) => isWorkflowComplete(s)).length,
+);
+const pendingSessionsCount = computed(
+  () => history.value.filter((s) => !isWorkflowComplete(s)).length,
+);
 
 // --- delete ------------------------------------------------------------------------------------------------------------
 const openDeleteModal = (session) => {
@@ -589,7 +866,8 @@ watch(
 
 onMounted(() => {
   // ?month=YYYY-MM keeps the month across a reload or a back navigation
-  if (!contextualDate && /^\d{4}-\d{2}$/.test(String(route.query.month || ""))) viewedMonth.value = String(route.query.month);
+  if (!contextualDate && /^\d{4}-\d{2}$/.test(String(route.query.month || "")))
+    viewedMonth.value = String(route.query.month);
   window.addEventListener("keydown", onEscape);
   fetchInitialData();
 });

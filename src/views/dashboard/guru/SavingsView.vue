@@ -43,7 +43,7 @@
             <div class="step-num">2</div>
             <div class="step-body">
               <strong>Atur Akses Buku</strong>
-              <span>Buku bisa dibuat <em>Bersama</em> agar guru lain ikut melihat/mencatat, atau <em>Pribadi</em> agar hanya pemilik dan admin yang dapat mengaksesnya.</span>
+              <span>Daftar ini hanya berisi buku milik Anda. Jadikan <em>Publik</em> agar wali santri atau siapa saja bisa melihatnya lewat tautan (tanpa login, hanya baca), atau biarkan <em>Pribadi</em> agar hanya Anda dan admin yang bisa membukanya. Mencatat transaksi tetap hanya oleh Anda dan admin.</span>
             </div>
           </div>
           <div class="guide-step">
@@ -78,7 +78,7 @@
             <div class="step-num">7</div>
             <div class="step-body">
               <strong>Jika Link Tidak Bisa Dibuka</strong>
-              <span>Jika buku yang pernah dibagikan berubah menjadi pribadi, guru lain akan melihat halaman info bahwa buku tidak tersedia dan isi buku tidak ditampilkan demi keamanan data.</span>
+              <span>Jika buku dijadikan pribadi lagi, tautan publiknya tidak bisa dibuka dan isi buku tidak ditampilkan demi keamanan data.</span>
             </div>
           </div>
         </div>
@@ -577,7 +577,7 @@ const saveBook = async () => {
       success('Buku tabungan berhasil diperbarui')
     } else {
       await api.post('/savings/books', form.value)
-      success(`Buku tabungan berhasil dibuat${form.value.isPublished ? ' dan dipublish ke semua guru' : ''}`)
+      success(`Buku tabungan berhasil dibuat${form.value.isPublished ? ' dan bisa dilihat publik lewat tautan' : ''}`)
     }
     closeFormModal()
     await fetchBooks()
@@ -595,7 +595,7 @@ const togglePublish = async (book) => {
     // Replace array item to guarantee Vue reactivity
     const idx = books.value.findIndex(b => b.id === book.id)
     if (idx !== -1) books.value[idx] = { ...books.value[idx], isPublished: newState }
-    success(newState ? 'Buku dipublish — semua guru bisa melihatnya' : 'Buku dijadikan pribadi')
+    success(newState ? 'Buku kini publik — siapa saja bisa melihatnya lewat tautan' : 'Buku dijadikan pribadi')
   } catch (e) {
     showError(e.response?.data?.error || 'Gagal mengubah status publish')
   }

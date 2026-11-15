@@ -205,7 +205,7 @@
             ></textarea>
           </div>
           <div class="info-note">
-            🌐 Buku yang dibuat admin otomatis dipublish dan bisa dilihat oleh semua guru.
+            🌐 Buku yang dibuat admin otomatis publik: siapa saja bisa melihatnya lewat tautan (hanya baca). Guru tidak melihatnya di menu Tabungan mereka.
           </div>
           <div class="modal-actions">
             <button class="btn-cancel" @click="showCreateModal = false">Batal</button>
@@ -267,7 +267,7 @@ const createBook = async () => {
   creating.value = true
   try {
     await api.post('/savings/books', { ...createForm.value, isPublished: true })
-    success('Buku berhasil dibuat dan dipublish ke semua guru')
+    success('Buku berhasil dibuat dan bisa dilihat publik lewat tautan')
     showCreateModal.value = false
     createForm.value = { title: '', description: '' }
     const { data } = await api.get('/savings/books')

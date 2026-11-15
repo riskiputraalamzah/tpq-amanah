@@ -21,8 +21,18 @@
             <span class="book-badge" :class="book.status">{{
               book.status === "active" ? "Aktif" : "Ditutup"
             }}</span>
-            <span v-if="book.isPublished" class="badge-shared" title="Buku ini dapat diakses publik tanpa login">🌐 Publik</span>
-            <span v-else class="badge-private" title="Hanya Anda dan Admin yang dapat mengakses buku ini">🔒 Pribadi</span>
+            <span
+              v-if="book.isPublished"
+              class="badge-shared"
+              title="Buku ini dapat diakses publik tanpa login"
+              >🌐 Publik</span
+            >
+            <span
+              v-else
+              class="badge-private"
+              title="Hanya Anda dan Admin yang dapat mengakses buku ini"
+              >🔒 Pribadi</span
+            >
           </div>
           <p v-if="book.description">{{ book.description }}</p>
           <p class="book-meta">
@@ -141,7 +151,9 @@
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
                 {{
-                  book.isPublished ? "Jadikan Pribadi" : "Jadikan Publik (Dapat Diakses Umum)"
+                  book.isPublished
+                    ? "Jadikan Pribadi"
+                    : "Jadikan Publik (Dapat Diakses Umum)"
                 }}
               </button>
               <button
@@ -239,7 +251,12 @@
     </div>
 
     <!-- Loading -->
-    <PageSkeleton v-if="loading" :stats="4" :rows="8" label="Memuat buku tabungan" />
+    <PageSkeleton
+      v-if="loading"
+      :stats="4"
+      :rows="8"
+      label="Memuat buku tabungan"
+    />
 
     <template v-else-if="bookAccessError">
       <section class="book-unavailable glass-card">
@@ -258,7 +275,11 @@
           </svg>
         </div>
         <div class="unavailable-content">
-          <span class="unavailable-eyebrow">Buku tidak tersedia</span>
+          <span class="unavailable-eyebrow">{{
+            bookAccessError.publicPath
+              ? "Buku milik guru lain"
+              : "Buku tidak tersedia"
+          }}</span>
           <h1>{{ bookAccessError.title }}</h1>
           <p>{{ bookAccessError.message }}</p>
           <div v-if="bookAccessError.ownerName" class="unavailable-owner">
@@ -267,7 +288,17 @@
           </div>
         </div>
         <div class="unavailable-actions">
-          <button class="btn-save" @click="goToSavingsList">
+          <router-link
+            v-if="bookAccessError.publicPath"
+            class="btn-save unavailable-public"
+            :to="bookAccessError.publicPath"
+          >
+            Lihat halaman publik
+          </router-link>
+          <button
+            :class="bookAccessError.publicPath ? 'btn-cancel' : 'btn-save'"
+            @click="goToSavingsList"
+          >
             Kembali ke Tabungan
           </button>
           <button class="btn-cancel" @click="router.back()">Kembali</button>
@@ -340,7 +371,9 @@
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val text-expense">Rp {{ formatCurrency(totalExpense) }}</span>
+            <span class="sum-val text-expense"
+              >Rp {{ formatCurrency(totalExpense) }}</span
+            >
             <span class="sum-label">Pengeluaran</span>
           </div>
         </div>
@@ -361,14 +394,19 @@
             </svg>
           </div>
           <div class="sum-info">
-            <span class="sum-val text-balance">{{ formatLedgerCurrency(totalBalance) }}</span>
+            <span class="sum-val text-balance">{{
+              formatLedgerCurrency(totalBalance)
+            }}</span>
             <span class="sum-label">Saldo Buku</span>
           </div>
         </div>
       </div>
 
       <!-- Mobile Segmented View Tabs (< 1024px) -->
-      <div class="mobile-view-tabs mobile-only">
+      <div
+        class="mobile-view-tabs mobile-only"
+        style="z-index: 99; position: sticky; top: 0"
+      >
         <button
           v-if="book?.status === 'active'"
           type="button"
@@ -376,7 +414,14 @@
           :class="{ active: mobileView === 'form' }"
           @click="setMobileView('form')"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -388,9 +433,18 @@
           :class="{ active: mobileView === 'history' }"
           @click="setMobileView('history')"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <rect x="9" y="2" width="6" height="4" rx="1" />
-            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <path
+              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+            />
             <line x1="9" y1="12" x2="15" y2="12" />
             <line x1="9" y1="16" x2="15" y2="16" />
           </svg>
@@ -403,7 +457,14 @@
           :class="{ active: mobileView === 'members' }"
           @click="setMobileView('members')"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -417,13 +478,16 @@
       <!-- Main Layout: 2 Kolom di Desktop (>= 1024px), Tampilan Dinamis di Mobile (< 1024px) -->
       <div
         class="detail-main-layout"
-        :class="{ 'form-collapsed': isFormCollapsed || book?.status !== 'active' }"
+        :class="{
+          'form-collapsed': isFormCollapsed || book?.status !== 'active',
+        }"
       >
         <!-- Side Column: Form Catat Transaksi (only if active) -->
         <aside
           v-if="book?.status === 'active'"
           class="layout-side-col"
           :class="{ 'mobile-visible': mobileView === 'form' }"
+          style="position: sticky; top: 12px"
         >
           <!-- Collapsed State on Desktop -->
           <div
@@ -434,7 +498,14 @@
           >
             <div class="collapsed-content">
               <div class="collapsed-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -444,7 +515,10 @@
           </div>
 
           <!-- Active Form Card -->
-          <div v-show="!isFormCollapsed" class="add-section glass-card sticky-card">
+          <div
+            v-show="!isFormCollapsed"
+            class="add-section glass-card sticky-card"
+          >
             <div class="side-col-header">
               <h2>
                 <svg
@@ -466,7 +540,14 @@
                 @click="isFormCollapsed = true"
                 title="Sembunyikan Form untuk memperluas tabel"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
@@ -480,7 +561,14 @@
                 :class="{ active: newTx.type === 'income' }"
                 @click="setTransactionType('income')"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
@@ -492,7 +580,14 @@
                 :class="{ active: newTx.type === 'expense' }"
                 @click="setTransactionType('expense')"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 <span>Pengeluaran</span>
@@ -507,7 +602,7 @@
                 style="position: relative"
               >
                 <div class="form-label-row">
-                  <label class="form-label mb-0">Nama Anggota *</label>
+                  <label class="mb-0 form-label">Nama Anggota *</label>
                   <div class="santri-input-modes">
                     <button
                       class="mode-btn"
@@ -597,13 +692,19 @@
                   v-model="newTx.amount"
                   input-class="form-input"
                   placeholder="cth: 5.000"
-                  :aria-label="newTx.type === 'expense' ? 'Jumlah pengeluaran' : 'Jumlah pemasukan'"
+                  :aria-label="
+                    newTx.type === 'expense'
+                      ? 'Jumlah pengeluaran'
+                      : 'Jumlah pemasukan'
+                  "
                 />
               </div>
 
               <!-- Date -->
               <div class="form-group">
-                <label class="form-label">Waktu Transaksi (Jam & Menit) *</label>
+                <label class="form-label"
+                  >Waktu Transaksi (Jam & Menit) *</label
+                >
                 <input
                   v-model="newTx.date"
                   type="datetime-local"
@@ -633,8 +734,22 @@
                 @click="addTransaction"
                 :disabled="submitting"
               >
-                <svg v-if="!submitting" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line v-if="newTx.type === 'income'" x1="12" y1="5" x2="12" y2="19" />
+                <svg
+                  v-if="!submitting"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <line
+                    v-if="newTx.type === 'income'"
+                    x1="12"
+                    y1="5"
+                    x2="12"
+                    y2="19"
+                  />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 <span>
@@ -649,8 +764,15 @@
               </button>
 
               <!-- Mobile Quick Switch to History -->
-              <div class="mobile-only quick-history-link" v-if="transactions.length > 0">
-                <button type="button" class="btn-text-link" @click="setMobileView('history')">
+              <div
+                class="mobile-only quick-history-link"
+                v-if="transactions.length > 0"
+              >
+                <button
+                  type="button"
+                  class="btn-text-link"
+                  @click="setMobileView('history')"
+                >
                   Lihat riwayat transaksi ({{ transactions.length }}) &rarr;
                 </button>
               </div>
@@ -663,7 +785,10 @@
           class="layout-main-col"
           :class="{ 'mobile-visible': mobileView !== 'form' }"
         >
-          <div v-if="book?.status !== 'active'" class="closed-notice glass-card">
+          <div
+            v-if="book?.status !== 'active'"
+            class="closed-notice glass-card"
+          >
             <svg
               width="16"
               height="16"
@@ -676,7 +801,8 @@
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-            Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat ditambahkan.
+            Buku tabungan ini sudah ditutup. Tidak ada transaksi baru yang dapat
+            ditambahkan.
           </div>
 
           <div class="data-workspace-card glass-card">
@@ -689,9 +815,18 @@
                   :class="{ active: activeDataTab === 'history' }"
                   @click="setActiveDataTab('history')"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <rect x="9" y="2" width="6" height="4" rx="1" />
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                    <path
+                      d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+                    />
                     <line x1="9" y1="12" x2="15" y2="12" />
                     <line x1="9" y1="16" x2="15" y2="16" />
                   </svg>
@@ -705,7 +840,14 @@
                   :class="{ active: activeDataTab === 'members' }"
                   @click="setActiveDataTab('members')"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -717,9 +859,19 @@
               </div>
 
               <!-- Quick uncollapse button on desktop if form is collapsed -->
-              <div v-if="isFormCollapsed && book?.status === 'active'" class="ws-tabs-right desktop-only">
+              <div
+                v-if="isFormCollapsed && book?.status === 'active'"
+                class="ws-tabs-right desktop-only"
+              >
                 <button class="uncollapse-btn" @click="isFormCollapsed = false">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
@@ -791,12 +943,25 @@
 
               <div v-if="filteredTx.length === 0" class="empty-text">
                 <div class="empty-icon-wrap">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
                     <circle cx="12" cy="12" r="10" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </div>
-                <p>{{ searchTx ? "Tidak ada transaksi yang cocok dengan pencarian" : "Belum ada riwayat transaksi" }}</p>
+                <p>
+                  {{
+                    searchTx
+                      ? "Tidak ada transaksi yang cocok dengan pencarian"
+                      : "Belum ada riwayat transaksi"
+                  }}
+                </p>
               </div>
 
               <div v-else class="tx-list scrollable-tx-list">
@@ -814,7 +979,9 @@
                   </div>
                   <div class="tx-info">
                     <span class="tx-santri">{{ getTransactionTitle(tx) }}</span>
-                    <span class="tx-notes">{{ getTransactionSubtitle(tx) }}</span>
+                    <span class="tx-notes">{{
+                      getTransactionSubtitle(tx)
+                    }}</span>
                     <span class="tx-meta"
                       >{{ formatDateTime(tx.date) }} &middot; dicatat oleh
                       {{ tx.recordedByName }}</span
@@ -914,12 +1081,25 @@
 
               <div v-if="filteredSummary.length === 0" class="empty-text">
                 <div class="empty-icon-wrap">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <svg
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
                     <circle cx="12" cy="12" r="10" />
                     <line x1="8" y1="12" x2="16" y2="12" />
                   </svg>
                 </div>
-                <p>{{ searchMember ? "Anggota tidak ditemukan" : "Belum ada data anggota" }}</p>
+                <p>
+                  {{
+                    searchMember
+                      ? "Anggota tidak ditemukan"
+                      : "Belum ada data anggota"
+                  }}
+                </p>
               </div>
 
               <div v-else class="santri-table-wrap scrollable-table-wrap">
@@ -937,16 +1117,26 @@
                       <td>
                         <div class="member-name-cell">
                           <div class="member-avatar">
-                            {{ s.santriName ? s.santriName.charAt(0).toUpperCase() : 'A' }}
+                            {{
+                              s.santriName
+                                ? s.santriName.charAt(0).toUpperCase()
+                                : "A"
+                            }}
                           </div>
                           <span class="santri-name">{{ s.santriName }}</span>
                         </div>
                       </td>
                       <td>
-                        <span class="tx-count-pill">{{ s.transactionCount }}x</span>
+                        <span class="tx-count-pill"
+                          >{{ s.transactionCount }}x</span
+                        >
                       </td>
-                      <td class="amount-cell">Rp {{ formatCurrency(s.balance) }}</td>
-                      <td class="muted">{{ formatDateTime(s.lastTransaction) }}</td>
+                      <td class="amount-cell">
+                        Rp {{ formatCurrency(s.balance) }}
+                      </td>
+                      <td class="muted">
+                        {{ formatDateTime(s.lastTransaction) }}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -958,32 +1148,34 @@
     </template>
 
     <!-- Edit Tx Modal -->
-      <div v-if="editingTx" class="modal-overlay" @click.self="editingTx = null">
-        <div class="modal glass-card">
-          <div class="modal-header">
-            <h3>Edit {{ isEditingExpense ? "Pengeluaran" : "Pemasukan" }}</h3>
-            <button class="close-btn" @click="editingTx = null">&times;</button>
-          </div>
-          <div v-if="isEditingExpense" class="form-group">
-            <label class="form-label">Keterangan Pengeluaran</label>
-            <input
-              v-model="editForm.description"
-              type="text"
-              class="form-input"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label">{{
-              isEditingExpense
-                ? "Jumlah Pengeluaran (Rp)"
-                : "Jumlah Pemasukan (Rp)"
-            }}</label>
-            <MoneyInput
-              v-model="editForm.amount"
-              input-class="form-input"
-              :aria-label="isEditingExpense ? 'Jumlah pengeluaran' : 'Jumlah pemasukan'"
-            />
-          </div>
+    <div v-if="editingTx" class="modal-overlay" @click.self="editingTx = null">
+      <div class="modal glass-card">
+        <div class="modal-header">
+          <h3>Edit {{ isEditingExpense ? "Pengeluaran" : "Pemasukan" }}</h3>
+          <button class="close-btn" @click="editingTx = null">&times;</button>
+        </div>
+        <div v-if="isEditingExpense" class="form-group">
+          <label class="form-label">Keterangan Pengeluaran</label>
+          <input
+            v-model="editForm.description"
+            type="text"
+            class="form-input"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{
+            isEditingExpense
+              ? "Jumlah Pengeluaran (Rp)"
+              : "Jumlah Pemasukan (Rp)"
+          }}</label>
+          <MoneyInput
+            v-model="editForm.amount"
+            input-class="form-input"
+            :aria-label="
+              isEditingExpense ? 'Jumlah pengeluaran' : 'Jumlah pemasukan'
+            "
+          />
+        </div>
         <div class="form-group">
           <label class="form-label">Waktu Transaksi</label>
           <input
@@ -1009,8 +1201,8 @@
     <!-- Delete Tx Confirm -->
     <div
       v-if="deletingTx"
-        class="modal-overlay"
-        @click.self="deletingTx = null"
+      class="modal-overlay"
+      @click.self="deletingTx = null"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon danger-icon">
@@ -1048,8 +1240,8 @@
     <!-- Book Edit Modal -->
     <div
       v-if="showBookEditModal"
-        class="modal-overlay"
-        @click.self="showBookEditModal = false"
+      class="modal-overlay"
+      @click.self="showBookEditModal = false"
     >
       <div class="modal glass-card">
         <div class="modal-header">
@@ -1089,8 +1281,8 @@
     <!-- Book Close Confirm -->
     <div
       v-if="showBookCloseModal"
-        class="modal-overlay"
-        @click.self="showBookCloseModal = false"
+      class="modal-overlay"
+      @click.self="showBookCloseModal = false"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon warning-icon">
@@ -1130,8 +1322,8 @@
     <!-- Book Delete Confirm -->
     <div
       v-if="showBookDeleteModal"
-        class="modal-overlay"
-        @click.self="showBookDeleteModal = false"
+      class="modal-overlay"
+      @click.self="showBookDeleteModal = false"
     >
       <div class="modal glass-card confirm-modal">
         <div class="confirm-icon danger-icon">
@@ -1169,8 +1361,8 @@
     <!-- Print Period Modal -->
     <div
       v-if="showPrintModal"
-        class="modal-overlay"
-        @click.self="showPrintModal = false"
+      class="modal-overlay"
+      @click.self="showPrintModal = false"
     >
       <div class="modal glass-card print-modal">
         <div class="modal-header">
@@ -1280,7 +1472,9 @@
             <span class="share-header-icon">🌐</span>
             <h3>Bagikan Tautan Publik</h3>
           </div>
-          <button class="close-btn" @click="showShareModal = false">&times;</button>
+          <button class="close-btn" @click="showShareModal = false">
+            &times;
+          </button>
         </div>
 
         <div class="share-modal-body">
@@ -1289,7 +1483,8 @@
             <div class="share-warning-text">
               <strong>Buku Masih Berstatus Pribadi</strong>
               <p>
-                Buku ini saat ini privat sehingga publik/wali santri belum bisa membuka tautan. Jadikan publik agar dapat dibagikan.
+                Buku ini saat ini privat sehingga publik/wali santri belum bisa
+                membuka tautan. Jadikan publik agar dapat dibagikan.
               </p>
               <button
                 type="button"
@@ -1308,7 +1503,7 @@
               <span>Status: Publik (Dapat Diakses Siapa Saja Tanpa Login)</span>
             </div>
 
-            <div class="form-group" style="margin-top: 0.85rem;">
+            <div class="form-group" style="margin-top: 0.85rem">
               <label class="form-label">Tautan Web Publik:</label>
               <div class="copy-input-group">
                 <input
@@ -1317,11 +1512,7 @@
                   :value="publicShareUrl"
                   class="form-input copy-input"
                 />
-                <button
-                  type="button"
-                  class="btn-copy"
-                  @click="copyPublicUrl"
-                >
+                <button type="button" class="btn-copy" @click="copyPublicUrl">
                   {{ copiedShareLink ? "✓ Tersalin" : "Salin" }}
                 </button>
               </div>
@@ -1334,8 +1525,15 @@
                 rel="noopener noreferrer"
                 class="btn-wa-share"
               >
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                <svg
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                  />
                 </svg>
                 <span>Bagikan ke WhatsApp</span>
               </a>
@@ -1345,8 +1543,17 @@
                 target="_blank"
                 class="btn-preview-public"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                  />
                   <polyline points="15 3 21 3 21 9" />
                   <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
@@ -1356,8 +1563,10 @@
           </div>
         </div>
 
-        <div class="modal-actions" style="margin-top: 1.25rem;">
-          <button class="btn-cancel" @click="showShareModal = false">Tutup</button>
+        <div class="modal-actions" style="margin-top: 1.25rem">
+          <button class="btn-cancel" @click="showShareModal = false">
+            Tutup
+          </button>
         </div>
       </div>
     </div>
@@ -1449,7 +1658,9 @@ const enablePublishAndShare = async () => {
   try {
     await api.put(`/savings/books/${bookId}`, { isPublished: true });
     if (book.value) book.value.isPublished = true;
-    success("Status buku berhasil diubah ke Publik! Siapa saja kini dapat melihatnya tanpa login.");
+    success(
+      "Status buku berhasil diubah ke Publik! Siapa saja kini dapat melihatnya tanpa login.",
+    );
   } catch (e) {
     console.error("Enable publish error:", e);
     showError("Gagal mengubah status buku menjadi publik");
@@ -1808,10 +2019,20 @@ const buildBookAccessError = (error) => {
   const data = error?.response?.data || {};
 
   if (status === 403) {
+    // a public book of another teacher: readable on its public page, not managed here
+    if (data.publicPath) {
+      return {
+        title: "Buku ini dikelola oleh pemiliknya",
+        message:
+          "Buku publik guru lain tidak masuk ke Tabungan Anda dan tidak bisa dicatat dari akun Anda. Anda tetap bisa melihat isinya di halaman publik.",
+        ownerName: data.ownerName || null,
+        publicPath: data.publicPath,
+      };
+    }
     return {
-      title: "Buku ini sudah tidak tersedia untuk Anda",
+      title: "Buku ini tidak tersedia untuk Anda",
       message:
-        "Buku yang Anda buka kemungkinan sudah dijadikan pribadi oleh pemiliknya. Isi buku tidak ditampilkan agar data tetap aman.",
+        "Buku ini pribadi milik guru lain. Isi buku tidak ditampilkan agar data tetap aman.",
       ownerName: data.ownerName || null,
     };
   }
@@ -2088,7 +2309,7 @@ const toggleBookPublish = async () => {
     book.value = { ...book.value, isPublished: newState };
     success(
       newState
-        ? "Buku berhasil dipublish ke semua guru"
+        ? "Buku kini publik — siapa saja bisa melihatnya lewat tautan"
         : "Buku dijadikan pribadi",
     );
   } catch (e) {
@@ -2857,7 +3078,9 @@ onBeforeUnmount(() => {
   top: 46px;
   background: white;
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--gray-200);
   min-width: 200px;
   z-index: 200;
@@ -2985,6 +3208,13 @@ onBeforeUnmount(() => {
 .unavailable-owner strong {
   color: var(--primary-dark);
   font-size: 0.88rem;
+}
+
+.unavailable-public {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .unavailable-actions {
@@ -3258,7 +3488,9 @@ onBeforeUnmount(() => {
   font-size: 0.88rem;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   background: white;
 }
 
@@ -3611,7 +3843,9 @@ onBeforeUnmount(() => {
   width: 220px;
   outline: none;
   background: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .tx-search-wrap .search-input:focus {
@@ -3652,7 +3886,6 @@ onBeforeUnmount(() => {
 
 /* ── Scrollable Containers ── */
 .scrollable-tx-list {
-  max-height: 640px;
   overflow-y: auto;
   padding-right: 4px;
 }
