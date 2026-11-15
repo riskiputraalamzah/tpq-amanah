@@ -5,6 +5,10 @@
       <p>Selamat datang, {{ user?.displayName }}!</p>
     </header>
 
+    <!-- the admin: what waits, today, and how the TPQ is doing (AdminDashboard.vue); the teachers keep theirs -->
+    <AdminDashboard v-if="isAdmin" />
+    <template v-else>
+
     <!-- New registrants waiting to be contacted (admin, or a guru given "Pendaftaran santri") -->
     <router-link v-if="seesRegistrations && newRegistrations" to="/dashboard/pendaftaran" class="reg-alert">
       <span class="reg-alert-num">{{ newRegistrations }}</span>
@@ -18,282 +22,8 @@
     <!-- Kelengkapan LPJ (hanya guru yang masuk LPJ) -->
     <LpjStatusCard v-if="isGuru" />
 
-    <div class="dashboard-cards">
-      <!-- Admin Cards -->
-      <template v-if="isAdmin">
-        <!-- Loading Skeleton for Total Users -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
-          <div class="stat-card-icon admin">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <SkeletonLoader type="text" width="50px" height="2rem" />
-            <span class="stat-card-label">Total Users</span>
-          </div>
-        </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp">
-          <div class="stat-card-icon admin">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <span class="stat-card-value">{{ stats.totalUsers }}</span>
-            <span class="stat-card-label">Total Users</span>
-          </div>
-        </div>
-
-        <!-- Loading Skeleton for Total Guru -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp delay-100">
-          <div class="stat-card-icon guru">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <SkeletonLoader type="text" width="40px" height="2rem" />
-            <span class="stat-card-label">Total Guru</span>
-          </div>
-        </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp delay-100">
-          <div class="stat-card-icon guru">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <span class="stat-card-value">{{ stats.totalGuru }}</span>
-            <span class="stat-card-label">Total Guru</span>
-          </div>
-        </div>
-
-        <!-- Total Santri - Hidden (not functioning yet)
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp delay-200">
-          <div class="stat-card-icon santri">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <SkeletonLoader type="text" width="45px" height="2rem" />
-            <span class="stat-card-label">Total Santri</span>
-          </div>
-        </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp delay-200">
-          <div class="stat-card-icon santri">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <span class="stat-card-value">{{ stats.totalSantri }}</span>
-            <span class="stat-card-label">Total Santri</span>
-          </div>
-        </div>
-        -->
-      </template>
-
-      <!-- Kehadiran Bulan Ini - Hidden for Admin (not functioning yet, only show for Guru) -->
-      <template v-if="isGuru">
-        <!-- Loading Skeleton for Kehadiran -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp">
-          <div class="stat-card-icon attendance">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <SkeletonLoader type="text" width="50px" height="2rem" />
-            <span class="stat-card-label">Kehadiran Bulan Ini</span>
-          </div>
-        </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp">
-          <div class="stat-card-icon attendance">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <span class="stat-card-value">{{ stats.attendanceThisMonth }}</span>
-            <span class="stat-card-label">Kehadiran Bulan Ini</span>
-          </div>
-        </div>
-      </template>
-
-      <!-- Guru and Admin shared Cards -->
-      <template v-if="isGuru || isAdmin">
-        <!-- Loading Skeleton for Periode Penilaian -->
-        <div v-if="loading" class="stat-card glass-card animate-fadeInUp"
-          :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
-          <div class="stat-card-icon grading">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <SkeletonLoader type="text" width="40px" height="2rem" />
-            <span class="stat-card-label">Periode Penilaian Aktif</span>
-          </div>
-        </div>
-        <div v-else class="stat-card glass-card animate-fadeInUp"
-          :class="{ 'delay-200': isAdmin, 'delay-100': isGuru }">
-          <div class="stat-card-icon grading">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </div>
-          <div class="stat-card-info">
-            <span class="stat-card-value">{{ stats.activePeriods }}</span>
-            <span class="stat-card-label">Periode Penilaian Aktif</span>
-          </div>
-        </div>
-      </template>
-
-      <!-- Santri Card -->
-      <template v-if="isSantri">
-        <div class="under-construction glass-card animate-fadeInUp">
-          <div class="under-construction-icon">
-            <svg class="mx-auto" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 6v6l4 2" />
-            </svg>
-          </div>
-          <h2>Fitur Dalam Pengembangan</h2>
-          <p>Dashboard untuk Santri sedang dalam tahap pengembangan. Silakan hubungi guru atau admin untuk informasi
-            lebih lanjut.</p>
-        </div>
-      </template>
-    </div>
-
-    <!-- Quick Actions -->
-    <section v-if="isGuru || isAdmin" class="quick-actions">
-      <h2>Aksi Cepat</h2>
-      <div class="action-grid">
-        <!-- Isi Absensi (Guru) -->
-        <router-link to="/dashboard/attendance" class="action-card glass-card" v-if="isGuru">
-          <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4" />
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-          </div>
-          <span>Isi Absensi</span>
-        </router-link>
-
-        <!-- Rekap Absensi (Admin) -->
-        <router-link to="/dashboard/admin-attendance" class="action-card glass-card" v-if="isAdmin">
-          <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <path d="M12 16v-4" />
-              <path d="M8 16v-2" />
-              <path d="M16 16v-3" />
-            </svg>
-          </div>
-          <span>Rekap Absensi</span>
-        </router-link>
-
-        <!-- KBM / Mengajar (Guru) -->
-        <router-link to="/dashboard/kbm" class="action-card glass-card" v-if="isGuru">
-          <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-          </div>
-          <span>KBM / Mengajar</span>
-        </router-link>
-
-        <!-- Penilaian Santri (Guru & Admin) -->
-        <router-link to="/dashboard/grading" class="action-card glass-card">
-          <div class="action-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </div>
-          <span>Penilaian Santri</span>
-        </router-link>
-
-        <!-- Tabungan Santri (Guru) -->
-        <router-link to="/dashboard/savings" class="action-card glass-card savings-action" v-if="isGuru">
-          <div class="action-icon savings-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-              <path d="M8 14h8"/>
-            </svg>
-          </div>
-          <span>Tabungan Santri</span>
-        </router-link>
-
-        <template v-if="isAdmin">
-          <router-link to="/dashboard/users" class="action-card glass-card">
-            <div class="action-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <line x1="20" y1="8" x2="20" y2="14" />
-                <line x1="23" y1="11" x2="17" y2="11" />
-              </svg>
-            </div>
-            <span>Tambah User</span>
-          </router-link>
-
-          <router-link to="/dashboard/content" class="action-card glass-card">
-            <div class="action-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </div>
-            <span>Edit Konten</span>
-          </router-link>
-
-          <!-- Tabungan Admin -->
-          <router-link to="/dashboard/admin-savings" class="action-card glass-card savings-action">
-            <div class="action-icon savings-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 6v6l4 2"/>
-                <path d="M8 14h8"/>
-              </svg>
-            </div>
-            <span>Tabungan</span>
-          </router-link>
-        </template>
-      </div>
-    </section>
+    <!-- the teacher: today's tasks, izin from the parents, who needs attention, my KBM, my jilid (GuruDashboard.vue) -->
+    <GuruDashboard v-if="isGuru" />
 
     <!-- Permissions-based Actions for Guru -->
     <section v-if="isGuru && hasCustomPermissions" class="permissions-actions">
@@ -331,6 +61,7 @@
         </button>
       </div>
     </section>
+    </template>
   </div>
 </template>
 
@@ -341,6 +72,8 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import LpjStatusCard from '@/components/LpjStatusCard.vue'
+import AdminDashboard from '@/views/dashboard/admin/AdminDashboard.vue'
+import GuruDashboard from '@/views/dashboard/guru/GuruDashboard.vue'
 import { loadPdfLibs } from '@/utils/pdf'
 import { useToast } from '@/composables/useToast'
 
@@ -446,13 +179,14 @@ const prepareExport = async () => {
 }
 
 const fetchStats = async () => {
+  // the admin's numbers come from AdminDashboard (one request)
+  if (isAdmin.value) return
   loading.value = true
   try {
     const isStaff = isGuru.value || isAdmin.value
     await Promise.all([
       isAdmin.value && fetchUserStats(),
-      isStaff && fetchMyAttendanceStats(),
-      isStaff && fetchPeriodStats(),
+      // the cards these fed are now GuruDashboard; only the PDF export (akses khusus) needs data here
       isStaff && hasPermission('export-pdf') && prepareExport()
     ])
   } catch (error) {
