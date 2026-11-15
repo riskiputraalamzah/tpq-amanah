@@ -15,8 +15,10 @@
         <h2>Tambah Santri</h2>
         <p class="add-hint">
           Santri baru dengan data lengkap dan wali?
-          <router-link to="/dashboard/pendaftaran/langsung">Daftarkan langsung</router-link>:
-          langsung diterima, data terverifikasi, dan tertaut ke WhatsApp wali.
+          <router-link to="/dashboard/pendaftaran/langsung"
+            >Daftarkan langsung</router-link
+          >: langsung diterima, data terverifikasi, dan tertaut ke WhatsApp
+          wali.
         </p>
         <form class="add-form" @submit.prevent="addSantri">
           <div class="form-group">
@@ -74,7 +76,15 @@
             :disabled="exportingExcel || filtered.length === 0"
             @click="exportExcel"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -84,12 +94,28 @@
         </div>
 
         <!-- Nomor induk dengan NSPQ lama / salah ketik (Hanya Admin) -->
-        <div v-if="adminMode && wrongPrefixRows.length > 0" class="ni-banner ni-banner-warn" role="status">
+        <div
+          v-if="adminMode && wrongPrefixRows.length > 0"
+          class="ni-banner ni-banner-warn"
+          role="status"
+        >
           <div class="ni-banner-text">
-            <strong>{{ wrongPrefixRows.length }} nomor induk masih memakai NSPQ {{ wrongPrefixes.join(", ") }}.</strong>
-            <span>NSPQ di Profil TPQ: {{ currentNspq }}. Contoh perbaikan: {{ wrongPrefixRows[0].nomorInduk }} → {{ correctedNumber(wrongPrefixRows[0].nomorInduk) }}</span>
+            <strong
+              >{{ wrongPrefixRows.length }} nomor induk masih memakai NSPQ
+              {{ wrongPrefixes.join(", ") }}.</strong
+            >
+            <span
+              >NSPQ di Profil TPQ: {{ currentNspq }}. Contoh perbaikan:
+              {{ wrongPrefixRows[0].nomorInduk }} →
+              {{ correctedNumber(wrongPrefixRows[0].nomorInduk) }}</span
+            >
           </div>
-          <button type="button" class="btn btn-primary btn-sm" :disabled="fixingPrefix" @click="fixNspqPrefix">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            :disabled="fixingPrefix"
+            @click="fixNspqPrefix"
+          >
             {{ fixingPrefix ? "Memperbaiki..." : "Perbaiki ke " + currentNspq }}
           </button>
         </div>
@@ -97,7 +123,9 @@
         <!-- Santri lama yang belum punya nomor induk (Hanya Admin) -->
         <div v-if="adminMode && unnumberedCount > 0" class="ni-banner">
           <div class="ni-banner-text">
-            <strong>{{ unnumberedCount }} santri belum memiliki nomor induk.</strong>
+            <strong
+              >{{ unnumberedCount }} santri belum memiliki nomor induk.</strong
+            >
             <span>Format: NSPQ-Tahun-Urut, contoh {{ exampleNomorInduk }}</span>
           </div>
           <button
@@ -110,15 +138,27 @@
           </button>
         </div>
         <!-- a guru sees the santri of the jilid they look after -->
-        <p v-if="scope && !adminMode && scope.source === 'none'" class="scope-note is-warn" role="status">
-          Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
+        <p
+          v-if="scope && !adminMode && scope.source === 'none'"
+          class="scope-note is-warn"
+          role="status"
+        >
+          Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM.
+          Minta admin mengaturnya di menu Kelola Pengajar.
         </p>
-        <p v-else-if="scope && !adminMode && scope.source === 'feature'" class="scope-note">
+        <p
+          v-else-if="scope && !adminMode && scope.source === 'feature'"
+          class="scope-note"
+        >
           Antum diberi akses ke <strong>semua jilid</strong> oleh admin.
         </p>
         <p v-else-if="scope && !adminMode" class="scope-note">
-          Menampilkan santri <strong>{{ scopeLabel }}</strong>.
-          <template v-if="scope.source === 'kbm'"> Jilid diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan admin.</template>
+          Menampilkan santri <strong>{{ scopeLabel }}</strong
+          >.
+          <template v-if="scope.source === 'kbm'">
+            Jilid diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan
+            admin.</template
+          >
         </p>
         <div class="filters">
           <input
@@ -128,20 +168,39 @@
             aria-label="Cari santri"
             placeholder="Cari nama atau nomor induk..."
           />
-          <select v-if="adminMode || filterClasses.length > 1" v-model="levelFilter" class="form-input filter-select" aria-label="Jilid">
-            <option value="">{{ adminMode ? "Semua jilid" : "Semua jilid saya" }}</option>
+          <select
+            v-if="adminMode || filterClasses.length > 1"
+            v-model="levelFilter"
+            class="form-input filter-select"
+            aria-label="Jilid"
+          >
+            <option value="">
+              {{ adminMode ? "Semua jilid" : "Semua jilid saya" }}
+            </option>
             <option v-if="adminMode" value="__none">Belum ditentukan</option>
-            <option v-for="c in filterClasses" :key="c.id" :value="String(c.id)">
+            <option
+              v-for="c in filterClasses"
+              :key="c.id"
+              :value="String(c.id)"
+            >
               {{ c.name }}
             </option>
           </select>
-          <select v-model="statusFilter" class="form-input filter-select" aria-label="Status">
+          <select
+            v-model="statusFilter"
+            class="form-input filter-select"
+            aria-label="Status"
+          >
             <option value="">Semua Status</option>
             <option value="aktif">Aktif</option>
             <option value="nonaktif">Nonaktif</option>
             <option value="lulus">Lulus</option>
           </select>
-          <select v-model="sortChoice" class="form-input filter-select sort-select" aria-label="Urutkan">
+          <select
+            v-model="sortChoice"
+            class="form-input filter-select sort-select"
+            aria-label="Urutkan"
+          >
             <option value="name:asc">Urut: Nama A–Z</option>
             <option value="name:desc">Urut: Nama Z–A</option>
             <option value="nomorInduk:asc">Urut: No. induk</option>
@@ -163,13 +222,15 @@
               aria-modal="true"
               aria-labelledby="ni-modal-title"
             >
-              <h3 id="ni-modal-title" class="ni-modal-title">Buat Nomor Induk Santri</h3>
+              <h3 id="ni-modal-title" class="ni-modal-title">
+                Buat Nomor Induk Santri
+              </h3>
               <p class="ni-modal-text">
-                <strong>{{ nomorIndukPreview.items.length }} santri</strong> akan
-                mendapatkan nomor induk dengan NSPQ
+                <strong>{{ nomorIndukPreview.items.length }} santri</strong>
+                akan mendapatkan nomor induk dengan NSPQ
                 <strong>{{ nomorIndukPreview.nspq }}</strong> dan tahun
-                <strong>{{ nomorIndukPreview.yearCode }}</strong>. Urutan: Jilid /
-                Marhalah tertinggi lebih dulu, lalu nama A–Z.
+                <strong>{{ nomorIndukPreview.yearCode }}</strong
+                >. Urutan: Jilid / Marhalah tertinggi lebih dulu, lalu nama A–Z.
               </p>
               <p class="ni-modal-note">
                 Nomor induk bersifat tetap: tidak bisa diubah dan tidak dipakai
@@ -226,28 +287,57 @@
             class="modal-overlay"
             @click.self="conflictSantri = null"
           >
-            <div class="modal glass-card conflict-modal-card" role="dialog" aria-modal="true" aria-labelledby="purge-title">
+            <div
+              class="modal glass-card conflict-modal-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="purge-title"
+            >
               <div class="modal-header-danger">
                 <div>
-                  <h3 id="purge-title" class="modal-title">Hapus {{ conflictSantri.name }}?</h3>
+                  <h3 id="purge-title" class="modal-title">
+                    Hapus {{ conflictSantri.name }}?
+                  </h3>
                   <p class="modal-subtitle">
-                    <template v-if="conflictSantri.preview?.santri?.nomorInduk">No. induk {{ conflictSantri.preview.santri.nomorInduk }} · </template>santri ini masih punya data terkait.
+                    <template v-if="conflictSantri.preview?.santri?.nomorInduk"
+                      >No. induk
+                      {{
+                        conflictSantri.preview.santri.nomorInduk
+                      }}
+                      · </template
+                    >santri ini masih punya data terkait.
                   </p>
                 </div>
               </div>
 
               <p class="modal-text">
-                <strong>Santri keluar atau berhenti?</strong> Pilih <strong>Nonaktifkan</strong>: riwayat absen, nilai, dan tabungannya tetap tersimpan.
-                <br />Hapus permanen hanya untuk <strong>salah input, data ganda, atau uji coba</strong>.
+                <strong>Santri keluar atau berhenti?</strong> Pilih
+                <strong>Nonaktifkan</strong>: riwayat absen, nilai, dan
+                tabungannya tetap tersimpan. <br />Hapus permanen hanya untuk
+                <strong>salah input, data ganda, atau uji coba</strong>.
               </p>
 
               <div class="purge-list">
-                <p class="purge-list-title">Yang ikut terhapus bila hapus permanen:</p>
+                <p class="purge-list-title">
+                  Yang ikut terhapus bila hapus permanen:
+                </p>
                 <ul>
-                  <li v-for="x in conflictSantri.preview?.items || []" :key="x.key"><span>{{ x.label }}</span><strong>{{ x.count }}</strong></li>
+                  <li
+                    v-for="x in conflictSantri.preview?.items || []"
+                    :key="x.key"
+                  >
+                    <span>{{ x.label }}</span
+                    ><strong>{{ x.count }}</strong>
+                  </li>
                 </ul>
               </div>
-              <p v-if="conflictSantri.preview?.blocked" class="purge-blocked" role="alert">{{ conflictSantri.preview.reason }}</p>
+              <p
+                v-if="conflictSantri.preview?.blocked"
+                class="purge-blocked"
+                role="alert"
+              >
+                {{ conflictSantri.preview.reason }}
+              </p>
 
               <div class="modal-action-buttons">
                 <button
@@ -290,30 +380,81 @@
               <tr>
                 <th>No</th>
                 <th :aria-sort="ariaSort('nomorInduk')">
-                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'nomorInduk' }" @click="toggleSort('nomorInduk')">
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    :class="{ active: sortKey === 'nomorInduk' }"
+                    @click="toggleSort('nomorInduk')"
+                  >
                     No. Induk
-                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <path v-if="sortKey !== 'nomorInduk'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                    <svg
+                      class="sort-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        v-if="sortKey !== 'nomorInduk'"
+                        d="M8 9l4-4 4 4M8 15l4 4 4-4"
+                      />
                       <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
                       <path v-else d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                 </th>
                 <th :aria-sort="ariaSort('name')">
-                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'name' }" @click="toggleSort('name')">
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    :class="{ active: sortKey === 'name' }"
+                    @click="toggleSort('name')"
+                  >
                     Nama
-                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <path v-if="sortKey !== 'name'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                    <svg
+                      class="sort-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        v-if="sortKey !== 'name'"
+                        d="M8 9l4-4 4 4M8 15l4 4 4-4"
+                      />
                       <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
                       <path v-else d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
                 </th>
                 <th :aria-sort="ariaSort('level')">
-                  <button type="button" class="sort-btn" :class="{ active: sortKey === 'level' }" @click="toggleSort('level')">
+                  <button
+                    type="button"
+                    class="sort-btn"
+                    :class="{ active: sortKey === 'level' }"
+                    @click="toggleSort('level')"
+                  >
                     Jilid / Marhalah
-                    <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                      <path v-if="sortKey !== 'level'" d="M8 9l4-4 4 4M8 15l4 4 4-4" />
+                    <svg
+                      class="sort-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        v-if="sortKey !== 'level'"
+                        d="M8 9l4-4 4 4M8 15l4 4 4-4"
+                      />
                       <path v-else-if="sortDir === 'asc'" d="M6 15l6-6 6 6" />
                       <path v-else d="M6 9l6 6 6-6" />
                     </svg>
@@ -333,25 +474,62 @@
                       type="button"
                       class="ni-copy"
                       :aria-label="`Salin nomor induk ${row.name} dengan strip`"
-                      :title="copiedKey === `${row.id}:dash` ? 'Tersalin' : 'Salin dengan strip'"
+                      :title="
+                        copiedKey === `${row.id}:dash`
+                          ? 'Tersalin'
+                          : 'Salin dengan strip'
+                      "
                       @click="copyNomorInduk(row)"
                     >
-                      <svg v-if="copiedKey === `${row.id}:dash`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <svg
+                        v-if="copiedKey === `${row.id}:dash`"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        aria-hidden="true"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
-                      <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <svg
+                        v-else
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
                         <rect x="9" y="9" width="13" height="13" rx="2" />
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        <path
+                          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                        />
                       </svg>
                     </button>
                     <button
                       type="button"
                       class="ni-copy ni-copy-plain"
                       :aria-label="`Salin nomor induk ${row.name} tanpa strip`"
-                      :title="copiedKey === `${row.id}:plain` ? 'Tersalin' : 'Salin tanpa strip'"
+                      :title="
+                        copiedKey === `${row.id}:plain`
+                          ? 'Tersalin'
+                          : 'Salin tanpa strip'
+                      "
                       @click="copyNomorInduk(row, { stripped: true })"
                     >
-                      <svg v-if="copiedKey === `${row.id}:plain`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <svg
+                        v-if="copiedKey === `${row.id}:plain`"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        aria-hidden="true"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                       <span v-else aria-hidden="true">123</span>
@@ -361,20 +539,40 @@
                 </td>
                 <td class="name-cell">
                   {{ row.name }}
-                  <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
-                    class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
+                  <router-link
+                    v-if="waliStatus[row.id]"
+                    :to="{
+                      path: '/dashboard/wali-santri',
+                      query: { santri: row.id },
+                    }"
+                    class="wali-data-link"
+                    :class="`is-${waliStatus[row.id].tone}`"
+                  >
                     Data wali: {{ waliStatus[row.id].label }}
                   </router-link>
                 </td>
                 <td>{{ levelName(row.currentClassId) }}</td>
                 <td>
-                  <span class="badge" :class="statusBadgeClass(row.status)">{{ statusLabel(row.status) }}</span>
+                  <span class="badge" :class="statusBadgeClass(row.status)">{{
+                    statusLabel(row.status)
+                  }}</span>
                 </td>
                 <td class="action-cell">
-                  <button type="button" class="action-link" @click="openEdit(row)">
+                  <button
+                    type="button"
+                    class="action-link"
+                    @click="openEdit(row)"
+                  >
                     {{ adminMode ? "Ubah" : "Ubah nama" }}
                   </button>
-                  <button v-if="adminMode" type="button" class="action-link danger" @click="removeSantri(row)">Hapus</button>
+                  <button
+                    v-if="adminMode"
+                    type="button"
+                    class="action-link danger"
+                    @click="removeSantri(row)"
+                  >
+                    Hapus
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -388,34 +586,136 @@
               <p class="s-name">{{ row.name }}</p>
               <p class="s-meta">
                 <span class="s-level">{{ levelName(row.currentClassId) }}</span>
-                <span class="badge" :class="statusBadgeClass(row.status)">{{ statusLabel(row.status) }}</span>
+                <span class="badge" :class="statusBadgeClass(row.status)">{{
+                  statusLabel(row.status)
+                }}</span>
               </p>
               <p v-if="row.nomorInduk" class="s-ni">
                 <span class="ni-number">{{ row.nomorInduk }}</span>
-                <button type="button" class="ni-copy" :aria-label="`Salin nomor induk ${row.name} dengan strip`"
-                  :title="copiedKey === `${row.id}:dash` ? 'Tersalin' : 'Salin dengan strip'" @click="copyNomorInduk(row)">
-                  <svg v-if="copiedKey === `${row.id}:dash`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
-                  <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                <button
+                  type="button"
+                  class="ni-copy"
+                  :aria-label="`Salin nomor induk ${row.name} dengan strip`"
+                  :title="
+                    copiedKey === `${row.id}:dash`
+                      ? 'Tersalin'
+                      : 'Salin dengan strip'
+                  "
+                  @click="copyNomorInduk(row)"
+                >
+                  <svg
+                    v-if="copiedKey === `${row.id}:dash`"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <svg
+                    v-else
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path
+                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                    />
+                  </svg>
                 </button>
-                <button type="button" class="ni-copy ni-copy-plain" :aria-label="`Salin nomor induk ${row.name} tanpa strip`"
-                  :title="copiedKey === `${row.id}:plain` ? 'Tersalin' : 'Salin tanpa strip'" @click="copyNomorInduk(row, { stripped: true })">
-                  <svg v-if="copiedKey === `${row.id}:plain`" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                <button
+                  type="button"
+                  class="ni-copy ni-copy-plain"
+                  :aria-label="`Salin nomor induk ${row.name} tanpa strip`"
+                  :title="
+                    copiedKey === `${row.id}:plain`
+                      ? 'Tersalin'
+                      : 'Salin tanpa strip'
+                  "
+                  @click="copyNomorInduk(row, { stripped: true })"
+                >
+                  <svg
+                    v-if="copiedKey === `${row.id}:plain`"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   <span v-else aria-hidden="true">123</span>
                 </button>
               </p>
               <p v-else class="s-ni ni-empty">Belum ada nomor induk</p>
-              <router-link v-if="waliStatus[row.id]" :to="{ path: '/dashboard/wali-santri', query: { santri: row.id } }"
-                class="wali-data-link" :class="`is-${waliStatus[row.id].tone}`">
+              <router-link
+                v-if="waliStatus[row.id]"
+                :to="{
+                  path: '/dashboard/wali-santri',
+                  query: { santri: row.id },
+                }"
+                class="wali-data-link"
+                :class="`is-${waliStatus[row.id].tone}`"
+              >
                 Data wali: {{ waliStatus[row.id].label }}
               </router-link>
             </div>
             <div class="s-actions">
-              <button type="button" class="s-btn" :aria-label="`${adminMode ? 'Ubah data' : 'Ubah nama'} ${row.name}`" @click="openEdit(row)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+              <button
+                type="button"
+                class="s-btn"
+                :aria-label="`${adminMode ? 'Ubah data' : 'Ubah nama'} ${row.name}`"
+                @click="openEdit(row)"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
                 <span>{{ adminMode ? "Ubah" : "Ubah nama" }}</span>
               </button>
-              <button v-if="adminMode" type="button" class="s-btn is-danger" :aria-label="`Hapus ${row.name}`" @click="removeSantri(row)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>
+              <button
+                v-if="adminMode"
+                type="button"
+                class="s-btn is-danger"
+                :aria-label="`Hapus ${row.name}`"
+                @click="removeSantri(row)"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6M14 11v6" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
               </button>
             </div>
           </li>
@@ -423,34 +723,83 @@
 
         <!-- edit: one sheet for every screen (from the bottom on phones) -->
         <Teleport to="body">
-          <div v-if="editRow" class="es-overlay" @click.self="closeEdit" @keydown.esc="closeEdit">
-            <form class="es-sheet" role="dialog" aria-modal="true" aria-labelledby="es-title" novalidate @submit.prevent="saveEdit">
+          <div
+            v-if="editRow"
+            class="es-overlay"
+            @click.self="closeEdit"
+            @keydown.esc="closeEdit"
+          >
+            <form
+              class="es-sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="es-title"
+              novalidate
+              @submit.prevent="saveEdit"
+            >
               <span class="es-grab" aria-hidden="true"></span>
-              <h3 id="es-title" class="es-title">{{ adminMode ? "Ubah data santri" : "Ubah nama santri" }}</h3>
-              <p class="es-sub">{{ levelName(editRow.currentClassId) }}<template v-if="editRow.nomorInduk"> · {{ editRow.nomorInduk }}</template></p>
+              <h3 id="es-title" class="es-title">
+                {{ adminMode ? "Ubah data santri" : "Ubah nama santri" }}
+              </h3>
+              <p class="es-sub">
+                {{ levelName(editRow.currentClassId)
+                }}<template v-if="editRow.nomorInduk">
+                  · {{ editRow.nomorInduk }}</template
+                >
+              </p>
 
               <label for="es-name" class="es-label">Nama lengkap</label>
-              <input id="es-name" ref="editInput" v-model="editingName" class="es-input" type="text" maxlength="120"
-                autocomplete="off" autocapitalize="words" spellcheck="false" :aria-invalid="!!editError" />
-              <p v-if="nameChanged" class="es-help">Sebelumnya: <s>{{ editRow.name }}</s></p>
-              <p v-else class="es-help">Tulis sesuai akta. Huruf besar di awal kata diatur otomatis; nama baru ikut ke absen, nilai, dan tabungan.</p>
+              <input
+                id="es-name"
+                ref="editInput"
+                v-model="editingName"
+                class="es-input"
+                type="text"
+                maxlength="120"
+                autocomplete="off"
+                autocapitalize="words"
+                spellcheck="false"
+                :aria-invalid="!!editError"
+              />
+              <p v-if="nameChanged" class="es-help">
+                Sebelumnya: <s>{{ editRow.name }}</s>
+              </p>
+              <p v-else class="es-help">''</p>
 
               <div v-if="adminMode" class="es-grid">
                 <div>
-                  <label for="es-level" class="es-label">Jilid / Marhalah</label>
+                  <label for="es-level" class="es-label"
+                    >Jilid / Marhalah</label
+                  >
                   <select id="es-level" v-model="editingLevel" class="es-input">
                     <option value="">Belum ditentukan</option>
                     <optgroup label="JILID">
-                      <option v-for="c in jilidList" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                      <option
+                        v-for="c in jilidList"
+                        :key="c.id"
+                        :value="String(c.id)"
+                      >
+                        {{ c.name }}
+                      </option>
                     </optgroup>
                     <optgroup v-if="marhalahList.length > 0" label="MARHALAH">
-                      <option v-for="c in marhalahList" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                      <option
+                        v-for="c in marhalahList"
+                        :key="c.id"
+                        :value="String(c.id)"
+                      >
+                        {{ c.name }}
+                      </option>
                     </optgroup>
                   </select>
                 </div>
                 <div>
                   <label for="es-status" class="es-label">Status</label>
-                  <select id="es-status" v-model="editingStatus" class="es-input">
+                  <select
+                    id="es-status"
+                    v-model="editingStatus"
+                    class="es-input"
+                  >
                     <option value="aktif">Aktif</option>
                     <option value="nonaktif">Nonaktif</option>
                     <option value="lulus">Lulus</option>
@@ -458,10 +807,25 @@
                 </div>
               </div>
 
-              <p v-if="editError" class="es-error" role="alert">{{ editError }}</p>
+              <p v-if="editError" class="es-error" role="alert">
+                {{ editError }}
+              </p>
               <div class="es-actions">
-                <button type="button" class="btn btn-ghost" :disabled="saving" @click="closeEdit">Batal</button>
-                <button type="submit" class="btn btn-primary" :disabled="saving || !editDirty">{{ saving ? "Menyimpan…" : "Simpan" }}</button>
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  :disabled="saving"
+                  @click="closeEdit"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  :disabled="saving || !editDirty"
+                >
+                  {{ saving ? "Menyimpan…" : "Simpan" }}
+                </button>
               </div>
             </form>
           </div>
@@ -530,10 +894,18 @@ const currentNspq = ref("");
 const fixingPrefix = ref(false);
 const prefixOf = (nomorInduk) => String(nomorInduk || "").split("-")[0];
 const wrongPrefixRows = computed(() =>
-  currentNspq.value ? santri.value.filter((row) => row.nomorInduk && prefixOf(row.nomorInduk) !== currentNspq.value) : [],
+  currentNspq.value
+    ? santri.value.filter(
+        (row) =>
+          row.nomorInduk && prefixOf(row.nomorInduk) !== currentNspq.value,
+      )
+    : [],
 );
-const wrongPrefixes = computed(() => [...new Set(wrongPrefixRows.value.map((row) => prefixOf(row.nomorInduk)))]);
-const correctedNumber = (nomorInduk) => `${currentNspq.value}-${String(nomorInduk).split("-").slice(1).join("-")}`;
+const wrongPrefixes = computed(() => [
+  ...new Set(wrongPrefixRows.value.map((row) => prefixOf(row.nomorInduk))),
+]);
+const correctedNumber = (nomorInduk) =>
+  `${currentNspq.value}-${String(nomorInduk).split("-").slice(1).join("-")}`;
 
 const loadNspq = async () => {
   if (!props.adminMode) return;
@@ -550,14 +922,28 @@ const fixNspqPrefix = async () => {
   if (fixingPrefix.value) return;
   const ok = await confirm(
     `Ganti awalan NSPQ ${wrongPrefixes.value.join(", ")} menjadi ${currentNspq.value} pada ${wrongPrefixRows.value.length} nomor induk? Tahun dan nomor urut tidak berubah, nomor lama tetap disimpan sebagai riwayat.`,
-    { title: "Perbaiki Nomor Induk", confirmText: "Ya, Perbaiki", cancelText: "Batal" },
+    {
+      title: "Perbaiki Nomor Induk",
+      confirmText: "Ya, Perbaiki",
+      cancelText: "Batal",
+    },
   );
   if (!ok) return;
   fixingPrefix.value = true;
   try {
-    const { data } = await api.post("/santri/nomor-induk/fix-nspq", {}, { timeout: 60000 });
-    const fixedById = new Map((data.fixed || []).map((item) => [item.id, item.nomorInduk]));
-    santri.value = santri.value.map((row) => (fixedById.has(row.id) ? { ...row, nomorInduk: fixedById.get(row.id) } : row));
+    const { data } = await api.post(
+      "/santri/nomor-induk/fix-nspq",
+      {},
+      { timeout: 60000 },
+    );
+    const fixedById = new Map(
+      (data.fixed || []).map((item) => [item.id, item.nomorInduk]),
+    );
+    santri.value = santri.value.map((row) =>
+      fixedById.has(row.id)
+        ? { ...row, nomorInduk: fixedById.get(row.id) }
+        : row,
+    );
     currentNspq.value = data.nspq || currentNspq.value;
     success(data.message || "Nomor induk berhasil diperbaiki.");
   } catch (error) {
@@ -592,7 +978,9 @@ const openNomorIndukPreview = async () => {
     await nextTick();
     document.querySelector(".ni-modal .btn-primary")?.focus();
   } catch (error) {
-    showError(error.response?.data?.error || "Gagal menyiapkan pratinjau nomor induk.");
+    showError(
+      error.response?.data?.error || "Gagal menyiapkan pratinjau nomor induk.",
+    );
   } finally {
     previewLoading.value = false;
   }
@@ -606,10 +994,16 @@ const generateNomorInduk = async () => {
   if (generating.value) return;
   generating.value = true;
   try {
-    const { data } = await api.post("/santri/nomor-induk/generate", {}, {
-      timeout: 60000,
-    });
-    const assignedById = new Map((data.assigned || []).map((item) => [item.id, item]));
+    const { data } = await api.post(
+      "/santri/nomor-induk/generate",
+      {},
+      {
+        timeout: 60000,
+      },
+    );
+    const assignedById = new Map(
+      (data.assigned || []).map((item) => [item.id, item]),
+    );
     santri.value = santri.value.map((row) =>
       assignedById.has(row.id) ? { ...row, ...assignedById.get(row.id) } : row,
     );
@@ -625,7 +1019,9 @@ const generateNomorInduk = async () => {
 // Default copy keeps the dashes (safe to paste into Excel, where a 17-digit number loses its last digits);
 // the second button copies digits only, for forms that do not accept dashes.
 const copyNomorInduk = async (row, { stripped = false } = {}) => {
-  const text = stripped ? String(row.nomorInduk).replace(/-/g, "") : row.nomorInduk;
+  const text = stripped
+    ? String(row.nomorInduk).replace(/-/g, "")
+    : row.nomorInduk;
   try {
     await navigator.clipboard.writeText(text);
     copiedKey.value = `${row.id}:${stripped ? "plain" : "dash"}`;
@@ -663,7 +1059,10 @@ const exportExcel = async () => {
       status: statusLabel(row.status),
     }));
     const workbook = buildSantriWorkbook(ExcelJS, { rows, exportedAt });
-    const filename = santriFilename({ filtered: hasActiveFilter.value, date: exportedAt });
+    const filename = santriFilename({
+      filtered: hasActiveFilter.value,
+      date: exportedAt,
+    });
     await downloadWorkbook(workbook, filename);
     success(`${rows.length} santri diekspor ke ${filename}`);
   } catch (error) {
@@ -694,7 +1093,9 @@ const removeSantri = async (row) => {
   listError.value = "";
   let preview;
   try {
-    preview = (await api.get(`/santri/${row.id}/delete-preview`, { cache: false })).data;
+    preview = (
+      await api.get(`/santri/${row.id}/delete-preview`, { cache: false })
+    ).data;
   } catch (error) {
     const msg = error.response?.data?.error || "Gagal memeriksa data santri.";
     listError.value = msg;
@@ -705,12 +1106,15 @@ const removeSantri = async (row) => {
     conflictSantri.value = { ...row, preview };
     return;
   }
-  const ok = await confirm(`"${row.name}" belum punya data lain di sistem dan akan dihapus.`, {
-    title: "Hapus santri?",
-    type: "danger",
-    confirmText: "Hapus",
-    cancelText: "Batal",
-  });
+  const ok = await confirm(
+    `"${row.name}" belum punya data lain di sistem dan akan dihapus.`,
+    {
+      title: "Hapus santri?",
+      type: "danger",
+      confirmText: "Hapus",
+      cancelText: "Batal",
+    },
+  );
   if (!ok) return;
   try {
     await api.delete(`/santri/${row.id}`);
@@ -723,14 +1127,27 @@ const removeSantri = async (row) => {
   }
 };
 
-const sameName = (a, b) => String(a || "").toLowerCase().replace(/\s+/g, " ").trim() === String(b || "").toLowerCase().replace(/\s+/g, " ").trim();
+const sameName = (a, b) =>
+  String(a || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim() ===
+  String(b || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 const purgeSantri = async (row) => {
   const typed = await ask({
     title: "Hapus permanen?",
     message: `Semua data terkait ${row.name} ikut terhapus dan tidak bisa dikembalikan. Ketik nama santri untuk memastikan.`,
     tone: "danger",
     confirmText: "Hapus permanen",
-    input: { label: "Nama santri", placeholder: row.name, required: true, maxlength: 120 },
+    input: {
+      label: "Nama santri",
+      placeholder: row.name,
+      required: true,
+      maxlength: 120,
+    },
   });
   if (typed === null) return;
   if (!sameName(typed, row.name)) {
@@ -739,7 +1156,9 @@ const purgeSantri = async (row) => {
   }
   saving.value = true;
   try {
-    const { data } = await api.delete(`/santri/${row.id}`, { params: { force: "true", confirm: typed } });
+    const { data } = await api.delete(`/santri/${row.id}`, {
+      params: { force: "true", confirm: typed },
+    });
     santri.value = santri.value.filter((item) => item.id !== row.id);
     conflictSantri.value = null;
     success(data.message || `Santri "${row.name}" dihapus permanen.`);
@@ -791,7 +1210,10 @@ const loadWaliStatus = async () => {
     waliStatus.value = Object.fromEntries(
       (data || [])
         .filter((r) => r.guardians?.length || r.profileStatus !== "empty")
-        .map((r) => [r.santriId, PROFILE_STATUS[r.profileStatus] || PROFILE_STATUS.empty]),
+        .map((r) => [
+          r.santriId,
+          PROFILE_STATUS[r.profileStatus] || PROFILE_STATUS.empty,
+        ]),
     );
   } catch {
     waliStatus.value = {};
@@ -801,17 +1223,31 @@ const loadWaliStatus = async () => {
 // Guru: only the jilid they look after (the admin sets it in Kelola Pengajar, else their KBM history).
 const scope = ref(null);
 const normLevel = (v) => {
-  const s = String(v ?? "").trim().toLowerCase();
+  const s = String(v ?? "")
+    .trim()
+    .toLowerCase();
   return ["7", "8", "9", "marhalah"].includes(s) ? "7" : s;
 };
-const scopeIds = computed(() => (props.adminMode || !scope.value || scope.value.classIds === null ? null : scope.value.classIds || []));
+const scopeIds = computed(() =>
+  props.adminMode || !scope.value || scope.value.classIds === null
+    ? null
+    : scope.value.classIds || [],
+);
 const scopedSantri = computed(() =>
-  scopeIds.value ? santri.value.filter((row) => scopeIds.value.includes(normLevel(row.currentClassId))) : santri.value,
+  scopeIds.value
+    ? santri.value.filter((row) =>
+        scopeIds.value.includes(normLevel(row.currentClassId)),
+      )
+    : santri.value,
 );
 const filterClasses = computed(() =>
-  scopeIds.value ? classes.value.filter((c) => scopeIds.value.includes(normLevel(c.id))) : classes.value,
+  scopeIds.value
+    ? classes.value.filter((c) => scopeIds.value.includes(normLevel(c.id)))
+    : classes.value,
 );
-const scopeLabel = computed(() => filterClasses.value.map((c) => c.name).join(", "));
+const scopeLabel = computed(() =>
+  filterClasses.value.map((c) => c.name).join(", "),
+);
 const loadScope = async () => {
   if (props.adminMode) return;
   try {
@@ -835,10 +1271,13 @@ const filtered = computed(() => {
     if (q) {
       const nomorInduk = String(row.nomorInduk || "");
       const matches =
-        String(row.name || "").toLowerCase().includes(q) ||
+        String(row.name || "")
+          .toLowerCase()
+          .includes(q) ||
         nomorInduk.includes(q) ||
         // "26001" or "26 001" also finds 411235151939-26-001
-        (qDigits.length >= 3 && nomorInduk.replace(/\D/g, "").includes(qDigits));
+        (qDigits.length >= 3 &&
+          nomorInduk.replace(/\D/g, "").includes(qDigits));
       if (!matches) return false;
     }
     if (levelFilter.value === "__none") {
@@ -868,7 +1307,11 @@ const toggleSort = (key) => {
 };
 
 const ariaSort = (key) =>
-  sortKey.value !== key ? "none" : sortDir.value === "asc" ? "ascending" : "descending";
+  sortKey.value !== key
+    ? "none"
+    : sortDir.value === "asc"
+      ? "ascending"
+      : "descending";
 
 const sortedRows = computed(() =>
   sortSantri(filtered.value, sortKey.value, sortDir.value),
@@ -946,14 +1389,21 @@ const cancelEdit = () => {
 const editRow = ref(null);
 const editInput = ref(null);
 const editError = ref("");
-const nameChanged = computed(() => !!editRow.value && editingName.value.trim().replace(/\s+/g, " ") !== String(editRow.value.name || ""));
+const nameChanged = computed(
+  () =>
+    !!editRow.value &&
+    editingName.value.trim().replace(/\s+/g, " ") !==
+      String(editRow.value.name || ""),
+);
 const editDirty = computed(() => {
   if (!editRow.value) return false;
   if (nameChanged.value) return true;
   if (!props.adminMode) return false;
   return (
-    (editingLevel.value || "") !== (editRow.value.currentClassId ? String(editRow.value.currentClassId) : "") ||
-    editingStatus.value !== (editRow.value.status || "aktif")
+    (editingLevel.value || "") !==
+      (editRow.value.currentClassId
+        ? String(editRow.value.currentClassId)
+        : "") || editingStatus.value !== (editRow.value.status || "aktif")
   );
 });
 const openEdit = async (row) => {
@@ -980,13 +1430,18 @@ onBeforeUnmount(() => {
 });
 
 // phones get cards, wider screens the table (only one of them is rendered)
-const phoneQuery = typeof window !== "undefined" && window.matchMedia ? window.matchMedia("(max-width: 767px)") : null;
+const phoneQuery =
+  typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(max-width: 767px)")
+    : null;
 const isPhone = ref(!!phoneQuery?.matches);
 const onPhoneChange = (e) => {
   isPhone.value = e.matches;
 };
 phoneQuery?.addEventListener?.("change", onPhoneChange);
-onBeforeUnmount(() => phoneQuery?.removeEventListener?.("change", onPhoneChange));
+onBeforeUnmount(() =>
+  phoneQuery?.removeEventListener?.("change", onPhoneChange),
+);
 
 // sort for phones (the table headers do the same on wide screens)
 const sortChoice = computed({
@@ -1027,7 +1482,8 @@ const saveSantri = async (row) => {
     success(`Data santri "${row.name}" berhasil diperbarui.`);
   } catch (error) {
     // shown in the sheet, next to the name, so it can be corrected right there
-    editError.value = error.response?.data?.error || "Gagal menyimpan perubahan santri.";
+    editError.value =
+      error.response?.data?.error || "Gagal menyimpan perubahan santri.";
     editInput.value?.focus();
   } finally {
     saving.value = false;
@@ -1038,7 +1494,6 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-
 @media (min-width: 1024px) {
   .santri-view {
     padding-top: 0;
@@ -1423,8 +1878,14 @@ onMounted(fetchData);
 }
 
 @keyframes es-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1449,8 +1910,12 @@ onMounted(fetchData);
 }
 
 @keyframes es-up {
-  from { transform: translateY(100%); }
-  to { transform: none; }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1735,10 +2200,18 @@ onMounted(fetchData);
   text-decoration: underline;
 }
 
-.wali-data-link.is-ok { color: #0a5c40; }
-.wali-data-link.is-info { color: #1d4f8a; }
-.wali-data-link.is-warn { color: #92400e; }
-.wali-data-link.is-danger { color: #b42318; }
+.wali-data-link.is-ok {
+  color: #0a5c40;
+}
+.wali-data-link.is-info {
+  color: #1d4f8a;
+}
+.wali-data-link.is-warn {
+  color: #92400e;
+}
+.wali-data-link.is-danger {
+  color: #b42318;
+}
 
 .scope-note {
   margin: var(--space-md) 0;
