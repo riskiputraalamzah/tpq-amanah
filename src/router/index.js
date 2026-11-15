@@ -255,6 +255,13 @@ const routes = [
         meta: { role: "admin", feature: "pendaftaran" },
       },
       {
+        // the staff registers a family at the desk: accepted at once, no placement talk
+        path: "pendaftaran/langsung",
+        name: "PendaftaranLangsung",
+        component: () => import("../views/dashboard/admin/PendaftaranLangsungView.vue"),
+        meta: { role: "admin", feature: "pendaftaran" },
+      },
+      {
         path: "wa-log",
         name: "WaLog",
         component: () => import("../views/dashboard/admin/WaLogView.vue"),

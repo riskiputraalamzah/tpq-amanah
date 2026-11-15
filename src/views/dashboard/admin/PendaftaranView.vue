@@ -6,6 +6,9 @@
         <p>Pendaftar dari formulir web. Hubungi wali, jadwalkan penempatan jilid, lalu terima.</p>
       </div>
       <div class="pd-head-actions">
+        <router-link to="/dashboard/pendaftaran/langsung" class="pd-btn pd-btn-primary">
+          <LineIcon name="plus" :size="17" /> Daftarkan langsung
+        </router-link>
         <button type="button" class="pd-btn pd-btn-ghost" @click="copyLink">
           <LineIcon name="link" :size="17" /> Salin link daftar
         </button>
@@ -51,6 +54,7 @@
             <span class="pd-pill" :class="`is-${statusOf(r).tone}`">{{ statusOf(r).label }}</span>
             <span v-if="r.similarTo?.length" class="pd-pill is-twin" :title="`Mirip ${r.similarTo.join(', ')}`">Mungkin ganda</span>
             <span v-if="r.fixRequest && isOpen(r)" class="pd-pill is-warn">Menunggu perbaikan wali</span>
+            <span v-if="r.direct" class="pd-pill is-idle" :title="r.createdByName ? `Didaftarkan langsung oleh ${r.createdByName}` : 'Didaftarkan langsung'">Langsung</span>
           </span>
           <span class="pd-sub">
             {{ r.number }} · {{ genderShort(r.gender) }}{{ r.age !== null ? `, ${r.age} th` : '' }} · {{ sesiName(r.sesi) }}<template v-if="r.desa"> · {{ r.desa }}</template>
@@ -59,7 +63,7 @@
           <span v-if="r.status === 'scheduled' && r.schedule" class="pd-sub is-sched">
             <LineIcon name="calendar" :size="14" /> {{ longDate(r.schedule.date, { weekday: true }) }}{{ r.schedule.time ? `, ${r.schedule.time}` : '' }}
           </span>
-          <span class="pd-sub is-muted">Daftar {{ ago(r.submittedAt) }}<template v-if="r.editedAfterSubmitAt"> · diubah wali</template></span>
+          <span class="pd-sub is-muted">{{ r.direct ? 'Didaftarkan' : 'Daftar' }} {{ ago(r.submittedAt) }}<template v-if="r.direct && r.createdByName"> oleh {{ r.createdByName }}</template><template v-if="r.editedAfterSubmitAt"> · diubah wali</template></span>
         </button>
         <div class="pd-row-side">
           <a v-if="['submitted', 'contacted', 'scheduled'].includes(r.status)" :href="waLink(r)" target="_blank" rel="noopener noreferrer"
@@ -130,6 +134,7 @@
           <p v-if="detail.status === 'accepted'" class="pd-note">
             Diterima di <strong>{{ levelName(detail.classId) }}</strong><template v-if="detail.nomorInduk"> · No. induk <strong>{{ detail.nomorInduk }}</strong></template>
             <template v-if="detail.acceptedByName"> · oleh {{ detail.acceptedByName }}</template>.
+            <template v-if="detail.direct"> Didaftarkan langsung (tanpa jadwal penempatan); data ananda tercatat terverifikasi.</template>
             Wali sudah tertaut dan tinggal melengkapi NIK &amp; KK.
           </p>
 

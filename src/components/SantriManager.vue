@@ -13,6 +13,11 @@
       <!-- Form Tambah Santri (Hanya untuk Admin) -->
       <section v-if="adminMode" class="glass-card">
         <h2>Tambah Santri</h2>
+        <p class="add-hint">
+          Santri baru dengan data lengkap dan wali?
+          <router-link to="/dashboard/pendaftaran/langsung">Daftarkan langsung</router-link>:
+          langsung diterima, data terverifikasi, dan tertaut ke WhatsApp wali.
+        </p>
         <form class="add-form" @submit.prevent="addSantri">
           <div class="form-group">
             <label>Nama Santri</label>
@@ -1001,6 +1006,18 @@ onMounted(fetchData);
   .santri-view {
     padding-top: 0;
   }
+}
+
+.add-hint {
+  margin: -4px 0 12px;
+  font-size: 0.86rem;
+  color: #475a50;
+  line-height: 1.5;
+}
+
+.add-hint a {
+  color: #0a5c40;
+  font-weight: 700;
 }
 
 .page-header {
