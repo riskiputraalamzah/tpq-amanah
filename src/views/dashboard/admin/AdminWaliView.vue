@@ -170,6 +170,22 @@
       </article>
     </template>
 
+    <!-- the KK photo (private): shown here, never as a public link -->
+    <Teleport to="body">
+      <div v-if="kkView" class="wv-overlay" @click.self="kkView = null" @keydown.esc="kkView = null">
+        <section class="wv-sheet wv-kk" role="dialog" aria-modal="true" aria-labelledby="kk-title">
+          <header class="wv-sheet-head">
+            <h3 id="kk-title">Foto KK · {{ kkView.name }}</h3>
+            <button type="button" class="wv-close" aria-label="Tutup" @click="kkView = null"><LineIcon name="x" :size="18" /></button>
+          </header>
+          <div class="wv-sheet-body">
+            <img :src="kkView.url" :alt="`Foto Kartu Keluarga ${kkView.name}`" class="wv-kk-img" />
+            <a class="wv-btn wv-btn-ghost" :href="kkView.url" :download="`KK-${kkView.name}.jpg`">Unduh foto</a>
+          </div>
+        </section>
+      </div>
+    </Teleport>
+
     <!-- reminder to a linked wali, sent from the teacher's own WhatsApp -->
     <Teleport to="body">
       <div v-if="remind" class="wv-overlay" @click.self="remind = null">
@@ -347,6 +363,7 @@ const siteUrl = window.location.origin
 
 const loading = ref(true)
 const loadError = ref('')
+const kkView = ref(null) // { url, name }: the KK photo being looked at
 const rows = ref([])
 const requests = ref([])
 const tab = ref('santri')
@@ -690,7 +707,7 @@ async function decideIdentity(approve) {
 async function openKk() {
   try {
     const { data } = await api.get(`/wali/admin/santri/${review.value.santri.id}/kk`, { cache: false })
-    window.open(data.url, '_blank', 'noopener')
+    kkView.value = { url: data.url, name: review.value.santri.name || 'santri' }
   } catch (err) {
     showError(err.response?.data?.error || 'Foto KK tidak bisa dibuka')
   }
@@ -1162,6 +1179,21 @@ textarea.wv-input {
 }
 
 /* sheets */
+.wv-kk {
+  max-width: 760px;
+}
+
+.wv-kk-img {
+  display: block;
+  width: 100%;
+  max-height: 70dvh;
+  object-fit: contain;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+}
+
 .wv-overlay {
   position: fixed;
   inset: 0;

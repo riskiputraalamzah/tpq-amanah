@@ -30,10 +30,10 @@
           <span class="link-icon" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg>
           </span>
-          <span class="link-text"><strong>Tautkan anak lain</strong><span>Sudah mengaji di sini, punya kode dari ustadz/ustadzah</span></span>
+          <span class="link-text"><strong>Tambah anak lain</strong><span>Ketik kode dari slip kertas, atau minta kodenya ke ustadz/ustadzah</span></span>
           <span class="link-go" aria-hidden="true">›</span>
         </router-link>
-        <router-link to="/wali/daftar/baru" class="link-row">
+        <router-link v-if="SHOW_NEW_REGISTRATION" to="/wali/daftar/baru" class="link-row">
           <span class="link-icon" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>
           </span>
@@ -51,6 +51,7 @@
 </template>
 
 <script setup>
+import { SHOW_NEW_REGISTRATION } from '@/utils/waliFeatures'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'

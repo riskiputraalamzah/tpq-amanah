@@ -39,12 +39,13 @@
     <!-- enter the code -->
     <template v-else-if="mode === 'code'">
       <router-link to="/wali" class="w-link back-link">← Kembali</router-link>
-      <h1 class="w-title">Tautkan ananda</h1>
-      <p class="w-lead">Masukkan kode dari <strong>slip TPQ</strong> atau <strong>pesan WhatsApp</strong> ustadz/ustadzah.</p>
+      <h1 class="w-title">Ketik kode dari slip</h1>
+      <p class="w-lead">Kode ada di <strong>slip kertas</strong> yang dibawa ananda (8 huruf/angka, contoh <strong>AB2C-D3EF</strong>).
+        Belum punya? Minta ke ustadz/ustadzah ananda.</p>
 
       <form class="w-card" @submit.prevent="submitCode">
         <div class="w-field">
-          <label for="link-code">Kode tautan</label>
+          <label for="link-code">Kode dari slip</label>
           <input id="link-code" v-model="code" class="w-input w-code-input" autocomplete="off" autocapitalize="characters"
             spellcheck="false" placeholder="AB2C-D3EF" maxlength="9" @input="code = formatLinkCode(code)" />
           <span class="w-help">8 huruf/angka. Huruf besar/kecil tidak masalah.</span>
@@ -81,7 +82,7 @@
       </form>
 
       <p class="w-center lost">
-        Kode hilang atau belum dapat?
+        Slip hilang dan ustadz/ustadzah sulit dihubungi?
         <button type="button" class="w-link" @click="mode = 'request'; error = ''">Ajukan ke admin</button>
       </p>
     </template>

@@ -40,25 +40,31 @@
         </router-link>
       </template>
 
-      <!-- No child linked yet: a new family registers, a family already at the TPQ links with the code -->
+      <!-- No child linked yet: one obvious way in - the code on the paper slip ("pengkinian data").
+           (A new family registering is switched off for now: utils/waliFeatures.js.) -->
       <div v-if="!santri.length" class="start">
         <h2 class="w-section-title">{{ registrations.length ? 'Lainnya' : 'Mulai dari sini' }}</h2>
-        <router-link to="/wali/daftar/baru" class="start-card is-new">
+        <router-link to="/wali/tautkan" class="start-card is-new start-main">
+          <span class="start-icon" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="13" y2="17" /></svg>
+          </span>
+          <span class="start-text">
+            <strong>Pengkinian data santri</strong>
+            <span>Ketuk di sini, lalu ketik kode dari slip kertas yang dibawa ananda</span>
+          </span>
+          <span class="start-go" aria-hidden="true">›</span>
+        </router-link>
+        <p class="start-help">
+          <strong>Belum dapat slip, atau slipnya hilang?</strong>
+          Minta kodenya ke ustadz/ustadzah yang mengajar ananda.
+        </p>
+        <router-link v-if="SHOW_NEW_REGISTRATION" to="/wali/daftar/baru" class="start-card">
           <span class="start-icon" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>
           </span>
           <span class="start-text">
             <strong>Daftarkan santri baru</strong>
             <span>Ananda belum mengaji di TPQ Amanah</span>
-          </span>
-        </router-link>
-        <router-link to="/wali/tautkan" class="start-card">
-          <span class="start-icon" aria-hidden="true">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg>
-          </span>
-          <span class="start-text">
-            <strong>Tautkan dengan kode</strong>
-            <span>Ananda sudah mengaji di sini: masukkan kode dari slip atau ustadz/ustadzah</span>
           </span>
         </router-link>
       </div>
@@ -135,8 +141,8 @@
 
         <!-- another child: kept small here (also under Akun) -->
         <div class="add-row" role="group" aria-label="Tambah ananda">
-          <router-link to="/wali/tautkan" class="add-link">+ Tautkan anak lain</router-link>
-          <router-link to="/wali/daftar/baru" class="add-link">+ Daftarkan santri baru</router-link>
+          <router-link to="/wali/tautkan" class="add-link">+ Tambah anak lain (pakai kode slip)</router-link>
+          <router-link v-if="SHOW_NEW_REGISTRATION" to="/wali/daftar/baru" class="add-link">+ Daftarkan santri baru</router-link>
         </div>
       </template>
 
@@ -174,6 +180,7 @@ import PageSkeleton from '@/components/PageSkeleton.vue'
 import { STATUS } from '@/utils/santriProfile'
 import { REG_STATUS, longDate } from '@/utils/pendaftaran'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
+import { SHOW_NEW_REGISTRATION } from '@/utils/waliFeatures'
 
 const loading = ref(true)
 const loadError = ref('')
@@ -668,6 +675,29 @@ onMounted(load)
   color: #0b3b2a;
   text-decoration: none;
   box-shadow: 0 10px 24px -18px rgba(3, 41, 29, 0.35);
+}
+
+.start-main {
+  min-height: 92px;
+}
+
+.start-go {
+  margin-left: auto;
+  font-size: 1.8rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.start-help {
+  margin: 2px 4px 14px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #475a50;
+}
+
+.start-help strong {
+  display: block;
+  color: #0b3b2a;
 }
 
 .start-card.is-new {

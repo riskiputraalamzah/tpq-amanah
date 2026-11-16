@@ -96,7 +96,7 @@
           <!-- optional KK photo on the "lainnya" step -->
           <div v-if="STEPS[step].key === 'lainnya'" class="kk-box">
             <span class="w-label">Foto Kartu Keluarga (opsional)</span>
-            <p class="w-help">Foto disimpan tertutup dan hanya bisa dilihat admin TPQ.</p>
+            <p class="w-help">Boleh dilewati. Foto disimpan tertutup dan hanya bisa dilihat admin TPQ.</p>
             <div v-if="hasKkPhoto" class="kk-done">
               <span class="w-pill is-ok">Foto KK terunggah</span>
               <label class="w-link kk-change">Ganti<input type="file" accept="image/*" class="sr-only" @change="uploadKk" /></label>
@@ -328,26 +328,40 @@ async function saveAndLeave() {
   if (saved) router.push('/wali')
 }
 
-// The KK photo is made smaller on the phone first (max 1600px, JPEG), so it uploads fast on mobile data.
-function shrinkImage(file) {
+// The KK photo is made smaller on the phone first (JPEG, at most 1600 px, under ~800 KB), so it uploads fast on mobile
+// data and fits where the TPQ keeps it. A photo still too big is made smaller again.
+const KK_LIMIT = 800 * 1024
+function loadImage(file) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
-      const scale = Math.min(1, 1600 / Math.max(img.width, img.height))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.round(img.width * scale)
-      canvas.height = Math.round(img.height * scale)
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
       URL.revokeObjectURL(url)
-      resolve(canvas.toDataURL('image/jpeg', 0.82))
+      resolve(img)
     }
     img.onerror = () => {
       URL.revokeObjectURL(url)
-      reject(new Error('Gambar tidak bisa dibaca'))
+      reject(new Error('Foto tidak bisa dibaca. Coba ambil foto lagi.'))
     }
     img.src = url
   })
+}
+async function shrinkImage(file) {
+  const img = await loadImage(file)
+  let dataUrl = ''
+  for (const [side, quality] of [[1600, 0.8], [1400, 0.7], [1200, 0.6], [1000, 0.55]]) {
+    const scale = Math.min(1, side / Math.max(img.width, img.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(img.width * scale)
+    canvas.height = Math.round(img.height * scale)
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#fff' // a transparent PNG gets a white page, not a black one
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    dataUrl = canvas.toDataURL('image/jpeg', quality)
+    if (dataUrl.length * 0.75 <= KK_LIMIT) return dataUrl
+  }
+  return dataUrl
 }
 
 async function uploadKk(event) {
@@ -365,7 +379,7 @@ async function uploadKk(event) {
     await api.post(`/wali/santri/${santriId}/kk`, { dataBase64: dataUrl, contentType: 'image/jpeg' })
     hasKkPhoto.value = true
   } catch (err) {
-    kkError.value = err.response?.data?.error || err.message || 'Foto KK belum terunggah.'
+    kkError.value = err.response?.data?.error || (err.response ? 'Foto KK belum terunggah. Coba lagi sebentar.' : err.message || 'Foto KK belum terunggah. Periksa sinyal internet, lalu coba lagi.')
   } finally {
     kkBusy.value = false
   }
