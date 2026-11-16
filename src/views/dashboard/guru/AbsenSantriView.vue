@@ -6,11 +6,6 @@
     </header>
 
     <div class="as-controls">
-      <div class="as-slots" role="group" aria-label="Sesi">
-        <button v-for="s in SLOTS" :key="s.id" type="button" class="as-slot" :aria-pressed="slot === s.id" @click="setSlot(s.id)">
-          {{ s.label }}
-        </button>
-      </div>
       <label class="as-date">
         <span class="sr-only">Tanggal</span>
         <input type="date" class="as-input" :value="date" :min="minDate" :max="today" @change="setDate($event.target.value)" />
@@ -19,6 +14,25 @@
     <p v-if="sheet && sheet.daysBack" class="as-hint">
       Guru bisa mengisi sampai {{ sheet.daysBack }} hari ke belakang. Hari yang lebih lama hanya bisa diubah admin.
     </p>
+
+    <!-- stays at the top while scrolling: switch sesi from anywhere, see what is recorded and whether it is saved -->
+    <div ref="bar" class="as-bar">
+      <div class="as-slots" role="group" aria-label="Sesi">
+        <button v-for="s in SLOTS" :key="s.id" type="button" class="as-slot" :aria-pressed="slot === s.id" @click="setSlot(s.id)">
+          <span class="as-slot-top">
+            <span class="as-slot-name">{{ s.label }}</span>
+            <span v-if="slotCount(s.id) !== null" class="as-slot-count">{{ slotCount(s.id) }} dicatat</span>
+          </span>
+          <span class="as-slot-meta">{{ slotJilid(s.id) }}</span>
+        </button>
+      </div>
+      <div v-if="sheet" class="as-summary" role="status" aria-live="polite">
+        <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
+        <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
+        <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
+        <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
+      </div>
+    </div>
 
     <PageSkeleton v-if="loading && !sheet" :rows="6" label="Memuat daftar santri" />
     <p v-else-if="loadError" class="as-note is-danger" role="alert">{{ loadError }}</p>
@@ -36,30 +50,32 @@
         terubah tanpa sengaja<template v-if="sheet.canEdit">; ketuk "Ubah status" bila memang perlu menggantinya</template>.
       </p>
 
-      <!-- what is recorded, and whether it is saved -->
-      <div class="as-summary" role="status" aria-live="polite">
-        <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
-        <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
-        <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
-        <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
-      </div>
       <!-- why something was not saved (the server refused it, or the session ended) -->
       <p v-if="saveNote" class="as-note is-warn as-save-note" role="alert">{{ saveNote }}</p>
 
       <label class="sr-only" for="as-search">Cari nama santri</label>
-      <input id="as-search" v-model="search" class="as-input as-search" placeholder="Cari nama santri (semua jilid)" />
+      <input id="as-search" ref="listTop" v-model="search" class="as-input as-search" placeholder="Cari nama santri (semua jilid)" />
 
-      <section v-for="g in shownGroups" :key="g.classId" class="as-group" :aria-labelledby="`as-g-${g.classId}`">
-        <div class="as-group-head">
-          <button type="button" class="as-group-toggle" :aria-expanded="isOpen(g)" @click="toggle(g.classId)">
-            <span :id="`as-g-${g.classId}`" class="as-group-name">{{ levelName(g.classId) }}</span>
-            <span class="as-group-count">{{ g.recorded }}/{{ g.items.length }} dicatat</span>
-            <span class="as-chevron" aria-hidden="true">{{ isOpen(g) ? '▾' : '▸' }}</span>
-          </button>
-          <button v-if="sheet.canEdit && isOpen(g) && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
-            Tandai sisanya hadir
-          </button>
-        </div>
+      <template v-for="g in shownGroups" :key="g.classId">
+        <!-- each sesi keeps its own attendance: the other sesi's jilid are said to be so -->
+        <p v-if="g === firstOther && !search" class="as-others-note">
+          Di bawah ini jilid yang jadwalnya <strong>sesi {{ otherSlot.label }}</strong>. Yang tercatat di sini hanya santrinya yang
+          ikut sesi {{ slotLabel }}. Absen sesi {{ otherSlot.label }} ada di tab <strong>{{ otherSlot.label }}</strong>.
+        </p>
+        <section class="as-group" :class="{ 'is-other': !g.own }" :aria-labelledby="`as-g-${g.classId}`" :data-class="g.classId">
+          <div class="as-group-head">
+            <button type="button" class="as-group-toggle" :aria-expanded="isOpen(g)" @click="toggle(g.classId)">
+              <span :id="`as-g-${g.classId}`" class="as-group-name">{{ levelName(g.classId) }}</span>
+              <span class="as-group-count">{{ groupCountText(g) }}</span>
+              <span class="as-chevron" aria-hidden="true">{{ isOpen(g) ? '▾' : '▸' }}</span>
+            </button>
+            <button v-if="sheet.canEdit && isOpen(g) && g.own && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
+              Tandai sisanya hadir
+            </button>
+            <button v-if="!g.own && otherSheetHas(g.classId)" type="button" class="as-jump" @click="jumpTo(g.classId)">
+              Lihat di sesi {{ otherSlot.label }} · {{ otherRecordedOf(g.classId) }}/{{ g.items.length }} dicatat ›
+            </button>
+          </div>
         <ul v-if="isOpen(g)" class="as-list">
           <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id) }">
             <div class="as-name">
@@ -83,11 +99,12 @@
             </div>
           </li>
         </ul>
-      </section>
+        </section>
+      </template>
       <p v-if="!shownGroups.length" class="as-empty">Tidak ada santri yang cocok.</p>
 
       <button v-if="!search && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
-        {{ showOthers ? 'Sembunyikan jilid lain' : `Santri jilid lain yang datang di sesi ini (${otherCount})` }}
+        {{ showOthers ? 'Sembunyikan jilid lain' : `Ada santri jilid lain yang ikut sesi ${slotLabel}? Tampilkan jilid lain (${otherCount} santri)` }}
       </button>
       <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa. Baris izin/sakit dari wali terkunci.</p>
     </template>
@@ -95,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
@@ -140,6 +157,11 @@ const saveState = ref('idle')
 const saveNote = ref('')
 const unlocked = ref({}) // santri whose parent's izin the person confirmed to change
 const pendingCount = ref(0)
+// the other sesi of the same day (its jilid and how many are recorded there), for the tabs and the other jilid
+const otherSheet = ref(null)
+const bar = ref(null)
+const listTop = ref(null)
+let jumpClass = '' // after switching sesi from "Lihat di sesi …": the jilid to open and show
 
 const recordOf = (id) => records.value[id] || null
 // izin / sakit the parents sent from the wali portal
@@ -165,6 +187,37 @@ const groups = computed(() => {
   }))
 })
 const otherGroups = computed(() => groups.value.filter((g) => !g.own))
+const slotLabel = computed(() => SLOTS.find((x) => x.id === slot.value)?.label || '')
+const otherSlot = computed(() => SLOTS.find((x) => x.id !== slot.value))
+const recordedIn = (sh) => Object.values(sh?.records || {}).filter((r) => r?.status).length
+// "Jilid 1–4", "Jilid 5, 6, Marhalah"
+function jilidRange(ids) {
+  const nums = ids.filter((i) => String(i) !== '7')
+  const parts = []
+  if (nums.length > 2) parts.push(`Jilid ${nums[0]}–${nums[nums.length - 1]}`)
+  else if (nums.length) parts.push(`Jilid ${nums.join(', ')}`)
+  if (ids.some((i) => String(i) === '7')) parts.push('Marhalah')
+  return parts.join(', ')
+}
+// each sesi tab: "Sore  38 dicatat" over "Jilid 1–4"
+const sheetOf = (id) => (id === slot.value ? sheet.value : otherSheet.value?.slot === id ? otherSheet.value : null)
+const slotJilid = (id) => jilidRange(sheetOf(id)?.defaultClassIds || [])
+function slotCount(id) {
+  const sh = sheetOf(id)
+  if (!sh) return null
+  return id === slot.value ? Object.values(records.value).filter((r) => r?.status).length : recordedIn(sh)
+}
+const otherSheetHas = (classId) => (otherSheet.value?.defaultClassIds || []).includes(classId)
+function otherRecordedOf(classId) {
+  const sh = otherSheet.value
+  if (!sh) return 0
+  const ids = new Set((sh.santri || []).filter((s) => s.classId === classId).map((s) => s.id))
+  return Object.entries(sh.records || {}).filter(([id, r]) => ids.has(id) && r?.status).length
+}
+// own jilid: "8/8 dicatat"; another sesi's jilid: only who came to this sesi
+const groupCountText = (g) => (g.own || g.searching
+  ? `${g.recorded}/${g.items.length} dicatat`
+  : g.recorded ? `${g.recorded} ikut sesi ${slotLabel.value}` : `belum ada yang ikut sesi ${slotLabel.value}`)
 const otherCount = computed(() => otherGroups.value.reduce((n, g) => n + g.items.length, 0))
 const shownGroups = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -173,9 +226,10 @@ const shownGroups = computed(() => {
       .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
       .filter((g) => g.items.length)
   }
-  // the sesi's own jilid, then (on request, or when someone of another jilid is already recorded) the others
-  return groups.value.filter((g) => g.own || showOthers.value || g.recorded > 0)
+  // the sesi's own jilid first, then (on request, or when someone of another jilid is already recorded) the others
+  return [...groups.value.filter((g) => g.own), ...groups.value.filter((g) => !g.own && (showOthers.value || g.recorded > 0))]
 })
+const firstOther = computed(() => shownGroups.value.find((g) => !g.own) || null)
 const isOpen = (g) => g.searching || (opened.value[g.classId] ?? g.own)
 const toggle = (classId) => {
   const g = groups.value.find((x) => x.classId === classId)
@@ -212,10 +266,12 @@ async function load({ silent = false } = {}) {
     if (silent && (pending.size || sending > 0)) return // taps are on their way: they show the newest state
     sheet.value = data
     records.value = withPending(data.records, d, sl)
+    loadOther(d, sl, mine)
     if (!silent) {
       opened.value = {}
       unlocked.value = {}
       if (!pending.size) saveState.value = 'idle'
+      afterSwitch()
     }
   } catch (err) {
     if (mine === loadSeq && !silent) {
@@ -225,6 +281,50 @@ async function load({ silent = false } = {}) {
   } finally {
     if (mine === loadSeq) loading.value = false
   }
+}
+
+// the other sesi of the same day, for its tab and "Lihat di sesi …" (never blocks the page; a failure shows nothing)
+async function loadOther(d, sl, seq) {
+  const other = SLOTS.find((x) => x.id !== sl)?.id
+  if (!other) return
+  try {
+    const { data } = await api.get('/santri-presence', { params: { date: d, slot: other }, cache: false })
+    if (seq === loadSeq) otherSheet.value = data
+  } catch {
+    if (seq === loadSeq) otherSheet.value = null
+  }
+}
+
+// After switching sesi (or day) while scrolled down: back to the top of the list, under the bar; from "Lihat di sesi
+// …" straight to that jilid, opened.
+let scrollAfterLoad = false
+function stickyBottom() {
+  const el = bar.value
+  if (!el) return 0
+  return (parseFloat(getComputedStyle(el).top) || 0) + el.offsetHeight + 8
+}
+function afterSwitch() {
+  const target = jumpClass
+  const wanted = scrollAfterLoad
+  jumpClass = ''
+  scrollAfterLoad = false
+  if (!target && !wanted) return
+  nextTick(() => {
+    const el = target ? document.querySelector(`.as-group[data-class="${target}"]`) : listTop.value
+    if (!el) return
+    if (target) opened.value = { ...opened.value, [target]: true }
+    const below = stickyBottom()
+    // only when it is hidden under the bar (scrolled past); a page already at the top stays where it is
+    if (!target && el.getBoundingClientRect().top >= below) return
+    el.style.scrollMarginTop = `${below}px`
+    el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  })
+}
+function jumpTo(classId) {
+  const other = otherSlot.value?.id
+  if (!other) return
+  jumpClass = classId
+  setSlot(other)
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -388,8 +488,10 @@ async function sendAll() {
 function resetView() {
   sheet.value = null // the old day's rows are never tapped on a new day
   records.value = {}
+  otherSheet.value = null
   showOthers.value = false
   saveNote.value = ''
+  scrollAfterLoad = true
   load()
 }
 function setSlot(id) {
@@ -482,7 +584,8 @@ onBeforeUnmount(() => {
 }
 
 .as-slots {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 4px;
   border-radius: 12px;
@@ -490,21 +593,87 @@ onBeforeUnmount(() => {
 }
 
 .as-slot {
-  min-height: 42px;
-  min-width: 84px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  min-height: 48px;
+  padding: 4px 8px;
   border: 0;
   border-radius: 9px;
   background: transparent;
   font: inherit;
-  font-weight: 700;
   color: #3b4a42;
   cursor: pointer;
 }
 
+.as-slot-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+
+.as-slot-name {
+  font-weight: 800;
+}
+
+.as-slot-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.as-slot-meta {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .as-slot[aria-pressed="true"] {
+  background: var(--emerald);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.as-slot[aria-pressed="true"] .as-slot-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* the other sesi's jilid: said plainly, a step back from this sesi's own */
+.as-others-note {
+  margin: 18px 0 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(11, 59, 42, 0.05);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+.as-group.is-other .as-group-count {
+  font-style: italic;
+}
+
+.as-jump {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(10, 92, 64, 0.35);
   background: #fff;
-  color: var(--ink);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--emerald);
+  cursor: pointer;
+}
+
+.as-jump:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
 }
 
 .as-input {
@@ -558,28 +727,35 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-/* the tally stays in view while scrolling a long list */
-.as-summary {
+/* the sesi switch and the tally stay in view while scrolling a long list */
+.as-bar {
   position: sticky;
   top: calc(var(--appbar-h, 0px) + 8px); /* under the phone top bar */
   z-index: 5;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 18px -14px rgba(3, 41, 29, 0.4);
+}
+
+@media (min-width: 1024px) {
+  .as-bar {
+    top: 8px;
+  }
+}
+
+.as-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid var(--line);
-  box-shadow: 0 8px 18px -14px rgba(3, 41, 29, 0.4);
+  padding: 0 6px 2px;
   font-size: 0.88rem;
   color: var(--body);
-}
-
-@media (min-width: 1024px) {
-  .as-summary {
-    top: 8px;
-  }
 }
 
 .as-summary strong {
