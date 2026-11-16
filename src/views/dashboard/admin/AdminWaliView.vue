@@ -226,8 +226,23 @@
           <div class="wv-sheet-body">
             <p class="wv-code">{{ codeSheet.code }}</p>
             <p class="wv-sub wv-center">Berlaku sampai {{ dateText(codeSheet.expiresAt) }}. Kode lama santri ini tidak berlaku lagi.</p>
-            <p class="wv-note">Kirim <strong>langsung ke wali (japri)</strong>, jangan di grup.</p>
-            <a class="wv-btn wv-btn-wa" :href="waShareUrl(codeSheet)" target="_blank" rel="noopener">Kirim lewat WhatsApp</a>
+            <!-- sent by the TPQ bot to the number typed here (POST /wali/admin/codes/send) -->
+            <form class="wv-code-send" @submit.prevent="sendCode">
+              <label for="code-phone" class="wv-label">Nomor WhatsApp wali</label>
+              <div v-if="codeSheet.guardians?.length" class="wv-code-known">
+                <button v-for="g in codeSheet.guardians" :key="g.waliId" type="button" class="wv-chip" :class="{ 'is-active': samePhone(codePhone, g.phone) }"
+                  @click="codePhone = displayPhone(g.phone)">
+                  {{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}
+                </button>
+              </div>
+              <input id="code-phone" v-model="codePhone" class="wv-input" type="tel" inputmode="tel" autocomplete="off" placeholder="Contoh: 0812 3456 7890" />
+              <p v-if="codeError" class="wv-note is-danger" role="alert">{{ codeError }}</p>
+              <p v-if="codeSentTo.length" class="wv-note is-ok" role="status">Masuk antrean WA bot: {{ codeSentTo.join(', ') }}</p>
+              <button type="submit" class="wv-btn wv-btn-wa" :disabled="busy || !codePhone.trim()">
+                {{ busy ? 'Mengirim…' : 'Kirim lewat WA bot TPQ' }}
+              </button>
+            </form>
+            <p class="wv-sub wv-center">Dikirim japri oleh nomor WA TPQ. Malam hari (21.00–06.30) dikirim besok pagi.</p>
             <button type="button" class="wv-btn wv-btn-ghost" @click="copyMessage(codeSheet)">{{ copied ? 'Pesan tersalin ✓' : 'Salin pesan' }}</button>
           </div>
         </section>
@@ -577,7 +592,10 @@ async function makeCode(r) {
   try {
     const { data } = await api.post('/wali/admin/codes', { santriId: r.santriId })
     copied.value = false
-    codeSheet.value = data
+    codePhone.value = ''
+    codeError.value = ''
+    codeSentTo.value = []
+    codeSheet.value = { ...data, santriId: data.santriId || r.santriId, guardians: r.guardians || [] }
   } catch (err) {
     showError(err.response?.data?.error || 'Kode belum bisa dibuat')
   } finally {
@@ -586,7 +604,27 @@ async function makeCode(r) {
 }
 const messageFor = (c) => linkCodeMessage({ santriName: c.santriName, code: c.code, expiresAt: c.expiresAt, siteUrl })
 // wa.me without a number: the teacher picks the parent's chat (a private message, not the group)
-const waShareUrl = (c) => `https://wa.me/?text=${encodeURIComponent(messageFor(c))}`
+const codePhone = ref('')
+const codeError = ref('')
+const codeSentTo = ref([])
+const digits = (p) => String(p || '').replace(/\D/g, '').replace(/^0/, '62')
+const samePhone = (a, b) => !!a && digits(a) === digits(b)
+// the TPQ bot sends the code to the number typed (or tapped); the sheet stays open for the other parent
+async function sendCode() {
+  busy.value = true
+  codeError.value = ''
+  try {
+    const { data } = await api.post('/wali/admin/codes/send', { santriId: codeSheet.value.santriId, code: codeSheet.value.code, phone: codePhone.value })
+    const shown = displayPhone(data.phone)
+    if (!codeSentTo.value.includes(shown)) codeSentTo.value.push(shown)
+    codePhone.value = ''
+    showSuccess(`Kode masuk antrean WA bot ke ${shown}`)
+  } catch (err) {
+    codeError.value = err.response?.data?.error || 'Kode belum terkirim. Coba lagi.'
+  } finally {
+    busy.value = false
+  }
+}
 async function copyMessage(c) {
   try {
     await navigator.clipboard.writeText(messageFor(c))
@@ -1099,6 +1137,28 @@ textarea.wv-input {
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.wv-code-send {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.wv-code-known {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wv-code-known .wv-chip.is-active {
+  border-color: #0a5c40;
+  background: #e3f1ea;
+}
+
+.wv-note.is-ok {
+  background: #e3f1ea;
+  color: #0a5c40;
 }
 
 .wv-remind-to {

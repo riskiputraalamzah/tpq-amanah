@@ -23,3 +23,12 @@ test("verify / needs fixing / identity / link request: the admin is told the wal
   assert.ok(has(view, "'Perubahan identitas disetujui, wali dikabari lewat WA'"));
   assert.ok(has(view, "'Pengajuan ditolak, wali dikabari lewat WA'"));
 });
+
+test("Kode untuk santri: sent by the TPQ bot to the number typed or tapped (linked wali), no wa.me share link", () => {
+  assert.ok(has(view, `<form class="wv-code-send" @submit.prevent="sendCode">`));
+  assert.ok(has(view, `<input id="code-phone" v-model="codePhone" class="wv-input" type="tel" inputmode="tel"`));
+  assert.ok(has(view, `@click="codePhone = displayPhone(g.phone)"`), "a linked wali's number in one tap");
+  assert.ok(has(view, "await api.post('/wali/admin/codes/send', { santriId: codeSheet.value.santriId, code: codeSheet.value.code, phone: codePhone.value })"));
+  assert.ok(!has(view, "waShareUrl"), "the wa.me share link is gone");
+  assert.ok(has(view, "{{ busy ? 'Mengirim…' : 'Kirim lewat WA bot TPQ' }}"));
+});
