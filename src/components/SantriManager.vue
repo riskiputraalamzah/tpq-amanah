@@ -871,7 +871,9 @@ const santri = ref([]);
 const classes = ref([]);
 const search = ref("");
 const levelFilter = ref("");
-const statusFilter = ref("");
+// the list opens on the active santri; "Semua Status" shows the nonaktif and lulus too
+const DEFAULT_STATUS = "aktif";
+const statusFilter = ref(DEFAULT_STATUS);
 const newName = ref("");
 const newLevel = ref("");
 const formMessage = ref("");
@@ -1038,7 +1040,7 @@ onBeforeUnmount(() => clearTimeout(copiedTimer));
 // Excel export: exactly the rows on screen (search, filters and sort applied).
 const exportingExcel = ref(false);
 const hasActiveFilter = computed(
-  () => !!(search.value.trim() || levelFilter.value || statusFilter.value),
+  () => !!(search.value.trim() || levelFilter.value || statusFilter.value !== DEFAULT_STATUS),
 );
 
 const exportExcel = async () => {
