@@ -10,6 +10,10 @@
     <PageSkeleton v-if="loading" :rows="8" label="Memuat data santri" />
 
     <div v-else>
+      <!-- naik jilid just done (to undo), and "usulan santri baru" (guru: propose; admin / coordinator: decide) -->
+      <SantriPromotions ref="promotionsPanel" :admin-mode="adminMode" @changed="reloadSantri" />
+      <SantriProposals :admin-mode="adminMode" :default-class-id="proposalClassId" @changed="reloadSantri" />
+
       <!-- Form Tambah Santri (Hanya untuk Admin) -->
       <section v-if="adminMode" class="glass-card">
         <h2>Tambah Santri</h2>
@@ -559,6 +563,15 @@
                 </td>
                 <td class="action-cell">
                   <button
+                    v-if="nextLevelOf(row)"
+                    type="button"
+                    class="action-link promote-link"
+                    :disabled="promotingId === row.id"
+                    @click="promote(row)"
+                  >
+                    Naik ke {{ levelShort(nextLevelOf(row)) }}
+                  </button>
+                  <button
                     type="button"
                     class="action-link"
                     @click="openEdit(row)"
@@ -669,6 +682,15 @@
               >
                 Data wali: {{ waliStatus[row.id].label }}
               </router-link>
+              <button
+                v-if="nextLevelOf(row)"
+                type="button"
+                class="s-promote"
+                :disabled="promotingId === row.id"
+                @click="promote(row)"
+              >
+                {{ promotingId === row.id ? "Menaikkan…" : `Naik ke ${levelShort(nextLevelOf(row))}` }}
+              </button>
             </div>
             <div class="s-actions">
               <button
@@ -845,6 +867,8 @@ import { useAuthStore } from "@/stores/auth";
 import { STATUS as PROFILE_STATUS } from "@/utils/santriProfile";
 import { useToast, useConfirm } from "@/composables/useToast";
 import { useDialog } from "@/composables/useDialog";
+import SantriProposals from "@/components/santri/SantriProposals.vue";
+import SantriPromotions from "@/components/santri/SantriPromotions.vue";
 
 const { success, error: showError, warning } = useToast();
 const { confirm } = useConfirm();
@@ -1318,6 +1342,66 @@ const sortedRows = computed(() =>
   sortSantri(filtered.value, sortKey.value, sortDir.value),
 );
 
+// Naik jilid by the guru: one step up, only the jilid they teach (the server checks it again)
+const LEVEL_ORDER = ["1", "2", "3", "4", "5", "6", "7"];
+const changeAccess = ref({ taughtClassIds: [], canDecide: false });
+const promotingId = ref("");
+const promotionsPanel = ref(null);
+const levelShort = (id) => (String(id) === "7" ? "Marhalah" : `Jilid ${id}`);
+const loadChangeAccess = async () => {
+  if (props.adminMode) return;
+  try {
+    const { data } = await api.get("/santri-changes/me", { cache: false });
+    changeAccess.value = data;
+  } catch {
+    changeAccess.value = { taughtClassIds: [], canDecide: false };
+  }
+};
+const nextLevelOf = (row) => {
+  if (props.adminMode) return null;
+  if (String(row.status || "aktif").toLowerCase() !== "aktif") return null;
+  const cur = normLevel(row.currentClassId);
+  if (!(changeAccess.value.taughtClassIds || []).includes(cur)) return null;
+  const i = LEVEL_ORDER.indexOf(cur);
+  return i >= 0 && i < LEVEL_ORDER.length - 1 ? LEVEL_ORDER[i + 1] : null;
+};
+// a new proposal starts on the jilid the guru teaches (the first one)
+const proposalClassId = computed(() => (changeAccess.value.taughtClassIds || [])[0] || "");
+
+// the list again without the page skeleton (after naik jilid, an accepted proposal, an undo)
+const reloadSantri = async () => {
+  try {
+    const { data } = await api.get("/santri", { cache: false });
+    santri.value = data;
+  } catch {
+    /* the old list stays; the next visit loads it */
+  }
+  promotionsPanel.value?.reload();
+};
+
+const promote = async (row) => {
+  const to = nextLevelOf(row);
+  if (!to || promotingId.value) return;
+  const from = normLevel(row.currentClassId);
+  const ok = await ask({
+    title: `Naikkan ${row.name} ke ${levelShort(to)}?`,
+    message: `${row.name} pindah dari ${levelShort(from)} ke ${levelShort(to)}: ikut daftar ${levelShort(to)} di absen, KBM, dan portal wali. Admin dan guru ${levelShort(to)} dikabari lewat WA. Bisa dibatalkan dalam 24 jam.`,
+    confirmText: "Ya, naikkan",
+    cancelText: "Batal",
+  });
+  if (!ok) return;
+  promotingId.value = row.id;
+  try {
+    await api.post("/santri-changes/promote", { santriId: row.id, from });
+    success(`${row.name} naik ke ${levelShort(to)}`);
+  } catch (error) {
+    showError(error.response?.data?.error || "Belum berhasil menaikkan jilid. Coba lagi.");
+  } finally {
+    promotingId.value = "";
+    await reloadSantri();
+  }
+};
+
 const fetchData = async () => {
   loading.value = true;
   listError.value = "";
@@ -1328,6 +1412,7 @@ const fetchData = async () => {
       loadNspq(),
       loadScope(),
       loadWaliStatus(),
+      loadChangeAccess(),
     ]);
     santri.value = santriRes.data;
     classes.value = classesRes.data;
@@ -1625,6 +1710,40 @@ onMounted(fetchData);
 
 .action-cell {
   white-space: nowrap;
+}
+
+.promote-link {
+  color: #0a5c40;
+  font-weight: 800;
+}
+
+.promote-link:disabled,
+.s-promote:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* phones: naik jilid as a clear button under the name */
+.s-promote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid #0a5c40;
+  background: #fff;
+  font: inherit;
+  font-weight: 800;
+  color: #0a5c40;
+  cursor: pointer;
+}
+
+.s-promote:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
 }
 
 /* phones: cards instead of the wide table */
