@@ -18,24 +18,15 @@
       </router-view>
     </main>
 
-    <!-- Bottom navigation: the four places a parent goes, within thumb reach. Hidden on the forms, which have their
-         own Kembali / Lanjut bar at the bottom. -->
-    <nav v-if="showNav" class="wali-nav" aria-label="Menu wali santri">
-      <router-link v-for="item in NAV" :key="item.key" :to="item.to" class="wali-nav-item" :class="{ 'is-active': active === item.key }"
-        :aria-current="active === item.key ? 'page' : undefined">
-        <span class="wali-nav-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
-          <span v-if="item.key === 'pengumuman' && unseen" class="wali-nav-badge">{{ unseen > 9 ? '9+' : unseen }}</span>
-        </span>
-        <span class="wali-nav-label">{{ item.label }}</span>
-        <span v-if="item.key === 'pengumuman' && unseen" class="sr-only">, {{ unseen }} baru</span>
-      </router-link>
-    </nav>
+    <!-- Bottom navigation: the four places a parent goes, within thumb reach (the same bar as the dashboard's: BubbleNav).
+         Hidden on the forms, which have their own Kembali / Lanjut bar at the bottom. -->
+    <BubbleNav v-if="showNav" :items="navItems" :active-index="activeIndex" floating :max-width="560" aria-label="Menu wali santri" />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import BubbleNav from '@/components/BubbleNav.vue'
 import { useRoute } from 'vue-router'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
 import { usePageTransition } from '@/composables/usePageTransition'
@@ -54,6 +45,9 @@ const NAV = [
   { key: 'akun', to: '/wali/akun', label: 'Akun', icon: '<circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" />' },
 ]
 
+// the tabs as the bar draws them: the unread-announcement count rides on "Pengumuman"
+const navItems = computed(() => NAV.map((item) => ({ ...item, badge: item.key === 'pengumuman' ? unseen.value : 0, badgeLabel: 'baru' })))
+
 const showNav = computed(() => !route.meta.hideNav)
 const active = computed(() => {
   const p = route.path
@@ -63,108 +57,14 @@ const active = computed(() => {
   return 'home'
 })
 
+const activeIndex = computed(() => NAV.findIndex((item) => item.key === active.value))
+
 onMounted(() => refresh())
 </script>
 
 <style scoped>
+/* room under the page for the bar, the bubble that rises above it and the gap a floating bar keeps from the edge */
 .wali-shell.has-nav :deep(.wali-main) {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
-}
-
-.wali-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 30;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.97);
-  border-top: 1px solid rgba(11, 59, 42, 0.1);
-  box-shadow: 0 -10px 24px -18px rgba(3, 41, 29, 0.45);
-  backdrop-filter: blur(8px);
-}
-
-@media (min-width: 600px) {
-  .wali-nav {
-    bottom: 12px;
-    border: 1px solid rgba(11, 59, 42, 0.12);
-    border-radius: 20px;
-    padding-bottom: 6px;
-  }
-}
-
-.wali-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 52px;
-  padding: 4px 2px;
-  border-radius: 14px;
-  color: #6b7a72;
-  text-decoration: none;
-}
-
-.wali-nav-item.is-active {
-  color: #0a5c40;
-}
-
-.wali-nav-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 30px;
-  border-radius: 999px;
-  transition: background-color 0.15s ease;
-}
-
-.wali-nav-item.is-active .wali-nav-icon {
-  background: #e3f1ea;
-}
-
-.wali-nav-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.wali-nav-badge {
-  position: absolute;
-  top: -2px;
-  right: 4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: #b45309;
-  color: #fff;
-  font-size: 0.66rem;
-  font-weight: 800;
-  line-height: 18px;
-  text-align: center;
-}
-
-.wali-nav-item:focus-visible {
-  outline: 3px solid #b45309;
-  outline-offset: 1px;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .wali-nav-icon {
-    transition: none;
-  }
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
 }
 </style>

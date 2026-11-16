@@ -22,43 +22,9 @@
     </router-link>
   </header>
 
-  <!-- Bottom bar: the few places used all day, within thumb reach; everything else is under "Menu".
-       A rounded bar with a round hole under the active tab and a dark-green bubble sitting in it; both slide to the
-       tab you choose (--cx is the centre of the active tab). -->
-  <nav ref="navEl" class="mc-nav" :class="{ 'is-hidden': typing, 'is-ready': navReady, 'has-active': activeIdx >= 0 }"
-    :style="{ '--cx': `${cx}px` }" :aria-label="`Menu utama ${roleLabel}`">
-    <span class="mc-nav-bg" aria-hidden="true"></span>
-    <span class="mc-bubble" aria-hidden="true">
-      <Transition name="mc-pop" mode="out-in">
-        <span :key="activeIdx" class="mc-bubble-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" v-html="activeItem?.icon || ''"></svg>
-        </span>
-      </Transition>
-      <span v-if="activeBadge" class="mc-badge">{{ activeBadge > 9 ? '9+' : activeBadge }}</span>
-    </span>
-
-    <div class="mc-nav-row">
-      <template v-for="(item, i) in navItems" :key="item.key">
-        <button v-if="item.sheet" :ref="(el) => setItemEl(i, el)" type="button" class="mc-nav-item" :class="{ 'is-open': sheetOpen }" :aria-expanded="sheetOpen" aria-haspopup="dialog" @click="toggleSheet">
-          <span class="mc-nav-icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
-            <span v-if="menuBadge && i !== activeIdx" class="mc-badge">{{ menuBadge > 9 ? '9+' : menuBadge }}</span>
-          </span>
-          <span class="mc-nav-label">{{ item.label }}</span>
-          <span v-if="menuBadge" class="mc-sr">, {{ menuBadge }} pendaftar baru</span>
-        </button>
-        <router-link v-else :ref="(el) => setItemEl(i, el)" :to="item.to" class="mc-nav-item" :class="{ 'is-active': i === activeIdx }"
-          :aria-current="isNavActive(item) ? 'page' : undefined">
-          <span class="mc-nav-icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
-            <span v-if="item.badge && badgeCount && i !== activeIdx" class="mc-badge">{{ badgeCount > 9 ? '9+' : badgeCount }}</span>
-          </span>
-          <span class="mc-nav-label">{{ item.label }}</span>
-          <span v-if="item.badge && badgeCount" class="mc-sr">, {{ badgeCount }} pendaftar baru</span>
-        </router-link>
-      </template>
-    </div>
-  </nav>
+  <!-- Bottom bar: the few places used all day, within thumb reach; everything else is under "Menu" (BubbleNav.vue) -->
+  <BubbleNav ref="bubbleNav" :items="barItems" :active-index="activeIdx" :current-index="currentIdx" phone-only
+    :aria-label="`Menu utama ${roleLabel}`" @press="toggleSheet" />
 
   <!-- "Menu": every page, grouped like the desktop sidebar, as a sheet from the bottom -->
   <Teleport to="body">
@@ -121,6 +87,7 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { deepPageFor } from '@/utils/navDirection'
+import BubbleNav from '@/components/BubbleNav.vue'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
@@ -183,34 +150,17 @@ const isNavActive = (item) => (item.exact ? route.path === item.to : isActive(it
 
 // Which tab the bubble sits in: the page's tab, or Menu while its sheet is open (none for a page that is in no tab)
 const menuIndex = computed(() => navItems.value.findIndex((i) => i.sheet))
-const activeIdx = computed(() => (sheetOpen.value ? menuIndex.value : navItems.value.findIndex((i) => !i.sheet && isNavActive(i))))
-const activeItem = computed(() => navItems.value[activeIdx.value] || null)
-const activeBadge = computed(() => {
-  const item = activeItem.value
-  if (!item) return 0
-  return item.sheet ? props.menuBadge : item.badge ? props.badgeCount : 0
-})
-
-// where the bubble and the hole are: the centre of the active tab, measured from the bar's left edge
-const navEl = ref(null)
-const itemEls = []
-const cx = ref(-120)
-const navReady = ref(false) // transitions start after the first measure, so the bubble does not slide in from nowhere
-const setItemEl = (i, el) => {
-  itemEls[i] = el ? el.$el || el : null
-}
-function measureNav() {
-  const nav = navEl.value
-  const el = itemEls[activeIdx.value]
-  if (!nav) return
-  // a page that is in no tab: the bubble and the hole close where they are (no sliding away)
-  if (activeIdx.value < 0 || !el) return
-  const n = nav.getBoundingClientRect()
-  const r = el.getBoundingClientRect()
-  if (!n.width || !r.width) return // hidden (laptop width): measured again when it shows
-  cx.value = Math.round(r.left - n.left + r.width / 2)
-}
-let navObserver = null
+const currentIdx = computed(() => navItems.value.findIndex((i) => !i.sheet && isNavActive(i)))
+const activeIdx = computed(() => (sheetOpen.value ? menuIndex.value : currentIdx.value))
+const bubbleNav = ref(null)
+// what BubbleNav draws: the tabs, the new-registrant badge where it belongs, and Menu as a button that opens the sheet
+const barItems = computed(() =>
+  navItems.value.map((item) =>
+    item.sheet
+      ? { key: item.key, label: item.label, icon: item.icon, button: true, expanded: sheetOpen.value, badge: props.menuBadge, badgeLabel: 'pendaftar baru' }
+      : { key: item.key, label: item.label, icon: item.icon, to: item.to, badge: item.badge ? props.badgeCount : 0, badgeLabel: 'pendaftar baru' },
+  ),
+)
 
 /* ------------------------------------------------------------ top bar: title and back */
 // Inner pages get a Back button and their own title (the list is shared with the page slide: utils/navDirection.js)
@@ -291,7 +241,7 @@ function closeSheet() {
   sheetOpen.value = false
   document.body.style.overflow = ''
   document.removeEventListener('keydown', onKey)
-  const btn = itemEls[menuIndex.value]
+  const btn = bubbleNav.value?.itemEl(menuIndex.value)
   nextTick(() => btn?.focus?.({ preventScroll: true }))
 }
 const toggleSheet = () => (sheetOpen.value ? closeSheet() : openSheet())
@@ -300,45 +250,15 @@ function logout() {
   emit('logout')
 }
 
-/* ------------------------------------------------------------ keyboard: the bar steps aside while typing */
-const typing = ref(false)
-const TEXT_FIELD = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]):not([type=range]), textarea, select'
-const onFocusIn = (e) => {
-  if (e.target?.matches?.(TEXT_FIELD)) typing.value = true
-}
-const onFocusOut = () => {
-  setTimeout(() => {
-    typing.value = !!document.activeElement?.matches?.(TEXT_FIELD)
-  }, 60)
-}
-
-watch(activeIdx, async () => {
-  await nextTick()
-  measureNav()
-})
-
 onMounted(() => {
-  measureNav()
-  requestAnimationFrame(() => {
-    navReady.value = true
-  })
-  if (typeof ResizeObserver !== 'undefined' && navEl.value) {
-    navObserver = new ResizeObserver(measureNav)
-    navObserver.observe(navEl.value)
-  }
   routeAt = performance.now()
   window.addEventListener('scroll', schedule, { passive: true })
   window.addEventListener('resize', schedule, { passive: true })
-  document.addEventListener('focusin', onFocusIn)
-  document.addEventListener('focusout', onFocusOut)
   timers = [80, 400, 1100].map((ms) => setTimeout(schedule, ms))
 })
 onBeforeUnmount(() => {
-  navObserver?.disconnect()
   window.removeEventListener('scroll', schedule)
   window.removeEventListener('resize', schedule)
-  document.removeEventListener('focusin', onFocusIn)
-  document.removeEventListener('focusout', onFocusOut)
   document.removeEventListener('keydown', onKey)
   document.body.style.overflow = ''
   timers.forEach(clearTimeout)
@@ -348,8 +268,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 /* only below the desktop breakpoint; the sidebar is the navigation above it */
-.mc-bar,
-.mc-nav {
+.mc-bar {
   display: none;
 }
 
@@ -469,176 +388,6 @@ onBeforeUnmount(() => {
     font-weight: 800;
   }
 
-  /* ---- bottom bar ---- */
-  .mc-nav {
-    --nav-bar: 64px;
-    --hole: 0px; /* the hole's radius: it opens under the active tab and closes when no tab is active */
-    display: block;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: var(--z-fixed, 300);
-    height: calc(var(--nav-bar) + env(safe-area-inset-bottom, 0px));
-    max-width: 640px;
-    margin: 0 auto;
-    /* the shadow follows the bar's real shape, hole included (a box-shadow would be cut by the mask) */
-    filter: drop-shadow(0 -3px 10px rgba(2, 28, 19, 0.14));
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.2s ease;
-  }
-
-  .mc-nav.is-ready {
-    transition: transform 0.2s ease, --cx 0.42s cubic-bezier(0.22, 1, 0.36, 1), --hole 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .mc-nav.has-active {
-    --hole: 36px;
-  }
-
-  .mc-nav.is-hidden {
-    transform: translateY(calc(100% + 40px));
-    pointer-events: none;
-  }
-
-  /* the bar: rounded top corners, and a round hole (radius 36) around the active tab's bubble */
-  .mc-nav-bg {
-    position: absolute;
-    inset: 0;
-    background: #fbf9f3;
-    border-radius: 24px 24px 0 0;
-    -webkit-mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
-    mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
-  }
-
-  /* the bubble: dark green with the brand's gold icon, centred in the hole (it rises 24px above the bar) */
-  .mc-bubble {
-    position: absolute;
-    top: -24px;
-    left: 0;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    color: #fcd34d;
-    background: radial-gradient(circle at 30% 22%, #138a5f 0%, #065f46 52%, #03291d 100%);
-    box-shadow: 0 10px 18px -8px rgba(3, 41, 29, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transform: translate3d(calc(var(--cx) - 26px), 0, 0);
-    opacity: 0;
-    scale: 0.4;
-    pointer-events: none;
-    transition: opacity 0.2s ease, scale 0.28s cubic-bezier(0.34, 1.4, 0.5, 1);
-  }
-
-  .mc-nav.has-active .mc-bubble {
-    opacity: 1;
-    scale: 1;
-  }
-
-  .mc-bubble-icon {
-    display: grid;
-    place-items: center;
-  }
-
-  .mc-pop-enter-active,
-  .mc-pop-leave-active {
-    transition: opacity 0.12s ease, transform 0.16s ease;
-  }
-
-  .mc-pop-enter-from {
-    opacity: 0;
-    transform: scale(0.5) rotate(-12deg);
-  }
-
-  .mc-pop-leave-to {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-
-  .mc-nav-row {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    height: var(--nav-bar);
-  }
-
-  .mc-nav-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    padding: 10px 2px 0;
-    border: 0;
-    border-radius: 16px;
-    background: none;
-    font: inherit;
-    color: #5b6b62;
-    text-decoration: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: color 0.15s ease, transform 0.12s ease;
-  }
-
-  .mc-nav-item:active {
-    transform: scale(0.94);
-  }
-
-  .mc-nav-icon {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 28px;
-  }
-
-  /* the active tab's own icon is the one in the bubble: it steps out of the way */
-  .mc-nav-icon svg {
-    transition: opacity 0.15s ease, transform 0.2s ease;
-  }
-
-  .mc-nav-item.is-active,
-  .mc-nav-item.is-open {
-    color: #053d2c;
-  }
-
-  .mc-nav-item.is-active .mc-nav-icon svg,
-  .mc-nav-item.is-open .mc-nav-icon svg {
-    opacity: 0;
-    transform: translateY(8px) scale(0.5);
-  }
-
-  .mc-nav-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .mc-badge {
-    position: absolute;
-    top: -3px;
-    right: 0;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    border-radius: 999px;
-    background: #b45309;
-    color: #fff;
-    font-size: 0.66rem;
-    font-weight: 800;
-    line-height: 18px;
-    text-align: center;
-    box-shadow: 0 0 0 2px #fbf9f3;
-  }
-
-  .mc-bubble .mc-badge {
-    top: -2px;
-    right: -2px;
-  }
-
   .mc-icon-btn:focus-visible,
   .mc-logo:focus-visible,
   .mc-avatar-link:focus-visible {
@@ -646,10 +395,6 @@ onBeforeUnmount(() => {
     outline-offset: 1px;
   }
 
-  .mc-nav-item:focus-visible {
-    outline: 2px solid #0a5c40;
-    outline-offset: -4px;
-  }
 }
 
 .mc-sr {
@@ -970,13 +715,6 @@ onBeforeUnmount(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mc-nav,
-  .mc-nav.is-ready,
-  .mc-bubble,
-  .mc-nav-item,
-  .mc-nav-icon svg,
-  .mc-pop-enter-active,
-  .mc-pop-leave-active,
   .mc-sheet-enter-active,
   .mc-sheet-leave-active,
   .mc-sheet-enter-active .mc-sheet,
@@ -985,21 +723,5 @@ onBeforeUnmount(() => {
   .mc-swap-leave-active {
     transition: none;
   }
-}
-</style>
-
-<style>
-/* --cx (the centre of the active tab) is registered as a length so it can animate: the hole and the bubble read it
-   every frame, so they always move together. Without @property support they simply jump. */
-@property --cx {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
-}
-
-@property --hole {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
 }
 </style>

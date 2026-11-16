@@ -93,7 +93,8 @@ test("TAB_ORDER is the real tab order of the bottom bars", () => {
   assert.deepEqual(block("admin"), TAB_ORDER.admin, "admin tabs (MobileChrome.vue)");
   assert.deepEqual(block("guru"), TAB_ORDER.guru, "guru tabs (MobileChrome.vue)");
   const wali = read("src/views/wali/WaliLayout.vue");
-  const waliTabs = [...wali.slice(wali.indexOf("const NAV = ["), wali.indexOf("]\n\nconst showNav")).matchAll(/to: '([^']+)'/g)].map((m) => m[1]);
+  const navStart = wali.indexOf("const NAV = [");
+  const waliTabs = [...wali.slice(navStart, wali.indexOf("\n]\n", navStart)).matchAll(/to: '([^']+)'/g)].map((m) => m[1]);
   assert.deepEqual(waliTabs, TAB_ORDER.wali, "wali tabs (WaliLayout.vue)");
 });
 
@@ -113,4 +114,16 @@ test("both layouts slide their pages through the same composable; the old page l
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(css, /overflow-x: clip/, "browsers that cannot clip get no travel");
   assert.ok(!/transition:\s*all/.test(css), "only transform and opacity animate");
+});
+
+test("one bottom bar for everyone: the dashboard and the wali portal both draw it with BubbleNav", () => {
+  const bar = read("src/components/BubbleNav.vue");
+  const chrome = read("src/components/MobileChrome.vue");
+  const wali = read("src/views/wali/WaliLayout.vue");
+  assert.match(chrome, /<BubbleNav[\s\S]*?phone-only/, "dashboard: phones and tablets only");
+  assert.match(wali, /<BubbleNav[\s\S]*?floating/, "wali: floats on wide screens");
+  assert.ok(!/\.mc-nav[\w-]*\s*\{/.test(chrome), "the dashboard component holds no copy of the bar's styles");
+  assert.ok(!/wali-nav/.test(wali), "and neither does the wali layout");
+  assert.ok(bar.includes("@property --cx") && bar.includes("@property --hole"), "the animated properties are registered with the bar");
+  assert.ok(bar.includes("TEXT_FIELD"), "the bar steps aside while typing, for both");
 });
