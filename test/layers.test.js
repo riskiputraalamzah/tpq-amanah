@@ -47,3 +47,50 @@ test("a pop-up opened from another pop-up is above it (the KK photo over the rev
   const top = Number(view.match(/\.wv-overlay\.wv-overlay-top \{[^}]*z-index: (\d+)/)[1]);
   assert.ok(top > sheet);
 });
+
+// A page's pop-ups cover the phone's top and bottom bars only when nothing between them and the layout makes its own
+// stacking context. Teleported ones live in <body>; the others sit right under the page's root element.
+test("page pop-ups cover the phone bars: the layout is the one stacking context, not the page area", () => {
+  const layout = fs.readFileSync(path.join(src, "views/dashboard/DashboardLayout.vue"), "utf8");
+  const rule = (sel) => {
+    const at = layout.indexOf(`\n${sel} {`);
+    return at < 0 ? "" : layout.slice(at, layout.indexOf("}", at));
+  };
+  assert.match(rule(".dashboard-layout"), /isolation: isolate/);
+  assert.doesNotMatch(rule(".dashboard-main"), /isolation|transform|filter|z-index/, ".dashboard-main must not trap the page's pop-ups under the bars");
+});
+
+test("every pop-up that is not teleported sits directly under its page's root element", () => {
+  const views = filesIn(path.join(src, "views", "dashboard")).filter((f) => f.endsWith(".vue"));
+  const VOID = new Set(["input", "img", "br", "hr", "meta", "link", "col", "area", "source", "track", "wbr"]);
+  const deep = [];
+  for (const file of views) {
+    const text = fs.readFileSync(file, "utf8");
+    const template = text.slice(0, text.indexOf("<script"));
+    const stack = [];
+    const tag = /<!--[\s\S]*?-->|<(\/?)([A-Za-z][\w-]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)>/g;
+    let m;
+    while ((m = tag.exec(template))) {
+      if (m[0].startsWith("<!--")) continue;
+      const [, close, name, attrs, selfClose] = m;
+      if (close) {
+        while (stack.length && stack.pop().name !== name);
+        continue;
+      }
+      const cls = attrs.match(/\bclass="([^"]*)"/)?.[1] || "";
+      // elements only (a <template v-if> is no element); the first one is the page's root
+      const elements = stack.filter((s) => s.name !== "template");
+      if (/(^|\s)[\w-]*(overlay|backdrop)(\s|$)/.test(cls) && !stack.some((s) => s.name === "Teleport") && elements.length > 1) {
+        deep.push(`${path.relative(src, file)}: .${cls.split(/\s+/)[0]} under ${elements.slice(1).map((s) => s.name).join(" > ")}`);
+      }
+      if (!selfClose && !VOID.has(name.toLowerCase())) stack.push({ name });
+    }
+  }
+  assert.deepEqual(deep, [], "teleport it to <body> (or keep it right under the page root)");
+});
+
+test("the announcement banner shares the dashboard's stacking context: under every sheet, above the bars", () => {
+  const banner = fs.readFileSync(path.join(src, "components/AnnouncementBanner.vue"), "utf8");
+  assert.ok(!banner.includes("<Teleport"), "teleported, it would cover the sheets that are not");
+  assert.equal(zOf("components/AnnouncementBanner.vue"), 8000);
+});

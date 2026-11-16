@@ -1,6 +1,7 @@
 <template>
-  <Teleport to="body">
-    <TransitionGroup ref="wrap" name="banner-slide" tag="div" class="banners-wrapper">
+  <!-- not teleported: it stays in the dashboard's stacking context (DashboardLayout .dashboard-layout), above the bars
+       and the page, below every sheet of a page (also those not teleported) -->
+  <TransitionGroup ref="wrap" name="banner-slide" tag="div" class="banners-wrapper">
       <div
         v-for="ann in store.activeAnnouncements"
         :key="ann.id"
@@ -43,8 +44,7 @@
           </button>
         </div>
       </div>
-    </TransitionGroup>
-  </Teleport>
+  </TransitionGroup>
 </template>
 
 <script setup>

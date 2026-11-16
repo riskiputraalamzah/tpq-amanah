@@ -385,6 +385,10 @@ onMounted(() => {
   display: flex;
   min-height: 100vh;
   background: var(--lp-ivory);
+  /* the one stacking context of the dashboard: the page's pop-ups (9990 and up) and the phone bars (300) are in it
+     together, so a pop-up always covers the bars. Not on .dashboard-main: that would shut every pop-up of a page
+     under the bars (test/layers.test.js). */
+  isolation: isolate;
 }
 
 /* ------------------------------------------------------------ sidebar */
@@ -734,7 +738,6 @@ onMounted(() => {
 /* ------------------------------------------------------------ main work area */
 .dashboard-main {
   position: relative;
-  isolation: isolate;
   flex: 1;
   padding: var(--space-xl);
   min-height: 100vh;
