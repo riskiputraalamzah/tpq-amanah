@@ -32,16 +32,19 @@
       <!-- the parents told the TPQ ahead through the portal -->
       <p v-if="fromWali.length" class="as-note as-wali-note" role="status">
         <strong>{{ fromWali.length }} izin/sakit dari wali</strong> di sesi ini:
-        {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat, tidak perlu diubah.
+        {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat dan barisnya dikunci supaya tidak
+        terubah tanpa sengaja<template v-if="sheet.canEdit">; ketuk "Ubah status" bila memang perlu menggantinya</template>.
       </p>
 
       <!-- what is recorded, and whether it is saved -->
       <div class="as-summary" role="status" aria-live="polite">
         <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
         <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
-        <span class="as-save" :class="`is-${saveState}`">{{ SAVE_TEXT[saveState] }}</span>
-        <button v-if="saveState === 'error'" type="button" class="as-retry" @click="flush">Coba lagi</button>
+        <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
+        <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
       </div>
+      <!-- why something was not saved (the server refused it, or the session ended) -->
+      <p v-if="saveNote" class="as-note is-warn as-save-note" role="alert">{{ saveNote }}</p>
 
       <label class="sr-only" for="as-search">Cari nama santri</label>
       <input id="as-search" v-model="search" class="as-input as-search" placeholder="Cari nama santri (semua jilid)" />
@@ -58,19 +61,23 @@
           </button>
         </div>
         <ul v-if="isOpen(g)" class="as-list">
-          <li v-for="s in g.items" :key="s.id" class="as-row">
+          <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id) }">
             <div class="as-name">
               <strong>{{ s.name }}</strong>
               <span v-if="recordOf(s.id)?.source === 'wali'" class="as-by is-wali">
                 {{ recordOf(s.id).status === 'sakit' ? 'Sakit' : 'Izin' }} dari {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).reason">: "{{ recordOf(s.id).reason }}"</template>
               </span>
               <span v-else-if="recordOf(s.id)?.byName" class="as-by">
-                {{ recordOf(s.id).source === 'kbm' ? 'dari KBM' : 'oleh' }} {{ recordOf(s.id).byName }}
+                {{ recordOf(s.id).source === 'kbm' ? 'dari KBM' : 'oleh' }} {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).changedFrom">
+                  · menggantikan {{ recordOf(s.id).changedFrom.status }} dari wali</template>
               </span>
+              <button v-if="sheet.canEdit && isLocked(s.id)" type="button" class="as-unlock" :aria-label="`Ubah status ${s.name}`" @click="unlock(s)">
+                🔒 Ubah status
+              </button>
             </div>
             <div class="as-choices" role="group" :aria-label="`Status ${s.name}`">
               <button v-for="st in STATUSES" :key="st.key" type="button" class="as-choice" :class="`is-${st.key}`"
-                :aria-pressed="statusOf(s.id) === st.key" :disabled="!sheet.canEdit" @click="choose(s.id, st.key)">
+                :aria-pressed="statusOf(s.id) === st.key" :disabled="!sheet.canEdit || isLocked(s.id)" @click="choose(s.id, st.key)">
                 {{ st.label }}
               </button>
             </div>
@@ -82,18 +89,21 @@
       <button v-if="!search && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
         {{ showOthers ? 'Sembunyikan jilid lain' : `Santri jilid lain yang datang di sesi ini (${otherCount})` }}
       </button>
-      <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa.</p>
+      <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa. Baris izin/sakit dari wali terkunci.</p>
     </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useDialog } from '@/composables/useDialog'
 
 const authStore = useAuthStore()
+const { ask } = useDialog()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const SLOTS = [
@@ -107,7 +117,7 @@ const STATUSES = [
   { key: 'alfa', label: 'Alfa' },
 ]
 const TALLY = STATUSES.map((s) => ({ key: s.key, label: s.label.toLowerCase() }))
-const SAVE_TEXT = { idle: '', saving: 'Menyimpan…', saved: 'Tersimpan ✓', error: 'Belum tersimpan' }
+const SAVE_TEXT = { idle: '', saving: 'Menyimpan…', saved: 'Tersimpan ✓', error: 'Belum tersimpan', refused: 'Sebagian tidak tersimpan' }
 
 const wibNow = () => new Date(Date.now() + 7 * 3600 * 1000)
 const today = wibNow().toISOString().slice(0, 10)
@@ -127,6 +137,9 @@ const search = ref('')
 const showOthers = ref(false)
 const opened = ref({})
 const saveState = ref('idle')
+const saveNote = ref('')
+const unlocked = ref({}) // santri whose parent's izin the person confirmed to change
+const pendingCount = ref(0)
 
 const recordOf = (id) => records.value[id] || null
 // izin / sakit the parents sent from the wali portal
@@ -178,80 +191,263 @@ const counts = computed(() => {
   return c
 })
 
-async function load() {
-  loading.value = true
-  loadError.value = ''
+// A row the parent's izin/sakit holds: its buttons are off until the person says "Ubah status" and confirms
+const isLocked = (id) => records.value[id]?.locked === true && !unlocked.value[id]
+
+// ---------------------------------------------------------------------------------------------------------------
+// Loading. A late answer to an old question is dropped (loadSeq), and a refresh in the background never replaces
+// what the person is in the middle of saving.
+let loadSeq = 0
+async function load({ silent = false } = {}) {
+  const mine = ++loadSeq
+  const d = date.value
+  const sl = slot.value
+  if (!silent) {
+    loading.value = true
+    loadError.value = ''
+  }
   try {
-    const { data } = await api.get('/santri-presence', { params: { date: date.value, slot: slot.value }, cache: false })
+    const { data } = await api.get('/santri-presence', { params: { date: d, slot: sl }, cache: false })
+    if (mine !== loadSeq) return
+    if (silent && (pending.size || sending > 0)) return // taps are on their way: they show the newest state
     sheet.value = data
-    records.value = { ...data.records }
-    opened.value = {}
-    saveState.value = 'idle'
+    records.value = withPending(data.records, d, sl)
+    if (!silent) {
+      opened.value = {}
+      unlocked.value = {}
+      if (!pending.size) saveState.value = 'idle'
+    }
   } catch (err) {
-    loadError.value = err.response?.data?.error || 'Daftar santri belum bisa dimuat.'
+    if (mine === loadSeq && !silent) {
+      sheet.value = null
+      loadError.value = err.response?.data?.error || 'Daftar santri belum bisa dimuat.'
+    }
   } finally {
-    loading.value = false
+    if (mine === loadSeq) loading.value = false
   }
 }
 
-// Each tap is shown at once and saved shortly after, several taps in one request
-const pending = new Map()
+// ---------------------------------------------------------------------------------------------------------------
+// Autosave. Every tap is shown at once and sent shortly after, several taps in one request.
+//  - a tap remembers the day and sesi it was made on, so it can never land on another day
+//  - requests go one after another (a slower earlier answer cannot overwrite a newer one)
+//  - a network failure keeps the taps and tries again by itself; the server refusing is told to the person
+//  - leaving the page (route, tab, browser) with something unsent is stopped or flushed
+const pending = new Map() // `${date}|${slot}|${santriId}` -> { date, slot, santriId, status, override }
+const keyOf = (d, sl, id) => `${d}|${sl}|${id}`
+const touch = () => { pendingCount.value = pending.size }
 let timer = null
+let retryTimer = null
+let retries = 0
+let sending = 0
+let alive = true
+let chain = Promise.resolve()
+let lastTap = { id: '', status: '', at: 0 }
+const RETRY_AFTER = [4000, 10000, 25000]
+
+const saveLabel = computed(() => (saveState.value === 'error' && pendingCount.value ? `${SAVE_TEXT.error} (${pendingCount.value})` : SAVE_TEXT[saveState.value]))
+
+// the server's records for this view, with the taps that are still waiting laid over them
+function withPending(serverRecords, d, sl) {
+  const out = { ...(serverRecords || {}) }
+  for (const m of pending.values()) {
+    if (m.date !== d || m.slot !== sl) continue
+    if (m.status) out[m.santriId] = { status: m.status, byName: 'Antum', source: 'absen' }
+    else delete out[m.santriId]
+  }
+  return out
+}
+
 function queue(santriId, status) {
+  const d = date.value
+  const sl = slot.value
+  // a row still holding the parent's izin: this change needs the confirmation the person gave
+  const override = records.value[santriId]?.locked === true
   const next = { ...records.value }
-  if (status) next[santriId] = { ...(next[santriId] || {}), status, byName: 'Antum', source: 'absen' }
+  if (status) next[santriId] = { status, byName: 'Antum', source: 'absen' }
   else delete next[santriId]
   records.value = next
-  pending.set(santriId, status)
+  pending.set(keyOf(d, sl, santriId), { date: d, slot: sl, santriId, status, override })
+  touch()
+  saveNote.value = ''
+  saveState.value = 'saving'
   clearTimeout(timer)
   timer = setTimeout(flush, 600)
 }
+
 function choose(santriId, status) {
-  queue(santriId, statusOf(santriId) === status ? null : status)
+  if (isLocked(santriId)) return
+  const same = statusOf(santriId) === status
+  const now = Date.now()
+  // a second tap right after the first (a double tap) must not undo it
+  if (same && lastTap.id === santriId && lastTap.status === status && now - lastTap.at < 450) return
+  lastTap = { id: santriId, status, at: now }
+  // the parent's own status is not cleared by tapping it again
+  if (same && records.value[santriId]?.locked) return
+  queue(santriId, same ? null : status)
 }
+
 function markRest(g) {
   g.items.filter((s) => !statusOf(s.id)).forEach((s) => queue(s.id, 'hadir'))
 }
-async function flush() {
-  clearTimeout(timer)
-  if (!pending.size) return
-  const marks = [...pending.entries()].map(([santriId, status]) => ({ santriId, status }))
-  pending.clear()
-  saveState.value = 'saving'
-  try {
-    const { data } = await api.put('/santri-presence', { date: date.value, slot: slot.value, marks })
-    // the server's view (who recorded what), keeping taps made while this request was on its way
-    const mine = Object.fromEntries([...pending.keys()].map((id) => [id, records.value[id]]))
-    records.value = { ...data.records, ...mine }
-    saveState.value = pending.size ? 'saving' : 'saved'
-  } catch (err) {
-    marks.forEach((m) => { if (!pending.has(m.santriId)) pending.set(m.santriId, m.status) })
-    saveState.value = 'error'
-    console.error('Absen santri save failed:', err.response?.data?.error || err.message)
-  }
-}
-async function setSlot(id) {
-  if (id === slot.value) return
-  await flush()
-  slot.value = id
-  showOthers.value = false
-  load()
-}
-async function setDate(d) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > today) return
-  await flush()
-  date.value = d
-  load()
+
+async function unlock(s) {
+  const r = recordOf(s.id)
+  if (!r || !sheet.value?.canEdit) return
+  const ok = await ask({
+    title: `Ubah status ${s.name}?`,
+    message: `${r.status === 'sakit' ? 'Sakit' : 'Izin'} ini dikirim oleh ${r.byName || 'wali'}${r.reason ? `: "${r.reason}"` : ''}. Jika diubah, izin dari wali itu diganti dengan catatan Antum. Ubah hanya bila santri memang datang atau keadaannya berbeda.`,
+    confirmText: 'Ya, ubah',
+    cancelText: 'Biarkan',
+    tone: 'danger',
+  })
+  if (ok) unlocked.value = { ...unlocked.value, [s.id]: true }
 }
 
-// leaving the page: send what is still waiting
-const onHide = () => { if (document.visibilityState === 'hidden') flush() }
+// a failure that may pass by itself (no connection, a busy server) keeps the taps; the rest is a "no" from the server
+const retriable = (err) => !err.response || err.response.status >= 500 || [408, 429].includes(err.response.status)
+
+function scheduleRetry() {
+  clearTimeout(retryTimer)
+  if (!alive || !pending.size) return
+  const wait = RETRY_AFTER[Math.min(retries, RETRY_AFTER.length - 1)]
+  retries += 1
+  retryTimer = setTimeout(flush, wait)
+}
+
+function flush() {
+  clearTimeout(timer)
+  // one request at a time, in the order the taps were made
+  chain = chain.then(sendAll, sendAll)
+  return chain
+}
+
+function retryNow() {
+  retries = 0
+  return flush()
+}
+
+async function sendAll() {
+  clearTimeout(timer)
+  clearTimeout(retryTimer)
+  let failed = false
+  let refusal = ''
+  while (pending.size) {
+    const first = pending.values().next().value
+    const ctx = { date: first.date, slot: first.slot }
+    const batch = [...pending.entries()].filter(([, m]) => m.date === ctx.date && m.slot === ctx.slot)
+    batch.forEach(([k]) => pending.delete(k))
+    touch()
+    saveState.value = 'saving'
+    sending += 1
+    try {
+      const marks = batch.map(([, m]) => ({ santriId: m.santriId, status: m.status, ...(m.override ? { override: true } : {}) }))
+      const { data } = await api.put('/santri-presence', { ...ctx, marks })
+      const stillHere = ctx.date === date.value && ctx.slot === slot.value
+      if (stillHere) records.value = withPending(data.records, ctx.date, ctx.slot)
+      if (data.locked?.length) {
+        refusal = `${data.locked.map((x) => x.name).join(', ')}: izin dari wali tidak diubah.`
+      }
+      retries = 0
+    } catch (err) {
+      const status = err.response?.status
+      const data = err.response?.data
+      if (status === 409 && data?.code === 'WALI_IZIN_LOCKED') {
+        // somebody (the parent) recorded it while this page was open: show what is there now
+        if (ctx.date === date.value && ctx.slot === slot.value && data.records) records.value = withPending(data.records, ctx.date, ctx.slot)
+        refusal = `${(data.locked || []).map((x) => x.name).join(', ') || 'Santri'}: sudah ada izin dari wali, tidak diubah.`
+      } else if (status === 401) {
+        // the login ended: keep the taps; they cannot be sent until the person signs in again
+        batch.forEach(([k, m]) => { if (!pending.has(k)) pending.set(k, m) })
+        touch()
+        refusal = 'Sesi masuk berakhir. Masuk lagi, lalu ulangi catatan yang belum tersimpan.'
+        failed = true
+        break
+      } else if (retriable(err)) {
+        batch.forEach(([k, m]) => { if (!pending.has(k)) pending.set(k, m) })
+        touch()
+        failed = true
+        scheduleRetry()
+        break
+      } else {
+        // 4xx: the server will not take it (e.g. the day is closed to this teacher): say so, and show the true state
+        refusal = data?.error || 'Perubahan ditolak server.'
+        if (ctx.date === date.value && ctx.slot === slot.value) load({ silent: true })
+      }
+    } finally {
+      sending -= 1
+    }
+  }
+  touch()
+  if (failed) saveState.value = 'error'
+  else if (refusal) saveState.value = 'refused'
+  else saveState.value = pending.size ? 'saving' : 'saved'
+  if (refusal) saveNote.value = refusal
+}
+
+function resetView() {
+  sheet.value = null // the old day's rows are never tapped on a new day
+  records.value = {}
+  showOthers.value = false
+  saveNote.value = ''
+  load()
+}
+function setSlot(id) {
+  if (id === slot.value) return
+  flush() // unsent taps keep their own day and sesi; they are sent (or retried) on their own
+  slot.value = id
+  resetView()
+}
+function setDate(d) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > today) return
+  if (d === date.value) return
+  flush()
+  date.value = d
+  resetView()
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Leaving, coming back
+const onHide = () => {
+  if (document.visibilityState === 'hidden') flush()
+  // back on the tab: the sheet may have changed meanwhile (a parent's izin, another teacher)
+  else if (!pending.size && sheet.value) load({ silent: true })
+}
+const onOnline = () => { if (pending.size) retryNow() }
+const onBeforeUnload = (e) => {
+  if (!pending.size) return
+  e.preventDefault()
+  e.returnValue = ''
+}
+let poll = null
+onBeforeRouteLeave(async () => {
+  await flush()
+  if (!pending.size) return true
+  return ask({
+    title: 'Ada yang belum tersimpan',
+    message: `${pending.size} catatan absen belum terkirim ke server. Jika keluar sekarang, catatan itu hilang.`,
+    confirmText: 'Keluar',
+    cancelText: 'Tetap di sini',
+    tone: 'danger',
+  })
+})
 onMounted(() => {
   load()
   document.addEventListener('visibilitychange', onHide)
+  window.addEventListener('online', onOnline)
+  window.addEventListener('beforeunload', onBeforeUnload)
+  // a parent's izin may arrive while the page is open
+  poll = setInterval(() => {
+    if (document.visibilityState === 'visible' && sheet.value && !pending.size && !sending) load({ silent: true })
+  }, 60000)
 })
 onBeforeUnmount(() => {
+  alive = false
   document.removeEventListener('visibilitychange', onHide)
+  window.removeEventListener('online', onOnline)
+  window.removeEventListener('beforeunload', onBeforeUnload)
+  clearInterval(poll)
+  clearTimeout(retryTimer)
   flush()
 })
 </script>
@@ -404,6 +600,11 @@ onBeforeUnmount(() => {
 .as-save.is-saved { color: #0a5c40; }
 .as-save.is-saving { color: var(--muted); }
 .as-save.is-error { color: #b42318; }
+.as-save.is-refused { color: #b45309; }
+
+.as-save-note {
+  margin: 8px 0 0;
+}
 
 .as-retry {
   min-height: 32px;
@@ -539,6 +740,40 @@ onBeforeUnmount(() => {
 .as-choice:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* the parent's izin/sakit: the row is held, the status it holds stays clear */
+.as-row.is-locked {
+  background: #f3f8fd;
+}
+
+.as-row.is-locked .as-choice:disabled {
+  opacity: 0.4;
+}
+
+.as-row.is-locked .as-choice[aria-pressed="true"]:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.as-unlock {
+  align-self: flex-start;
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(29, 79, 138, 0.35);
+  background: #fff;
+  color: #1d4f8a;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.as-unlock:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
 }
 
 .as-choice[aria-pressed="true"].is-hadir { background: #0a5c40; border-color: #0a5c40; color: #fff; }

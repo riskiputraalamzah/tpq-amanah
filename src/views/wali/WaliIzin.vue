@@ -9,7 +9,7 @@
     <template v-else>
       <router-link to="/wali" class="w-link back-link">← Beranda</router-link>
       <h1 class="w-title">Izin / sakit</h1>
-      <p class="w-lead">{{ page.santri.name }} · {{ levelName(page.santri.classId) }}. Langsung tercatat di daftar hadir TPQ, tidak perlu mengabari ustadz lagi.</p>
+      <p class="w-lead">{{ page.santri.name }} · {{ levelName(page.santri.classId) }}. Langsung tercatat di daftar hadir TPQ dan diteruskan ke ustadz/ustadzah jilidnya, tidak perlu mengabari lagi.</p>
 
       <!-- just sent -->
       <div v-if="done" class="w-card done-card" role="status">
@@ -18,6 +18,7 @@
           <div>
             <p class="done-title">{{ done.type === 'sakit' ? 'Sakit' : 'Izin' }} tercatat</p>
             <p class="done-text">{{ done.recorded.map((d) => dayLabel(d)).join(', ') }} · {{ SLOT_NAME[done.slot] }}</p>
+            <p v-if="done.teachersNotified" class="done-text">Ustadz/ustadzah jilid ini sudah diberi tahu lewat WhatsApp.</p>
           </div>
         </div>
         <p v-if="done.teacher.length" class="w-note is-warn done-teacher">
@@ -174,7 +175,7 @@ async function send() {
   sendError.value = ''
   try {
     const { data } = await api.post(`/wali/santri/${santriId}/izin`, { type: type.value, dates: dates.value, slot: slot.value, reason: reason.value })
-    done.value = { type: type.value, slot: slot.value, recorded: data.recorded, teacher: data.teacher }
+    done.value = { type: type.value, slot: slot.value, recorded: data.recorded, teacher: data.teacher, teachersNotified: data.teachersNotified || 0 }
     dates.value = []
     reason.value = ''
     await load()
