@@ -252,7 +252,7 @@ const menuGroups = computed(() => {
   if (specialMenus.value.length) {
     groups.push({
       key: 'khusus',
-      title: user.value?.permissions?.menuGroupName || 'Akses Khusus',
+      title: 'Akses Khusus', // always this name: the same for every guru, whatever was typed before
       items: specialMenus.value.map((m) => ({ to: m.to, label: m.label, icon: m.icon, badge: m.id === 'pendaftaran' ? 'pendaftaran' : '' })),
     })
   }

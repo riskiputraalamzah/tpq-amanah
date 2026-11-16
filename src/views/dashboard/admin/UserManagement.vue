@@ -134,13 +134,6 @@
           <p>Halaman dan hak tambahan untuk: <strong>{{ selectedUser?.displayName }}</strong>. Berlaku langsung setelah disimpan.</p>
   
           <div class="form-group">
-            <label class="form-label">Nama Grup Menu:</label>
-            <input v-model="permissionsForm.menuGroupName" type="text" class="form-input"
-              placeholder="Contoh: Operator" />
-            <span class="form-hint">Nama menu yang akan muncul di sidebar guru</span>
-          </div>
-  
-          <div class="form-group">
             <label class="form-label">Fitur yang Bisa Diakses:</label>
             <div class="features-list">
               <label v-for="feature in availableFeatures" :key="feature.id" class="feature-checkbox">

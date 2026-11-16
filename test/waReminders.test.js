@@ -51,3 +51,11 @@ test("Notifikasi WA: 'jaga sesi agar tidak kosong guru' with lead time and admin
   const status = fs.readFileSync(path.join(here, "../src/utils/waBotStatus.js"), "utf8");
   assert.ok(status.includes("coverage: 'Jaga sesi tidak kosong guru'"), "shown in the bot's last runs");
 });
+
+test("the special access group is always called 'Akses Khusus' (sidebar and home), whatever name was typed before", () => {
+  const layout = fs.readFileSync(path.join(here, "..", "src/views/dashboard/DashboardLayout.vue"), "utf8");
+  assert.ok(layout.includes("title: 'Akses Khusus',"));
+  assert.ok(!layout.includes("permissions?.menuGroupName"));
+  assert.ok(fs.readFileSync(path.join(here, "..", "src/views/dashboard/DashboardHome.vue"), "utf8").includes("<h2>Akses Khusus</h2>"));
+  assert.ok(!fs.readFileSync(path.join(here, "..", "src/views/dashboard/admin/UserManagement.vue"), "utf8").includes("Nama Grup Menu"), "no field to rename it");
+});

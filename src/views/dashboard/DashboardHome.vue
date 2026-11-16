@@ -27,7 +27,7 @@
 
     <!-- Permissions-based Actions for Guru -->
     <section v-if="isGuru && hasCustomPermissions" class="permissions-actions">
-      <h2>{{ user.permissions?.menuGroupName || 'Akses Khusus' }}</h2>
+      <h2>Akses Khusus</h2>
       <div class="action-grid">
         <!-- Rekap Absensi -->
         <router-link v-if="hasPermission('admin-attendance-view')" to="/dashboard/admin-attendance"
