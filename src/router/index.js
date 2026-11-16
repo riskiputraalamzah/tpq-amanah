@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { applyThemeColor } from "@/utils/themeColor";
 
 import HomeView from "../views/HomeView.vue";
 import { useAuthStore } from "../stores/auth";
@@ -332,10 +333,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
+    // 'instant': the page has scroll-behavior: smooth (for anchor links), which would scroll the new page into view
+    // while it slides in
     if (savedPosition) {
-      return savedPosition;
+      return { ...savedPosition, behavior: "instant" };
     } else {
-      return { top: 0 };
+      return { top: 0, behavior: "instant" };
     }
   },
 });
@@ -440,5 +443,9 @@ router.onError((error, to) => {
   sessionStorage.setItem(reloadKey, "1");
   window.location.assign(to.fullPath);
 });
+
+// The browser's own bars (status bar, address bar) take the colour of the area: dashboard and wali portal are dark green
+// like their top bars, the website keeps its brand green.
+router.afterEach((to) => applyThemeColor(to.path));
 
 export default router;

@@ -142,7 +142,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
 
-// the guru layout has its own top bar: no room for the admin's floating menu button
 const isGuru = useAuthStore().user?.role === 'guru'
 const isAdmin = useAuthStore().user?.role === 'admin'
 const route = useRoute()
@@ -396,16 +395,6 @@ onBeforeUnmount(() => clearInterval(timer))
   --emerald: #0a5c40;
   --line: rgba(11, 59, 42, 0.12);
   color: var(--ink);
-}
-
-@media (min-width: 1024px) {
-  .wl {
-    padding-top: 0;
-  }
-}
-
-.wl.is-guru {
-  padding-top: 0;
 }
 
 .wl-head {

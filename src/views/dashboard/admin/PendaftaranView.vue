@@ -652,17 +652,6 @@ watch(() => route.query.id, (id) => {
 </script>
 
 <style scoped>
-
-.pd.is-guru {
-  padding-top: 0;
-}
-
-@media (min-width: 1024px) {
-  .pd {
-    padding-top: 0;
-  }
-}
-
 .pd-head {
   display: flex;
   align-items: flex-start;

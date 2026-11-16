@@ -136,6 +136,14 @@ html {
   scroll-behavior: smooth;
 }
 
+/* an installed app on an iPhone draws under the status bar: pages other than the dashboard and the wali portal (which pad
+   their own top bars) start below it. No inset exists in a browser tab or on Android, so nothing changes there. */
+@media (display-mode: standalone) {
+  body:not(:has(.dashboard-layout, .wali-shell)) {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
 body {
   font-family: 'Google Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   font-optical-sizing: auto;

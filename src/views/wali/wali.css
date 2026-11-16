@@ -76,6 +76,7 @@
   margin: 0 auto;
   padding: 20px 16px calc(40px + env(safe-area-inset-bottom));
   box-sizing: border-box;
+  overflow-x: clip; /* a page sliding in is wider than the screen for a moment */
 }
 
 /* headings and text */

@@ -70,3 +70,16 @@ body:has(.dashboard-layout) {
 @media (prefers-reduced-motion: reduce) {
   .dashboard-layout .btn-primary { transition: none; }
 }
+
+/* Things scrolled into view (a field with an error, an anchor, Tab to a button) must land clear of the bars that stay
+   on screen: the announcement banner, and on a phone the top bar above and the bottom bar below. */
+:root:has(.dashboard-layout) {
+  scroll-padding-top: calc(var(--banner-h, 0px) + 12px);
+}
+
+@media (max-width: 1023px) {
+  :root:has(.dashboard-layout) {
+    scroll-padding-top: calc(56px + env(safe-area-inset-top, 0px) + var(--banner-h, 0px) + 12px);
+    scroll-padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 36px);
+  }
+}

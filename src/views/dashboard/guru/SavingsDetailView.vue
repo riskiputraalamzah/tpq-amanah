@@ -487,7 +487,7 @@
           v-if="book?.status === 'active'"
           class="layout-side-col"
           :class="{ 'mobile-visible': mobileView === 'form' }"
-          style="position: sticky; top: 12px"
+          style="position: sticky; top: calc(var(--appbar-h, 0px) + 12px)"
         >
           <!-- Collapsed State on Desktop -->
           <div
@@ -3654,6 +3654,12 @@ onBeforeUnmount(() => {
   gap: var(--space-xl);
   align-items: start;
   margin-bottom: var(--space-2xl);
+}
+
+@media (max-width: 1023px) {
+  .detail-main-layout {
+    margin-bottom: 0; /* the layout leaves the room above the bottom bar */
+  }
 }
 
 .detail-main-layout.form-collapsed {

@@ -93,7 +93,8 @@
         <PageSkeleton v-if="routeLoading" :stats="3" :rows="6" />
         <div v-show="!routeLoading">
           <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
+            <!-- the old and the new page slide together; the direction follows where you are going (usePageTransition) -->
+            <transition :name="pageTransition" @before-leave="onBeforeLeave">
               <component :is="Component" :key="$route.path" />
             </transition>
           </router-view>
@@ -124,6 +125,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useAnnouncementStore } from "@/stores/announcements";
 import AnnouncementBanner from "@/components/AnnouncementBanner.vue";
 import MobileChrome from "@/components/MobileChrome.vue";
+import { usePageTransition } from "@/composables/usePageTransition";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
 import { prefetchDashboardRoutes } from "@/utils/prefetch";
@@ -140,6 +142,8 @@ const announcementStore = useAnnouncementStore();
 const user = computed(() => authStore.user);
 const isAdmin = computed(() => authStore.isAdmin);
 const isGuru = computed(() => authStore.isGuru);
+
+const { name: pageTransition, onBeforeLeave } = usePageTransition({ role: () => (isAdmin.value ? "admin" : "guru") });
 
 // Pages a guru can be given as "akses khusus" (feature ids: backend utils/guru_features.js; routes: meta.feature)
 const SPECIAL_MENUS = [
@@ -758,16 +762,25 @@ onMounted(() => {
 .dashboard-layout {
   --appbar-h: 0px;
   --nav-h: 0px;
+  --nav-over: 0px;
 }
 
 @media (max-width: 1023px) {
   .dashboard-layout {
     --appbar-h: calc(56px + env(safe-area-inset-top, 0px) + var(--banner-h, 0px));
     --nav-h: calc(64px + env(safe-area-inset-bottom, 0px));
+    --nav-over: 24px; /* the bubble rises this far above the bottom bar */
   }
 
+  /* the ONLY place that sets a page's margins on a phone: 16px sides and under the top bar, and above the
+     bottom bar room for the bar, the bubble that rises above it, and 8px. A page's own root must not add padding or margin of its own. */
   .dashboard-main {
-    padding: calc(var(--appbar-h) + var(--space-md)) var(--space-md) calc(var(--nav-h) + var(--space-xl));
+    padding: calc(var(--appbar-h) + 16px) 16px calc(var(--nav-h) + var(--nav-over) + 8px);
+    overflow-x: clip; /* a page sliding in is wider than the screen for a moment */
+  }
+
+  .dashboard-content :deep(.glass-card:last-child) {
+    margin-bottom: 0;
   }
 }
 
@@ -784,15 +797,6 @@ onMounted(() => {
 .dashboard-content {
   max-width: 1400px;
   margin: 0 auto;
-}
-
-/* Transitions: enter only, so the old page never delays the new one */
-.fade-enter-active {
-  transition: opacity 0.12s ease;
-}
-
-.fade-enter-from {
-  opacity: 0;
 }
 
 /* Loading Overlay */

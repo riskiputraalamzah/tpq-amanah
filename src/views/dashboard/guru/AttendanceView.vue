@@ -1531,13 +1531,6 @@ onMounted(async () => {
   width: 100%;
 }
 
-@media (max-width: 640px) {
-
-  .attendance-view {
-    padding-top: 10px;
-  }
-}
-
 /* Post-Attendance Modal */
 .post-attendance-modal {
   max-width: 440px;

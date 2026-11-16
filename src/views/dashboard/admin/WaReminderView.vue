@@ -904,7 +904,7 @@ onBeforeUnmount(() => {
   position: fixed;
   left: 16px;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(var(--nav-h, 0px) + var(--nav-over, 0px) + 12px); /* above the phone bottom bar and its bubble */
   z-index: 50;
   display: flex;
   flex-wrap: wrap;

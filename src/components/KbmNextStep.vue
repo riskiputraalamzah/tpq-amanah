@@ -34,10 +34,10 @@ const emit = defineEmits(['close'])
 <style scoped>
 .next-step {
   position: fixed;
-  left: 12px;
-  right: 12px;
-  /* above the guru bottom navigation on phones */
-  bottom: calc(84px + env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  /* above the phone's bottom bar (--nav-h comes from the dashboard layout) */
+  bottom: calc(var(--nav-h, 70px) + var(--nav-over, 0px) + 12px);
   z-index: 950;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

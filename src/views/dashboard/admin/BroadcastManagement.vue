@@ -576,10 +576,6 @@ onMounted(() => {
 
 <style scoped>
 /* Follow same visual styles from AnnouncementManagement.vue */
-.ann-management {
-  padding: var(--space-lg);
-}
-
 .page-header {
   margin-bottom: var(--space-xl);
 }

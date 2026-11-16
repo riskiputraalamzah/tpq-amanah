@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "TPQ Amanah Sawotratap",
+  "short_name": "TPQ Amanah",
+  "description": "Portal guru, admin, dan wali santri TPQ Amanah Sawotratap: absensi, KBM, kegiatan, tabungan, dan kabar ananda.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#03291d",
+  "background_color": "#fbf9f3",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

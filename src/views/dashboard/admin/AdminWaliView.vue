@@ -726,17 +726,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* on a phone the admin's menu button floats top-left (like the other admin pages); the guru layout has its own top bar */
-
-.wv.is-guru {
-  padding-top: 0;
-}
-
-@media (min-width: 1024px) {
-  .wv {
-    padding-top: 0;
-  }
-}
 
 .wv-head {
   display: flex;

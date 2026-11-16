@@ -22,27 +22,42 @@
     </router-link>
   </header>
 
-  <!-- Bottom bar: the few places used all day, within thumb reach; everything else is under "Menu" -->
-  <nav class="mc-nav" :class="{ 'is-hidden': typing }" :aria-label="`Menu utama ${roleLabel}`">
-    <template v-for="item in navItems" :key="item.key">
-      <button v-if="item.sheet" ref="menuBtn" type="button" class="mc-nav-item" :class="{ 'is-open': sheetOpen }" :aria-expanded="sheetOpen" aria-haspopup="dialog" @click="toggleSheet">
-        <span class="mc-nav-icon" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
-          <span v-if="menuBadge" class="mc-badge">{{ menuBadge > 9 ? '9+' : menuBadge }}</span>
+  <!-- Bottom bar: the few places used all day, within thumb reach; everything else is under "Menu".
+       A rounded bar with a round hole under the active tab and a dark-green bubble sitting in it; both slide to the
+       tab you choose (--cx is the centre of the active tab). -->
+  <nav ref="navEl" class="mc-nav" :class="{ 'is-hidden': typing, 'is-ready': navReady, 'has-active': activeIdx >= 0 }"
+    :style="{ '--cx': `${cx}px` }" :aria-label="`Menu utama ${roleLabel}`">
+    <span class="mc-nav-bg" aria-hidden="true"></span>
+    <span class="mc-bubble" aria-hidden="true">
+      <Transition name="mc-pop" mode="out-in">
+        <span :key="activeIdx" class="mc-bubble-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" v-html="activeItem?.icon || ''"></svg>
         </span>
-        <span class="mc-nav-label">{{ item.label }}</span>
-        <span v-if="menuBadge" class="mc-sr">, {{ menuBadge }} pendaftar baru</span>
-      </button>
-      <router-link v-else :to="item.to" class="mc-nav-item" :class="{ 'is-active': isNavActive(item), 'is-cta': item.cta }"
-        :aria-current="isNavActive(item) ? 'page' : undefined">
-        <span class="mc-nav-icon" aria-hidden="true">
-          <svg :width="item.cta ? 26 : 22" :height="item.cta ? 26 : 22" viewBox="0 0 24 24" fill="none" stroke="currentColor" :stroke-width="item.cta ? 2.4 : 2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
-          <span v-if="item.badge && badgeCount" class="mc-badge">{{ badgeCount > 9 ? '9+' : badgeCount }}</span>
-        </span>
-        <span class="mc-nav-label">{{ item.label }}</span>
-        <span v-if="item.badge && badgeCount" class="mc-sr">, {{ badgeCount }} pendaftar baru</span>
-      </router-link>
-    </template>
+      </Transition>
+      <span v-if="activeBadge" class="mc-badge">{{ activeBadge > 9 ? '9+' : activeBadge }}</span>
+    </span>
+
+    <div class="mc-nav-row">
+      <template v-for="(item, i) in navItems" :key="item.key">
+        <button v-if="item.sheet" :ref="(el) => setItemEl(i, el)" type="button" class="mc-nav-item" :class="{ 'is-open': sheetOpen }" :aria-expanded="sheetOpen" aria-haspopup="dialog" @click="toggleSheet">
+          <span class="mc-nav-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
+            <span v-if="menuBadge && i !== activeIdx" class="mc-badge">{{ menuBadge > 9 ? '9+' : menuBadge }}</span>
+          </span>
+          <span class="mc-nav-label">{{ item.label }}</span>
+          <span v-if="menuBadge" class="mc-sr">, {{ menuBadge }} pendaftar baru</span>
+        </button>
+        <router-link v-else :ref="(el) => setItemEl(i, el)" :to="item.to" class="mc-nav-item" :class="{ 'is-active': i === activeIdx }"
+          :aria-current="isNavActive(item) ? 'page' : undefined">
+          <span class="mc-nav-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
+            <span v-if="item.badge && badgeCount && i !== activeIdx" class="mc-badge">{{ badgeCount > 9 ? '9+' : badgeCount }}</span>
+          </span>
+          <span class="mc-nav-label">{{ item.label }}</span>
+          <span v-if="item.badge && badgeCount" class="mc-sr">, {{ badgeCount }} pendaftar baru</span>
+        </router-link>
+      </template>
+    </div>
   </nav>
 
   <!-- "Menu": every page, grouped like the desktop sidebar, as a sheet from the bottom -->
@@ -105,6 +120,7 @@
 // Menu data comes from DashboardLayout (one list for the sidebar and this sheet).
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { deepPageFor } from '@/utils/navDirection'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
@@ -154,11 +170,10 @@ const NAV = {
     { key: 'monitor', to: '/dashboard/kbm-monitor', label: 'Monitor', icon: ICON.monitor },
     MENU,
   ],
-  // Absensi (the teacher's own check-in) is the one thing done every day: the raised centre button
   guru: [
     { key: 'home', to: '/dashboard', label: 'Beranda', icon: ICON.home, exact: true },
     { key: 'kbm', to: '/dashboard/kbm', label: 'KBM', icon: ICON.kbm },
-    { key: 'absensi', to: '/dashboard/attendance', label: 'Absensi', icon: ICON.check, cta: true },
+    { key: 'absensi', to: '/dashboard/attendance', label: 'Absensi', icon: ICON.check },
     { key: 'absen-santri', to: '/dashboard/absen-santri', label: 'Santri', icon: ICON.absenSantri },
     MENU,
   ],
@@ -166,27 +181,42 @@ const NAV = {
 const navItems = computed(() => (isAdmin.value ? NAV.admin : NAV.guru))
 const isNavActive = (item) => (item.exact ? route.path === item.to : isActive(item.to))
 
+// Which tab the bubble sits in: the page's tab, or Menu while its sheet is open (none for a page that is in no tab)
+const menuIndex = computed(() => navItems.value.findIndex((i) => i.sheet))
+const activeIdx = computed(() => (sheetOpen.value ? menuIndex.value : navItems.value.findIndex((i) => !i.sheet && isNavActive(i))))
+const activeItem = computed(() => navItems.value[activeIdx.value] || null)
+const activeBadge = computed(() => {
+  const item = activeItem.value
+  if (!item) return 0
+  return item.sheet ? props.menuBadge : item.badge ? props.badgeCount : 0
+})
+
+// where the bubble and the hole are: the centre of the active tab, measured from the bar's left edge
+const navEl = ref(null)
+const itemEls = []
+const cx = ref(-120)
+const navReady = ref(false) // transitions start after the first measure, so the bubble does not slide in from nowhere
+const setItemEl = (i, el) => {
+  itemEls[i] = el ? el.$el || el : null
+}
+function measureNav() {
+  const nav = navEl.value
+  const el = itemEls[activeIdx.value]
+  if (!nav) return
+  // a page that is in no tab: the bubble and the hole close where they are (no sliding away)
+  if (activeIdx.value < 0 || !el) return
+  const n = nav.getBoundingClientRect()
+  const r = el.getBoundingClientRect()
+  if (!n.width || !r.width) return // hidden (laptop width): measured again when it shows
+  cx.value = Math.round(r.left - n.left + r.width / 2)
+}
+let navObserver = null
+
 /* ------------------------------------------------------------ top bar: title and back */
-// Inner pages: a Back button and their own title. [pattern, title, where Back goes without history]
-const DEEP = [
-  [/^\/dashboard\/kbm\/daily-workspace$/, 'Isi KBM', () => '/dashboard/kbm'],
-  [/^\/dashboard\/kbm\/[^/]+\/jurnal$/, 'Jurnal KBM', () => '/dashboard/kbm'],
-  [/^\/dashboard\/kbm\/[^/]+\/absensi$/, 'Absen Santri KBM', () => '/dashboard/kbm'],
-  [/^\/dashboard\/lpj\/[^/]+\/sptjm$/, 'SPTJM', (p) => p.replace(/\/sptjm$/, '')],
-  [/^\/dashboard\/lpj\/[^/]+$/, 'Detail LPJ', () => (isAdmin.value ? '/dashboard/admin-lpj' : '/dashboard/lpj')],
-  [/^\/dashboard\/grading\/[^/]+$/, 'Penilaian', () => '/dashboard/grading'],
-  [/^\/dashboard\/admin-grading\/[^/]+$/, 'Penilaian', () => '/dashboard/admin-grading'],
-  [/^\/dashboard\/savings\/[^/]+$/, 'Buku Tabungan', () => (isAdmin.value ? '/dashboard/admin-savings' : '/dashboard/savings')],
-  [/^\/dashboard\/kegiatan\/[^/]+$/, 'Detail Kegiatan', () => '/dashboard/kegiatan'],
-  [/^\/dashboard\/pendaftaran\/langsung$/, 'Daftarkan Langsung', () => '/dashboard/pendaftaran'],
-]
+// Inner pages get a Back button and their own title (the list is shared with the page slide: utils/navDirection.js)
 const ALONE = { '/dashboard/profile': 'Profil Saya', '/dashboard/settings': 'Pengaturan' }
 
-const deepInfo = computed(() => {
-  const path = route.path
-  const hit = DEEP.find(([re]) => re.test(path))
-  return hit ? { title: hit[1], back: hit[2](path) } : null
-})
+const deepInfo = computed(() => deepPageFor(route.path, props.role))
 const deep = computed(() => !!deepInfo.value)
 const isHome = computed(() => route.path === '/dashboard')
 const title = computed(() => {
@@ -214,7 +244,8 @@ let timers = []
 function measure() {
   raf = 0
   const bar = barEl.value
-  const h1 = document.querySelector('.dashboard-content h1')
+  // the page that is sliding out is still in the document for a moment: its title does not count
+  const h1 = [...document.querySelectorAll('.dashboard-content h1')].find((h) => !h.closest('.page-leaving'))
   if (!bar) return
   if (!h1) {
     // the page is still drawing its title: wait a moment before settling on "no title of its own"
@@ -242,7 +273,6 @@ watch(
 /* ------------------------------------------------------------ the Menu sheet */
 const sheetOpen = ref(false)
 const sheetEl = ref(null)
-const menuBtn = ref(null)
 // the guru's own "Akun" group is just the profile, which the sheet header already links to
 const sheetGroups = computed(() => props.groups.filter((g) => g.key !== 'akun'))
 
@@ -261,7 +291,7 @@ function closeSheet() {
   sheetOpen.value = false
   document.body.style.overflow = ''
   document.removeEventListener('keydown', onKey)
-  const btn = Array.isArray(menuBtn.value) ? menuBtn.value[0] : menuBtn.value
+  const btn = itemEls[menuIndex.value]
   nextTick(() => btn?.focus?.({ preventScroll: true }))
 }
 const toggleSheet = () => (sheetOpen.value ? closeSheet() : openSheet())
@@ -282,7 +312,20 @@ const onFocusOut = () => {
   }, 60)
 }
 
+watch(activeIdx, async () => {
+  await nextTick()
+  measureNav()
+})
+
 onMounted(() => {
+  measureNav()
+  requestAnimationFrame(() => {
+    navReady.value = true
+  })
+  if (typeof ResizeObserver !== 'undefined' && navEl.value) {
+    navObserver = new ResizeObserver(measureNav)
+    navObserver.observe(navEl.value)
+  }
   routeAt = performance.now()
   window.addEventListener('scroll', schedule, { passive: true })
   window.addEventListener('resize', schedule, { passive: true })
@@ -291,6 +334,7 @@ onMounted(() => {
   timers = [80, 400, 1100].map((ms) => setTimeout(schedule, ms))
 })
 onBeforeUnmount(() => {
+  navObserver?.disconnect()
   window.removeEventListener('scroll', schedule)
   window.removeEventListener('resize', schedule)
   document.removeEventListener('focusin', onFocusIn)
@@ -323,9 +367,7 @@ onBeforeUnmount(() => {
     height: calc(56px + env(safe-area-inset-top, 0px));
     padding: env(safe-area-inset-top, 0px) 10px 0 8px;
     color: #fff;
-    background: rgba(3, 41, 29, 0.97);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    background: #03291d; /* = theme-color: the status bar of the browser / installed app is the same colour */
     border-bottom: 1px solid rgba(252, 211, 77, 0.28);
     box-shadow: 0 8px 22px -16px rgba(2, 28, 19, 0.7);
   }
@@ -429,28 +471,97 @@ onBeforeUnmount(() => {
 
   /* ---- bottom bar ---- */
   .mc-nav {
+    --nav-bar: 64px;
+    --hole: 0px; /* the hole's radius: it opens under the active tab and closes when no tab is active */
+    display: block;
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: var(--z-fixed, 300);
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-items: end;
+    height: calc(var(--nav-bar) + env(safe-area-inset-bottom, 0px));
     max-width: 640px;
     margin: 0 auto;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
-    background: rgba(251, 249, 243, 0.98);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    border-top: 1px solid rgba(180, 83, 9, 0.22);
-    box-shadow: 0 -10px 26px -18px rgba(2, 28, 19, 0.5);
-    transition: transform 0.18s ease;
+    /* the shadow follows the bar's real shape, hole included (a box-shadow would be cut by the mask) */
+    filter: drop-shadow(0 -3px 10px rgba(2, 28, 19, 0.14));
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.2s ease;
+  }
+
+  .mc-nav.is-ready {
+    transition: transform 0.2s ease, --cx 0.42s cubic-bezier(0.22, 1, 0.36, 1), --hole 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .mc-nav.has-active {
+    --hole: 36px;
   }
 
   .mc-nav.is-hidden {
-    transform: translateY(110%);
+    transform: translateY(calc(100% + 40px));
     pointer-events: none;
+  }
+
+  /* the bar: rounded top corners, and a round hole (radius 36) around the active tab's bubble */
+  .mc-nav-bg {
+    position: absolute;
+    inset: 0;
+    background: #fbf9f3;
+    border-radius: 24px 24px 0 0;
+    -webkit-mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
+    mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
+  }
+
+  /* the bubble: dark green with the brand's gold icon, centred in the hole (it rises 24px above the bar) */
+  .mc-bubble {
+    position: absolute;
+    top: -24px;
+    left: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    color: #fcd34d;
+    background: radial-gradient(circle at 30% 22%, #138a5f 0%, #065f46 52%, #03291d 100%);
+    box-shadow: 0 10px 18px -8px rgba(3, 41, 29, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translate3d(calc(var(--cx) - 26px), 0, 0);
+    opacity: 0;
+    scale: 0.4;
+    pointer-events: none;
+    transition: opacity 0.2s ease, scale 0.28s cubic-bezier(0.34, 1.4, 0.5, 1);
+  }
+
+  .mc-nav.has-active .mc-bubble {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .mc-bubble-icon {
+    display: grid;
+    place-items: center;
+  }
+
+  .mc-pop-enter-active,
+  .mc-pop-leave-active {
+    transition: opacity 0.12s ease, transform 0.16s ease;
+  }
+
+  .mc-pop-enter-from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-12deg);
+  }
+
+  .mc-pop-leave-to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .mc-nav-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    height: var(--nav-bar);
   }
 
   .mc-nav-item {
@@ -458,41 +569,45 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-    min-height: 52px;
-    padding: 4px 2px;
+    gap: 3px;
+    padding: 10px 2px 0;
     border: 0;
-    border-radius: 14px;
+    border-radius: 16px;
     background: none;
     font: inherit;
     color: #5b6b62;
     text-decoration: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease, transform 0.12s ease;
+  }
+
+  .mc-nav-item:active {
+    transform: scale(0.94);
   }
 
   .mc-nav-icon {
     position: relative;
     display: grid;
     place-items: center;
-    width: 54px;
-    height: 30px;
-    border-radius: 999px;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    width: 30px;
+    height: 28px;
+  }
+
+  /* the active tab's own icon is the one in the bubble: it steps out of the way */
+  .mc-nav-icon svg {
+    transition: opacity 0.15s ease, transform 0.2s ease;
   }
 
   .mc-nav-item.is-active,
   .mc-nav-item.is-open {
-    color: #0a5c40;
+    color: #053d2c;
   }
 
-  .mc-nav-item.is-active .mc-nav-icon,
-  .mc-nav-item.is-open .mc-nav-icon {
-    background: #dcefe5;
-  }
-
-  .mc-nav-item:active .mc-nav-icon {
-    background: #e9efeb;
+  .mc-nav-item.is-active .mc-nav-icon svg,
+  .mc-nav-item.is-open .mc-nav-icon svg {
+    opacity: 0;
+    transform: translateY(8px) scale(0.5);
   }
 
   .mc-nav-label {
@@ -502,29 +617,10 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
 
-  /* the raised centre button (guru: own attendance) */
-  .mc-nav-item.is-cta .mc-nav-icon {
-    width: 54px;
-    height: 54px;
-    margin-top: -26px;
-    color: #fcd34d;
-    background: linear-gradient(145deg, #0b6b4a 0%, #065f46 55%, #03291d 100%);
-    box-shadow: 0 0 0 3px #fbf9f3, 0 0 0 4px rgba(180, 83, 9, 0.55), 0 12px 22px -8px rgba(3, 41, 29, 0.65);
-  }
-
-  .mc-nav-item.is-cta.is-active .mc-nav-icon {
-    background: linear-gradient(145deg, #0b6b4a 0%, #065f46 55%, #03291d 100%);
-    box-shadow: 0 0 0 3px #fbf9f3, 0 0 0 4px #b45309, 0 14px 24px -8px rgba(3, 41, 29, 0.75);
-  }
-
-  .mc-nav-item.is-cta .mc-nav-label {
-    color: #065f46;
-  }
-
   .mc-badge {
     position: absolute;
     top: -3px;
-    right: 3px;
+    right: 0;
     min-width: 18px;
     height: 18px;
     padding: 0 4px;
@@ -538,7 +634,11 @@ onBeforeUnmount(() => {
     box-shadow: 0 0 0 2px #fbf9f3;
   }
 
-  .mc-nav-item:focus-visible,
+  .mc-bubble .mc-badge {
+    top: -2px;
+    right: -2px;
+  }
+
   .mc-icon-btn:focus-visible,
   .mc-logo:focus-visible,
   .mc-avatar-link:focus-visible {
@@ -547,7 +647,8 @@ onBeforeUnmount(() => {
   }
 
   .mc-nav-item:focus-visible {
-    outline-offset: -2px;
+    outline: 2px solid #0a5c40;
+    outline-offset: -4px;
   }
 }
 
@@ -870,6 +971,12 @@ onBeforeUnmount(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .mc-nav,
+  .mc-nav.is-ready,
+  .mc-bubble,
+  .mc-nav-item,
+  .mc-nav-icon svg,
+  .mc-pop-enter-active,
+  .mc-pop-leave-active,
   .mc-sheet-enter-active,
   .mc-sheet-leave-active,
   .mc-sheet-enter-active .mc-sheet,
@@ -878,5 +985,21 @@ onBeforeUnmount(() => {
   .mc-swap-leave-active {
     transition: none;
   }
+}
+</style>
+
+<style>
+/* --cx (the centre of the active tab) is registered as a length so it can animate: the hole and the bubble read it
+   every frame, so they always move together. Without @property support they simply jump. */
+@property --cx {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --hole {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
 }
 </style>

@@ -11,7 +11,11 @@
     </header>
 
     <main class="wali-main">
-      <router-view />
+      <router-view v-slot="{ Component, route: current }">
+        <transition :name="pageTransition" @before-leave="onBeforeLeave">
+          <component :is="Component" :key="current.path" />
+        </transition>
+      </router-view>
     </main>
 
     <!-- Bottom navigation: the four places a parent goes, within thumb reach. Hidden on the forms, which have their
@@ -34,12 +38,14 @@
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
+import { usePageTransition } from '@/composables/usePageTransition'
 import '@/styles/landing.css'
 import './wali.css'
 
 const logoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
 const route = useRoute()
 const { unseen, refresh } = useWaliAnnouncements()
+const { name: pageTransition, onBeforeLeave } = usePageTransition({ role: () => 'wali' })
 
 const NAV = [
   { key: 'home', to: '/wali', label: 'Beranda', icon: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z" />' },

@@ -768,16 +768,6 @@ onBeforeRouteLeave(async () => {
   color: #0b3b2a;
 }
 
-.dl.is-guru {
-  padding-top: 0;
-}
-
-@media (min-width: 1024px) {
-  .dl {
-    padding-top: 0;
-  }
-}
-
 .dl-back {
   display: inline-flex;
   align-items: center;

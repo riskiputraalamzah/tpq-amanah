@@ -2,7 +2,8 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: when installed on an iPhone the top bar can run under the status bar (it pads itself) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- Preconnect to Google Fonts for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -40,7 +41,14 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/logo-sm.png" />
-    <link rel="apple-touch-icon" href="/logo-sm.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- Installed app (PWA): name, icons and colours are in the manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="TPQ Amanah" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -79,6 +87,7 @@
     />
 
     <!-- Theme Color -->
+    <!-- the colour of the browser bars; the app changes it per area (utils/themeColor.js: dashboard, wali, site) -->
     <meta name="theme-color" content="#166534" />
     <meta name="msapplication-TileColor" content="#166534" />
     <script type="application/ld+json">

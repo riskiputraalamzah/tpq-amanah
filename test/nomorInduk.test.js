@@ -3,29 +3,31 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { squash, has } from "./helpers/sourceText.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const read = (file) => fs.readFileSync(path.join(here, "../src", file), "utf8");
 
-const santriManager = read("components/SantriManager.vue");
+// formatting-proof: line breaks / indentation / trailing commas from the editor do not matter (helpers/sourceText.js)
+const santriManager = squash(read("components/SantriManager.vue"));
 const layout = read("views/dashboard/DashboardLayout.vue");
 const identity = read("composables/useTpqIdentity.js");
 const profile = read("views/dashboard/admin/TpqProfileView.vue");
 
 test("Kelola Santri shows, searches and copies the nomor induk", () => {
-  assert.ok(santriManager.includes("<th>No. Induk</th>"), "table has a No. Induk column");
-  assert.ok(santriManager.includes("row.nomorInduk"), "each row shows its nomor induk");
-  assert.ok(santriManager.includes("Cari nama atau nomor induk"), "search mentions nomor induk");
-  assert.ok(santriManager.includes("navigator.clipboard.writeText(text)"), "number can be copied");
-  assert.ok(santriManager.includes('replace(/-/g, "")'), "a second button copies it without dashes");
-  assert.ok(santriManager.includes("copyNomorInduk(row, { stripped: true })"));
+  assert.ok(has(santriManager, "<th>No. Induk</th>"), "table has a No. Induk column");
+  assert.ok(has(santriManager, "row.nomorInduk"), "each row shows its nomor induk");
+  assert.ok(has(santriManager, "Cari nama atau nomor induk"), "search mentions nomor induk");
+  assert.ok(has(santriManager, "navigator.clipboard.writeText(text)"), "number can be copied");
+  assert.ok(has(santriManager, 'replace(/-/g, "")'), "a second button copies it without dashes");
+  assert.ok(has(santriManager, "copyNomorInduk(row, { stripped: true })"));
 });
 
 test("Only admin can number existing santri, after a preview", () => {
-  assert.ok(santriManager.includes('v-if="adminMode && unnumberedCount > 0"'), "banner is admin-only");
-  assert.ok(santriManager.includes('api.get("/santri/nomor-induk/preview")'), "admin sees a preview first");
-  assert.ok(santriManager.includes('api.post("/santri/nomor-induk/generate"'), "then confirms the generation");
-  assert.ok(santriManager.includes('clearApiCache("/santri/nomor-induk")'), "preview is never served from cache");
+  assert.ok(has(santriManager, 'v-if="adminMode && unnumberedCount > 0"'), "banner is admin-only");
+  assert.ok(has(santriManager, 'api.get("/santri/nomor-induk/preview")'), "admin sees a preview first");
+  assert.ok(has(santriManager, 'api.post("/santri/nomor-induk/generate"'), "then confirms the generation");
+  assert.ok(has(santriManager, 'clearApiCache("/santri/nomor-induk")'), "preview is never served from cache");
 });
 
 test("Sidebar NSPQ opens the SIPDAR certificate safely in a new tab", () => {
@@ -67,14 +69,14 @@ test("Sorting: No. Induk, Nama and Jilid (1-6 then Marhalah), empty values last"
 
 test("Kelola Santri headers sort and announce their order", () => {
   for (const key of ["nomorInduk", "name", "level"]) {
-    assert.ok(santriManager.includes(`@click="toggleSort('${key}')"`), `${key} header sorts`);
-    assert.ok(santriManager.includes(`:aria-sort="ariaSort('${key}')"`), `${key} header exposes aria-sort`);
+    assert.ok(has(santriManager, `@click="toggleSort('${key}')"`), `${key} header sorts`);
+    assert.ok(has(santriManager, `:aria-sort="ariaSort('${key}')"`), `${key} header exposes aria-sort`);
   }
-  assert.ok(santriManager.includes('v-for="(row, index) in sortedRows"'), "table renders the sorted rows");
+  assert.ok(has(santriManager, 'v-for="(row, index) in sortedRows"'), "table renders the sorted rows");
 });
 
 test("Kelola Santri offers to fix numbers issued with a mistyped NSPQ", () => {
-  assert.ok(santriManager.includes('v-if="adminMode && wrongPrefixRows.length > 0"'), "admin-only banner when prefixes differ");
-  assert.ok(santriManager.includes('api.post("/santri/nomor-induk/fix-nspq"'), "calls the fix endpoint");
-  assert.ok(santriManager.includes("await confirm("), "asks for confirmation first");
+  assert.ok(has(santriManager, 'v-if="adminMode && wrongPrefixRows.length > 0"'), "admin-only banner when prefixes differ");
+  assert.ok(has(santriManager, 'api.post("/santri/nomor-induk/fix-nspq"'), "calls the fix endpoint");
+  assert.ok(has(santriManager, "await confirm("), "asks for confirmation first");
 });

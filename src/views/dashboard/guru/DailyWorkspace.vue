@@ -1406,14 +1406,7 @@ onMounted(async () => {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 5rem;
   box-sizing: border-box;
-}
-
-@media (max-width: 1023px) {
-  .daily-workspace-view {
-    padding-bottom: 8rem;
-  }
 }
 
 /* Header */

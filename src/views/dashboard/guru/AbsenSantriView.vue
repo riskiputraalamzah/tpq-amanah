@@ -264,15 +264,6 @@ onBeforeUnmount(() => {
   --emerald: #0a5c40;
   --line: rgba(11, 59, 42, 0.12);
   color: var(--ink);
-  padding-bottom: 24px;
-}
-
-/* the admin's menu button floats top-left on a phone (the guru layout has its own top bar) */
-
-@media (min-width: 1024px) {
-  .as.is-admin {
-    padding-top: 0;
-  }
 }
 
 .as-head h1 {

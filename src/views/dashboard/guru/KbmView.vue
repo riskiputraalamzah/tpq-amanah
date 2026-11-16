@@ -180,7 +180,7 @@
         <!-- The calendar is the page: every day shows its own state, tap it to see or fill that day -->
         <section
           class="kbm-calendar-card glass-card"
-          style="position: sticky; top: 12px"
+          style="position: sticky; top: calc(var(--appbar-h, 0px) + 12px)"
           aria-labelledby="calendar-heading"
         >
           <h2 id="calendar-heading" class="sr-only">Kalender KBM</h2>

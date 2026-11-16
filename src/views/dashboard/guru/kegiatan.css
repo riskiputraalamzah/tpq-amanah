@@ -7,18 +7,6 @@
   --emerald: #0a5c40;
   --line: rgba(11, 59, 42, 0.12);
   color: var(--ink);
-  padding-bottom: 28px;
-}
-
-/* the admin's floating menu button takes the top-left on a phone; the guru layout has its own top bar */
-.kg.is-admin {
-  padding-top: 60px;
-}
-
-@media (min-width: 1024px) {
-  .kg.is-admin {
-    padding-top: 0;
-  }
 }
 
 .kg-head {
@@ -424,7 +412,7 @@ textarea.kg-input {
 .kg-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 9990; /* above the phone top and bottom bars */
   display: flex;
   align-items: flex-end;
   justify-content: center;

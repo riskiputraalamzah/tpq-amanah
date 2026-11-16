@@ -3083,10 +3083,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .admin-attendance-view {
-    padding-top: 56px;
-  }
-
   .summary-content {
 
     align-items: center;
