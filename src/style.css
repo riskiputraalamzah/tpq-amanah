@@ -1039,6 +1039,8 @@ img {
 
 /* ============================================================
    GLOBAL MODAL / OVERLAY SYSTEM
+   Layers (bottom to top): page bars ~100, sheets 9990-9995, .modal-overlay 999999, old confirm 1000000,
+   app dialog (DialogHost) 1000005, toasts 1000010. Kept in order by test/layers.test.js.
    All modals are Teleport'd to <body> so these styles apply
    globally without interference from scroll containers.
    ============================================================ */

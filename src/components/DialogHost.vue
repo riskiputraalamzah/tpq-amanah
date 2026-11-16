@@ -61,7 +61,9 @@ watch(() => dialogState.open, async (open) => {
 .dlg-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100000; /* above every sheet in the app (they go up to 9990), below the toasts */
+  /* the confirmation always comes on top of the pop-up that asked for it: above every sheet (9990-9995), every
+     .modal-overlay (999999, style.css) and the old confirm (1000000); below the toasts (1000010). test/layers.test.js */
+  z-index: 1000005;
   display: flex;
   align-items: flex-end;
   justify-content: center;
