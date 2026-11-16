@@ -76,3 +76,12 @@ export function lastRunItems(lastRuns) {
       return { type, label: RUN_LABELS[type], value: `${when} · ${parts.join(', ')}` }
     })
 }
+
+// Why a message failed, in words the admin can act on (WhatsApp's own errors are technical)
+const NOT_ON_WA = 'Nomor tidak ditemukan di WhatsApp. Kemungkinan nomornya salah atau kurang angka: cek nomor wali/guru, lalu kirim ulang.'
+export function waFailText(row) {
+  const error = String(row?.error || '')
+  if (/No LID for user|tidak terdaftar di WhatsApp/i.test(error)) return NOT_ON_WA
+  const tries = Number(row?.attempts) > 1 ? `Gagal setelah ${row.attempts}x percobaan` : 'Gagal'
+  return error ? `${tries}: ${error}` : tries
+}

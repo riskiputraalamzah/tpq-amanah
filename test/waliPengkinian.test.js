@@ -30,3 +30,9 @@ test("KK photo: the phone shrinks it until it is small enough, and the admin vie
   assert.ok(!has(adminView, "window.open(data.url"), "no new tab");
   assert.ok(has(adminView, '<img :src="kkView.url"'));
 });
+
+test("the KK photo opens over the review sheet, not behind it", () => {
+  const view = squash(read("src/views/dashboard/admin/AdminWaliView.vue"));
+  assert.ok(has(view, '<div v-if="kkView" class="wv-overlay wv-overlay-top"'));
+  assert.ok(has(view, ".wv-overlay.wv-overlay-top { z-index: 9995; }"), "above the other sheets (9990), below the app dialog (100000)");
+});

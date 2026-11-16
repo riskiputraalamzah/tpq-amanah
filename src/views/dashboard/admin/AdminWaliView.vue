@@ -64,7 +64,7 @@
       </div>
 
       <p v-if="statusFilter === 'remind' && visibleRows.length" class="wv-note">
-        Wali sudah tertaut, tapi datanya belum diisi, belum selesai, atau perlu diperbaiki. Tekan <strong>Ingatkan</strong> untuk menjapri wali dari WhatsApp Antum.
+        Wali sudah tertaut, tapi datanya belum diisi, belum selesai, atau perlu diperbaiki. Tekan <strong>Ingatkan</strong>: WA bot TPQ yang mengirim pengingat ke wali.
       </p>
       <p v-if="!visibleRows.length" class="wv-empty">{{ statusFilter === 'remind' ? 'Tidak ada wali yang perlu diingatkan.' : 'Tidak ada santri yang cocok.' }}</p>
       <ul v-else class="wv-list">
@@ -172,7 +172,7 @@
 
     <!-- the KK photo (private): shown here, never as a public link -->
     <Teleport to="body">
-      <div v-if="kkView" class="wv-overlay" @click.self="kkView = null" @keydown.esc="kkView = null">
+      <div v-if="kkView" class="wv-overlay wv-overlay-top" @click.self="kkView = null" @keydown.esc="kkView = null">
         <section class="wv-sheet wv-kk" role="dialog" aria-modal="true" aria-labelledby="kk-title">
           <header class="wv-sheet-head">
             <h3 id="kk-title">Foto KK · {{ kkView.name }}</h3>
@@ -186,7 +186,7 @@
       </div>
     </Teleport>
 
-    <!-- reminder to a linked wali, sent from the teacher's own WhatsApp -->
+    <!-- reminder to the linked wali, sent by the TPQ bot (POST /wali/admin/reminders/send) -->
     <Teleport to="body">
       <div v-if="remind" class="wv-overlay" @click.self="remind = null">
         <section class="wv-sheet" role="dialog" aria-modal="true" aria-labelledby="remind-title">
@@ -199,14 +199,17 @@
           </header>
           <div class="wv-sheet-body">
             <p v-if="remind.lastReminder" class="wv-note is-warn">{{ reminderText(remind.lastReminder) }}. Beri jeda beberapa hari sebelum mengingatkan lagi.</p>
+            <p class="wv-label">Dikirim ke</p>
+            <ul class="wv-remind-to">
+              <li v-for="g in remind.guardians" :key="g.waliId">{{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}</li>
+            </ul>
             <p class="wv-label">Pesan</p>
             <p class="wv-message">{{ remindMessage }}</p>
-            <a v-for="g in remind.guardians" :key="g.waliId" class="wv-btn wv-btn-wa" :href="waTo(g.phone, remindMessage)"
-              target="_blank" rel="noopener" @click="sendReminder(remind, g)">
-              Kirim ke {{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}
-            </a>
-            <button type="button" class="wv-btn wv-btn-ghost" @click="copyText(remindMessage)">{{ copied ? 'Pesan tersalin ✓' : 'Salin pesan' }}</button>
-            <p class="wv-sub wv-center">Pesan terkirim dari WhatsApp di HP Antum, langsung ke wali.</p>
+            <p v-if="remindError" class="wv-note is-danger" role="alert">{{ remindError }}</p>
+            <button type="button" class="wv-btn wv-btn-wa" :disabled="busy" @click="sendReminder(remind)">
+              {{ busy ? 'Mengirim…' : 'Kirim lewat WA bot TPQ' }}
+            </button>
+            <p class="wv-sub wv-center">Dikirim otomatis oleh nomor WA TPQ. Malam hari (21.00–06.30) dikirim besok pagi. Cek di Pusat WhatsApp.</p>
           </div>
         </section>
       </div>
@@ -546,37 +549,25 @@ const remindMessage = computed(() => remind.value
   })
   : '')
 const waTo = (phone, text) => `https://wa.me/${String(phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
-const remindedTo = new Set()
+const remindError = ref('')
 function openRemind(r) {
-  copied.value = false
-  remindedTo.clear()
+  remindError.value = ''
   remind.value = r
 }
-// the link opens WhatsApp by itself; record once, close when every wali of this santri was messaged
-function sendReminder(r, g) {
-  if (!remindedTo.size) logReminder(r)
-  remindedTo.add(g.waliId)
-  if (r.guardians.every((x) => remindedTo.has(x.waliId))) {
-    remind.value = null
-    showSuccess('Pesan pengingat dibuka di WhatsApp')
-  }
-}
-async function logReminder(r) {
-  // the link opens WhatsApp by itself; this only records it
+// the TPQ bot sends it (to every wali of this santri); the backend refuses a second one the same day
+async function sendReminder(r) {
+  busy.value = true
+  remindError.value = ''
   try {
-    const { data } = await api.post('/wali/admin/reminders', { santriId: r.santriId })
+    const { data } = await api.post('/wali/admin/reminders/send', { santriId: r.santriId })
     const row = rows.value.find((x) => x.santriId === r.santriId)
     if (row) row.lastReminder = data.lastReminder
-  } catch {
-    /* not recorded: the message itself still went out */
-  }
-}
-async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text)
-    copied.value = true
-  } catch {
-    showError('Tidak bisa menyalin otomatis. Tekan lama pada pesan untuk menyalin.')
+    remind.value = null
+    showSuccess(`Pengingat masuk antrean WA bot (${data.queued} wali)`)
+  } catch (err) {
+    remindError.value = err.response?.data?.error || 'Pengingat belum terkirim. Coba lagi.'
+  } finally {
+    busy.value = false
   }
 }
 
@@ -645,14 +636,14 @@ async function decide(q, approve) {
       message: `Pengajuan tautan untuk ${q.childName}. Alasan ini akan dilihat oleh wali.`,
       tone: 'danger',
       confirmText: 'Tolak pengajuan',
-      input: { label: 'Alasan', value: 'Nama santri tidak ditemukan', required: true },
+      input: { label: 'Alasan', value: 'Nama santri tidak ditemukan', required: true, maxlength: 300, multiline: true },
     })
     if (reason === null) return
   }
   busy.value = true
   try {
     await api.post(`/wali/admin/link-requests/${q.id}/decide`, { approve, santriId: choice.value[q.id], reason })
-    showSuccess(approve ? 'Wali sudah ditautkan' : 'Pengajuan ditolak')
+    showSuccess(approve ? 'Wali sudah ditautkan, dikabari lewat WA' : 'Pengajuan ditolak, wali dikabari lewat WA')
     await load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal memproses pengajuan')
@@ -680,8 +671,8 @@ async function decideReview(decision) {
     const { data } = await api.post(`/wali/admin/santri/${review.value.santri.id}/review`, { decision, note: fixNote.value, syncName: nameDiffers.value && syncName.value })
     review.value = null
     showSuccess(decision === 'verified'
-      ? (data?.sync?.name ? `Data terverifikasi. Nama santri sekarang "${data.sync.name}".` : 'Data terverifikasi')
-      : 'Permintaan perbaikan dikirim ke wali')
+      ? (data?.sync?.name ? `Data terverifikasi, wali dikabari lewat WA. Nama santri sekarang "${data.sync.name}".` : 'Data terverifikasi, wali dikabari lewat WA')
+      : 'Permintaan perbaikan dikirim ke WA wali')
     if (data?.sync?.nameSkipped) showWarning(data.sync.nameSkipped)
     load({ quiet: true })
   } catch (err) {
@@ -695,7 +686,7 @@ async function decideIdentity(approve) {
   try {
     const { data } = await api.post(`/wali/admin/santri/${review.value.santri.id}/identity`, { approve, syncName: approve })
     review.value = null
-    showSuccess(approve ? 'Perubahan identitas disetujui' : 'Perubahan identitas ditolak')
+    showSuccess(approve ? 'Perubahan identitas disetujui, wali dikabari lewat WA' : 'Perubahan identitas ditolak, wali dikabari lewat WA')
     if (data?.sync?.nameSkipped) showWarning(data.sync.nameSkipped)
     load({ quiet: true })
   } catch (err) {
@@ -1110,6 +1101,16 @@ textarea.wv-input {
   overflow-wrap: anywhere;
 }
 
+.wv-remind-to {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .wv-reminded {
   color: #92400e;
 }
@@ -1181,6 +1182,11 @@ textarea.wv-input {
 /* sheets */
 .wv-kk {
   max-width: 760px;
+}
+
+/* the KK photo opens from inside the review sheet: it goes over it, not behind it */
+.wv-overlay.wv-overlay-top {
+  z-index: 9995;
 }
 
 .wv-kk-img {

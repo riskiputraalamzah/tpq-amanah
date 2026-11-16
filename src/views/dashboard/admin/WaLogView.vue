@@ -121,7 +121,7 @@
             <span class="wl-status" :class="r.status === 'sent' ? 'is-sent' : 'is-failed'">{{ r.status === 'sent' ? 'Terkirim' : 'Gagal' }}</span>
           </button>
           <div v-if="open === r.id" class="wl-detail">
-            <p v-if="r.status === 'failed'" class="wl-note is-danger">Gagal setelah {{ r.attempts }}x percobaan<template v-if="r.error">: {{ r.error }}</template></p>
+            <p v-if="r.status === 'failed'" class="wl-note is-danger">{{ waFailText(r) }}</p>
             <p v-else-if="r.attempts > 1" class="wl-sub">Terkirim pada percobaan ke-{{ r.attempts }}.</p>
             <p class="wl-preview">{{ r.preview || '(tanpa isi)' }}</p>
           </div>
@@ -150,7 +150,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
-import { WA_CATEGORY } from '@/utils/waBotStatus'
+import { WA_CATEGORY, waFailText } from '@/utils/waBotStatus'
 
 const isGuru = useAuthStore().user?.role === 'guru'
 const isAdmin = useAuthStore().user?.role === 'admin'

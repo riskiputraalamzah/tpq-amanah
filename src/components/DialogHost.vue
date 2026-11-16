@@ -11,8 +11,15 @@
 
         <div v-if="dialogState.input" class="dlg-field">
           <label for="dlg-input" class="dlg-label">{{ dialogState.input.label }}</label>
-          <input id="dlg-input" ref="field" v-model="dialogState.input.value" class="dlg-input" :placeholder="dialogState.input.placeholder"
+          <!-- a reason or a note: a box of a few lines (Enter = new line, Ctrl+Enter = confirm) -->
+          <textarea v-if="dialogState.input.multiline" id="dlg-input" ref="field" v-model="dialogState.input.value" class="dlg-input dlg-textarea"
+            rows="4" :placeholder="dialogState.input.placeholder" :maxlength="dialogState.input.maxlength" @keydown.enter.ctrl.prevent="confirm"
+            @keydown.enter.meta.prevent="confirm"></textarea>
+          <input v-else id="dlg-input" ref="field" v-model="dialogState.input.value" class="dlg-input" :placeholder="dialogState.input.placeholder"
             :maxlength="dialogState.input.maxlength" autocomplete="off" @keydown.enter.prevent="confirm" />
+          <span v-if="dialogState.input.multiline && dialogState.input.maxlength" class="dlg-count" aria-live="polite">
+            {{ String(dialogState.input.value || '').length }}/{{ dialogState.input.maxlength }}
+          </span>
         </div>
 
         <div class="dlg-actions">
@@ -143,6 +150,21 @@ watch(() => dialogState.open, async (open) => {
   font: inherit;
   color: #0b3b2a;
   box-sizing: border-box;
+}
+
+.dlg-textarea {
+  min-height: 112px;
+  max-height: 40vh;
+  padding: 12px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.dlg-count {
+  justify-self: end;
+  font-size: 0.78rem;
+  color: #6b7d73;
+  font-variant-numeric: tabular-nums;
 }
 
 .dlg-input:focus {

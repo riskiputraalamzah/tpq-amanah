@@ -3,6 +3,7 @@
 //   const { ask } = useDialog()
 //   if (await ask({ title: 'Lepas tautan?', message: '...', tone: 'danger', confirmText: 'Lepas' })) { ... }   // true / false
 //   const reason = await ask({ title: 'Tolak?', input: { label: 'Alasan', required: true } })                  // text / null
+//   input.multiline: a text box of a few lines (a reason, a note) instead of one line
 import { reactive } from 'vue'
 
 export const dialogState = reactive({
@@ -12,7 +13,7 @@ export const dialogState = reactive({
   tone: 'default', // default | danger
   confirmText: 'Ya, lanjutkan',
   cancelText: 'Batal',
-  input: null, // { label, placeholder, value, required, maxlength } when a text is asked for
+  input: null, // { label, placeholder, value, required, maxlength, multiline } when a text is asked for
   resolve: null,
 })
 
@@ -27,7 +28,7 @@ export function useDialog() {
       dialogState.confirmText = options.confirmText || (options.input ? 'Simpan' : 'Ya, lanjutkan')
       dialogState.cancelText = options.cancelText || 'Batal'
       dialogState.input = options.input
-        ? { label: '', placeholder: '', value: '', required: false, maxlength: 200, ...options.input }
+        ? { label: '', placeholder: '', value: '', required: false, maxlength: 200, multiline: false, ...options.input }
         : null
       dialogState.resolve = resolve
       dialogState.open = true

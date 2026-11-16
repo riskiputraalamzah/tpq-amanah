@@ -280,7 +280,7 @@
         <header class="pd-sheet-head">
           <div>
             <h3 id="pd-settings-title">Penerima notifikasi WA</h3>
-            <p class="pd-sub">Dapat pesan setiap ada pendaftar baru (pukul 06:30-21:00).</p>
+            <p class="pd-sub">Dapat pesan setiap ada pendaftar baru, dan saat data santri dari wali perlu dicek (pukul 06:30-21:00).</p>
           </div>
           <button type="button" class="pd-close" aria-label="Tutup" @click="settingsOpen = false"><LineIcon name="x" :size="20" /></button>
         </header>
@@ -533,7 +533,7 @@ async function cancel() {
     tone: 'danger',
     confirmText: 'Batalkan pendaftaran',
     cancelText: 'Kembali',
-    input: { label: 'Alasan', value: '', placeholder: 'Contoh: usia belum cukup, kuota sesi penuh', required: true, maxlength: 300 },
+    input: { label: 'Alasan', value: '', placeholder: 'Contoh: usia belum cukup, kuota sesi penuh', required: true, maxlength: 300, multiline: true },
   })
   if (reason === null) return
   await act(() => api.post(`/pendaftaran/admin/${detail.value.id}/cancel`, { reason }), 'Pendaftaran dibatalkan')
@@ -550,7 +550,7 @@ async function askFix() {
     title: 'Minta perbaikan data?',
     message: `Pesan ini dikirim ke WhatsApp wali ${detail.value.childName}. Wali memperbaiki sendiri lewat portal.`,
     confirmText: 'Kirim ke wali',
-    input: { label: 'Yang perlu diperbaiki', value: detail.value.fixRequest?.note || '', placeholder: 'Contoh: tanggal lahir berbeda dengan akta, mohon dicek', required: true, maxlength: 300 },
+    input: { label: 'Yang perlu diperbaiki', value: detail.value.fixRequest?.note || '', placeholder: 'Contoh: tanggal lahir berbeda dengan akta, mohon dicek', required: true, maxlength: 300, multiline: true },
   })
   if (note === null) return
   await act(() => api.post(`/pendaftaran/admin/${detail.value.id}/fix`, { note }), 'Permintaan perbaikan dikirim ke wali')
