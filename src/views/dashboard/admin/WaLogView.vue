@@ -3,12 +3,19 @@
     <header class="wl-head">
       <div>
         <h1>Riwayat WA Bot</h1>
-        <p>Pesan yang dikirim bot WhatsApp TPQ: ke siapa, kapan, untuk apa, dan berhasil atau tidak.</p>
+        <p>Pesan yang dikirim bot WhatsApp TPQ: ke siapa, kapan, untuk apa, dan berhasil atau tidak. Hari ini diperbarui otomatis.</p>
       </div>
-      <button type="button" class="wl-btn" :disabled="loading" @click="refresh">
-        <LineIcon name="refresh" :size="16" /> {{ loading ? 'Memuat…' : 'Muat ulang' }}
-      </button>
+      <div class="wl-head-actions">
+        <span v-if="selectedDay === today || tab === 'antrean'" class="wl-live" :title="liveText">
+          <span class="wl-live-dot" aria-hidden="true"></span> Langsung
+        </span>
+        <button type="button" class="wl-btn" :disabled="loading" @click="refresh">
+          <LineIcon name="refresh" :size="16" /> {{ loading ? 'Memuat…' : 'Muat ulang' }}
+        </button>
+      </div>
     </header>
+
+    <WaHubNav v-if="isAdmin" />
 
     <!-- what was sent / what still waits -->
     <div class="wl-tabs" role="tablist" aria-label="Riwayat atau antrean">
@@ -132,15 +139,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
+import WaHubNav from '@/components/WaHubNav.vue'
+import { useWaLive } from '@/composables/useWaLive'
 import { displayPhone } from '@/utils/santriProfile'
 import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { WA_CATEGORY } from '@/utils/waBotStatus'
 
 const isGuru = useAuthStore().user?.role === 'guru'
 const isAdmin = useAuthStore().user?.role === 'admin'
@@ -184,6 +194,7 @@ async function control(q, action) {
   try {
     const { data: d } = await api.post(`/wa-log/queue/${q.source}/${encodeURIComponent(q.id)}/${action}`)
     queue.value = d
+    live.setQueue(d)
     toast.success(action === 'cancel' ? 'Pesan dibatalkan' : 'Pesan dikirim dalam 1 menit')
   } catch (err) {
     toast.error(err.response?.data?.error || 'Belum berhasil.')
@@ -192,17 +203,7 @@ async function control(q, action) {
   }
 }
 
-const CATEGORY = {
-  guru: 'Guru',
-  pengumuman: 'Pengumuman',
-  broadcast: 'Broadcast',
-  wali_kode: 'Kode masuk wali',
-  wali_alfa: 'Kabar alfa',
-  pendaftaran: 'Pendaftaran',
-  wali_info: 'Info wali',
-  tes: 'Tes',
-  lainnya: 'Lainnya',
-}
+const CATEGORY = WA_CATEGORY
 const CATEGORY_ORDER = Object.keys(CATEGORY)
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -280,20 +281,69 @@ function refresh() {
   loadDays()
   loadDay()
   loadQueue()
+  live.refresh()
 }
 
-// today's list refreshes by itself while the page is open and visible
-let timer = null
-onMounted(() => {
-  refresh()
-  timer = setInterval(() => {
-    if (selectedDay.value === today && !document.hidden && !loading.value) refresh()
-  }, 60 * 1000)
+// Live (useWaLive, shared with Pusat WhatsApp): what the bot sent since the last look is added to today's list and
+// counts, and the queue follows, without reloading.
+const live = useWaLive()
+const liveText = computed(() => (live.state.updatedAt ? `Diperbarui ${new Date(live.state.updatedAt.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 19)} WIB` : 'Menyambung…'))
+watch(() => live.state.tick, () => {
+  if (live.state.queue && !queueBusy.value) queue.value = live.state.queue
+  const rows = live.state.lastRows.filter((r) => (r.day || today) === today)
+  if (!rows.length) return
+  const todayEntry = days.value.find((d) => d.day === today)
+  if (todayEntry) {
+    rows.forEach((r) => { todayEntry.total += 1; todayEntry[r.status === 'sent' ? 'sent' : 'failed'] += 1 })
+  }
+  if (selectedDay.value !== today || !data.value) return
+  const have = new Set(data.value.rows.map((r) => r.id))
+  const added = rows.filter((r) => !have.has(r.id))
+  if (!added.length) return
+  const summary = { ...data.value.summary, byCategory: { ...data.value.summary.byCategory } }
+  added.forEach((r) => {
+    summary.total += 1
+    summary[r.status === 'sent' ? 'sent' : 'failed'] += 1
+    summary.byCategory[r.category] = (summary.byCategory[r.category] || 0) + 1
+  })
+  data.value = { ...data.value, summary, rows: [...added, ...data.value.rows].sort((a, b) => String(b.at).localeCompare(String(a.at))) }
 })
-onBeforeUnmount(() => clearInterval(timer))
+
+onMounted(() => refresh())
 </script>
 
 <style scoped>
+.wl-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wl-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f6b4a;
+}
+
+.wl-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  animation: wl-blink 2s ease-in-out infinite;
+}
+
+@keyframes wl-blink {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wl-live-dot { animation: none; }
+}
+
 .wl-tabs {
   display: flex;
   gap: 6px;

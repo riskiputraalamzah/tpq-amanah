@@ -16,6 +16,8 @@
       </div>
     </header>
 
+    <WaHubNav />
+
     <!-- Loading -->
     <PageSkeleton v-if="loading" label="Memuat data broadcast" />
 
@@ -252,6 +254,7 @@
 </template>
 
 <script setup>
+import WaHubNav from '@/components/WaHubNav.vue'
 import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'

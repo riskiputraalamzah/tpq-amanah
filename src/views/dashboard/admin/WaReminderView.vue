@@ -1,9 +1,11 @@
 <template>
   <div class="wa-view">
     <header class="page-header">
-      <h1>Notifikasi WhatsApp</h1>
+      <h1>Pengingat WA Guru</h1>
       <p>Atur pengingat absen yang dikirim bot WhatsApp ke setiap guru, Senin–Jumat.</p>
     </header>
+
+    <WaHubNav />
 
     <PageSkeleton v-if="loading" variant="form" :rows="6" label="Memuat pengaturan notifikasi" />
 
@@ -13,13 +15,10 @@
     </div>
 
     <template v-else>
-      <!-- Status bot -->
-      <section class="card status-card" aria-labelledby="bot-status-title">
-        <div class="status-head">
-          <h2 id="bot-status-title">Status bot</h2>
-          <span class="pill" :class="botStatus.tone">{{ botStatus.label }}</span>
-        </div>
-        <p class="status-detail">{{ botStatus.detail }}</p>
+      <!-- The bot's status is live above (and in Ringkasan); here: what it ran last and how it gets its schedule -->
+      <section v-if="bot.scheduleSource === 'file' || lastRunItems.length" class="card runs-card" aria-labelledby="bot-runs-title">
+        <h2 id="bot-runs-title">Terakhir dijalankan bot</h2>
+        <p class="status-detail">Perubahan pengaturan dipakai bot paling lambat 5 menit setelah disimpan.</p>
         <p v-if="bot.scheduleSource === 'file'" class="alert alert-warning">
           Bot masih memakai jadwal lama dari <code>contacts.json</code>. Setelah pengaturan di bawah sudah benar
           dan pesan tes berhasil, ubah <code>WA_SCHEDULE_SOURCE=backend</code> di VM lalu restart bot.
@@ -219,6 +218,8 @@
 </template>
 
 <script setup>
+import WaHubNav from '@/components/WaHubNav.vue'
+import { lastRunItems as runItems } from '@/utils/waBotStatus'
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api, { clearApiCache } from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
@@ -232,7 +233,6 @@ const testTypes = [
   { value: 'end', label: 'Cek akhir sesi', hint: 'Sesuai status absen guru hari ini' },
   { value: 'recap', label: 'Rekap belum absen', hint: 'Daftar tanggal yang belum lengkap bulan ini' },
 ]
-const RUN_LABELS = { start: 'Pesan awal sesi', end: 'Cek akhir sesi', recap: 'Rekap belum absen', coverage: 'Jaga sesi tidak kosong guru' }
 
 const loading = ref(true)
 const loadError = ref('')
@@ -243,87 +243,10 @@ const form = ref(null)
 const snapshot = ref('')
 const testDialog = ref(null)
 const testNumberInput = ref(null)
-const nowTick = ref(Date.now())
 let pollTimer = null
-let clockTimer = null
 
-const toDate = (value) => {
-  if (!value) return null
-  if (value._seconds !== undefined) return new Date(value._seconds * 1000)
-  if (value.seconds !== undefined) return new Date(value.seconds * 1000)
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-const relative = (date) => {
-  const minutes = Math.round((nowTick.value - date.getTime()) / 60000)
-  if (minutes < 1) return 'baru saja'
-  if (minutes < 60) return `${minutes} menit lalu`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours} jam lalu`
-  return date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
-}
-
-// WhatsApp state as reported by the bot (whatsapp-web.js states plus "ready").
-const WA_STATES = {
-  ready: { tone: 'ok', label: 'Online', text: 'WhatsApp terhubung' },
-  CONNECTED: { tone: 'ok', label: 'Online', text: 'WhatsApp terhubung' },
-  QR_RECEIVED: { tone: 'warn', label: 'Perlu scan QR', text: 'WhatsApp menunggu scan QR di halaman /scan bot' },
-  AUTHENTICATED: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
-  INITIALIZING: { tone: 'warn', label: 'Menyambung...', text: 'Bot sedang menyalakan WhatsApp' },
-  OPENING: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
-  PAIRING: { tone: 'warn', label: 'Menyambung...', text: 'WhatsApp sedang menyambung' },
-  NOT_STARTED: { tone: 'warn', label: 'Menyambung...', text: 'Bot sedang menyalakan WhatsApp' },
-  RECONNECTING: { tone: 'warn', label: 'Menyambung ulang...', text: 'WhatsApp terputus, bot sedang menyambung ulang otomatis' },
-}
-
-const botStatus = computed(() => {
-  const last = toDate(bot.value.lastSyncAt)
-  if (!last) {
-    return { tone: 'neutral', label: 'Belum terhubung', detail: 'Bot belum pernah mengambil pengaturan ini. Pastikan bot versi terbaru sudah berjalan di VM.' }
-  }
-  const minutes = (nowTick.value - last.getTime()) / 60000
-  if (minutes > 10) {
-    return { tone: 'danger', label: 'Tidak ada kabar', detail: `Kabar terakhir dari bot ${relative(last)}. Cek bot di VM.` }
-  }
-  const wa = WA_STATES[bot.value.waState] || { tone: 'danger', label: 'WA terputus', text: 'WhatsApp terputus' }
-  return {
-    tone: wa.tone,
-    label: wa.label,
-    detail: `${wa.text} · kabar terakhir ${relative(last)} · perubahan pengaturan dipakai bot paling lambat 5 menit setelah disimpan.`,
-  }
-})
-
-// Keeps the status card live: one light request every 15 seconds while the tab is visible.
-const STATUS_REFRESH_MS = 15000
-let statusTimer = null
-const refreshBotStatus = async () => {
-  if (document.visibilityState !== 'visible') return
-  try {
-    clearApiCache('/wa-reminders/status')
-    const { data } = await api.get('/wa-reminders/status')
-    bot.value = data || {}
-    nowTick.value = Date.now()
-  } catch {
-    // Keep the last known status; the next tick tries again.
-  }
-}
-const onVisibility = () => {
-  if (document.visibilityState === 'visible') refreshBotStatus()
-}
-
-const lastRunItems = computed(() =>
-  Object.entries(bot.value.lastRuns || {})
-    .filter(([type]) => RUN_LABELS[type])
-    .map(([type, run]) => {
-      const at = toDate(run.at)
-      const when = at ? at.toLocaleString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-'
-      const parts = [`${run.sent} terkirim`]
-      if (run.failed) parts.push(`${run.failed} gagal`)
-      if (run.skipped) parts.push(`${run.skipped} tidak perlu`)
-      return { type, label: RUN_LABELS[type], value: `${when} · ${parts.join(', ')}` }
-    }),
-)
+// what the bot ran last (pengingat guru); the live online/offline status is in WaHubNav
+const lastRunItems = computed(() => runItems(bot.value.lastRuns))
 
 const activeCount = computed(() => (form.value ? Object.values(form.value.gurus).filter((g) => g.enabled).length : 0))
 const isDirty = computed(() => !!form.value && JSON.stringify(form.value) !== snapshot.value)
@@ -515,19 +438,11 @@ const warnBeforeLeave = (event) => {
 
 onMounted(() => {
   load()
-  clockTimer = setInterval(() => {
-    nowTick.value = Date.now()
-  }, 30000)
-  statusTimer = setInterval(refreshBotStatus, STATUS_REFRESH_MS)
-  document.addEventListener('visibilitychange', onVisibility)
   window.addEventListener('beforeunload', warnBeforeLeave)
 })
 
 onBeforeUnmount(() => {
   stopPolling()
-  clearInterval(clockTimer)
-  clearInterval(statusTimer)
-  document.removeEventListener('visibilitychange', onVisibility)
   window.removeEventListener('beforeunload', warnBeforeLeave)
 })
 </script>
@@ -580,7 +495,6 @@ onBeforeUnmount(() => {
   margin: 0 0 var(--space-md);
 }
 
-.status-head,
 .section-head {
   display: flex;
   align-items: center;
@@ -588,41 +502,9 @@ onBeforeUnmount(() => {
   gap: var(--space-md);
 }
 
-.status-head h2 {
-  margin: 0;
-}
-
 .status-detail {
   margin: var(--space-sm) 0 0;
   font-size: 0.9rem;
-  color: var(--gray-700);
-}
-
-.pill {
-  flex: none;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.pill.ok {
-  background: rgba(46, 125, 50, 0.12);
-  color: #0f6b4a;
-}
-
-.pill.warn {
-  background: rgba(239, 108, 0, 0.12);
-  color: #b45309;
-}
-
-.pill.danger {
-  background: rgba(211, 47, 47, 0.12);
-  color: #c62828;
-}
-
-.pill.neutral {
-  background: var(--gray-100);
   color: var(--gray-700);
 }
 

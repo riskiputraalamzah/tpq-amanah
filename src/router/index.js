@@ -263,6 +263,13 @@ const routes = [
         meta: { role: "admin", feature: "pendaftaran" },
       },
       {
+        // Pusat WhatsApp: the bot's status, today's messages and the queue, live (tabs: wa-log, broadcasts, wa-reminders)
+        path: "whatsapp",
+        name: "WhatsAppHub",
+        component: () => import("../views/dashboard/admin/WhatsAppHubView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "wa-log",
         name: "WaLog",
         component: () => import("../views/dashboard/admin/WaLogView.vue"),

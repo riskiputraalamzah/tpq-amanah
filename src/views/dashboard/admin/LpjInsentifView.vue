@@ -88,7 +88,7 @@
               </div>
               <div class="guru-actions">
                 <button v-if="!g.ready" type="button" class="btn btn-ghost btn-sm" :disabled="!g.canRemind || reminding"
-                  :title="g.canRemind ? 'Kirim daftar kekurangan ke WhatsApp guru' : 'Nomor WA belum diatur di menu Notifikasi WA'"
+                  :title="g.canRemind ? 'Kirim daftar kekurangan ke WhatsApp guru' : 'Nomor WA belum diatur di Pusat WhatsApp › Pengingat Guru'"
                   @click="remind([g.id])">
                   Kirim pengingat
                 </button>
@@ -108,7 +108,7 @@
                 <li v-if="g.gaps.missingKbm.length"><strong>Hadir, KBM belum dibuat ({{ g.gaps.missingKbm.length }}):</strong> {{ dateList(g.gaps.missingKbm) }}</li>
                 <li v-if="g.gaps.incompleteKbm.length"><strong>KBM belum lengkap ({{ g.gaps.incompleteKbm.length }}):</strong> {{ incompleteList(g.gaps.incompleteKbm) }}</li>
               </ul>
-              <p v-if="!g.canRemind" class="hint">Nomor WA guru ini belum diatur, jadi pengingat tidak bisa dikirim. Atur di menu <router-link to="/dashboard/wa-reminders">Notifikasi WA</router-link>.</p>
+              <p v-if="!g.canRemind" class="hint">Nomor WA guru ini belum diatur, jadi pengingat tidak bisa dikirim. Atur di <router-link to="/dashboard/wa-reminders">Pusat WhatsApp › Pengingat Guru</router-link>.</p>
             </details>
           </li>
         </ul>

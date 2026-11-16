@@ -182,7 +182,6 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/santri', label: 'Kelola Santri', icon: ICON.santri },
       { to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
       { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali },
-      { to: '/dashboard/pengumuman-wali', label: 'Pengumuman Wali', icon: ICON.megaphone },
       { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
     ],
   },
@@ -205,13 +204,13 @@ const ADMIN_GROUPS = [
     ],
   },
   {
-    key: 'wa',
-    title: 'WhatsApp & Info',
+    // everything WhatsApp is one page with tabs (Pusat WhatsApp: status, riwayat & antrean, broadcast, pengingat guru)
+    key: 'info',
+    title: 'Komunikasi',
     items: [
-      { to: '/dashboard/broadcasts', label: 'Broadcast WA', icon: ICON.mail },
+      { to: '/dashboard/whatsapp', label: 'Pusat WhatsApp', icon: ICON.chat, also: ['/dashboard/wa-log', '/dashboard/broadcasts', '/dashboard/wa-reminders'] },
+      { to: '/dashboard/pengumuman-wali', label: 'Pengumuman Wali', icon: ICON.megaphone },
       { to: '/dashboard/announcements', label: 'Pengumuman Guru & Web', icon: ICON.bell },
-      { to: '/dashboard/wa-reminders', label: 'Pengingat WA Guru', icon: ICON.chat },
-      { to: '/dashboard/wa-log', label: 'Riwayat & Antrean WA', icon: ICON.clock },
     ],
   },
   {

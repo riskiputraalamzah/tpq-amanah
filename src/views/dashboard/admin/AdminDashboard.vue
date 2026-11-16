@@ -71,7 +71,7 @@
                 <strong>{{ d.today.gurus.kbmComplete }} lengkap</strong>
                 <span class="ad-mini-sub">{{ d.today.gurus.kbmGaps ? `${d.today.gurus.kbmGaps} belum lengkap` : 'tidak ada yang tertinggal' }}</span>
               </div>
-              <router-link to="/dashboard/wa-log" class="ad-mini is-link">
+              <router-link to="/dashboard/whatsapp" class="ad-mini is-link">
                 <span class="ad-mini-label">Pesan WA</span>
                 <strong>{{ d.today.wa.sent }} terkirim</strong>
                 <span class="ad-mini-sub" :class="{ 'is-bad': d.today.wa.failed }">{{ d.today.wa.failed ? `${d.today.wa.failed} gagal` : 'tidak ada yang gagal' }}</span>

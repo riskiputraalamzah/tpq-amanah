@@ -281,7 +281,7 @@ const canNudge = computed(() => !!detail.value?.guru.wa?.canNudge && detail.valu
 const nudgeNote = computed(() => {
   const guru = detail.value?.guru
   if (!guru) return ''
-  if (!guru.wa?.canNudge) return 'Nomor WA belum diatur di menu Notifikasi WA.'
+  if (!guru.wa?.canNudge) return 'Nomor WA belum diatur di Pusat WhatsApp › Pengingat Guru.'
   if (!detail.value.issues.length) return 'Tidak ada yang perlu diingatkan.'
   const last = guru.lastNudge?.at ? new Date(guru.lastNudge.at._seconds ? guru.lastNudge.at._seconds * 1000 : guru.lastNudge.at) : null
   const lastText = last && !Number.isNaN(last.getTime())
@@ -368,7 +368,7 @@ const pollNudge = (id, startedAt) => {
         return
       }
       if (job.status === 'failed' || job.status === 'expired') {
-        nudge.value = { sending: false, state: { tone: 'alert', text: job.status === 'expired' ? 'Bot tidak mengambil pesan dalam 30 menit. Cek status bot di menu Notifikasi WA.' : `Gagal: ${job.error || 'bot tidak bisa mengirim'}` } }
+        nudge.value = { sending: false, state: { tone: 'alert', text: job.status === 'expired' ? 'Bot tidak mengambil pesan dalam 30 menit. Cek status bot di Pusat WhatsApp.' : `Gagal: ${job.error || 'bot tidak bisa mengirim'}` } }
         return
       }
       if (Date.now() - startedAt > 3 * 60 * 1000) {
