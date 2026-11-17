@@ -14,7 +14,7 @@
       <!-- the data was already sent (by the other parent): nothing to fill, show what is useful instead -->
       <template v-if="dataSent">
         <p class="w-note data-note">
-          <span>{{ linked.profileStatus === 'verified' ? 'Data ananda sudah lengkap dan terverifikasi.' : 'Data ananda sudah diisi dan sedang dicek admin.' }}
+          <span>{{ linked.profileStatus === 'verified' ? 'Data ananda sudah lengkap dan terverifikasi.' : 'Data ananda sudah diisi dan sedang dicek pengurus TPQ.' }}
             Bapak/Ibu <strong>tidak perlu mengisinya lagi</strong>.</span>
         </p>
         <router-link :to="`/wali/santri/${linked.santriId}/progres`" class="w-btn w-btn-primary">Lihat kehadiran &amp; materi ananda</router-link>

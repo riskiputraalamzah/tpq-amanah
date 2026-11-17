@@ -136,7 +136,7 @@
             </p>
             <router-link :to="`/wali/santri/${s.santriId}`" class="w-btn w-btn-primary">{{ actionLabel(s) }}</router-link>
           </div>
-          <p v-if="s.hasPendingIdentity" class="w-note is-warn child-note">Perubahan identitas sedang dicek admin.</p>
+          <p v-if="s.hasPendingIdentity" class="w-note is-warn child-note">Perubahan identitas sedang dicek pengurus TPQ.</p>
         </article>
 
         <!-- another child: kept small here (also under Akun) -->
@@ -164,7 +164,7 @@
         <div v-for="r in requests" :key="r.id" class="w-card request-card">
           <strong>{{ r.childName }}</strong>
           <span class="w-pill" :class="r.status === 'rejected' ? 'is-danger' : 'is-info'">
-            {{ r.status === 'rejected' ? 'Ditolak' : 'Menunggu dicek admin' }}
+            {{ r.status === 'rejected' ? 'Ditolak' : 'Menunggu dicek' }}
           </span>
           <p v-if="r.status === 'rejected' && r.reason" class="w-help">Alasan: {{ r.reason }}</p>
         </div>

@@ -21,7 +21,7 @@
       Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
     </p>
     <p v-else-if="scope && !isAdmin && scope.source === 'feature'" class="wv-note wv-scope">
-      Antum diberi akses ke <strong>semua jilid</strong> oleh admin. NIK, KK, dan verifikasi data tetap khusus admin.
+      Antum diberi akses ke <strong>semua jilid</strong> oleh admin. NIK, KK, dan verifikasi data hanya untuk jilid yang Antum ampu.
     </p>
     <p v-else-if="scope && !isAdmin" class="wv-note wv-scope">
       Jilid Antum: <strong>{{ scopeLabel }}</strong>.
@@ -63,12 +63,23 @@
           @click="statusFilter = f.value">{{ f.label }} <span>{{ countFor(f.value) }}</span></button>
       </div>
 
+      <!-- how the list is laid out: one list, by jilid, or by the wali's number (one number, several children) -->
+      <div class="wv-groupby" role="group" aria-label="Kelompokkan">
+        <span class="wv-groupby-label">Kelompokkan</span>
+        <button v-for="o in GROUPINGS" :key="o.value" type="button" class="wv-chip" :aria-pressed="groupBy === o.value" @click="setGroupBy(o.value)">{{ o.label }}</button>
+        <label v-if="groupBy === 'phone'" class="wv-check wv-groupby-only">
+          <input v-model="onlyShared" type="checkbox" /> Hanya nomor dengan lebih dari 1 santri
+        </label>
+      </div>
+
       <p v-if="statusFilter === 'remind' && visibleRows.length" class="wv-note">
         Wali sudah tertaut, tapi datanya belum diisi, belum selesai, atau perlu diperbaiki. Tekan <strong>Ingatkan</strong>: WA bot TPQ yang mengirim pengingat ke wali.
       </p>
-      <p v-if="!visibleRows.length" class="wv-empty">{{ statusFilter === 'remind' ? 'Tidak ada wali yang perlu diingatkan.' : 'Tidak ada santri yang cocok.' }}</p>
-      <ul v-else class="wv-list">
-        <li v-for="r in visibleRows" :key="r.santriId" class="wv-row">
+      <p v-if="!groupedRows.length" class="wv-empty">{{ statusFilter === 'remind' ? 'Tidak ada wali yang perlu diingatkan.' : 'Tidak ada santri yang cocok.' }}</p>
+      <section v-for="grp in groupedRows" v-else :key="grp.key" class="wv-block" :aria-label="grp.title || 'Daftar santri'">
+      <h3 v-if="grp.title" class="wv-block-title">{{ grp.title }} <span>{{ grp.note }}</span></h3>
+      <ul class="wv-list">
+        <li v-for="r in grp.rows" :key="`${grp.key}-${r.santriId}`" class="wv-row">
           <div class="wv-row-main">
             <strong>{{ r.name }}</strong>
             <span class="wv-sub">{{ levelName(r.classId) }}<template v-if="r.nomorInduk"> · {{ r.nomorInduk }}</template></span>
@@ -77,6 +88,7 @@
             </span>
             <span v-else class="wv-sub is-muted">Belum ada wali tertaut</span>
             <span v-if="r.lastReminder" class="wv-sub wv-reminded">{{ reminderText(r.lastReminder) }}</span>
+            <span v-if="routingText(r)" class="wv-sub wv-routing" :class="{ 'is-admin': r.routing.status === 'escalated' }">{{ routingText(r) }}</span>
           </div>
           <div class="wv-row-side">
             <span class="wv-pill" :class="`is-${(STATUS[r.profileStatus] || STATUS.empty).tone}`">
@@ -97,6 +109,7 @@
           </div>
         </li>
       </ul>
+      </section>
     </template>
 
     <!-- kabar alfa: the bot tells the wali when their child was alfa (admin) -->
@@ -292,7 +305,7 @@
                   {{ labelOf(path) }}: <s>{{ valueAt(review.profile.data, path) || '-' }}</s> → <strong>{{ v || '-' }}</strong>
                 </li>
               </ul>
-              <div v-if="isAdmin" class="wv-request-actions">
+              <div v-if="review.canVerify" class="wv-request-actions">
                 <button type="button" class="wv-btn wv-btn-ghost is-danger" :disabled="busy" @click="decideIdentity(false)">Tolak</button>
                 <button type="button" class="wv-btn wv-btn-primary" :disabled="busy" @click="decideIdentity(true)">Setujui</button>
               </div>
@@ -316,11 +329,11 @@
                   <button v-if="isAdmin" type="button" class="wv-link is-danger" @click="unlink(g)">Lepas</button>
                 </li>
               </ul>
-              <button v-if="isAdmin && review.profile.hasKkPhoto" type="button" class="wv-btn wv-btn-ghost" @click="openKk">Lihat foto KK</button>
+              <button v-if="review.canVerify && review.profile.hasKkPhoto" type="button" class="wv-btn wv-btn-ghost" @click="openKk">Lihat foto KK</button>
               <p v-else-if="!review.profile.hasKkPhoto" class="wv-sub">Foto KK tidak diunggah.</p>
             </div>
 
-            <template v-if="isAdmin && ['submitted', 'needs_fix', 'verified'].includes(review.profile.status)">
+            <template v-if="review.canVerify && ['submitted', 'needs_fix', 'verified'].includes(review.profile.status)">
               <div class="wv-group">
                 <label v-if="nameDiffers" class="wv-check">
                   <input v-model="syncName" type="checkbox" /> Pakai nama "{{ valueAt(review.profile.data, 'santri.namaLengkap') }}" sebagai nama santri di sistem
@@ -328,7 +341,7 @@
                 </label>
                 <p class="wv-sub">
                   Saat diverifikasi, jenis kelamin, tempat dan tanggal lahir<template v-if="nameDiffers && syncName">, serta nama</template>
-                  ikut tersimpan di data santri (Kelola Santri). NIK, KK, alamat, dan data orang tua tetap di sini, hanya admin yang bisa melihat.
+                  ikut tersimpan di data santri (Kelola Santri). NIK, KK, alamat, dan data orang tua tetap di sini, hanya admin dan guru jilidnya yang bisa melihat.
                 </p>
                 <label class="wv-label" for="fix-note">Catatan perbaikan untuk wali</label>
                 <textarea id="fix-note" v-model="fixNote" class="wv-input" rows="2" placeholder="Contoh: NIK belum sesuai KK"></textarea>
@@ -339,7 +352,7 @@
                 <button type="button" class="wv-btn wv-btn-primary" :disabled="busy" @click="decideReview('verified')">Verifikasi</button>
               </div>
             </template>
-            <p v-else-if="!isAdmin" class="wv-sub">Verifikasi data dilakukan oleh admin.</p>
+            <p v-else-if="!review.canVerify" class="wv-sub">Data ini diproses oleh guru jilidnya atau admin.</p>
           </div>
         </section>
       </div>
@@ -354,6 +367,7 @@ import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { useWaliBadge } from '@/composables/useWaliBadge'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { STATUS, STEPS, RELATIONS, REMIND_STATUSES, getPath, displayPhone, linkCodeMessage, reminderMessage } from '@/utils/santriProfile'
@@ -376,6 +390,8 @@ const authStore = useAuthStore()
 const { ask } = useDialog()
 const route = useRoute()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
+// the badge on this menu: what waits for this person's decision (refreshed after each decision here)
+const { refresh: refreshWaliBadge } = useWaliBadge()
 const { success: showSuccess, error: showError, warning: showWarning } = useToast()
 const siteUrl = window.location.origin
 
@@ -455,6 +471,79 @@ const visibleRows = computed(() => {
   const q = search.value.trim().toLowerCase()
   return filteredByClass.value.filter((r) => matchStatus(r, statusFilter.value) && (!q || r.name.toLowerCase().includes(q)))
 })
+
+/* ---- laying out the list: one list, by jilid, or by the wali's number (a number linked to several children) */
+const GROUPINGS = [
+  { value: 'none', label: 'Tanpa' },
+  { value: 'jilid', label: 'Per jilid' },
+  { value: 'phone', label: 'Per nomor wali' },
+]
+const GROUP_KEY = 'wv-group-by'
+const readGroupBy = () => {
+  try {
+    const v = localStorage.getItem(GROUP_KEY)
+    return GROUPINGS.some((o) => o.value === v) ? v : 'none'
+  } catch {
+    return 'none'
+  }
+}
+const groupBy = ref(readGroupBy())
+const onlyShared = ref(false)
+function setGroupBy(v) {
+  groupBy.value = v
+  try {
+    localStorage.setItem(GROUP_KEY, v)
+  } catch {
+    /* private mode: for this visit only */
+  }
+}
+const groupedRows = computed(() => {
+  const list = visibleRows.value
+  if (!list.length) return []
+  if (groupBy.value === 'jilid') {
+    const by = new Map()
+    for (const r of list) {
+      const k = r.classId || ''
+      if (!by.has(k)) by.set(k, [])
+      by.get(k).push(r)
+    }
+    return [...by.entries()]
+      .sort(([a], [b]) => (a || '99').localeCompare(b || '99', undefined, { numeric: true }))
+      .map(([k, rows]) => ({ key: `j${k}`, title: levelName(k), note: `${rows.length} santri`, rows }))
+  }
+  if (groupBy.value === 'phone') {
+    // a child with two wali shows under both numbers; a child with none at the end
+    const by = new Map()
+    const none = []
+    for (const r of list) {
+      if (!r.guardians.length) none.push(r)
+      for (const g of r.guardians) {
+        if (!by.has(g.phone)) by.set(g.phone, { relation: g.relation, rows: [] })
+        by.get(g.phone).rows.push(r)
+      }
+    }
+    const groups = [...by.entries()]
+      .filter(([, g]) => !onlyShared.value || g.rows.length > 1)
+      .sort(([pa, a], [pb, b]) => b.rows.length - a.rows.length || pa.localeCompare(pb))
+      .map(([phone, g]) => ({ key: `p${phone}`, title: `${relationLabel(g.relation)} · ${displayPhone(phone)}`, note: `${g.rows.length} santri`, rows: g.rows }))
+    if (none.length && !onlyShared.value) groups.push({ key: 'pnone', title: 'Belum ada wali tertaut', note: `${none.length} santri`, rows: none })
+    return groups
+  }
+  return [{ key: 'all', title: '', note: '', rows: list }]
+})
+
+// who was told that it waits: the jilid's teacher (until a time), or the admin already
+const clock = (v) => {
+  const d = v?._seconds ? new Date(v._seconds * 1000) : v ? new Date(v) : null
+  return d && !Number.isNaN(d.getTime()) ? d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }) : ''
+}
+function routingText(r) {
+  const w = r.routing
+  if (!w || !(r.profileStatus === 'submitted' || r.hasPendingIdentity)) return ''
+  if (w.status === 'waiting') return `Dikabarkan ke ${w.teacherNames || 'guru jilidnya'} · diteruskan ke admin pukul ${clock(w.dueAt)} bila belum diproses`
+  if (w.reason === 'no-teacher') return 'Langsung ke admin: guru jilid ini belum mengaktifkan WA di Notifikasi WA'
+  return `Belum diproses ${w.teacherNames || 'guru jilidnya'} dalam 30 menit, sudah diteruskan ke admin`
+}
 const countFor = (f) => filteredByClass.value.filter((r) => matchStatus(r, f)).length
 const stats = computed(() => ({
   linked: rows.value.filter((r) => r.guardians.length).length,
@@ -479,6 +568,7 @@ async function load({ quiet = false } = {}) {
     rows.value = p.data || []
     requests.value = q.data || []
     scope.value = sc.data || null
+    refreshWaliBadge({ force: true })
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Data belum bisa dimuat.'
   } finally {
@@ -1173,6 +1263,58 @@ textarea.wv-input {
 
 .wv-reminded {
   color: #92400e;
+}
+
+/* who was told that it waits */
+.wv-routing {
+  color: #1d4f8a;
+}
+
+.wv-routing.is-admin {
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* laying out the list */
+.wv-groupby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 12px;
+}
+
+.wv-groupby-label {
+  margin-right: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5b6b62;
+}
+
+.wv-groupby-only {
+  margin: 0 0 0 6px;
+}
+
+.wv-block + .wv-block {
+  margin-top: 16px;
+}
+
+.wv-block-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0b3b2a;
+  font-variant-numeric: tabular-nums;
+}
+
+.wv-block-title span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5b6b62;
 }
 
 .wv-sheet-body .wv-btn-wa + .wv-btn-wa {

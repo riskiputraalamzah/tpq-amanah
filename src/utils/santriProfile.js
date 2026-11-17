@@ -10,7 +10,7 @@ export const RELATIONS = [
 export const STATUS = {
   empty: { label: 'Belum diisi', tone: 'idle' },
   draft: { label: 'Belum selesai', tone: 'warn' },
-  submitted: { label: 'Menunggu dicek admin', tone: 'info' },
+  submitted: { label: 'Menunggu dicek', tone: 'info' }, // by the jilid's teacher or the admin
   needs_fix: { label: 'Perlu diperbaiki', tone: 'danger' },
   verified: { label: 'Terverifikasi', tone: 'ok' },
 }

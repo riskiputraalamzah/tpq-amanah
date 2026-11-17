@@ -14,7 +14,7 @@
       </div>
       <h1 class="w-title">{{ wasVerified ? 'Perubahan tersimpan' : 'Data terkirim' }}</h1>
       <p class="w-lead">
-        <template v-if="wasVerified && pendingIdentity.length">Perubahan identitas akan dicek admin dulu. Perubahan lain sudah tersimpan.</template>
+        <template v-if="wasVerified && pendingIdentity.length">Perubahan identitas akan dicek pengurus TPQ dulu. Perubahan lain sudah tersimpan.</template>
         <template v-else-if="wasVerified">Terima kasih, data ananda sudah diperbarui.</template>
         <template v-else>Jazakumullahu khairan. Admin TPQ akan mengecek data ananda.</template>
       </p>
@@ -30,9 +30,9 @@
         <span><strong>Perlu diperbaiki:</strong> {{ adminNote }}</span>
       </p>
       <p v-else-if="status === 'verified'" class="w-note">
-        <span>Data sudah terverifikasi. Perubahan alamat dan kontak langsung tersimpan. Perubahan nama, jenis kelamin, tempat/tanggal lahir, NIK, atau KK dicek admin dulu.</span>
+        <span>Data sudah terverifikasi. Perubahan alamat dan kontak langsung tersimpan. Perubahan nama, jenis kelamin, tempat/tanggal lahir, NIK, atau KK dicek pengurus TPQ dulu.</span>
       </p>
-      <p v-if="pendingIdentity.length" class="w-note is-warn">Ada perubahan identitas yang sedang dicek admin.</p>
+      <p v-if="pendingIdentity.length" class="w-note is-warn">Ada perubahan identitas yang sedang dicek pengurus TPQ.</p>
 
       <!-- progress -->
       <div class="w-steps" aria-hidden="true">
@@ -86,7 +86,7 @@
                   Nama ini dari catatan TPQ. Bila belum lengkap atau ejaannya keliru, ubah sesuai <strong>akta kelahiran</strong>.
                 </p>
                 <p v-else-if="value(field)" class="w-help">
-                  Di catatan TPQ tertulis "{{ santri.name }}". Setelah dicek admin, nama lengkap ini yang dipakai di TPQ.
+                  Di catatan TPQ tertulis "{{ santri.name }}". Setelah dicek pengurus TPQ, nama lengkap ini yang dipakai di TPQ.
                 </p>
               </template>
               <span v-if="errors[field.path]" :id="`${idOf(field)}-err`" class="w-error" role="alert">{{ errors[field.path] }}</span>
@@ -96,7 +96,7 @@
           <!-- optional KK photo on the "lainnya" step -->
           <div v-if="STEPS[step].key === 'lainnya'" class="kk-box">
             <span class="w-label">Foto Kartu Keluarga (opsional)</span>
-            <p class="w-help">Boleh dilewati. Foto disimpan tertutup dan hanya bisa dilihat admin TPQ.</p>
+            <p class="w-help">Boleh dilewati. Foto disimpan tertutup dan hanya bisa dilihat admin TPQ dan ustadz/ustadzah jilid ananda.</p>
             <div v-if="hasKkPhoto" class="kk-done">
               <span class="w-pill is-ok">Foto KK terunggah</span>
               <label class="w-link kk-change">Ganti<input type="file" accept="image/*" class="sr-only" @change="uploadKk" /></label>

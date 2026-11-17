@@ -60,10 +60,10 @@
                   :aria-current="isItemActive(m) ? 'page' : undefined" @click="closeSheet">
                   <span class="mc-tile-icon" aria-hidden="true">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="m.icon"></svg>
-                    <span v-if="m.badge === 'pendaftaran' && badgeCount" class="mc-badge">{{ badgeCount > 9 ? '9+' : badgeCount }}</span>
+                    <span v-if="m.badge && badges[m.badge]" class="mc-badge">{{ badges[m.badge] > 9 ? '9+' : badges[m.badge] }}</span>
                   </span>
                   <span class="mc-tile-label">{{ m.label }}</span>
-                  <span v-if="m.badge === 'pendaftaran' && badgeCount" class="mc-sr">, {{ badgeCount }} pendaftar baru</span>
+                  <span v-if="m.badge && badges[m.badge]" class="mc-sr">, {{ badges[m.badge] }} {{ badgeLabels[m.badge] || 'baru' }}</span>
                 </router-link>
               </div>
             </section>
@@ -93,8 +93,9 @@ const props = defineProps({
   groups: { type: Array, default: () => [] },
   role: { type: String, default: 'guru' },
   user: { type: Object, default: null },
-  badgeCount: { type: Number, default: 0 }, // registrations nobody has contacted yet
-  menuBadge: { type: Number, default: 0 }, // the same, on the Menu tab when Pendaftaran is not a tab itself
+  // what waits, by the key a menu item names: { pendaftaran: n, wali: n } (DashboardLayout), and how to say it
+  badges: { type: Object, default: () => ({}) },
+  badgeLabels: { type: Object, default: () => ({}) },
   nspq: { type: Object, default: null },
 })
 const emit = defineEmits(['logout'])
@@ -133,7 +134,7 @@ const NAV = {
   admin: [
     { key: 'home', to: '/dashboard', label: 'Beranda', icon: ICON.home, exact: true },
     { key: 'santri', to: '/dashboard/santri', label: 'Santri', icon: ICON.santri },
-    { key: 'daftar', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: true },
+    { key: 'daftar', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
     { key: 'monitor', to: '/dashboard/kbm-monitor', label: 'Monitor', icon: ICON.monitor },
     MENU,
   ],
@@ -153,12 +154,26 @@ const menuIndex = computed(() => navItems.value.findIndex((i) => i.sheet))
 const currentIdx = computed(() => navItems.value.findIndex((i) => !i.sheet && isNavActive(i)))
 const activeIdx = computed(() => (sheetOpen.value ? menuIndex.value : currentIdx.value))
 const bubbleNav = ref(null)
-// what BubbleNav draws: the tabs, the new-registrant badge where it belongs, and Menu as a button that opens the sheet
+// The Menu tab: what waits behind it (the badges of the sheet's pages that are not a tab of their own)
+const menuWaiting = computed(() => {
+  const tabs = new Set(navItems.value.filter((i) => i.to).map((i) => i.to))
+  const seen = new Set()
+  let n = 0
+  for (const g of props.groups) {
+    for (const m of g.items) {
+      if (!m.badge || tabs.has(m.to) || seen.has(m.to)) continue
+      seen.add(m.to)
+      n += props.badges[m.badge] || 0
+    }
+  }
+  return n
+})
+// what BubbleNav draws: the tabs, the badge where it belongs, and Menu as a button that opens the sheet
 const barItems = computed(() =>
   navItems.value.map((item) =>
     item.sheet
-      ? { key: item.key, label: item.label, icon: item.icon, button: true, expanded: sheetOpen.value, badge: props.menuBadge, badgeLabel: 'pendaftar baru' }
-      : { key: item.key, label: item.label, icon: item.icon, to: item.to, badge: item.badge ? props.badgeCount : 0, badgeLabel: 'pendaftar baru' },
+      ? { key: item.key, label: item.label, icon: item.icon, button: true, expanded: sheetOpen.value, badge: menuWaiting.value, badgeLabel: 'perlu diproses' }
+      : { key: item.key, label: item.label, icon: item.icon, to: item.to, badge: item.badge ? props.badges[item.badge] || 0 : 0, badgeLabel: props.badgeLabels[item.badge] || 'baru' },
   ),
 )
 

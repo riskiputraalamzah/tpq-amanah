@@ -59,7 +59,7 @@
             <router-link v-for="m in g.items" :key="m.to" :to="m.to" class="sidebar-link" :class="{ active: isItemActive(m) }">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
               {{ m.label }}
-              <span v-if="m.badge === 'pendaftaran' && newRegistrations" class="sidebar-badge" :aria-label="`${newRegistrations} pendaftar baru`">{{ newRegistrations }}</span>
+              <span v-if="m.badge && badges[m.badge]" class="sidebar-badge" :aria-label="`${badges[m.badge]} ${BADGE_LABEL[m.badge]}`">{{ badges[m.badge] }}</span>
             </router-link>
           </div>
         </template>
@@ -107,8 +107,8 @@
       :groups="menuGroups"
       :role="isAdmin ? 'admin' : 'guru'"
       :user="user"
-      :badge-count="newRegistrations"
-      :menu-badge="isAdmin ? 0 : seesRegistrations ? newRegistrations : 0"
+      :badges="badges"
+      :badge-labels="BADGE_LABEL"
       :nspq="tpqIdentity"
       @logout="handleLogout"
     />
@@ -118,6 +118,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { usePendaftaranCount } from "@/composables/usePendaftaranCount";
+import { useWaliBadge } from "@/composables/useWaliBadge";
 import "@/styles/landing.css";
 import "@/styles/dashboard.css";
 import { useRouter, useRoute } from "vue-router";
@@ -181,7 +182,7 @@ const ADMIN_GROUPS = [
     items: [
       { to: '/dashboard/santri', label: 'Kelola Santri', icon: ICON.santri },
       { to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
-      { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali },
+      { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
       { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
     ],
   },
@@ -243,7 +244,7 @@ const menuGroups = computed(() => {
       title: 'Santri & Wali',
       items: [
         { to: '/dashboard/santri', label: 'Data Santri', icon: ICON.santri },
-        { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali },
+        { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
         { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
         { to: '/dashboard/savings', label: 'Tabungan', icon: ICON.coin },
       ],
@@ -285,7 +286,8 @@ function toggleGroup(g) {
     /* private mode: for this visit only */
   }
 }
-const groupBadge = (g) => (g.items.some((m) => m.badge === 'pendaftaran') ? newRegistrations.value : 0)
+// a folded group shows what waits inside it
+const groupBadge = (g) => g.items.reduce((n, m) => n + (m.badge ? badges.value[m.badge] || 0 : 0), 0)
 
 const specialMenus = computed(() =>
   isGuru.value ? SPECIAL_MENUS.filter((m) => user.value?.permissions?.features?.includes(m.id)) : [],
@@ -332,11 +334,20 @@ const handleLogout = async () => {
 // New registrants nobody has contacted yet (admin, or a guru given "Pendaftaran santri")
 const { count: newRegistrations, refresh: refreshRegistrations } = usePendaftaranCount();
 const seesRegistrations = computed(() => isAdmin.value || hasPermission("pendaftaran"));
+// What waits for a decision in Data Wali Santri (a teacher: their jilid; the admin: what was handed to the admin)
+const { count: waliWaiting, refresh: refreshWali } = useWaliBadge();
+// every badge of the menus, by the key a menu item names (sidebar, the phone's tabs and its Menu sheet)
+const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses" };
+const badges = computed(() => ({
+  pendaftaran: seesRegistrations.value ? newRegistrations.value : 0,
+  wali: isAdmin.value || isGuru.value ? waliWaiting.value : 0,
+}));
 
 watch(
   () => route.path,
   () => {
     if (seesRegistrations.value) refreshRegistrations();
+    if (isAdmin.value || isGuru.value) refreshWali();
   }
 );
 
@@ -375,6 +386,7 @@ onMounted(() => {
   prefetchDashboardRoutes(router, authStore.user?.role);
   if (authStore.isAuthenticated) loadTpqIdentity();
   if (seesRegistrations.value) refreshRegistrations({ force: true });
+  if (isAdmin.value || isGuru.value) refreshWali({ force: true });
 });
 </script>
 
