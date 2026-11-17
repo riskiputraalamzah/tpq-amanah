@@ -25,39 +25,21 @@
     <!-- the teacher: today's tasks, izin from the parents, who needs attention, my KBM, my jilid (GuruDashboard.vue) -->
     <GuruDashboard v-if="isGuru" />
 
-    <!-- Permissions-based Actions for Guru -->
-    <section v-if="isGuru && hasCustomPermissions" class="permissions-actions">
-      <h2>Akses Khusus</h2>
+    <!-- the special access this guru was given: one card each, to where it is used; nothing given -> nothing shown -->
+    <section v-if="isGuru && accessCards.length" class="permissions-actions" aria-labelledby="akses-khusus-title">
+      <h2 id="akses-khusus-title">Akses Khusus</h2>
       <div class="action-grid">
-        <!-- Rekap Absensi -->
-        <router-link v-if="hasPermission('admin-attendance-view')" to="/dashboard/admin-attendance"
-          class="action-card glass-card permission-card">
-          <div class="action-icon permission-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <path d="M12 16v-4" />
-              <path d="M8 16v-2" />
-              <path d="M16 16v-3" />
-            </svg>
-          </div>
-          <span>Rekap Absensi</span>
+        <router-link v-for="c in accessCards" :key="c.id" :to="c.to" class="action-card glass-card permission-card">
+          <div class="action-icon permission-icon"><LineIcon :name="c.icon" :size="24" /></div>
+          <span class="access-label">{{ c.label }}</span>
+          <small class="access-hint">{{ c.hint }}</small>
         </router-link>
-
-        <!-- Export PDF -->
-        <button v-if="hasPermission('export-pdf')" class="action-card glass-card permission-card"
+        <!-- the PDF of every guru's attendance this month, in one tap (part of Rekap Absensi) -->
+        <button v-if="hasPermission('admin-attendance-view')" type="button" class="action-card glass-card permission-card"
           @click="handleExportPDF" :disabled="exporting">
-          <div class="action-icon permission-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="12" y1="18" x2="12" y2="12" />
-              <line x1="9" y1="15" x2="15" y2="15" />
-            </svg>
-          </div>
-          <span>{{ exporting ? 'Mengunduh...' : 'Export PDF' }}</span>
+          <div class="action-icon permission-icon"><LineIcon name="file" :size="24" /></div>
+          <span class="access-label">{{ exporting ? 'Mengunduh...' : 'Export PDF' }}</span>
+          <small class="access-hint">Rekap absensi bulan ini</small>
         </button>
       </div>
     </section>
@@ -76,6 +58,8 @@ import AdminDashboard from '@/views/dashboard/admin/AdminDashboard.vue'
 import GuruDashboard from '@/views/dashboard/guru/GuruDashboard.vue'
 import { loadPdfLibs } from '@/utils/pdf'
 import { useToast } from '@/composables/useToast'
+import LineIcon from '@/components/LineIcon.vue'
+import { ACCESS_CARDS } from '@/utils/guruRights'
 
 const { success, error: showError } = useToast()
 
@@ -95,6 +79,9 @@ const isSantri = computed(() => authStore.isSantri)
 const hasCustomPermissions = computed(() => {
   return isGuru.value && user.value?.permissions?.features?.length > 0
 })
+
+// one card per special access given (a feature with no card shows nothing)
+const accessCards = computed(() => (isGuru.value ? ACCESS_CARDS.filter((c) => hasPermission(c.id)) : []))
 
 const hasPermission = (permissionId) => {
   return user.value?.permissions?.features?.includes(permissionId) || false
@@ -187,7 +174,7 @@ const fetchStats = async () => {
     await Promise.all([
       isAdmin.value && fetchUserStats(),
       // the cards these fed are now GuruDashboard; only the PDF export (akses khusus) needs data here
-      isStaff && hasPermission('export-pdf') && prepareExport()
+      isStaff && hasPermission('admin-attendance-view') && prepareExport()
     ])
   } catch (error) {
     console.log('Stats fetch error (API may not be running):', error)
@@ -521,6 +508,17 @@ watch(
 }
 
 .quick-actions h2,
+.access-label {
+  font-weight: 700;
+}
+
+.access-hint {
+  margin-top: -0.4rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--lp-body, #475a50);
+}
+
 .permissions-actions h2 {
   display: flex;
   align-items: center;

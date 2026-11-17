@@ -348,8 +348,14 @@ watch(
   () => {
     if (seesRegistrations.value) refreshRegistrations();
     if (isAdmin.value || isGuru.value) refreshWali();
+    // a special access the admin added or removed shows in the menus without signing in again (at most once a minute)
+    authStore.refreshUser();
   }
 );
+// back to the app (another tab, the phone unlocked): the account's access again
+const onVisible = () => {
+  if (document.visibilityState === "visible") authStore.refreshUser();
+};
 
 // Shows a skeleton only when a page's code is still downloading; short waits stay invisible.
 const ROUTE_SKELETON_DELAY_MS = 80;
@@ -377,6 +383,7 @@ onBeforeUnmount(() => {
   removeBeforeEach();
   removeAfterEach();
   removeOnError();
+  document.removeEventListener("visibilitychange", onVisible);
 });
 
 onMounted(() => {
@@ -387,6 +394,7 @@ onMounted(() => {
   if (authStore.isAuthenticated) loadTpqIdentity();
   if (seesRegistrations.value) refreshRegistrations({ force: true });
   if (isAdmin.value || isGuru.value) refreshWali({ force: true });
+  document.addEventListener("visibilitychange", onVisible);
 });
 </script>
 

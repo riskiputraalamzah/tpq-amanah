@@ -572,6 +572,7 @@
                     Naik ke {{ levelShort(nextLevelOf(row)) }}
                   </button>
                   <button
+                    v-if="canEditRow(row)"
                     type="button"
                     class="action-link"
                     @click="openEdit(row)"
@@ -694,6 +695,7 @@
             </div>
             <div class="s-actions">
               <button
+                v-if="canEditRow(row)"
                 type="button"
                 class="s-btn"
                 :aria-label="`${adminMode ? 'Ubah data' : 'Ubah nama'} ${row.name}`"
@@ -1357,6 +1359,8 @@ const loadChangeAccess = async () => {
     changeAccess.value = { taughtClassIds: [], canDecide: false };
   }
 };
+// a guru renames only santri of the jilid they teach ("Semua jilid" only shows the others)
+const canEditRow = (row) => props.adminMode || (changeAccess.value.taughtClassIds || []).includes(normLevel(row.currentClassId));
 const nextLevelOf = (row) => {
   if (props.adminMode) return null;
   if (String(row.status || "aktif").toLowerCase() !== "aktif") return null;

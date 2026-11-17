@@ -10,7 +10,7 @@
         <button v-if="isAdmin" type="button" class="wv-btn wv-btn-ghost" :disabled="exporting || !visibleRows.length" @click="exportExcel">
           <LineIcon name="table" :size="17" /> {{ exporting ? 'Menyiapkan…' : 'Export Excel' }}
         </button>
-        <button v-if="classOptions.length" type="button" class="wv-btn wv-btn-primary" @click="openSlips">
+        <button v-if="slipClassOptions.length" type="button" class="wv-btn wv-btn-primary" @click="openSlips">
           <LineIcon name="file" :size="17" /> Cetak slip kode
         </button>
       </div>
@@ -96,10 +96,10 @@
             </span>
             <span v-if="r.hasPendingIdentity" class="wv-pill is-warn">Ubah identitas</span>
             <div class="wv-actions">
-              <button v-if="r.guardians.length < 2" type="button" class="wv-btn wv-btn-ghost" @click="makeCode(r)">
+              <button v-if="canAct(r.classId) && r.guardians.length < 2" type="button" class="wv-btn wv-btn-ghost" @click="makeCode(r)">
                 <LineIcon name="link" :size="16" /> Kode
               </button>
-              <button v-if="needsReminder(r)" type="button" class="wv-btn wv-btn-ghost wv-btn-remind" @click="openRemind(r)">
+              <button v-if="canAct(r.classId) && needsReminder(r)" type="button" class="wv-btn wv-btn-ghost wv-btn-remind" @click="openRemind(r)">
                 Ingatkan
               </button>
               <button v-if="r.profileStatus !== 'empty'" type="button" class="wv-btn wv-btn-primary" @click="openReview(r)">
@@ -176,10 +176,11 @@
             {{ s.name }} · {{ levelName(s.classId) }}{{ s.guardians.length >= 2 ? ' (sudah 2 wali)' : '' }}
           </option>
         </select>
-        <div class="wv-request-actions">
+        <div v-if="canAct(q.classId)" class="wv-request-actions">
           <button type="button" class="wv-btn wv-btn-ghost is-danger" :disabled="busy" @click="decide(q, false)">Tolak</button>
           <button type="button" class="wv-btn wv-btn-primary" :disabled="busy || !choice[q.id]" @click="decide(q, true)">Tautkan</button>
         </div>
+        <p v-else class="wv-sub">Diproses oleh guru jilidnya atau admin.</p>
       </article>
     </template>
 
@@ -272,11 +273,22 @@
           </header>
           <div class="wv-sheet-body">
             <label class="wv-label" for="slip-class">Jilid</label>
-            <select id="slip-class" v-model="slipClass" class="wv-input">
-              <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
+            <select id="slip-class" v-model="slipClass" class="wv-input" @change="loadSlipActive">
+              <option v-for="c in slipClassOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
             </select>
             <label class="wv-check"><input v-model="slipOnlyUnlinked" type="checkbox" /> Hanya santri yang belum tertaut wali</label>
-            <p class="wv-note is-warn">Slip berisi kode baru. Kode lama santri tersebut tidak berlaku lagi.</p>
+            <!-- codes already made (maybe handed out): kept unless the person asks for new ones -->
+            <div v-if="slipActive.length" class="wv-note is-warn wv-slip-active" role="status">
+              <strong>{{ slipActive.length }} santri sudah punya kode yang masih berlaku:</strong>
+              <ul>
+                <li v-for="c in slipActive.slice(0, 6)" :key="c.santriId">{{ c.santriName }} · dibuat {{ c.createdByName || 'seseorang' }}, {{ dateText(c.createdAt) }}</li>
+                <li v-if="slipActive.length > 6">dan {{ slipActive.length - 6 }} lainnya</li>
+              </ul>
+              <span>Mereka dilewati, jadi slip yang sudah dibagikan tetap berlaku.</span>
+              <label class="wv-check"><input v-model="slipRegen" type="checkbox" /> Buat kode baru juga untuk mereka (kode lama tidak berlaku lagi)</label>
+            </div>
+            <!-- only when a code still valid is really replaced (by default those santri are skipped) -->
+            <p v-if="slipRegen" class="wv-note is-warn">Slip berisi kode baru. Kode lama santri tersebut tidak berlaku lagi.</p>
             <p v-if="slipError" class="wv-note is-danger" role="alert">{{ slipError }}</p>
             <button type="button" class="wv-btn wv-btn-primary" :disabled="busy" @click="printSlips">
               {{ busy ? 'Membuat slip…' : 'Buat & unduh PDF' }}
@@ -437,10 +449,29 @@ const classOptions = computed(() => {
   return CLASS_OPTIONS.filter((c) => (scope.value.classIds || []).includes(c.value))
 })
 const scopeLabel = computed(() => classOptions.value.map((c) => c.label).join(', '))
+// Where this person acts (codes, slips, reminders, link requests): the admin everywhere, a guru the jilid they teach.
+// "Semua jilid" only shows more (the server says which: actClassIds).
+const actIds = computed(() => (isAdmin.value ? null : scope.value?.actClassIds ?? scope.value?.classIds ?? []))
+const canAct = (classId) => actIds.value === null || actIds.value.includes(String(classId || ''))
+const slipClassOptions = computed(() => CLASS_OPTIONS.filter((c) => canAct(c.value)))
+const slipActive = ref([])
+const slipRegen = ref(false)
+async function loadSlipActive() {
+  slipActive.value = []
+  slipRegen.value = false
+  if (!slipClass.value) return
+  try {
+    const { data } = await api.get('/wali/admin/codes/active', { params: { classId: slipClass.value }, cache: false })
+    slipActive.value = Array.isArray(data) ? data : []
+  } catch {
+    slipActive.value = []
+  }
+}
 function openSlips() {
-  if (!classOptions.value.some((c) => c.value === slipClass.value)) slipClass.value = classOptions.value[0]?.value || ''
+  if (!slipClassOptions.value.some((c) => c.value === slipClass.value)) slipClass.value = slipClassOptions.value[0]?.value || ''
   slipError.value = ''
   slipOpen.value = true
+  loadSlipActive()
 }
 
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Tanpa jilid')
@@ -677,17 +708,28 @@ async function sendReminder(r) {
 }
 
 /* ---- codes */
-async function makeCode(r) {
+// A code still valid (made by someone, maybe already handed out) is not replaced without asking
+async function makeCode(r, { replace = false } = {}) {
   busy.value = true
   try {
-    const { data } = await api.post('/wali/admin/codes', { santriId: r.santriId })
+    const { data } = await api.post('/wali/admin/codes', { santriId: r.santriId, replace })
     copied.value = false
     codePhone.value = ''
     codeError.value = ''
     codeSentTo.value = []
     codeSheet.value = { ...data, santriId: data.santriId || r.santriId, guardians: r.guardians || [] }
   } catch (err) {
-    showError(err.response?.data?.error || 'Kode belum bisa dibuat')
+    const active = err.response?.status === 409 ? err.response?.data?.activeCode : null
+    if (!active) return showError(err.response?.data?.error || 'Kode belum bisa dibuat')
+    busy.value = false
+    const ok = await ask({
+      title: `${r.name} sudah punya kode`,
+      message: `Kode yang masih berlaku dibuat oleh ${active.createdByName || 'seseorang'} pada ${dateText(active.createdAt)}, mungkin sudah dibagikan ke wali. Bila dibuat kode baru, kode itu tidak berlaku lagi.`,
+      tone: 'danger',
+      confirmText: 'Buat kode baru',
+      cancelText: 'Batal',
+    })
+    if (ok) await makeCode(r, { replace: true })
   } finally {
     busy.value = false
   }
@@ -728,9 +770,11 @@ async function printSlips() {
   busy.value = true
   slipError.value = ''
   try {
-    const { data } = await api.post('/wali/admin/codes/class', { classId: slipClass.value, onlyUnlinked: slipOnlyUnlinked.value })
+    const { data } = await api.post('/wali/admin/codes/class', { classId: slipClass.value, onlyUnlinked: slipOnlyUnlinked.value, skipActive: !slipRegen.value })
     if (!data.length) {
-      slipError.value = slipOnlyUnlinked.value ? 'Semua santri di jilid ini sudah tertaut wali.' : 'Tidak ada santri aktif di jilid ini.'
+      slipError.value = slipActive.value.length && !slipRegen.value
+        ? 'Santri yang tersisa sudah punya kode yang masih berlaku. Centang "Buat kode baru juga" bila slipnya hilang.'
+        : slipOnlyUnlinked.value ? 'Semua santri di jilid ini sudah tertaut wali.' : 'Tidak ada santri aktif di jilid ini.'
       return
     }
     const { jsPDF } = await loadPdfLibs()
@@ -1263,6 +1307,11 @@ textarea.wv-input {
 
 .wv-reminded {
   color: #92400e;
+}
+
+.wv-slip-active ul {
+  margin: 6px 0;
+  padding-left: 18px;
 }
 
 /* who was told that it waits */

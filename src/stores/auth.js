@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import api, { clearApiCache } from '../services/api'
+import { withAliases } from '../utils/guruRights'
 
 const CACHED_USER_KEY = 'tpq_user'
 const SESSION_INVALID_STATUSES = [401, 403, 404]
@@ -67,6 +68,14 @@ async function getFirebase() {
 export const useAuthStore = defineStore('auth', () => {
     const token = ref(localStorage.getItem('tpq_token') || null)
     const user = ref(token.value ? readCachedUser() : null)
+    // an account that still has an old access id ("Export PDF") sees what it became ("Rekap Absensi")
+    watch(user, (u) => {
+        const f = u?.permissions?.features
+        if (Array.isArray(f)) {
+            const next = withAliases(f)
+            if (next.length !== f.length) u.permissions.features = next
+        }
+    }, { immediate: true })
     const firebaseUser = ref(null)
     const loading = ref(false)
     const error = ref(null)
@@ -121,6 +130,29 @@ export const useAuthStore = defineStore('auth', () => {
                 sessionVerified = false
                 return true
             })
+    }
+
+    // The signed-in account again from the server (its special access may have changed meanwhile: the admin added or
+    // removed one). At most once a minute; the menus follow at once. A failure changes nothing.
+    let lastRefresh = Date.now()
+    let refreshing = null
+    function refreshUser({ minIntervalMs = 60 * 1000 } = {}) {
+        if (!token.value || !user.value || user.value.role === 'wali') return null
+        if (refreshing || Date.now() - lastRefresh < minIntervalMs) return refreshing
+        lastRefresh = Date.now()
+        const asked = token.value
+        refreshing = api.get('/auth/verify', { cache: false })
+            .then(({ data }) => {
+                if (token.value === asked && data && data.role) {
+                    user.value = data
+                    writeCachedUser(data)
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                refreshing = null
+            })
+        return refreshing
     }
 
     // Check auth on app load
@@ -253,6 +285,7 @@ export const useAuthStore = defineStore('auth', () => {
         isWali,
         checkAuth,
         revalidateSession,
+        refreshUser,
         loginWithCredentials,
         loginWithWaliOtp,
         logout,

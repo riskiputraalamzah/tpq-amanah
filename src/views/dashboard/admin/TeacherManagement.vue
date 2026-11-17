@@ -22,6 +22,12 @@
       </label>
     </div>
 
+    <!-- the jilid set here decides who verifies the wali's data and who hears about it first -->
+    <p v-if="!loading && noJilid.length" class="pp-note is-warn" role="status">
+      <strong>{{ noJilid.length }} guru belum ditetapkan jilidnya.</strong> Mereka belum bisa memverifikasi data wali santri, dan kabar
+      data wali dari jilid itu langsung ke admin. Tekan <strong>Atur jilid</strong> pada guru tersebut.
+    </p>
+
     <ul v-if="loading" class="pp-list" aria-label="Memuat guru"><li v-for="i in 4" :key="i" class="pp-skeleton"></li></ul>
     <p v-else-if="loadError" class="pp-note is-danger" role="alert">{{ loadError }}</p>
     <p v-else-if="!teachers.length" class="pp-empty">Belum ada guru. Tekan <strong>Tambah guru</strong> untuk membuat akunnya.</p>
@@ -59,7 +65,7 @@
           <div class="pp-sheet-head">
             <div>
               <h3 id="tm-jilid-title">Jilid yang diampu</h3>
-              <p>{{ jilidFor.displayName }}. Menentukan santri yang guru ini lihat di Data Santri dan Data Wali Santri, dan yang bisa ia naikkan jilidnya.</p>
+              <p>{{ jilidFor.displayName }}. Menentukan santri yang guru ini lihat dan kelola, data wali yang ia verifikasi, dan kabar WA data wali yang ia terima lebih dulu.</p>
             </div>
             <button type="button" class="pp-close" aria-label="Tutup" @click="jilidFor = null"><LineIcon name="x" :size="18" /></button>
           </div>

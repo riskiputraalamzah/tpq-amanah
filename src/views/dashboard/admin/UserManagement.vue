@@ -36,6 +36,10 @@
             <span v-if="isMe(u)" class="pp-pill is-info">Akun Antum</span>
           </span>
           <span class="pp-sub">@{{ u.username || '-' }}</span>
+          <span v-if="u.role === 'guru' && jilidOf(u)" class="pp-sub">Jilid diampu: {{ jilidOf(u) }}</span>
+          <span v-else-if="u.role === 'guru' && scopesLoaded" class="pp-sub is-warn">
+            Jilid belum ditetapkan di <router-link to="/dashboard/teachers">Kelola Pengajar</router-link>: belum bisa memverifikasi data wali, kabarnya langsung ke admin
+          </span>
           <span v-if="u.role === 'guru' && featureNames(u).length" class="pp-sub">Akses khusus: {{ featureNames(u).join(', ') }}</span>
         </div>
         <div class="pp-actions">
@@ -118,12 +122,26 @@
             </div>
             <button type="button" class="pp-close" aria-label="Tutup" @click="access = null"><LineIcon name="x" :size="18" /></button>
           </div>
+          <details class="ua-defaults">
+            <summary>Sudah dimiliki setiap guru untuk jilid yang diampu (tanpa akses khusus)</summary>
+            <ul>
+              <li v-for="r in GURU_DEFAULT_RIGHTS" :key="r">{{ r }}</li>
+            </ul>
+          </details>
+          <div class="ua-presets">
+            <button v-for="p in PRESETS" :key="p.id" type="button" class="pp-btn pp-btn-ghost" @click="applyPreset(p)">{{ p.label }}</button>
+            <span class="pp-help">{{ presetHint }}</span>
+          </div>
           <div class="pp-checks">
             <label v-for="f in features" :key="f.id" class="pp-check">
               <input v-model="access.features" type="checkbox" :value="f.id" />
-              <div><strong>{{ f.label }}</strong><span>{{ f.description }}</span></div>
+              <div>
+                <strong>{{ f.label }} <span v-if="f.kind" class="pp-pill" :class="f.kind === 'act' ? 'is-warn' : 'is-info'">{{ KIND_LABEL[f.kind] }}</span></strong>
+                <span>{{ f.description }}</span>
+              </div>
             </label>
           </div>
+          <p class="pp-help ua-never">Tidak pernah untuk guru: {{ NEVER_FOR_GURU }}</p>
           <p v-if="sheetError" class="pp-error" role="alert">{{ sheetError }}</p>
           <div class="pp-sheet-actions">
             <button type="button" class="pp-btn pp-btn-ghost" :disabled="busy" @click="access = null">Batal</button>
@@ -143,6 +161,7 @@ import LineIcon from '@/components/LineIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { GURU_DEFAULT_RIGHTS, NEVER_FOR_GURU, PRESETS, KIND_LABEL, withAliases } from '@/utils/guruRights'
 
 const { success, error: showError } = useToast()
 const { ask } = useDialog()
@@ -164,7 +183,9 @@ const searchQuery = ref('')
 
 const initials = (name) => String(name || 'U').split(/\s+/).filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 const roleLabel = (role) => ({ admin: 'Admin', guru: 'Guru', santri: 'Santri' }[role] || role || '-')
-const featureNames = (u) => (u.permissions?.features || []).map((id) => features.value.find((f) => f.id === id)?.label || id)
+// what was given (an old id read as what it became: "Export PDF" is part of "Rekap Absensi"); unknown ids are not shown
+const givenOf = (u) => withAliases(u.permissions?.features || []).filter((id) => features.value.some((f) => f.id === id))
+const featureNames = (u) => givenOf(u).map((id) => features.value.find((f) => f.id === id).label)
 
 const roleFilters = computed(() => {
   const count = (r) => users.value.filter((u) => u.role === r).length
@@ -181,13 +202,27 @@ const filteredUsers = computed(() => {
     .sort((a, b) => (a.role === b.role ? 0 : a.role === 'admin' ? -1 : b.role === 'admin' ? 1 : 0) || String(a.displayName || '').localeCompare(String(b.displayName || '')))
 })
 
+// the jilid each guru teaches, as set by the admin (Kelola Pengajar)
+const scopes = ref({})
+const scopesLoaded = ref(false)
+const levelName = (id) => (String(id) === '7' ? 'Marhalah' : `Jilid ${id}`)
+const jilidOf = (u) => (scopes.value[u.id]?.assigned || []).map(levelName).join(', ')
+
 async function load() {
   loading.value = true
   loadError.value = ''
   try {
-    const [u, f] = await Promise.all([api.get('/users', { cache: false }), api.get('/users/available-features').catch(() => ({ data: [] }))])
+    const [u, f, sc] = await Promise.all([
+      api.get('/users', { cache: false }),
+      api.get('/users/available-features').catch(() => ({ data: [] })),
+      api.get('/guru-classes', { cache: false }).catch(() => ({ data: null })),
+    ])
     users.value = Array.isArray(u.data) ? u.data : []
     features.value = Array.isArray(f.data) ? f.data : []
+    if (Array.isArray(sc.data)) {
+      scopes.value = Object.fromEntries(sc.data.map((g) => [g.guruId, g]))
+      scopesLoaded.value = true
+    }
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Daftar akun belum bisa dimuat.'
   } finally {
@@ -285,9 +320,15 @@ async function copyDone() {
 
 /* ---- special access */
 const access = ref(null) // { user, features: [] }
+const presetHint = computed(() => PRESETS.map((p) => `${p.label}: ${p.features.map((id) => features.value.find((f) => f.id === id)?.label || id).join(', ')}`).join(' · '))
+// adds the preset's features to what is ticked (nothing is unticked)
+function applyPreset(p) {
+  if (!access.value) return
+  access.value.features = [...new Set([...access.value.features, ...p.features.filter((id) => features.value.some((f) => f.id === id))])]
+}
 function openAccess(u) {
   sheetError.value = ''
-  access.value = { user: u, features: [...(u.permissions?.features || [])] }
+  access.value = { user: u, features: givenOf(u) }
 }
 async function saveAccess() {
   if (busy.value || !access.value) return
@@ -338,6 +379,43 @@ onMounted(async () => {
 
 <style src="@/styles/people.css"></style>
 <style scoped>
+.ua-defaults {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f0f7f3;
+  border: 1px solid rgba(10, 92, 64, 0.18);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.ua-defaults summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ua-defaults ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.ua-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ua-never {
+  margin-top: 12px;
+}
+
+.pp-check strong .pp-pill {
+  margin-left: 6px;
+  vertical-align: 2px;
+}
+
 .ua-gen {
   justify-self: start;
   min-height: 36px;

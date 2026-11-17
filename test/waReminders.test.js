@@ -56,6 +56,6 @@ test("the special access group is always called 'Akses Khusus' (sidebar and home
   const layout = fs.readFileSync(path.join(here, "..", "src/views/dashboard/DashboardLayout.vue"), "utf8");
   assert.ok(layout.includes("title: 'Akses Khusus',"));
   assert.ok(!layout.includes("permissions?.menuGroupName"));
-  assert.ok(fs.readFileSync(path.join(here, "..", "src/views/dashboard/DashboardHome.vue"), "utf8").includes("<h2>Akses Khusus</h2>"));
+  assert.ok(fs.readFileSync(path.join(here, "..", "src/views/dashboard/DashboardHome.vue"), "utf8").includes('<h2 id="akses-khusus-title">Akses Khusus</h2>'));
   assert.ok(!fs.readFileSync(path.join(here, "..", "src/views/dashboard/admin/UserManagement.vue"), "utf8").includes("Nama Grup Menu"), "no field to rename it");
 });
