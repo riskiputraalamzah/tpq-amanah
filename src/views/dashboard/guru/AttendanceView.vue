@@ -126,11 +126,13 @@
 
           <div class="at-choices" role="radiogroup" aria-labelledby="at-today-title">
             <button type="button" role="radio" class="at-choice is-hadir" :aria-checked="selectedStatus === 'hadir'"
-              :class="{ active: selectedStatus === 'hadir' }" @click="selectedStatus = 'hadir'">
+              :class="{ active: selectedStatus === 'hadir', 'is-closed': hadirClosed }" :disabled="hadirClosed"
+              @click="selectedStatus = 'hadir'">
               <span class="at-choice-icon"><LineIcon name="check" :size="22" :stroke="2.6" /></span>
               <span class="at-choice-text">
                 <strong>Hadir</strong>
-                <span>Siap mengajar dan mengisi jurnal KBM</span>
+                <span v-if="hadirClosed">Dibuka pukul {{ String(hadirWindow.opensAt || '').replace(':', '.') }}, saat sesi Antum dimulai</span>
+                <span v-else>Siap mengajar dan mengisi jurnal KBM</span>
               </span>
             </button>
             <button type="button" role="radio" class="at-choice is-tidak" :aria-checked="selectedStatus === 'tidak_hadir'"
@@ -143,6 +145,10 @@
             </button>
           </div>
 
+          <p v-if="hadirClosed" class="at-hint is-closed" role="status">
+            <LineIcon name="info" :size="16" />
+            {{ hadirWindow.reason }}
+          </p>
           <p v-if="selectedStatus" class="at-hint" aria-live="polite">
             <LineIcon name="info" :size="16" />
             {{ selectedStatus === 'hadir'
@@ -445,7 +451,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
@@ -467,6 +473,27 @@ const dateNumber = computed(() => today.getDate())
 const monthYear = computed(() => `${monthNames[today.getMonth()]} ${today.getFullYear()}`)
 
 const selectedStatus = ref(null)
+// "Hadir" opens when the teacher's sesi starts (Sore 15.00, Malam 18.00); izin / sakit any time
+const hadirWindow = ref({ open: true, opensAt: null, reason: '' })
+const hadirClosed = computed(() => hadirWindow.value.open === false)
+let hadirTimer = null
+async function fetchHadirWindow() {
+  clearTimeout(hadirTimer)
+  try {
+    const { data } = await api.get('/attendance/hadir-window', { cache: false })
+    hadirWindow.value = data
+    if (data.open === false && selectedStatus.value === 'hadir') selectedStatus.value = null
+    if (data.open === false && /^\d{2}:\d{2}$/.test(data.opensAt || '')) {
+      // open it by itself at its time (WIB)
+      const wib = new Date(Date.now() + 7 * 3600 * 1000)
+      const [h, m] = data.opensAt.split(':').map(Number)
+      const wait = (h * 60 + m) * 60000 - (wib.getUTCHours() * 60 + wib.getUTCMinutes()) * 60000 - wib.getUTCSeconds() * 1000 + 2000
+      if (wait > 0 && wait < 24 * 3600 * 1000) hadirTimer = setTimeout(fetchHadirWindow, wait)
+    }
+  } catch {
+    hadirWindow.value = { open: true, opensAt: null, reason: '' }
+  }
+}
 const notes = ref('')
 const submitting = ref(false)
 const loading = ref(true)
@@ -1152,7 +1179,10 @@ const submitUpdate = async () => {
   }
 }
 
+onBeforeUnmount(() => clearTimeout(hadirTimer))
+
 onMounted(async () => {
+  fetchHadirWindow()
   loadingHolidays.value = true
   const attendanceLoaded = fetchAttendance()
   const viewingThisMonth = calendarYear.value === today.getFullYear() && calendarMonth.value === today.getMonth()
@@ -2362,6 +2392,15 @@ onMounted(async () => {
 .at-choice.is-tidak.active .at-choice-icon {
   background: #b42318;
   color: #fff;
+}
+
+.at-choice.is-closed {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.at-hint.is-closed {
+  color: #7a4b06;
 }
 
 .at-hint {

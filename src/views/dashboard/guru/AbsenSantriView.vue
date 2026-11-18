@@ -10,10 +10,17 @@
         <span class="sr-only">Tanggal</span>
         <input type="date" class="as-input" :value="date" :min="minDate" :max="today" @change="setDate($event.target.value)" />
       </label>
+      <!-- a child who goes to another sesi / teacher (Jilid 4 coming at malam) -->
+      <button type="button" class="as-titip-btn" :disabled="!sheet" @click="titipOpen = true">Titip santri</button>
     </div>
-    <p v-if="sheet && sheet.daysBack" class="as-hint">
-      Guru bisa mengisi sampai {{ sheet.daysBack }} hari ke belakang. Hari yang lebih lama hanya bisa diubah admin.
+    <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
+    <p v-if="sheet && sheet.daysBack === 0" class="as-hint">
+      Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
+      sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
     </p>
+
+    <AbsenReports ref="reportsBox" @changed="onOutsideChange" />
+    <EarlyAudit v-if="isAdmin" ref="auditBox" @changed="onOutsideChange" />
 
     <!-- stays at the top while scrolling: switch sesi from anywhere, see what is recorded and whether it is saved -->
     <div ref="bar" class="as-bar">
@@ -37,7 +44,29 @@
     <PageSkeleton v-if="loading && !sheet" :rows="6" label="Memuat daftar santri" />
     <p v-else-if="loadError" class="as-note is-danger" role="alert">{{ loadError }}</p>
 
+    <!-- the sesi has not started: nothing is recorded yet (a child is not "alfa" for a lesson still to come) -->
+    <div v-else-if="sheet && sheet.notOpenYet" class="as-closed" role="status">
+      <span class="as-closed-icon" aria-hidden="true">🕒</span>
+      <p class="as-closed-title">Sesi {{ slotLabel }} belum dimulai</p>
+      <p class="as-closed-text">
+        Absen dibuka pukul <strong>{{ String(sheet.opensAt || '').replace(':', '.') }}</strong>, saat ngaji dimulai. Halaman ini terbuka
+        sendiri pada jamnya.
+      </p>
+      <p v-if="fromWali.length" class="as-closed-wali">
+        Sudah ada {{ fromWali.length }} izin/sakit dari wali: {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}.
+      </p>
+      <button v-if="otherSlot && sheetOf(otherSlot.id)?.canEdit" type="button" class="as-jump" @click="setSlot(otherSlot.id)">
+        Buka absen sesi {{ otherSlot.label }} ›
+      </button>
+    </div>
+
     <template v-else-if="sheet">
+      <p v-if="sheet.lateEdit && sheet.canEdit" class="as-note is-warn" role="status">
+        Absen kemarin masih bisa diubah sampai pukul 12.00 hari ini, dengan konfirmasi. Setiap perubahan dikabarkan ke guru koordinator.
+      </p>
+      <p v-else-if="sheet.pastDay && sheet.canEdit" class="as-note is-warn" role="status">
+        Ini absen hari yang sudah lewat. Setiap perubahan diminta konfirmasi dulu dan dicatat atas nama Antum.
+      </p>
       <p v-if="!sheet.canEdit" class="as-note is-warn" role="status">
         {{ sheet.reason }}
         <router-link v-if="/absen kehadiran/.test(sheet.reason)" to="/dashboard/attendance" class="as-inline-link">Buka Absensi</router-link>
@@ -65,7 +94,7 @@
         <section class="as-group" :class="{ 'is-other': !g.own }" :aria-labelledby="`as-g-${g.classId}`" :data-class="g.classId">
           <div class="as-group-head">
             <button type="button" class="as-group-toggle" :aria-expanded="isOpen(g)" @click="toggle(g.classId)">
-              <span :id="`as-g-${g.classId}`" class="as-group-name">{{ levelName(g.classId) }}</span>
+              <span :id="`as-g-${g.classId}`" class="as-group-name">{{ g.titip ? 'Titipan' : levelName(g.classId) }}</span>
               <span class="as-group-count">{{ groupCountText(g) }}</span>
               <span class="as-chevron" aria-hidden="true">{{ isOpen(g) ? '▾' : '▸' }}</span>
             </button>
@@ -76,10 +105,14 @@
               Lihat di sesi {{ otherSlot.label }} · {{ otherRecordedOf(g.classId) }}/{{ g.items.length }} dicatat ›
             </button>
           </div>
+        <p v-if="!search && awayOf(g.classId).length" class="as-away">
+          Dititipkan ke sesi lain: {{ awayOf(g.classId).map((x) => `${x.name} (${slotName(x.titip.slot)}, ${x.titip.hostGuruName})`).join(', ') }}
+        </p>
         <ul v-if="isOpen(g)" class="as-list">
           <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id) }">
             <div class="as-name">
               <strong>{{ s.name }}</strong>
+              <span v-if="s.titip" class="as-titip">{{ titipNote(s) }}</span>
               <span v-if="recordOf(s.id)?.source === 'wali'" class="as-by is-wali">
                 {{ recordOf(s.id).status === 'sakit' ? 'Sakit' : 'Izin' }} dari {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).reason">: "{{ recordOf(s.id).reason }}"</template>
               </span>
@@ -116,6 +149,9 @@ import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import AbsenReports from '@/components/absen/AbsenReports.vue'
+import EarlyAudit from '@/components/absen/EarlyAudit.vue'
+import TitipSheet from '@/components/absen/TitipSheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDialog } from '@/composables/useDialog'
 
@@ -144,8 +180,8 @@ const minDate = computed(() => (sheet.value && sheet.value.daysBack === null ? u
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
 
 const date = ref(today)
-// from 17:00 WIB the malam sesi
-const slot = ref(wibNow().toISOString().slice(11, 16) >= '17:00' ? 'wave_2' : 'wave_1')
+// from 18:00 WIB (when it opens) the malam sesi
+const slot = ref(wibNow().toISOString().slice(11, 16) >= '18:00' ? 'wave_2' : 'wave_1')
 const sheet = ref(null)
 const records = ref({})
 const loading = ref(false)
@@ -156,6 +192,10 @@ const opened = ref({})
 const saveState = ref('idle')
 const saveNote = ref('')
 const unlocked = ref({}) // santri whose parent's izin the person confirmed to change
+const titipOpen = ref(false)
+const confirmed = ref({}) // `${date}|${slot}` (a past day) or `${date}|${slot}|${santriId}` (a kabar alfa sent): asked once
+const reportsBox = ref(null)
+const auditBox = ref(null)
 const pendingCount = ref(0)
 // the other sesi of the same day (its jilid and how many are recorded there), for the tabs and the other jilid
 const otherSheet = ref(null)
@@ -173,18 +213,34 @@ const fromWali = computed(() =>
 )
 const statusOf = (id) => records.value[id]?.status || null
 
+// Titip santri (services/santri_titip_service.js): a child who goes to THIS sesi that day is in the "Titipan" group
+// on top; a child who goes to the other sesi is left out of their jilid here (named under it, never "belum dicatat")
+const titipHere = (s) => !!s.titip && s.titip.slot === sheet.value?.slot
+const titipAway = (s) => !!s.titip && s.titip.slot !== sheet.value?.slot
+const slotName = (id) => (id === 'wave_2' ? 'Malam' : 'Sore')
+const titipNote = (s) => (titipHere(s)
+  ? `${levelName(s.classId)} · dititipkan ke ${s.titip.hostGuruName}`
+  : `dititipkan ke sesi ${slotName(s.titip.slot)} (${s.titip.hostGuruName})`)
+const awayOf = (classId) => (sheet.value?.santri || []).filter((s) => s.classId === classId && titipAway(s))
+const groupOf = (classId, items, extra = {}) => ({
+  classId,
+  items,
+  recorded: items.filter((s) => statusOf(s.id)).length,
+  own: (sheet.value?.defaultClassIds || []).includes(classId),
+  ...extra,
+})
 const groups = computed(() => {
   const map = new Map()
   for (const s of sheet.value?.santri || []) {
+    if (s.titip) continue
     if (!map.has(s.classId)) map.set(s.classId, [])
     map.get(s.classId).push(s)
   }
-  return [...map.entries()].map(([classId, items]) => ({
-    classId,
-    items,
-    recorded: items.filter((s) => statusOf(s.id)).length,
-    own: (sheet.value?.defaultClassIds || []).includes(classId),
-  }))
+  const titipan = (sheet.value?.santri || []).filter(titipHere)
+  return [
+    ...(titipan.length ? [groupOf('titip', titipan, { own: true, titip: true })] : []),
+    ...[...map.entries()].map(([classId, items]) => groupOf(classId, items)),
+  ]
 })
 const otherGroups = computed(() => groups.value.filter((g) => !g.own))
 const slotLabel = computed(() => SLOTS.find((x) => x.id === slot.value)?.label || '')
@@ -222,7 +278,10 @@ const otherCount = computed(() => otherGroups.value.reduce((n, g) => n + g.items
 const shownGroups = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (q) {
+    // a search finds every child, also one dititipkan to the other sesi (shown in their jilid, with the note)
+    const away = (sheet.value?.santri || []).filter(titipAway)
     return groups.value
+      .map((g) => ({ ...g, items: [...g.items, ...(g.titip ? [] : away.filter((s) => s.classId === g.classId))] }))
       .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
       .filter((g) => g.items.length)
   }
@@ -240,7 +299,7 @@ const counts = computed(() => {
   for (const s of sheet.value?.santri || []) {
     const st = statusOf(s.id)
     if (st) c[st] += 1
-    else if ((sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1
+    else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1
   }
   return c
 })
@@ -375,7 +434,43 @@ function queue(santriId, status) {
   timer = setTimeout(flush, 600)
 }
 
-function choose(santriId, status) {
+// A past day (the admin, or a guru with the access): asked once per day and sesi
+async function pastDayOk() {
+  const sh = sheet.value
+  if (!sh?.pastDay) return true
+  const key = `${sh.date}|${sh.slot}`
+  if (confirmed.value[key]) return true
+  const ok = await ask({
+    title: sh.lateEdit ? 'Ubah absen kemarin?' : 'Ubah absen hari yang sudah lewat?',
+    message: sh.lateEdit
+      ? `Absen ${sh.date.split('-').reverse().join('/')} sesi ${slotLabel.value} masih bisa diubah sampai pukul 12.00. Setiap perubahan dikabarkan ke guru koordinator, dan bila kabar alfa sudah terkirim, wali otomatis mendapat pesan koreksi.`
+      : `Absen ${sh.date.split('-').reverse().join('/')} sesi ${slotLabel.value} sudah ditutup untuk guru. Perubahan tercatat atas nama Antum, dan bila kabar alfa sudah terkirim, wali otomatis mendapat pesan koreksi.`,
+    confirmText: 'Ya, ubah',
+    cancelText: 'Batal',
+  })
+  if (ok) confirmed.value = { ...confirmed.value, [key]: true }
+  return ok
+}
+
+// The wali was already told "alfa": a change sends them a correction with an apology. Asked once per child.
+async function alfaToldOk(santriId, status) {
+  const sh = sheet.value
+  if (!(sh?.alfaSent || []).includes(santriId) || statusOf(santriId) !== 'alfa' || status === 'alfa') return true
+  const key = `${sh.date}|${sh.slot}|${santriId}`
+  if (confirmed.value[key]) return true
+  const name = sh.santri.find((s) => s.id === santriId)?.name || 'santri ini'
+  const ok = await ask({
+    title: `Kabar alfa ${name} sudah terkirim`,
+    message: `Wali ${name} sudah menerima kabar alfa lewat WhatsApp. Bila diubah, wali otomatis mendapat pesan koreksi dengan permintaan maaf. Ubah hanya bila memang keliru.`,
+    confirmText: 'Ya, ubah',
+    cancelText: 'Biarkan alfa',
+    tone: 'danger',
+  })
+  if (ok) confirmed.value = { ...confirmed.value, [key]: true }
+  return ok
+}
+
+async function choose(santriId, status) {
   if (isLocked(santriId)) return
   const same = statusOf(santriId) === status
   const now = Date.now()
@@ -384,11 +479,27 @@ function choose(santriId, status) {
   lastTap = { id: santriId, status, at: now }
   // the parent's own status is not cleared by tapping it again
   if (same && records.value[santriId]?.locked) return
+  const view = `${date.value}|${slot.value}`
+  if (!(await pastDayOk()) || !(await alfaToldOk(santriId, same ? null : status))) return
+  if (view !== `${date.value}|${slot.value}`) return // switched while the question was open
   queue(santriId, same ? null : status)
 }
 
-function markRest(g) {
+async function markRest(g) {
+  if (!(await pastDayOk())) return
   g.items.filter((s) => !statusOf(s.id)).forEach((s) => queue(s.id, 'hadir'))
+}
+
+// a titip set or ended: the groups of this sheet (and the other sesi's count) change
+function onTitipChanged() {
+  if (!pending.size) load({ silent: true })
+}
+
+// a report answered or an early record cleared: the sheet on screen may show it
+function onOutsideChange({ date: d, slot: sl } = {}) {
+  if (d !== date.value || pending.size) return
+  if (!sl || sl === slot.value) load({ silent: true })
+  else loadOther(date.value, slot.value, loadSeq)
 }
 
 async function unlock(s) {
@@ -442,7 +553,8 @@ async function sendAll() {
     sending += 1
     try {
       const marks = batch.map(([, m]) => ({ santriId: m.santriId, status: m.status, ...(m.override ? { override: true } : {}) }))
-      const { data } = await api.put('/santri-presence', { ...ctx, marks })
+      // a past day: the person confirmed before the tap was queued (pastDayOk)
+      const { data } = await api.put('/santri-presence', { ...ctx, marks, ...(ctx.date < today ? { confirmLate: true } : {}) })
       const stillHere = ctx.date === date.value && ctx.slot === slot.value
       if (stillHere) records.value = withPending(data.records, ctx.date, ctx.slot)
       if (data.locked?.length) {
@@ -690,6 +802,81 @@ onBeforeUnmount(() => {
 
 .as-date {
   flex: 1 1 160px;
+}
+
+/* the sesi has not started yet */
+.as-closed {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 28px 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(11, 59, 42, 0.25);
+  background: rgba(11, 59, 42, 0.03);
+  text-align: center;
+}
+
+.as-closed-icon {
+  font-size: 1.8rem;
+}
+
+.as-closed-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.as-closed-text,
+.as-closed-wali {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--body);
+  line-height: 1.5;
+}
+
+.as-closed-wali {
+  font-size: 0.86rem;
+}
+
+.as-closed .as-jump {
+  margin-top: 8px;
+}
+
+.as-titip-btn {
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(10, 92, 64, 0.35);
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  color: var(--emerald);
+  cursor: pointer;
+}
+
+.as-titip-btn:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-titip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fff3d6;
+  color: #7a4b06;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.as-away {
+  margin: 0;
+  padding: 8px 16px 10px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #6b4a12;
 }
 
 .as-hint {

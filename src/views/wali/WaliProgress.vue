@@ -44,10 +44,47 @@
           <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
           <p v-if="m.supportingMaterial" class="meeting-support">Pendukung: {{ m.supportingMaterial }}</p>
           <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
+
+          <!-- "Laporkan absen keliru": checked by the ustadz/ustadzah, the answer comes by WhatsApp -->
+          <template v-if="reportOf(m)">
+            <p v-if="reportOf(m).state === 'open'" class="report-state is-open" role="status">
+              Laporan terkirim: menurut Bapak/Ibu <strong>{{ STATUS_META[reportOf(m).want]?.label }}</strong>. Sedang dicek ustadz/ustadzah.
+            </p>
+            <p v-else-if="reportOf(m).resolution === 'fixed'" class="report-state is-done">
+              Sudah dibetulkan menjadi <strong>{{ STATUS_META[reportOf(m).want]?.label }}</strong>.
+            </p>
+            <p v-else class="report-state">
+              Sudah dicek: tetap {{ STATUS_META[reportOf(m).recorded]?.label || 'tercatat' }}.<template v-if="reportOf(m).answer"> "{{ reportOf(m).answer }}"</template>
+            </p>
+          </template>
+          <template v-else-if="canReport(m)">
+            <button v-if="formKey !== keyOf(m)" type="button" class="report-open" @click="openForm(m)">Absen ini keliru? Laporkan</button>
+            <form v-else class="report-form" @submit.prevent="sendReport(m)">
+              <p :id="`rp-${keyOf(m)}`" class="report-q">Yang benar, ananda:</p>
+              <div class="w-chips" role="radiogroup" :aria-labelledby="`rp-${keyOf(m)}`">
+                <button v-for="o in WANTS" :key="o.key" type="button" role="radio" class="w-chip" :aria-checked="form.want === o.key" @click="form.want = o.key">
+                  {{ o.label }}
+                </button>
+              </div>
+              <label class="report-label" :for="`rn-${keyOf(m)}`">Keterangan</label>
+              <textarea :id="`rn-${keyOf(m)}`" v-model="form.note" class="w-input report-note" rows="2" maxlength="300"
+                placeholder="Misalnya: ananda datang terlambat pukul 15.30"></textarea>
+              <p v-if="formError" class="w-error" role="alert">{{ formError }}</p>
+              <div class="report-actions">
+                <button type="button" class="w-btn w-btn-ghost" @click="formKey = ''">Batal</button>
+                <button type="submit" class="w-btn w-btn-primary" :disabled="sending || !form.want || form.note.trim().length < 3">
+                  {{ sending ? 'Mengirim…' : 'Kirim laporan' }}
+                </button>
+              </div>
+            </form>
+          </template>
         </li>
       </ul>
 
-      <p class="w-help foot">Data dari catatan KBM ustadz/ustadzah. Bila ada yang keliru, hubungi pengajar ananda.</p>
+      <p class="w-help foot">
+        Data dari catatan KBM ustadz/ustadzah. Bila absen alfa keliru (7 hari terakhir), ketuk "Laporkan" pada pertemuannya; untuk yang lain,
+        hubungi pengajar ananda.
+      </p>
     </template>
   </div>
 </template>
@@ -76,6 +113,11 @@ const STATUS_META = {
   sakit: { label: 'Sakit', tone: 'warn' },
   alfa: { label: 'Alfa', tone: 'danger' },
 }
+const WANTS = [
+  { key: 'hadir', label: 'Hadir' },
+  { key: 'izin', label: 'Izin' },
+  { key: 'sakit', label: 'Sakit' },
+]
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 
@@ -102,12 +144,59 @@ const index = computed(() => data.value?.months.indexOf(data.value.month) ?? -1)
 const older = computed(() => (index.value >= 0 ? data.value.months[index.value + 1] : null))
 const newer = computed(() => (index.value > 0 ? data.value.months[index.value - 1] : null))
 
+// reports of the last 30 days, by `${date}|${slot}`
+const reports = ref({})
+const formKey = ref('')
+const form = ref({ want: '', note: '' })
+const formError = ref('')
+const sending = ref(false)
+const keyOf = (m) => `${m.date}|${m.slot}`
+const reportOf = (m) => reports.value[keyOf(m)] || null
+const wibToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+const weekAgo = () => new Date(Date.now() + 7 * 3600 * 1000 - 7 * 86400000).toISOString().slice(0, 10)
+const canReport = (m) => m.status === 'alfa' && m.date >= weekAgo() && m.date <= wibToday()
+
+async function loadReports() {
+  try {
+    const res = await api.get(`/wali/santri/${route.params.santriId}/absen-reports`, { cache: false })
+    const map = {}
+    for (const r of res.data.reports || []) map[`${r.date}|${r.slot}`] = r
+    reports.value = map
+  } catch {
+    reports.value = {}
+  }
+}
+
+function openForm(m) {
+  formKey.value = keyOf(m)
+  form.value = { want: '', note: '' }
+  formError.value = ''
+}
+
+async function sendReport(m) {
+  sending.value = true
+  formError.value = ''
+  try {
+    const res = await api.post(`/wali/santri/${route.params.santriId}/absen-reports`, { date: m.date, slot: m.slot, want: form.value.want, note: form.value.note })
+    reports.value = { ...reports.value, [keyOf(m)]: res.data }
+    formKey.value = ''
+  } catch (err) {
+    formError.value = err.response?.data?.error || 'Laporan belum terkirim. Periksa koneksi lalu coba lagi.'
+    if (err.response?.status === 409) loadReports()
+  } finally {
+    sending.value = false
+  }
+}
+
 async function load() {
   loading.value = true
   loadError.value = ''
   try {
     const month = typeof route.query.bulan === 'string' ? route.query.bulan : ''
-    const res = await api.get(`/wali/santri/${route.params.santriId}/progress`, { params: month ? { month } : {}, cache: false })
+    const [res] = await Promise.all([
+      api.get(`/wali/santri/${route.params.santriId}/progress`, { params: month ? { month } : {}, cache: false }),
+      loadReports(),
+    ])
     data.value = res.data
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Progres belum bisa dimuat. Periksa koneksi lalu muat ulang.'
@@ -124,6 +213,78 @@ onMounted(load)
 </script>
 
 <style scoped>
+.report-open {
+  margin-top: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(142, 27, 18, 0.3);
+  background: #fff;
+  color: #8e1b12;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.report-open:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
+}
+
+.report-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(11, 59, 42, 0.1);
+}
+
+.report-q,
+.report-label {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--w-ink);
+}
+
+.report-note {
+  min-height: 72px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+.report-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+}
+
+.report-actions .w-btn {
+  min-height: 48px;
+  font-size: 0.92rem;
+}
+
+.report-state {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(11, 59, 42, 0.05);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--w-ink);
+}
+
+.report-state.is-open {
+  background: #fff8e6;
+  color: #6b4a12;
+}
+
+.report-state.is-done {
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
 .back-link {
   display: inline-block;
   margin: -4px 0 6px;

@@ -182,7 +182,8 @@
                 <span class="slot-name">SORE</span>
                 <span class="slot-time">15.00 – 16.30</span>
               </div>
-              <span class="slot-wave">Gelombang 1</span>
+              <span v-if="slotNotOpen('wave_1')" class="slot-wave slot-closed">Dibuka pukul {{ SLOT_START['wave_1'].replace(':', '.') }}</span>
+              <span v-else class="slot-wave">Gelombang 1</span>
               <div v-if="getSavedSessionsForSlot('wave_1').length > 0" class="slot-status-saved">
                 ✓ {{ getSavedSessionsForSlot('wave_1').length }} Sesi ({{ getSavedSessionsNamesForSlot('wave_1') }})
               </div>
@@ -201,12 +202,17 @@
                 <span class="slot-name">MALAM</span>
                 <span class="slot-time">18.00 – 19.30</span>
               </div>
-              <span class="slot-wave">Gelombang 2</span>
+              <span v-if="slotNotOpen('wave_2')" class="slot-wave slot-closed">Dibuka pukul {{ SLOT_START['wave_2'].replace(':', '.') }}</span>
+              <span v-else class="slot-wave">Gelombang 2</span>
               <div v-if="getSavedSessionsForSlot('wave_2').length > 0" class="slot-status-saved">
                 ✓ {{ getSavedSessionsForSlot('wave_2').length }} Sesi ({{ getSavedSessionsNamesForSlot('wave_2') }})
               </div>
             </button>
           </div>
+          <p v-if="slotNotOpen(selectedSlotId)" class="slot-closed-note" role="status">
+            KBM sesi {{ selectedSlotId === 'wave_2' ? 'Malam' : 'Sore' }} dibuka pukul {{ SLOT_START[selectedSlotId].replace(':', '.') }}, saat ngaji
+            dimulai. Absen santri belum bisa dicatat sebelum sesinya berlangsung.
+          </p>
         </section>
 
         <!-- Badal: replacing another teacher (their attendance must not be "hadir"; the server checks it) -->
@@ -319,6 +325,11 @@
                 Absen semua jilid sekaligus (misalnya saat doa pembukaan) bisa lewat
                 <router-link to="/dashboard/absen-santri" class="presence-link">Absen Santri</router-link>.
               </p>
+              <!-- titip santri: children of this jilid who go to another sesi / teacher that day are not on this form -->
+              <p v-if="titipAway.length" class="titip-away-note">
+                Tidak ada di daftar ini karena dititipkan:
+                {{ titipAway.map((t) => `${t.name} (sesi ${t.slot === 'wave_2' ? 'Malam' : 'Sore'}, ${t.hostGuruName})`).join(', ') }}.
+              </p>
             </div>
           </div>
 
@@ -364,7 +375,9 @@
               <div class="santri-name-col">
                 <span class="santri-avatar">{{ santri.name.charAt(0).toUpperCase() }}</span>
                 <span class="santri-name">{{ santri.name }}</span>
+                <span v-if="santri.titip" class="titip-badge">Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}</span>
                 <button
+                  v-if="!santri.titip"
                   type="button"
                   class="btn-rename-santri"
                   @click.stop="openRenameModal(santri)"
@@ -734,11 +747,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/services/api';
 import PageSkeleton from '@/components/PageSkeleton.vue';
 import { useToast } from '@/composables/useToast';
+import { useDialog } from '@/composables/useDialog';
 import { useAuthStore } from '@/stores/auth';
 import { normalizeSlotId } from '@/utils/sessionSlot';
 import { normalizeStudentStatus } from '@/utils/journalState';
@@ -783,12 +797,19 @@ const dailyContext = ref(null);
 const blockingError = ref(null);
 
 const selectedSlotId = ref('wave_1');
+// A sesi of today opens at its start (the server refuses earlier: utils/session_window.js)
+const SLOT_START = { wave_1: '15:00', wave_2: '18:00' };
+const clockTick = ref(Date.now());
+let clockTimer = null;
+const wibClockNow = () => new Date(clockTick.value + 7 * 3600 * 1000).toISOString().slice(11, 16);
+const slotNotOpen = (slot) => targetDate.value === getTodayWibString() && wibClockNow() < (SLOT_START[slot] || '15:00');
 const selectedLevelId = ref('');
 // The sesi is set for the teacher (admin schedule -> latest KBM -> time of day); the picker opens only on "Ganti".
 const slotPickerOpen = ref(false);
 const roster = ref([]);
 const inactiveSantri = ref([]);
 const presenceNote = ref(null);
+const titipAway = ref([]); // children of this jilid dititipkan elsewhere that day (not on this form)
 const curriculum = ref(null);
 const searchQuery = ref('');
 
@@ -960,6 +981,7 @@ watch(() => route.query.date, async (newDate, oldDate) => {
   if (newDate && newDate !== oldDate) {
     selectedLevelId.value = '';
     roster.value = [];
+    titipAway.value = [];
     inactiveSantri.value = [];
     curriculum.value = null;
     journalForm.value = {
@@ -1130,6 +1152,7 @@ const slotSourceText = computed(() => {
 function clearLevelSelection() {
   selectedLevelId.value = '';
   roster.value = [];
+  titipAway.value = [];
   inactiveSantri.value = [];
   curriculum.value = null;
   journalForm.value.material = '';
@@ -1288,8 +1311,10 @@ async function loadLevelContext(levelId) {
     roster.value = (data.roster || []).map(s => ({
       santriId: s.santriId,
       name: s.name,
-      status: s.status || 'hadir'
+      status: s.status || 'hadir',
+      ...(s.titip ? { titip: s.titip } : {})
     }));
+    titipAway.value = data.titipAway || [];
 
     inactiveSantri.value = data.inactiveSantri || [];
     presenceNote.value = data.presenceNote || null;
@@ -1311,16 +1336,38 @@ async function loadLevelContext(levelId) {
   }
 }
 
+// A guru's KBM of yesterday saved before 12:00: its statuses may replace what Absen Santri recorded, after a
+// confirmation (the coordinators are told). Otherwise a KBM filled in later only fills the children with no record.
+const { ask } = useDialog();
+function lateWindowOpen() {
+  const wibNow = new Date(Date.now() + 7 * 3600 * 1000);
+  const yesterday = new Date(wibNow.getTime() - 86400000).toISOString().slice(0, 10);
+  return targetDate.value === yesterday && wibNow.toISOString().slice(11, 16) < '12:00';
+}
+async function lateChoice() {
+  const u = authStore.user || {};
+  if (u.role === 'admin' || (u.permissions?.features || []).includes('absen-santri-backdate') || !lateWindowOpen()) return { ok: true, confirmLate: false };
+  const replace = await ask({
+    title: 'Ganti absen santri kemarin?',
+    message: 'Absen santri dari KBM ini bisa mengganti yang sudah tercatat kemarin (sampai pukul 12.00 hari ini). Setiap perubahan dikabarkan ke guru koordinator. Pilih "Hanya yang kosong" bila absen kemarin sudah benar.',
+    confirmText: 'Ya, ganti',
+    cancelText: 'Hanya yang kosong',
+  });
+  return { ok: true, confirmLate: replace === true };
+}
+
 // Submit KBM Sesi
 async function submitKbm() {
   if (!canSubmit.value) {
     warning('Pastikan sesi, level, absensi santri, dan jurnal telah terisi.');
     return;
   }
+  const late = await lateChoice();
 
   submitting.value = true;
   try {
     const payload = {
+      ...(late.confirmLate ? { confirmLate: true } : {}),
       date: targetDate.value,
       type: 'teaching',
       classId: selectedLevelId.value,
@@ -1390,7 +1437,10 @@ function handleReturnToLpj() {
   }
 }
 
+onBeforeUnmount(() => clearInterval(clockTimer));
+
 onMounted(async () => {
+  clockTimer = setInterval(() => { clockTick.value = Date.now(); }, 30000);
   await loadDailyContext();
 });
 </script>
@@ -2077,6 +2127,38 @@ onMounted(async () => {
     font-size: 0.78rem;
     white-space: nowrap;
   }
+}
+
+.titip-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff3d6;
+  color: #7a4b06;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.titip-away-note {
+  margin-top: 6px;
+  color: #6b4a12;
+}
+
+.slot-wave.slot-closed {
+  color: #8a5a0b;
+  font-weight: 700;
+}
+
+.slot-closed-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .slot-wave {

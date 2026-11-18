@@ -13,7 +13,7 @@ test("a tap remembers its own day and sesi, so a retry can never land on another
   assert.ok(has(view, "const keyOf = (d, sl, id) => `${d}|${sl}|${id}`"));
   assert.ok(has(view, "pending.set(keyOf(d, sl, santriId), { date: d, slot: sl, santriId, status, override })"));
   // the request is built from the batch's own day and sesi, not from what is on screen now
-  assert.ok(has(view, "api.put('/santri-presence', { ...ctx, marks })"));
+  assert.ok(has(view, "api.put('/santri-presence', { ...ctx, marks, ...(ctx.date < today ? { confirmLate: true } : {}) })"));
   assert.ok(!has(view, "date: date.value, slot: slot.value, marks"), "the old send used the current view");
 });
 
