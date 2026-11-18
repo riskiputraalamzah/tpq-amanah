@@ -1,5 +1,6 @@
 <template>
   <!-- admin: records saved before their sesi started (a KBM or a roll call filled in ahead) -->
+  <p v-if="result" class="ea-result" role="status">{{ result }}</p>
   <section v-if="rows.length" class="ea" aria-labelledby="ea-title">
     <button type="button" class="ea-head" :aria-expanded="open" aria-controls="ea-body" @click="open = !open">
       <span id="ea-title" class="ea-title">Absen dicatat sebelum sesinya dimulai</span>
@@ -55,6 +56,7 @@ const rows = ref([])
 const open = ref(false)
 const busy = ref(false)
 const error = ref('')
+const result = ref('') // what the last "Kosongkan" did, incl. the apologies queued for the wali
 
 // per day and sesi: one decision for what one person filled in ahead
 const grouped = computed(() => {
@@ -92,7 +94,10 @@ async function settle(g, action) {
   busy.value = true
   error.value = ''
   try {
-    await api.post('/santri-presence/audit/early', { action, ids: g.rows.map((r) => r.id) })
+    const { data } = await api.post('/santri-presence/audit/early', { action, ids: g.rows.map((r) => r.id) })
+    if (action === 'clear') {
+      result.value = `${data.done} absen dikosongkan.${data.corrected ? ` Permintaan maaf untuk ${data.corrected} nomor wali masuk antrean WhatsApp bot (dikirim dalam beberapa menit, kecuali jam 21.00–06.30).` : ' Belum ada kabar alfa yang terkirim untuk santri ini, jadi tidak perlu permintaan maaf.'}`
+    }
     await load()
     emit('changed', { date: g.date, slot: g.slot })
   } catch (err) {
@@ -146,6 +151,15 @@ defineExpose({ load })
   line-height: 22px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+.ea-result {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #e3f1ea;
+  color: #0a5c40;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 #ea-body {
   padding: 12px 14px 14px;

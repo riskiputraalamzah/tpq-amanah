@@ -133,6 +133,8 @@
             maksimal {{ alfa.today.cap }} pesan sehari.
           </p>
           <p class="wv-alfa-today"><strong>{{ alfa.today.used }}/{{ alfa.today.cap }}</strong> pesan hari ini</p>
+          <!-- a sent kabar whose record is no longer alfa: the apology goes at once when it is changed; this is the sweep -->
+          <button type="button" class="wv-btn wv-btn-ghost" :disabled="alfaBusy" @click="sendCorrections">Kirim permintaan maaf yang tertunda</button>
         </section>
 
         <h2 class="wv-section">7 hari terakhir</h2>
@@ -148,6 +150,7 @@
             </div>
             <div class="wv-row-side">
               <span class="wv-pill" :class="`is-${(ALFA_STATUS[n.status] || ALFA_STATUS.queued).tone}`">{{ (ALFA_STATUS[n.status] || ALFA_STATUS.queued).label }}</span>
+              <span v-if="n.correctedAt" class="wv-sub">{{ n.correctedBy === 'report' ? 'Dibetulkan dari laporan wali' : `Dikoreksi${n.correctedTo ? ` jadi ${n.correctedTo}` : ' (dikosongkan)'}, permintaan maaf dikirim` }}</span>
               <!-- not sent by the bot: the admin can send the same message by hand -->
               <div v-if="['skipped_cap', 'failed', 'partial'].includes(n.status)" class="wv-actions">
                 <a v-for="rc in n.recipients.filter((x) => x.status !== 'sent')" :key="rc.phone" class="wv-btn wv-btn-ghost"
@@ -650,6 +653,18 @@ async function loadAlfa() {
 function openAlfa() {
   tab.value = 'alfa'
   loadAlfa()
+}
+async function sendCorrections() {
+  alfaBusy.value = true
+  try {
+    const { data } = await api.post('/wali/admin/alfa/corrections')
+    showSuccess(data.queued ? `${data.queued} permintaan maaf masuk antrean WhatsApp bot` : 'Tidak ada permintaan maaf yang tertunda')
+    await loadAlfa()
+  } catch (err) {
+    showError(err.response?.data?.error || 'Belum bisa dikirim')
+  } finally {
+    alfaBusy.value = false
+  }
 }
 async function toggleAlfa() {
   alfaBusy.value = true
