@@ -169,6 +169,19 @@
           <p v-if="r.status === 'rejected' && r.reason" class="w-help">Alasan: {{ r.reason }}</p>
         </div>
       </template>
+
+      <!-- Saran & kritik untuk menjadikan platform dan layanan TPQ Amanah lebih baik -->
+      <router-link to="/wali/masukan" class="w-card feedback-card">
+        <span class="feedback-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+        </span>
+        <span class="feedback-text">
+          <strong>Saran &amp; Kritik</strong>
+          <span>Bantu kami menjadikan aplikasi &amp; layanan TPQ Amanah lebih baik</span>
+        </span>
+        <span v-if="repliedFeedbackCount" class="w-pill is-ok">{{ repliedFeedbackCount }} tanggapan</span>
+        <span class="feedback-go" aria-hidden="true">›</span>
+      </router-link>
     </template>
   </div>
 </template>
@@ -196,6 +209,7 @@ const toggleMore = (id) => {
 }
 const nameInput = ref('')
 const savingName = ref(false)
+const repliedFeedbackCount = ref(0)
 
 const TILES = [
   { key: 'hadir', label: 'hadir' },
@@ -234,15 +248,17 @@ async function load() {
   loading.value = true
   loadError.value = ''
   try {
-    const [{ data }, regs] = await Promise.all([
+    const [{ data }, regs, feedbacks] = await Promise.all([
       api.get('/wali/me', { cache: false }),
       // a failure here must not hide the children
       api.get('/pendaftaran/mine', { cache: false }).then((r) => r.data || []).catch(() => []),
+      api.get('/wali-feedback/mine', { cache: false }).then((r) => r.data || []).catch(() => []),
       refreshAnnouncements({ force: true }),
     ])
     wali.value = data.wali
     santri.value = data.santri || []
     requests.value = data.requests || []
+    repliedFeedbackCount.value = Array.isArray(feedbacks) ? feedbacks.filter((f) => f.reply?.text).length : 0
     // accepted: the child is under Ananda now; cancelled by the parent themselves: nothing to show
     registrations.value = regs.filter((r) => r.status !== 'accepted' && !(r.status === 'cancelled' && r.cancelledBy === 'wali'))
   } catch (err) {
@@ -752,5 +768,50 @@ onMounted(load)
 .request-card .w-help {
   flex-basis: 100%;
   margin: 0;
+}
+
+.feedback-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px 15px;
+  text-decoration: none;
+  color: #0b3b2a;
+}
+
+.feedback-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e3f1ea;
+  color: #0a5c40;
+}
+
+.feedback-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.feedback-text strong {
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.feedback-text span {
+  font-size: 0.82rem;
+  color: #5b6b62;
+  line-height: 1.35;
+}
+
+.feedback-go {
+  font-size: 1.35rem;
+  color: #0a5c40;
 }
 </style>

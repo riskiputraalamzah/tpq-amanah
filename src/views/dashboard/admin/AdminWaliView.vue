@@ -64,7 +64,9 @@
       </div>
 
       <!-- how the list is laid out: one list, by jilid, or by the wali's number (one number, several children) -->
-      <div class="wv-groupby" role="group" aria-label="Kelompokkan">
+      <div class="wv-groupby" role="group" aria-label="Kelompokkan dan urutkan">
+        <span class="wv-groupby-label">Urutkan</span>
+        <button v-for="s in SORTS" :key="s.value" type="button" class="wv-chip" :aria-pressed="sortBy === s.value" @click="sortBy = s.value">{{ s.label }}</button>
         <span class="wv-groupby-label">Kelompokkan</span>
         <button v-for="o in GROUPINGS" :key="o.value" type="button" class="wv-chip" :aria-pressed="groupBy === o.value" @click="setGroupBy(o.value)">{{ o.label }}</button>
         <label v-if="groupBy === 'phone'" class="wv-check wv-groupby-only">
@@ -82,7 +84,10 @@
         <li v-for="r in grp.rows" :key="`${grp.key}-${r.santriId}`" class="wv-row">
           <div class="wv-row-main">
             <strong>{{ r.name }}</strong>
-            <span class="wv-sub">{{ levelName(r.classId) }}<template v-if="r.nomorInduk"> · {{ r.nomorInduk }}</template></span>
+            <span class="wv-sub">
+              {{ levelName(r.classId) }}<template v-if="r.nomorInduk"> · {{ r.nomorInduk }}</template>
+              <template v-if="rowTime(r)"> · <time :title="fullDateTime(rowTime(r).at)">{{ rowTime(r).label }} {{ timeAgo(rowTime(r).at, now) }}</time></template>
+            </span>
             <span v-if="r.guardians.length" class="wv-sub">
               Wali: <template v-for="(g, i) in r.guardians" :key="g.waliId">{{ i ? ', ' : '' }}{{ relationLabel(g.relation) }} {{ displayPhone(g.phone) }}</template>
             </span>
@@ -169,7 +174,7 @@
         <div class="wv-request-head">
           <strong>{{ q.childName }}</strong>
           <span class="wv-sub">{{ q.classId ? levelName(q.classId) : 'Jilid tidak diisi' }} · {{ relationLabel(q.relation) }} {{ q.waliName || '' }}</span>
-          <span class="wv-sub">WA {{ displayPhone(q.phone) }} · {{ dateText(q.createdAt) }}</span>
+          <span class="wv-sub">WA {{ displayPhone(q.phone) }} · <time :title="fullDateTime(q.createdAt)">{{ timeAgo(q.createdAt, now) }}</time></span>
           <p v-if="q.note" class="wv-quote">"{{ q.note }}"</p>
         </div>
         <label class="wv-label" :for="`req-${q.id}`">Santri yang dimaksud</label>
@@ -242,7 +247,7 @@
           </header>
           <div class="wv-sheet-body">
             <p class="wv-code">{{ codeSheet.code }}</p>
-            <p class="wv-sub wv-center">Berlaku sampai {{ dateText(codeSheet.expiresAt) }}. Kode lama santri ini tidak berlaku lagi.</p>
+            <p class="wv-sub wv-center">Berlaku sampai {{ dateTimeText(codeSheet.expiresAt) }}. Kode lama santri ini tidak berlaku lagi.</p>
             <!-- sent by the TPQ bot to the number typed here (POST /wali/admin/codes/send) -->
             <form class="wv-code-send" @submit.prevent="sendCode">
               <label for="code-phone" class="wv-label">Nomor WhatsApp wali</label>
@@ -284,7 +289,7 @@
             <div v-if="slipActive.length" class="wv-note is-warn wv-slip-active" role="status">
               <strong>{{ slipActive.length }} santri sudah punya kode yang masih berlaku:</strong>
               <ul>
-                <li v-for="c in slipActive.slice(0, 6)" :key="c.santriId">{{ c.santriName }} · dibuat {{ c.createdByName || 'seseorang' }}, {{ dateText(c.createdAt) }}</li>
+                <li v-for="c in slipActive.slice(0, 6)" :key="c.santriId">{{ c.santriName }} · dibuat {{ c.createdByName || 'seseorang' }}, {{ timeAgo(c.createdAt, now) }}</li>
                 <li v-if="slipActive.length > 6">dan {{ slipActive.length - 6 }} lainnya</li>
               </ul>
               <span>Mereka dilewati, jadi slip yang sudah dibagikan tetap berlaku.</span>
@@ -376,7 +381,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
@@ -386,6 +391,7 @@ import { useWaliBadge } from '@/composables/useWaliBadge'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { STATUS, STEPS, RELATIONS, REMIND_STATUSES, getPath, displayPhone, linkCodeMessage, reminderMessage } from '@/utils/santriProfile'
+import { timeAgo, dateTimeText, fullDateTime, timeOf } from '@/utils/timeAgo'
 import { loadPdfLibs } from '@/utils/pdf'
 import { renderSlips } from '@/utils/waliSlips'
 import { loadExcelLib, downloadWorkbook } from '@/utils/excel'
@@ -501,9 +507,38 @@ const matchStatus = (r, f) => {
   return r.profileStatus === f
 }
 const filteredByClass = computed(() => rows.value.filter((r) => !classFilter.value || r.classId === classFilter.value))
+
+/* ---- when the row's data came in, newest first by default ("barusan", "2 menit lalu", then the date and hour) */
+// the moment that matters for the row: the form sent, else last filled in, else the wali linked, else the santri added
+function rowTime(r) {
+  if (timeOf(r.submittedAt)) return { at: r.submittedAt, label: r.profileStatus === 'verified' ? 'Dikirim wali' : 'Dikirim' }
+  if (timeOf(r.updatedAt)) return { at: r.updatedAt, label: 'Diisi wali' }
+  if (timeOf(r.linkedAt)) return { at: r.linkedAt, label: 'Wali tertaut' }
+  if (timeOf(r.createdAt)) return { at: r.createdAt, label: 'Santri ditambahkan' }
+  return null
+}
+const SORTS = [
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'oldest', label: 'Terlama' },
+  { value: 'name', label: 'Nama A-Z' },
+]
+const sortBy = ref('newest')
+const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'id', { sensitivity: 'base', numeric: true })
+function sortRows(list) {
+  if (sortBy.value === 'name') return [...list].sort(byName)
+  const dir = sortBy.value === 'oldest' ? 1 : -1
+  return list
+    .map((r) => ({ r, t: timeOf(rowTime(r)?.at) }))
+    // no time known (old data): always at the end, A-Z
+    .sort((a, b) => (!a.t || !b.t ? (a.t ? -1 : b.t ? 1 : byName(a.r, b.r)) : dir * (a.t - b.t) || byName(a.r, b.r)))
+    .map((x) => x.r)
+}
+// "2 menit lalu" moves on by itself while the page is open
+const now = ref(new Date())
+let clockTimer = null
 const visibleRows = computed(() => {
   const q = search.value.trim().toLowerCase()
-  return filteredByClass.value.filter((r) => matchStatus(r, statusFilter.value) && (!q || r.name.toLowerCase().includes(q)))
+  return sortRows(filteredByClass.value.filter((r) => matchStatus(r, statusFilter.value) && (!q || r.name.toLowerCase().includes(q))))
 })
 
 /* ---- laying out the list: one list, by jilid, or by the wali's number (a number linked to several children) */
@@ -684,10 +719,8 @@ function needsReminder(r) {
   return r.guardians.length > 0 && REMIND_STATUSES.includes(r.profileStatus)
 }
 function reminderText(rem) {
-  const at = rem?.at?._seconds ? new Date(rem.at._seconds * 1000) : rem?.at ? new Date(rem.at) : null
-  if (!at || Number.isNaN(at.getTime())) return ''
-  const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(at).setHours(0, 0, 0, 0)) / 86400000)
-  const when = days <= 0 ? 'hari ini' : days === 1 ? 'kemarin' : `${days} hari lalu`
+  const when = timeAgo(rem?.at, now.value)
+  if (!when) return ''
   return `Diingatkan ${when}${rem.byName ? ` oleh ${rem.byName}` : ''}${rem.count > 1 ? ` (${rem.count}x)` : ''}`
 }
 const remindMessage = computed(() => remind.value
@@ -739,7 +772,7 @@ async function makeCode(r, { replace = false } = {}) {
     busy.value = false
     const ok = await ask({
       title: `${r.name} sudah punya kode`,
-      message: `Kode yang masih berlaku dibuat oleh ${active.createdByName || 'seseorang'} pada ${dateText(active.createdAt)}, mungkin sudah dibagikan ke wali. Bila dibuat kode baru, kode itu tidak berlaku lagi.`,
+      message: `Kode yang masih berlaku dibuat oleh ${active.createdByName || 'seseorang'} (${timeAgo(active.createdAt, now.value)}), mungkin sudah dibagikan ke wali. Bila dibuat kode baru, kode itu tidak berlaku lagi.`,
       tone: 'danger',
       confirmText: 'Buat kode baru',
       cancelText: 'Batal',
@@ -910,6 +943,9 @@ async function unlink(g) {
 
 // /dashboard/wali-santri?santri=ID (from Kelola Santri): open that santri right away
 onMounted(async () => {
+  clockTimer = setInterval(() => {
+    now.value = new Date()
+  }, 30000)
   await load()
   const id = typeof route.query.santri === 'string' ? route.query.santri : ''
   const row = id && rows.value.find((r) => r.santriId === id)
@@ -917,6 +953,9 @@ onMounted(async () => {
     search.value = row.name
     if (row.profileStatus !== 'empty') openReview(row)
   }
+})
+onBeforeUnmount(() => {
+  if (clockTimer) clearInterval(clockTimer)
 })
 </script>
 

@@ -1,6 +1,8 @@
 // The "pengkinian data santri" form for the wali portal: the steps, their fields and the same checks the backend
 // makes (backend/src/utils/santri_profile.js), so mistakes show while typing instead of after sending.
 
+import { dateTimeText } from './timeAgo.js'
+
 export const RELATIONS = [
   { value: 'ayah', label: 'Ayah' },
   { value: 'ibu', label: 'Ibu' },
@@ -194,7 +196,8 @@ export function reminderMessage({ santriName, status, note = '', siteUrl, sender
 }
 
 export function linkCodeMessage({ santriName, code, expiresAt, siteUrl }) {
-  const until = expiresAt ? new Date(expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  // "19 Desember 2026 pukul 14.30 WIB": the hour matters, the code stops working at that minute
+  const until = dateTimeText(expiresAt)
   return [
     `Assalamu'alaikum Bapak/Ibu wali dari *${santriName}*.`,
     '',

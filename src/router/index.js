@@ -250,6 +250,12 @@ const routes = [
         meta: { role: "admin" },
       },
       {
+        path: "masukan-wali",
+        name: "WaliFeedbackAdmin",
+        component: () => import("../views/dashboard/admin/AdminFeedbackView.vue"),
+        meta: { role: "admin" },
+      },
+      {
         path: "pendaftaran",
         name: "Pendaftaran",
         component: () => import("../views/dashboard/admin/PendaftaranView.vue"),
@@ -319,6 +325,7 @@ const routes = [
       { path: "izin", name: "WaliIzinPick", component: () => import("../views/wali/WaliIzinPick.vue") },
       { path: "pengumuman", name: "WaliPengumuman", component: () => import("../views/wali/WaliPengumuman.vue") },
       { path: "akun", name: "WaliAkun", component: () => import("../views/wali/WaliAkun.vue") },
+      { path: "masukan", name: "WaliMasukan", component: () => import("../views/wali/WaliMasukan.vue") },
       { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
       { path: "santri/:santriId/rapor", name: "WaliRapor", component: () => import("../views/wali/WaliRapor.vue") },

@@ -20,6 +20,7 @@ import { onMounted, ref } from 'vue'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { timeAgo } from '@/utils/timeAgo'
 
 const props = defineProps({ adminMode: { type: Boolean, default: false } })
 const emit = defineEmits(['changed'])
@@ -27,11 +28,7 @@ const { success, error: showError } = useToast()
 const { ask } = useDialog()
 
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ditentukan')
-const when = (v) => {
-  const d = v?._seconds ? new Date(v._seconds * 1000) : v ? new Date(v) : null
-  if (!d || Number.isNaN(d.getTime())) return ''
-  return d.toLocaleString('id-ID', { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })
-}
+const when = (v) => timeAgo(v)
 
 const items = ref([])
 const busy = ref(false)

@@ -94,6 +94,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import api from '@/services/api'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { timeAgo } from '@/utils/timeAgo'
 
 const props = defineProps({
   adminMode: { type: Boolean, default: false },
@@ -107,11 +108,7 @@ const { ask } = useDialog()
 const LEVELS = ['1', '2', '3', '4', '5', '6', '7']
 const STATUS = { pending: 'Menunggu admin', approved: 'Diterima', rejected: 'Ditolak' }
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Jilid belum ditentukan')
-const when = (v) => {
-  const d = v?._seconds ? new Date(v._seconds * 1000) : v ? new Date(v) : null
-  if (!d || Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' })
-}
+const when = (v) => timeAgo(v)
 
 const mine = ref([])
 const pending = ref([])

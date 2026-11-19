@@ -1,8 +1,11 @@
 // Paper slips with the invitation codes, one per santri, 8 per A4 page (2 x 4), with cut lines.
 // The child brings the slip home; the parent opens the site, signs in with WhatsApp and types the code.
 
+import { dateTimeText } from './timeAgo.js'
+
 export function slipLines({ santriName, classLabel, code, expiresAt, siteUrl }) {
-  const until = expiresAt ? new Date(expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  // with the hour: the code stops working at that minute ("19 Desember 2026 pukul 14.30 WIB")
+  const until = dateTimeText(expiresAt)
   const host = String(siteUrl || '').replace(/^https?:\/\//, '')
   return {
     title: 'Pengkinian Data Santri - TPQ Amanah',
@@ -67,7 +70,9 @@ export function renderSlips({ jsPDF, slips, siteUrl }) {
     s.steps.forEach((line, n) => doc.text(line, left, y + 47 + n * 4.6))
     doc.setFontSize(7.5)
     doc.setTextColor(110)
-    doc.text(s.footer, left, y + ch - 5)
+    // the date with the hour can be longer than the slip is wide: wrap, the last line stays at the bottom
+    const footer = doc.splitTextToSize(s.footer, cw - 12).slice(0, 2)
+    footer.forEach((line, n) => doc.text(line, left, y + ch - 5 - (footer.length - 1 - n) * 3.4))
   })
   return doc
 }

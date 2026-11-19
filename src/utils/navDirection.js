@@ -41,7 +41,7 @@ export function pageDepth(path, role = 'guru') {
   const p = String(path || '').split('?')[0]
   if (role === 'wali') {
     if (/^\/wali\/santri\/[^/]+\/[^/]+$/.test(p)) return 3
-    if (/^\/wali\/(santri\/[^/]+|daftar\/[^/]+|tautkan)$/.test(p)) return 2
+    if (/^\/wali\/(santri\/[^/]+|daftar\/[^/]+|tautkan|masukan)$/.test(p)) return 2
     return 1
   }
   return deepPageFor(p, role) ? 2 : 1

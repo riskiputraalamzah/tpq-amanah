@@ -119,6 +119,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { usePendaftaranCount } from "@/composables/usePendaftaranCount";
 import { useWaliBadge } from "@/composables/useWaliBadge";
+import { useWaliFeedbackBadge } from "@/composables/useWaliFeedbackBadge";
 import "@/styles/landing.css";
 import "@/styles/dashboard.css";
 import { useRouter, useRoute } from "vue-router";
@@ -183,6 +184,7 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/santri', label: 'Kelola Santri', icon: ICON.santri },
       { to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
       { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
+      { to: '/dashboard/masukan-wali', label: 'Saran & Kritik Wali', icon: ICON.chat, badge: 'masukan' },
       { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
     ],
   },
@@ -336,11 +338,13 @@ const { count: newRegistrations, refresh: refreshRegistrations } = usePendaftara
 const seesRegistrations = computed(() => isAdmin.value || hasPermission("pendaftaran"));
 // What waits for a decision in Data Wali Santri (a teacher: their jilid; the admin: what was handed to the admin)
 const { count: waliWaiting, refresh: refreshWali } = useWaliBadge();
+const { count: feedbackWaiting, refresh: refreshFeedback } = useWaliFeedbackBadge();
 // every badge of the menus, by the key a menu item names (sidebar, the phone's tabs and its Menu sheet)
-const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses" };
+const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses", masukan: "masukan wali belum diproses" };
 const badges = computed(() => ({
   pendaftaran: seesRegistrations.value ? newRegistrations.value : 0,
   wali: isAdmin.value || isGuru.value ? waliWaiting.value : 0,
+  masukan: isAdmin.value ? feedbackWaiting.value : 0,
 }));
 
 watch(
@@ -348,6 +352,7 @@ watch(
   () => {
     if (seesRegistrations.value) refreshRegistrations();
     if (isAdmin.value || isGuru.value) refreshWali();
+    if (isAdmin.value) refreshFeedback();
     // a special access the admin added or removed shows in the menus without signing in again (at most once a minute)
     authStore.refreshUser();
   }
@@ -394,6 +399,7 @@ onMounted(() => {
   if (authStore.isAuthenticated) loadTpqIdentity();
   if (seesRegistrations.value) refreshRegistrations({ force: true });
   if (isAdmin.value || isGuru.value) refreshWali({ force: true });
+  if (isAdmin.value) refreshFeedback({ force: true });
   document.addEventListener("visibilitychange", onVisible);
 });
 </script>
