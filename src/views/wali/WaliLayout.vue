@@ -63,8 +63,8 @@ onMounted(() => refresh())
 </script>
 
 <style scoped>
-/* room under the page for the bar, the bubble that rises above it and the gap a floating bar keeps from the edge */
+/* room under the page for the floating bar (64px), the gap it keeps from the bottom edge (10px) and some air */
 .wali-shell.has-nav :deep(.wali-main) {
-  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 </style>

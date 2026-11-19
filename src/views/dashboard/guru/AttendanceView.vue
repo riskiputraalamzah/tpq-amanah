@@ -366,7 +366,8 @@
       </Teleport>
     </div>
 
-    <!-- Update / Create Attendance Modal -->
+    <!-- Update / Create Attendance Modal (under <body> like the day sheet it opens from, so it is above it) -->
+    <Teleport to="body">
     <div v-if="showUpdateModal" class="modal-overlay" @click.self="closeUpdateModal">
       <div class="modal glass-card">
         <h3 class="at-modal-title">
@@ -384,9 +385,13 @@
           <label class="form-label" id="at-modal-status">Status kehadiran</label>
           <div class="at-choices" role="radiogroup" aria-labelledby="at-modal-status">
             <button type="button" role="radio" class="at-choice is-hadir" :aria-checked="updateForm.status === 'hadir'"
-              :class="{ active: updateForm.status === 'hadir' }" @click="updateForm.status = 'hadir'">
+              :class="{ active: updateForm.status === 'hadir', 'is-closed': !!modalHadirBlock }" :disabled="!!modalHadirBlock"
+              @click="updateForm.status = 'hadir'">
               <span class="at-choice-icon"><LineIcon name="check" :size="20" :stroke="2.6" /></span>
-              <span class="at-choice-text"><strong>Hadir</strong></span>
+              <span class="at-choice-text">
+                <strong>Hadir</strong>
+                <span v-if="modalHadirBlock">{{ modalHadirBlock.short }}</span>
+              </span>
             </button>
             <button type="button" role="radio" class="at-choice is-tidak" :aria-checked="updateForm.status === 'tidak_hadir'"
               :class="{ active: updateForm.status === 'tidak_hadir' }" @click="updateForm.status = 'tidak_hadir'">
@@ -395,6 +400,11 @@
             </button>
           </div>
         </div>
+
+        <p v-if="modalHadirBlock" class="at-hint is-closed at-modal-hint" role="status">
+          <LineIcon name="info" :size="16" />
+          {{ modalHadirBlock.reason }}
+        </p>
 
         <div class="form-group">
           <label class="form-label">Catatan (Opsional)</label>
@@ -410,12 +420,14 @@
           <button type="button" class="btn btn-secondary" @click="closeUpdateModal" :disabled="updating">
             Batal
           </button>
-          <button type="button" class="btn btn-primary" @click="submitUpdate" :disabled="updating">
-            {{ updating ? 'Menyimpan...' : (updateForm.mode === 'create' ? 'Simpan Absensi' : 'Simpan Perubahan') }}
+          <button type="button" class="btn btn-primary" @click="submitUpdate" :disabled="updating || !updateForm.status">
+            {{ updating ? 'Menyimpan...' : !updateForm.status ? 'Pilih status dulu' : (updateForm.mode === 'create' ? 'Simpan Absensi' : 'Simpan Perubahan') }}
           </button>
         </div>
       </div>
     </div>
+
+    </Teleport>
 
     <!-- Modal Pasca Absen Hadir: Arahkan langsung ke KBM & Jurnal -->
     <Teleport to="body">
@@ -451,7 +463,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
@@ -588,7 +600,35 @@ const updateForm = ref({
   status: '',
   notes: '',
   attendanceId: null,
-  isToday: false
+  isToday: false,
+  originalStatus: ''
+})
+
+// "Hadir" is refused by the server for a day still to come, and for today before the teacher's sesi starts (their
+// sesi from Notifikasi WA: hadirWindow). Said here, so the button is off instead of failing after a tap. A past day,
+// and a record that already says hadir, are not limited. Izin / sakit ("Tidak hadir") may be told ahead.
+const wibTodayString = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+function hadirBlockFor(dateStr, originalStatus) {
+  if (originalStatus === 'hadir' || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ''))) return null
+  const day = wibTodayString()
+  if (dateStr > day) {
+    return {
+      short: 'Belum bisa untuk hari yang akan datang',
+      reason: 'Absen hadir untuk hari yang akan datang belum bisa diisi. Izin atau sakit bisa diisi lebih awal.',
+    }
+  }
+  if (dateStr === day && hadirWindow.value.open === false) {
+    return {
+      short: `Dibuka pukul ${String(hadirWindow.value.opensAt || '').replace(':', '.')}, saat sesi Antum dimulai`,
+      reason: hadirWindow.value.reason,
+    }
+  }
+  return null
+}
+const modalHadirBlock = computed(() => (showUpdateModal.value ? hadirBlockFor(updateForm.value.dateStr, updateForm.value.originalStatus) : null))
+// the time passes while the modal is open: Hadir goes away from the choice if it was picked
+watch(modalHadirBlock, (b) => {
+  if (b && updateForm.value.status === 'hadir') updateForm.value.status = ''
 })
 
 // Calendar state
@@ -1068,7 +1108,8 @@ const openUpdateModal = () => {
     status: todayAttendance.value.status === 'hadir' ? 'hadir' : 'tidak_hadir',
     notes: todayAttendance.value.notes || '',
     attendanceId: todayAttendance.value.id,
-    isToday: true
+    isToday: true,
+    originalStatus: todayAttendance.value.status === 'hadir' ? 'hadir' : 'tidak_hadir'
   }
   showUpdateModal.value = true
 }
@@ -1091,10 +1132,12 @@ const openCreateForCalendarDay = (day) => {
     date: getDateObjectForCalendarDay(day),
     dateStr: getDateStringForCalendarDay(day),
     dateFormatted: formatCalendarDate(day),
-    status: 'hadir',
+    // Hadir is the usual choice; when it is not allowed yet nothing is chosen (never a "tidak hadir" by accident)
+    status: hadirBlockFor(getDateStringForCalendarDay(day), '') ? '' : 'hadir',
     notes: '',
     attendanceId: null,
-    isToday
+    isToday,
+    originalStatus: ''
   }
   showUpdateModal.value = true
 }
@@ -1114,7 +1157,8 @@ const openEditForCalendarDay = (day) => {
     status: att.status === 'hadir' ? 'hadir' : 'tidak_hadir',
     notes: att.notes || '',
     attendanceId: att.id,
-    isToday
+    isToday,
+    originalStatus: att.status === 'hadir' ? 'hadir' : 'tidak_hadir'
   }
   showUpdateModal.value = true
 }
@@ -1125,6 +1169,10 @@ const closeUpdateModal = () => {
 
 const submitUpdate = async () => {
   if (!updateForm.value.status) return
+  if (updateForm.value.status === 'hadir' && modalHadirBlock.value) {
+    showError(modalHadirBlock.value.reason)
+    return
+  }
 
   if (isFutureMonthSelection()) {
     showError('Tidak dapat mengisi absensi untuk bulan yang akan datang')
@@ -2397,6 +2445,10 @@ onMounted(async () => {
 .at-choice.is-closed {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.at-modal-hint {
+  margin: 0 0 14px;
 }
 
 .at-hint.is-closed {

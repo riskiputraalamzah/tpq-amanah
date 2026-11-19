@@ -612,7 +612,8 @@
       </aside>
     </div>
 
-    <!-- Success Modal -->
+    <!-- Success Modal (under <body>: above the phone bars like the other pop-ups) -->
+    <Teleport to="body">
       <div v-if="showSuccessModal" class="modal-backdrop">
         <div class="modal-card glass-card text-center">
           <div class="success-icon-wrap">✓</div>
@@ -683,6 +684,8 @@
           </div>
         </div>
       </div>
+
+    </Teleport>
 
     <!-- Modal Ubah Nama Santri (Teleport to body for viewport centering) -->
     <Teleport to="body">
@@ -2816,7 +2819,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 9999;
   padding: 1rem;
 }
 

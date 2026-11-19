@@ -94,3 +94,27 @@ test("the announcement banner shares the dashboard's stacking context: under eve
   assert.ok(!banner.includes("<Teleport"), "teleported, it would cover the sheets that are not");
   assert.equal(zOf("components/AnnouncementBanner.vue"), 8000);
 });
+
+// The day sheet of the attendance pages is teleported to <body>; the "Catat kehadiran" pop-up it opens was not, so it sat
+// inside the layout's stacking context and the sheet covered it. A page that teleports any pop-up must teleport them all
+// (they then share one stacking context and the higher z-index wins). Same for a child component that teleports.
+test("a page that teleports a pop-up has none left inside the layout (they would be covered by the teleported one)", () => {
+  const all = filesIn(src).filter((f) => f.endsWith(".vue"));
+  const templateOf = (f) => {
+    const t = fs.readFileSync(f, "utf8");
+    return t.slice(0, t.indexOf("<script"));
+  };
+  const teleporting = new Set(all.filter((f) => templateOf(f).includes("<Teleport")).map((f) => path.basename(f, ".vue")));
+  const POPUP = /<div[^>]*v-if="[^"]*"[^>]*class="[^"]*(?:modal-overlay|modal-backdrop|-overlay|-backdrop)[^"]*"/g;
+  const stranded = [];
+  for (const f of all) {
+    const outside = templateOf(f).replace(/<Teleport[\s\S]*?<\/Teleport>/g, "");
+    const popups = outside.match(POPUP) || [];
+    if (!popups.length) continue;
+    const tpl = templateOf(f);
+    const own = tpl.includes("<Teleport");
+    const kids = [...tpl.matchAll(/<([A-Z][A-Za-z0-9]+)[\s>/]/g)].map((m) => m[1]).filter((n) => teleporting.has(n) && n !== path.basename(f, ".vue"));
+    if (own || kids.length) stranded.push(`${path.relative(src, f)}: ${popups.length} pop-up(s) outside <Teleport>`);
+  }
+  assert.deepEqual(stranded, []);
+});

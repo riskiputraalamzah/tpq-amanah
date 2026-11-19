@@ -160,11 +160,12 @@
           <div class="form-group">
             <label class="form-label">Status Kehadiran</label>
             <div class="edit-status-buttons">
-              <button class="status-btn-small hadir" :class="{ active: editForm.status === 'hadir' }"
-                @click="editForm.status = 'hadir'">✓ Hadir</button>
+              <button class="status-btn-small hadir" :class="{ active: editForm.status === 'hadir', 'is-closed': !!hadirBlock }"
+                :disabled="!!hadirBlock" @click="editForm.status = 'hadir'">✓ Hadir</button>
               <button class="status-btn-small tidak" :class="{ active: editForm.status === 'tidak_hadir' }"
                 @click="editForm.status = 'tidak_hadir'">✗ Tidak Hadir</button>
             </div>
+            <p v-if="hadirBlock" class="status-closed-note" role="status">{{ hadirBlock.reason }}</p>
           </div>
           <div class="form-group">
             <label class="form-label">Keterangan</label>
@@ -188,6 +189,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import { useHadirBlock } from '@/composables/useHadirBlock'
 import { useToast } from '@/composables/useToast'
 import { fetchHolidays, getHolidaysForMonth } from '@/services/holidayService'
 
@@ -357,25 +359,40 @@ const showDateDetail = (date) => {
   isEditing.value = false
 }
 
+// "Hadir" is refused for a sesi not started yet (today) and for a day still to come: the button says so
+const { block: hadirBlock, check: checkHadir, reset: resetHadir } = useHadirBlock()
+const dayString = () => `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}-${String(selectedDate.value).padStart(2, '0')}`
+watch(hadirBlock, (b) => {
+  if (b && editForm.value.status === 'hadir') editForm.value.status = ''
+})
+
 const startEdit = () => {
+  const original = selectedAttendance.value.status === 'hadir' ? 'hadir' : 'tidak_hadir'
   editForm.value = {
-    status: selectedAttendance.value.status === 'hadir' ? 'hadir' : 'tidak_hadir',
+    status: original,
     notes: selectedAttendance.value.notes || ''
   }
   isEditing.value = true
+  checkHadir(guruId.value, dayString(), original)
 }
 
 const startAdd = () => {
   editForm.value = { status: 'hadir', notes: '' }
   isEditing.value = true
+  checkHadir(guruId.value, dayString(), '')
 }
 
 const cancelEdit = () => {
   isEditing.value = false
+  resetHadir()
 }
 
 const saveEdit = async () => {
   if (!editForm.value.status) return
+  if (editForm.value.status === 'hadir' && hadirBlock.value) {
+    showError(hadirBlock.value.reason)
+    return
+  }
   saving.value = true
 
   try {
@@ -1106,6 +1123,23 @@ onMounted(async () => {
   display: flex;
   gap: var(--space-sm);
   margin-top: var(--space-sm);
+}
+
+.status-btn-small:disabled,
+.status-btn-small.is-closed {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.status-closed-note {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.84rem;
+  line-height: 1.45;
 }
 
 .status-btn-small {

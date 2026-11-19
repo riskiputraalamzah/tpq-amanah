@@ -534,6 +534,8 @@
       </table>
     </section>
 
+    <!-- Pop-ups of this page: under <body> like the day sheet they open from (a pop-up left inside the layout is covered by it) -->
+    <Teleport to="body">
     <!-- Add Attendance Modal -->
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal glass-card">
@@ -578,7 +580,8 @@
             <button class="status-btn" :class="{
               active: form.status === 'hadir',
               hadir: form.status === 'hadir',
-            }" @click="form.status = 'hadir'">
+              'is-closed': !!hadirBlock,
+            }" :disabled="!!hadirBlock" @click="form.status = 'hadir'">
               <LineIcon name="check" :size="17" :stroke="2.6" /> Hadir
             </button>
             <button class="status-btn" :class="{
@@ -588,6 +591,7 @@
               <LineIcon name="x" :size="17" :stroke="2.6" /> Tidak hadir
             </button>
           </div>
+          <p v-if="hadirBlock" class="status-closed-note" role="status">{{ hadirBlock.reason }}</p>
         </div>
         <div class="form-group">
           <label class="form-label">Keterangan (opsional)</label>
@@ -595,8 +599,8 @@
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" @click="closeModal">Batal</button>
-          <button class="btn btn-primary" @click="saveAttendance" :disabled="saving">
-            {{ saving ? "Menyimpan..." : "Simpan" }}
+          <button class="btn btn-primary" @click="saveAttendance" :disabled="saving || !form.status">
+            {{ saving ? "Menyimpan..." : !form.status ? "Pilih status dulu" : "Simpan" }}
           </button>
         </div>
       </div>
@@ -719,6 +723,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
     <!-- Reset Testing Modal -->
     <Teleport to="body">
       <div v-if="showResetTestingModal" class="modal-overlay" @click.self="closeResetTestingModal">
@@ -869,7 +874,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { useHadirBlock } from "@/composables/useHadirBlock";
 import api from "@/services/api";
 import { useToast } from "@/composables/useToast";
 import { useDialog } from "@/composables/useDialog";
@@ -1021,6 +1027,20 @@ const form = ref({
   guruName: "",
   status: "hadir",
   notes: "",
+});
+
+// "Hadir" is refused for a guru whose sesi has not started today, and for a day still to come: the button says so
+const { block: hadirBlock, check: checkHadir, reset: resetHadir } = useHadirBlock();
+watch(
+  () => [showModal.value, form.value.guruId, form.value.date, form.value.originalStatus],
+  ([open, guruId, date, original]) => {
+    if (open) checkHadir(guruId, date, original);
+    else resetHadir();
+  },
+);
+// it can come after the modal opened (the answer takes a moment): Hadir goes away from the choice
+watch(hadirBlock, (b) => {
+  if (b && form.value.status === "hadir") form.value.status = "";
 });
 
 const availableMonths = computed(() => {
@@ -1524,6 +1544,7 @@ const openAddModal = (day = null, guruId = "", existingData = null) => {
     guruId: guruId || "",
     status: existingData ? existingData.status : "hadir",
     notes: existingData ? existingData.notes : "",
+    originalStatus: existingData && existingData.status === "hadir" ? "hadir" : "",
     isQuickAdd,
   };
   showModal.value = true;
@@ -1935,6 +1956,10 @@ const saveAttendance = async () => {
   }
   if (!form.value.guruId) {
     warning("Pilih guru terlebih dahulu");
+    return;
+  }
+  if (!form.value.status) {
+    warning("Pilih status kehadiran dulu");
     return;
   }
   saving.value = true;
@@ -2637,6 +2662,23 @@ onUnmounted(() => {
 .status-buttons {
   display: flex;
   gap: var(--space-md);
+}
+
+.status-btn:disabled,
+.status-btn.is-closed {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.status-closed-note {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+  color: #5b3a06;
+  font-size: 0.84rem;
+  line-height: 1.45;
 }
 
 .status-btn {

@@ -791,11 +791,11 @@ onMounted(() => {
   .dashboard-layout {
     --appbar-h: calc(56px + env(safe-area-inset-top, 0px) + var(--banner-h, 0px));
     --nav-h: calc(64px + env(safe-area-inset-bottom, 0px));
-    --nav-over: 24px; /* the bubble rises this far above the bottom bar */
+    --nav-over: 18px; /* the bar floats 10px above the bottom edge: this is that gap and a little air */
   }
 
   /* the ONLY place that sets a page's margins on a phone: 16px sides and under the top bar, and above the
-     bottom bar room for the bar, the bubble that rises above it, and 8px. A page's own root must not add padding or margin of its own. */
+     bottom bar room for the floating bar, the gap under it, and 8px. A page's own root must not add padding or margin of its own. */
   .dashboard-main {
     padding: calc(var(--appbar-h) + 16px) 16px calc(var(--nav-h) + var(--nav-over) + 8px);
     overflow-x: clip; /* a page sliding in is wider than the screen for a moment */

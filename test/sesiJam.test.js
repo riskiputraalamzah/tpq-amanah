@@ -66,3 +66,25 @@ test("Titip santri: a Titipan group on top of the sesi the child goes to; left o
   assert.ok(has(kbm, "Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}"));
   assert.ok(has(kbm, "titipAway.value = data.titipAway || []"));
 });
+
+const attView = read("src/views/dashboard/guru/AttendanceView.vue");
+const adminAtt = read("src/views/dashboard/admin/AdminAttendanceView.vue");
+const detail = read("src/views/dashboard/admin/TeacherAttendanceDetail.vue");
+test("Hadir is switched off, with the reason, where the server would refuse it (guru calendar pop-up, admin add / edit)", () => {
+  assert.ok(has(attView, ":disabled=\"!!modalHadirBlock\""));
+  assert.ok(has(attView, "Belum bisa untuk hari yang akan datang"));
+  assert.ok(has(attView, "if (originalStatus === 'hadir'"), "a record that already says hadir is not limited");
+  assert.ok(has(attView, "status: hadirBlockFor(getDateStringForCalendarDay(day), '') ? '' : 'hadir'"), "nothing is preselected when Hadir is off");
+  assert.ok(has(attView, ":disabled=\"updating || !updateForm.status\""), "save waits for a status");
+  assert.ok(has(adminAtt, ":disabled=\"!!hadirBlock\""));
+  assert.ok(has(detail, ":disabled=\"!!hadirBlock\""));
+  const composable = read("src/composables/useHadirBlock.js");
+  assert.ok(has(composable, "api.get('/attendance/hadir-window', { params: { guruId, date }, cache: false })"));
+  assert.ok(has(composable, "if (mine === seq) info.value = data"), "an old answer never replaces a newer question");
+});
+
+test("the guru dashboard says 'Tidak hadir', not the raw 'tidak_hadir'", () => {
+  const dash = read("src/views/dashboard/guru/GuruDashboard.vue");
+  assert.ok(has(dash, "tidak_hadir: 'Tidak hadir'"));
+  assert.ok(has(dash, "Sudah: ${attendanceWord(d.tasks.attendance.status)}"));
+});

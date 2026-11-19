@@ -124,6 +124,10 @@ test("one bottom bar for everyone: the dashboard and the wali portal both draw i
   assert.match(wali, /<BubbleNav[\s\S]*?floating/, "wali: floats on wide screens");
   assert.ok(!/\.mc-nav[\w-]*\s*\{/.test(chrome), "the dashboard component holds no copy of the bar's styles");
   assert.ok(!/wali-nav/.test(wali), "and neither does the wali layout");
-  assert.ok(bar.includes("@property --cx") && bar.includes("@property --hole"), "the animated properties are registered with the bar");
   assert.ok(bar.includes("TEXT_FIELD"), "the bar steps aside while typing, for both");
+  // the pill design: the active tab shows its name, the others are icons read aloud by their aria-label; nothing is measured
+  assert.ok(bar.includes(".mc-nav-item.is-active .mc-nav-label"), "the active tab opens out its name");
+  assert.ok(bar.includes(":aria-label=\"itemLabel(item)\""), "an icon-only tab is still named");
+  assert.ok(!bar.includes("getBoundingClientRect"), "no measuring: the pill grows by itself");
+  assert.ok(/min-width: 44px/.test(bar) && /height: 44px/.test(bar), "every tab is a 44px tap target");
 });

@@ -1,37 +1,27 @@
 <template>
-  <!-- A bottom bar: rounded top corners, a round hole under the ACTIVE tab and a dark-green bubble sitting in it. Both slide
-       to the tab you choose (--cx is the centre of the active tab, measured here). Shared by the dashboard (admin, guru)
-       and the wali portal, so they always look and behave the same. -->
-  <nav ref="navEl" class="mc-nav" :class="{ 'is-hidden': typing, 'is-ready': navReady, 'has-active': activeIndex >= 0, 'is-phone-only': phoneOnly, 'is-floating': floating }"
-    :style="{ '--cx': `${cx}px`, '--cols': items.length, '--nav-max': `${maxWidth}px` }" :aria-label="ariaLabel">
-    <span class="mc-nav-bg" aria-hidden="true"></span>
-    <span class="mc-bubble" aria-hidden="true">
-      <Transition name="mc-pop" mode="out-in">
-        <span :key="activeIndex" class="mc-bubble-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" v-html="activeItem?.icon || ''"></svg>
-        </span>
-      </Transition>
-      <span v-if="activeBadge" class="mc-badge">{{ activeBadge > 9 ? '9+' : activeBadge }}</span>
-    </span>
-
+  <!-- The bottom bar: a dark-green bar floating above the bottom edge. The ACTIVE tab is a pill with its icon and its name;
+       the other tabs are icons only (their names are read aloud). Shared by the dashboard (admin, guru) and the wali
+       portal, so they always look and behave the same. No measuring: the pill grows by itself (CSS only). -->
+  <nav class="mc-nav" :class="{ 'is-hidden': typing, 'is-phone-only': phoneOnly, 'is-floating': floating }"
+    :style="{ '--nav-max': `${maxWidth}px` }" :aria-label="ariaLabel">
     <div class="mc-nav-row">
       <template v-for="(item, i) in items" :key="item.key">
-        <button v-if="item.button" :ref="(el) => setItemEl(i, el)" type="button" class="mc-nav-item" :class="{ 'is-open': i === activeIndex }" :aria-expanded="!!item.expanded" aria-haspopup="dialog" @click="$emit('press', item, i)">
+        <button v-if="item.button" :ref="(el) => setItemEl(i, el)" type="button" class="mc-nav-item" :class="{ 'is-open': i === activeIndex }" :aria-expanded="!!item.expanded" aria-haspopup="dialog" :aria-label="itemLabel(item)" @click="$emit('press', item, i)">
           <span class="mc-nav-icon" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
             <span v-if="item.badge && i !== activeIndex" class="mc-badge">{{ item.badge > 9 ? '9+' : item.badge }}</span>
           </span>
-          <span class="mc-nav-label">{{ item.label }}</span>
-          <span v-if="item.badge" class="mc-sr">, {{ item.badge }} {{ item.badgeLabel }}</span>
+          <span class="mc-nav-label" aria-hidden="true">{{ item.label }}</span>
+          <span v-if="item.badge && i === activeIndex" class="mc-badge is-inline" aria-hidden="true">{{ item.badge > 9 ? '9+' : item.badge }}</span>
         </button>
         <router-link v-else :ref="(el) => setItemEl(i, el)" :to="item.to" class="mc-nav-item" :class="{ 'is-active': i === activeIndex }"
-          :aria-current="i === (currentIndex ?? activeIndex) ? 'page' : undefined">
+          :aria-label="itemLabel(item)" :aria-current="i === (currentIndex ?? activeIndex) ? 'page' : undefined">
           <span class="mc-nav-icon" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" v-html="item.icon"></svg>
             <span v-if="item.badge && i !== activeIndex" class="mc-badge">{{ item.badge > 9 ? '9+' : item.badge }}</span>
           </span>
-          <span class="mc-nav-label">{{ item.label }}</span>
-          <span v-if="item.badge" class="mc-sr">, {{ item.badge }} {{ item.badgeLabel }}</span>
+          <span class="mc-nav-label" aria-hidden="true">{{ item.label }}</span>
+          <span v-if="item.badge && i === activeIndex" class="mc-badge is-inline" aria-hidden="true">{{ item.badge > 9 ? '9+' : item.badge }}</span>
         </router-link>
       </template>
     </div>
@@ -40,10 +30,10 @@
 
 <script setup>
 // items: [{ key, label, icon (svg inner markup), to? | button: true, badge?, badgeLabel?, expanded? }]
-// activeIndex: where the bubble sits (-1: nowhere); currentIndex: the tab of the page being shown (aria-current)
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+// activeIndex: the tab shown as the pill (-1: none, every tab is an icon); currentIndex: the tab of the page being shown (aria-current)
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-const props = defineProps({
+defineProps({
   items: { type: Array, required: true },
   activeIndex: { type: Number, default: -1 },
   currentIndex: { type: Number, default: undefined },
@@ -54,36 +44,13 @@ const props = defineProps({
 })
 defineEmits(['press'])
 
-const activeItem = computed(() => props.items[props.activeIndex] || null)
-const activeBadge = computed(() => activeItem.value?.badge || 0)
+// a tab whose name is not drawn (icon only) is still named: "Pendaftaran, 3 perlu diproses"
+const itemLabel = (item) => (item.badge ? `${item.label}, ${item.badge} ${item.badgeLabel || 'baru'}` : item.label)
 
-// where the bubble and the hole are: the centre of the active tab, measured from the bar's left edge
-const navEl = ref(null)
 const itemEls = []
-const cx = ref(-120)
-const navReady = ref(false) // transitions start after the first measure, so the bubble does not slide in from nowhere
 const setItemEl = (i, el) => {
   itemEls[i] = el ? el.$el || el : null
 }
-function measureNav() {
-  const nav = navEl.value
-  const el = itemEls[props.activeIndex]
-  if (!nav) return
-  // a page that is in no tab: the bubble and the hole close where they are (no sliding away)
-  if (props.activeIndex < 0 || !el) return
-  const n = nav.getBoundingClientRect()
-  const r = el.getBoundingClientRect()
-  if (!n.width || !r.width) return // hidden (laptop width): measured again when it shows
-  cx.value = Math.round(r.left - n.left + r.width / 2)
-}
-let observer = null
-watch(
-  () => [props.activeIndex, props.items.length],
-  async () => {
-    await nextTick()
-    measureNav()
-  },
-)
 
 // while typing the on-screen keyboard takes the room: the bar steps aside
 const typing = ref(false)
@@ -98,19 +65,10 @@ const onFocusOut = () => {
 }
 
 onMounted(() => {
-  measureNav()
-  requestAnimationFrame(() => {
-    navReady.value = true
-  })
-  if (typeof ResizeObserver !== 'undefined' && navEl.value) {
-    observer = new ResizeObserver(measureNav)
-    observer.observe(navEl.value)
-  }
   document.addEventListener('focusin', onFocusIn)
   document.addEventListener('focusout', onFocusOut)
 })
 onBeforeUnmount(() => {
-  observer?.disconnect()
   document.removeEventListener('focusin', onFocusIn)
   document.removeEventListener('focusout', onFocusOut)
 })
@@ -119,117 +77,59 @@ defineExpose({ itemEl: (i) => itemEls[i] })
 </script>
 
 <style scoped>
-/* the bar: rounded top corners, a round hole under the active tab and a dark-green bubble in it */
+/* the bar: a dark-green rounded bar floating 10px above the bottom edge (and above the phone's own gesture bar) */
 .mc-nav {
   --nav-bar: 64px;
-  --hole: 0px; /* the hole's radius: it opens under the active tab and closes when no tab is active */
+  --nav-gap: 10px; /* from the bottom edge; the sides keep 12px */
   display: block;
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--nav-gap) + env(safe-area-inset-bottom, 0px));
   z-index: var(--z-fixed, 300);
-  height: calc(var(--nav-bar) + env(safe-area-inset-bottom, 0px));
+  height: var(--nav-bar);
   max-width: var(--nav-max, 640px);
   margin: 0 auto;
-  /* the shadow follows the bar's real shape, hole included (a box-shadow would be cut by the mask) */
-  filter: drop-shadow(0 -3px 10px rgba(2, 28, 19, 0.14));
+  border-radius: 28px;
+  background: linear-gradient(180deg, #06452f 0%, #03291d 100%);
+  border: 1px solid rgba(167, 243, 208, 0.12);
+  box-shadow: 0 16px 30px -12px rgba(2, 28, 19, 0.6), 0 3px 8px rgba(2, 28, 19, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.2s ease;
-}
-
-.mc-nav.is-ready {
-  transition: transform 0.2s ease, --cx 0.42s cubic-bezier(0.22, 1, 0.36, 1), --hole 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.mc-nav.has-active {
-  --hole: 36px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .mc-nav.is-hidden {
   transform: translateY(calc(100% + 40px));
+  opacity: 0;
   pointer-events: none;
-}
-
-/* the bar: rounded top corners, and a round hole (radius 36) around the active tab's bubble */
-.mc-nav-bg {
-  position: absolute;
-  inset: 0;
-  background: #fbf9f3;
-  border-radius: 24px 24px 0 0;
-  -webkit-mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
-  mask: radial-gradient(circle at var(--cx) 2px, transparent var(--hole), #000 calc(var(--hole) * 1.02));
-}
-
-/* the bubble: dark green with the brand's gold icon, centred in the hole (it rises 24px above the bar) */
-.mc-bubble {
-  position: absolute;
-  top: -24px;
-  left: 0;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  color: #fcd34d;
-  background: radial-gradient(circle at 30% 22%, #138a5f 0%, #065f46 52%, #03291d 100%);
-  box-shadow: 0 10px 18px -8px rgba(3, 41, 29, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: translate3d(calc(var(--cx) - 26px), 0, 0);
-  opacity: 0;
-  scale: 0.4;
-  pointer-events: none;
-  transition: opacity 0.2s ease, scale 0.28s cubic-bezier(0.34, 1.4, 0.5, 1);
-}
-
-.mc-nav.has-active .mc-bubble {
-  opacity: 1;
-  scale: 1;
-}
-
-.mc-bubble-icon {
-  display: grid;
-  place-items: center;
-}
-
-.mc-pop-enter-active,
-.mc-pop-leave-active {
-  transition: opacity 0.12s ease, transform 0.16s ease;
-}
-
-.mc-pop-enter-from {
-  opacity: 0;
-  transform: scale(0.5) rotate(-12deg);
-}
-
-.mc-pop-leave-to {
-  opacity: 0;
-  transform: scale(0.6);
 }
 
 .mc-nav-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
-  height: var(--nav-bar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 8px;
 }
 
 .mc-nav-item {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 2px 0;
-  border: 0;
-  border-radius: 16px;
+  justify-content: center;
+  flex: 0 1 auto;
+  min-width: 44px; /* a tap target on a phone: 44px, whatever is drawn */
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: none;
   font: inherit;
-  color: #5b6b62;
+  color: rgba(236, 253, 245, 0.66);
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s ease, transform 0.12s ease;
+  transition: color 0.18s ease, background-color 0.22s ease, border-color 0.22s ease, padding 0.28s cubic-bezier(0.22, 1, 0.36, 1), transform 0.12s ease;
 }
 
 .mc-nav-item:active {
@@ -240,69 +140,75 @@ defineExpose({ itemEl: (i) => itemEls[i] })
   position: relative;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 28px;
+  flex: none;
+  width: 24px;
+  height: 24px;
 }
 
-/* the active tab's own icon is the one in the bubble: it steps out of the way */
-.mc-nav-icon svg {
-  transition: opacity 0.15s ease, transform 0.2s ease;
-}
-
+/* the active tab: a pill, the icon and its name (the name opens out) */
 .mc-nav-item.is-active,
 .mc-nav-item.is-open {
-  color: #053d2c;
+  padding: 0 14px 0 12px;
+  border-color: rgba(110, 231, 183, 0.3);
+  background: rgba(110, 231, 183, 0.17);
+  color: #d1fae5;
 }
 
 .mc-nav-item.is-active .mc-nav-icon svg,
 .mc-nav-item.is-open .mc-nav-icon svg {
-  opacity: 0;
-  transform: translateY(8px) scale(0.5);
+  stroke-width: 2.3;
 }
 
 .mc-nav-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  line-height: 1.1;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+  transition: max-width 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease 0.04s, margin 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* the name takes the room there is (the other tabs keep 44px): up to 10em, then it is cut with an ellipsis */
+.mc-nav-item.is-active .mc-nav-label,
+.mc-nav-item.is-open .mc-nav-label {
+  max-width: 10em;
+  margin-left: 7px;
+  opacity: 1;
+}
+
+/* what waits: on the icon's corner while the tab is an icon, after the name while it is the pill */
 .mc-badge {
   position: absolute;
-  top: -5px;
-  right: -7px; /* on the icon's corner, not over it */
+  top: -6px;
+  right: -8px;
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
   border-radius: 999px;
-  background: #b45309;
+  background: #d97706;
   color: #fff;
   font-size: 0.66rem;
   font-weight: 800;
   line-height: 18px;
   text-align: center;
-  box-shadow: 0 0 0 2px #fbf9f3;
+  box-shadow: 0 0 0 2px #04321f;
 }
 
-.mc-bubble .mc-badge {
-  top: -2px;
-  right: -2px;
+.mc-badge.is-inline {
+  position: static;
+  flex: none;
+  margin-left: 6px;
+  box-shadow: none;
 }
-
 
 .mc-nav-item:focus-visible {
-  outline: 2px solid #0a5c40;
-  outline-offset: -4px;
-}
-
-.mc-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+  outline: 2px solid #fcd34d;
+  outline-offset: 2px;
 }
 
 /* the dashboard shows it on phones and tablets only (the laptop has the sidebar) */
@@ -316,43 +222,47 @@ defineExpose({ itemEl: (i) => itemEls[i] })
   }
 }
 
-/* a wide screen: the bar floats a little above the bottom edge, rounded all round (the wali portal) */
-@media (min-width: 600px) {
-  .mc-nav.is-floating {
-    bottom: 12px;
-    height: var(--nav-bar);
+/* narrow phones: a little tighter, so five tabs and the pill (with "Pendaftaran") still fit */
+@media (max-width: 360px) {
+  .mc-nav-row {
+    padding: 0 4px;
   }
 
-  .mc-nav.is-floating .mc-nav-bg {
-    border-radius: 24px;
+  .mc-nav-item {
+    padding: 0 8px;
+  }
+
+  .mc-nav-item.is-active,
+  .mc-nav-item.is-open {
+    padding: 0 10px 0 8px;
+  }
+
+  .mc-nav-item.is-active .mc-nav-label,
+  .mc-nav-item.is-open .mc-nav-label {
+    margin-left: 5px;
+    font-size: 0.74rem;
+    letter-spacing: 0;
+  }
+}
+
+@media (max-width: 340px) {
+  .mc-nav {
+    left: 8px;
+    right: 8px;
+  }
+
+  .mc-nav-item.is-active .mc-nav-label,
+  .mc-nav-item.is-open .mc-nav-label {
+    margin-left: 4px;
+    font-size: 0.72rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mc-nav,
-  .mc-nav.is-ready,
-  .mc-bubble,
   .mc-nav-item,
-  .mc-nav-icon svg,
-  .mc-pop-enter-active,
-  .mc-pop-leave-active {
+  .mc-nav-label {
     transition: none;
   }
-}
-</style>
-
-<style>
-/* --cx (the centre of the active tab) and --hole (the hole's radius) are registered as lengths so they can animate: the
-   hole and the bubble read them every frame, so they always move together. Without @property support they simply jump. */
-@property --cx {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
-}
-
-@property --hole {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0px;
 }
 </style>

@@ -25,7 +25,7 @@
                 <span class="gd-task-mark" aria-hidden="true"><LineIcon :name="d.tasks.attendance.done ? 'check' : 'clock'" :size="18" :stroke="2.6" /></span>
                 <span class="gd-task-text">
                   <strong>Absen kehadiran saya</strong>
-                  <small>{{ d.tasks.attendance.done ? `Sudah: ${d.tasks.attendance.status}` : 'Belum absen hari ini' }}</small>
+                  <small>{{ d.tasks.attendance.done ? `Sudah: ${attendanceWord(d.tasks.attendance.status)}` : 'Belum absen hari ini' }}</small>
                 </span>
                 <span class="gd-go" aria-hidden="true">›</span>
               </router-link>
@@ -147,6 +147,9 @@ import { useStickySide } from '@/composables/useStickySide'
 
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+// the teacher's own attendance today, in words (the API says hadir / tidak_hadir / izin / sakit / alfa)
+const ATTENDANCE_WORD = { hadir: 'Hadir', tidak_hadir: 'Tidak hadir', izin: 'Izin', sakit: 'Sakit', alfa: 'Alfa' }
+const attendanceWord = (s) => ATTENDANCE_WORD[String(s || '').toLowerCase()] || String(s || '').replace(/_/g, ' ')
 const GAP = { incomplete: 'KBM belum lengkap', not_created: 'KBM belum dibuat', no_attendance: 'belum absen' }
 const SOURCE = { admin: 'jilid ditetapkan admin', kbm: 'dari riwayat KBM 60 hari', feature: 'akses semua jilid' }
 
