@@ -5,12 +5,15 @@
       <span class="ar-dot" aria-hidden="true"></span>
       Laporan absen keliru dari wali <span class="ar-count">{{ reports.length }}</span>
     </h2>
-    <p class="ar-lead">Wali merasa absen ananda keliru. Cek dulu, lalu betulkan atau jelaskan. Jawaban Antum dikirim ke wali lewat WhatsApp.</p>
+    <p class="ar-lead">Wali mengajukan crosscheck karena merasa absen ananda keliru. Cek alasannya, lalu setujui perubahan atau beri penjelasan. Konfirmasi maaf &amp; perubahan status dikirim otomatis ke WhatsApp wali.</p>
     <ul class="ar-list">
       <li v-for="r in reports" :key="r.id" class="ar-item">
         <div class="ar-who">
           <strong>{{ r.santriName }}</strong>
-          <span class="ar-meta">{{ levelName(r.classId) }} · {{ dayText(r.date) }} · Sesi {{ r.slot === 'wave_2' ? 'Malam' : 'Sore' }}</span>
+          <span class="ar-meta">
+            {{ levelName(r.classId) }} · {{ dayText(r.date) }} · Sesi {{ r.slot === 'wave_2' ? 'Malam' : 'Sore' }}
+            <template v-if="r.createdAt"> · {{ timeAgo(r.createdAt) }}</template>
+          </span>
         </div>
         <p class="ar-change">
           Tercatat <span class="ar-pill" :class="`is-${r.recorded || 'none'}`">{{ word(r.recorded) }}</span>
@@ -34,6 +37,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import { useDialog } from '@/composables/useDialog'
+import { timeAgo } from '@/utils/timeAgo'
 
 const emit = defineEmits(['changed'])
 const { ask } = useDialog()

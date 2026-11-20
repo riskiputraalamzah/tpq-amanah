@@ -14,6 +14,8 @@
     <p v-else-if="loadError" class="iz-note is-danger" role="alert">{{ loadError }}</p>
 
     <template v-else>
+      <AbsenReports @changed="load({ quiet: true })" />
+
       <!-- Scope info for Guru -->
       <p v-if="!isAdmin && classIds && !classIds.length" class="iz-note is-warn" role="status">
         Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
@@ -286,6 +288,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import AbsenReports from '@/components/absen/AbsenReports.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'

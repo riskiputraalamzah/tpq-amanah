@@ -57,10 +57,12 @@
         Sudah ada {{ fromWali.length }} izin/sakit dari wali: {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}.
       </p>
       <button v-if="otherSlot && sheetOf(otherSlot.id)?.canEdit" type="button" class="as-jump" @click="setSlot(otherSlot.id)">
-        Buka absen sesi {{ otherSlot.label }} ›
+        <span>Buka absen sesi {{ otherSlot.label }}</span>
+        <span aria-hidden="true">›</span>
       </button>
       <router-link to="/dashboard/izin-santri" class="as-jump">
-        Catat izin / sakit santri (hari ini / beberapa hari) ›
+        <span>Catat izin / sakit santri</span>
+        <span aria-hidden="true">›</span>
       </router-link>
     </div>
 
@@ -775,8 +777,12 @@ onBeforeUnmount(() => {
 }
 
 .as-jump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 40px;
-  padding: 0 12px;
+  padding: 6px 14px;
   border-radius: 10px;
   border: 1px solid rgba(10, 92, 64, 0.35);
   background: #fff;
@@ -784,6 +790,9 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--emerald);
+  text-decoration: none;
+  box-sizing: border-box;
+  max-width: 100%;
   cursor: pointer;
 }
 
@@ -805,7 +814,16 @@ onBeforeUnmount(() => {
 }
 
 .as-date {
-  flex: 1 1 160px;
+  flex: 1 1 180px;
+}
+
+@media (max-width: 520px) {
+  .as-date {
+    flex: 1 1 100%;
+  }
+  .as-controls .as-titip-btn {
+    flex: 1 1 calc(50% - 6px);
+  }
 }
 
 /* the sesi has not started yet */
@@ -814,7 +832,7 @@ onBeforeUnmount(() => {
   justify-items: center;
   gap: 6px;
   margin: 12px 0;
-  padding: 28px 18px;
+  padding: 24px 16px;
   border-radius: 16px;
   border: 1px dashed rgba(11, 59, 42, 0.25);
   background: rgba(11, 59, 42, 0.03);
@@ -844,7 +862,10 @@ onBeforeUnmount(() => {
 }
 
 .as-closed .as-jump {
-  margin-top: 8px;
+  margin-top: 6px;
+  min-height: 42px;
+  padding: 8px 16px;
+  white-space: nowrap;
 }
 
 .as-titip-btn {
@@ -852,14 +873,16 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   min-height: 46px;
-  padding: 0 16px;
+  padding: 0 14px;
   border-radius: 12px;
   border: 1px solid rgba(10, 92, 64, 0.35);
   background: #fff;
   font: inherit;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--emerald);
   text-decoration: none;
+  white-space: nowrap;
   box-sizing: border-box;
   cursor: pointer;
 }

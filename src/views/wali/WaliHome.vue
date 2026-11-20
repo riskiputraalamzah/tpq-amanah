@@ -90,6 +90,17 @@
             <span class="month-strip-more">Lihat kehadiran &amp; materi ›</span>
           </router-link>
 
+          <router-link
+            v-if="s.thisMonth?.alfa > 0"
+            :to="`/wali/santri/${s.santriId}/progres?koreksi=terbaru`"
+            class="alfa-crosscheck-row"
+          >
+            <span class="alfa-crosscheck-text">
+              Tercatat <strong>{{ s.thisMonth.alfa }} alfa</strong> · Ajukan crosscheck / koreksi absen
+            </span>
+            <span class="alfa-crosscheck-go" aria-hidden="true">›</span>
+          </router-link>
+
           <!-- the child's other pages: three tiles, thumb-sized -->
           <nav class="tiles" :aria-label="`Menu ${s.name}`">
             <router-link :to="`/wali/santri/${s.santriId}/izin`" class="tile">
@@ -462,6 +473,33 @@ onMounted(load)
 .month-strip-counts .is-izin strong { color: #1d4f8a; }
 .month-strip-counts .is-sakit strong { color: #7c3a0d; }
 .month-strip-counts .is-alfa strong { color: #8e1b12; }
+
+.alfa-crosscheck-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff8ed;
+  border: 1px solid #f1cf94;
+  color: #7c3a0d;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.alfa-crosscheck-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.alfa-crosscheck-go {
+  flex: none;
+  font-size: 1.2rem;
+  line-height: 1;
+}
 
 .act-lines {
   display: flex;

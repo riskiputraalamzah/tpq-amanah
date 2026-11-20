@@ -32,10 +32,33 @@
         </div>
       </div>
 
+      <!-- Banner crosscheck bila ada pertemuan 7 hari terakhir yang tercatat alfa dan belum dilaporkan -->
+      <section v-if="unreportedAlfas.length" class="w-card alfa-alert" aria-labelledby="alfa-alert-title">
+        <div class="alfa-alert-top">
+          <strong id="alfa-alert-title">Crosscheck Absen Alfa ({{ unreportedAlfas.length }} pertemuan)</strong>
+        </div>
+        <p class="alfa-alert-text">
+          Tercatat <strong>Alfa</strong> dalam 7 hari terakhir, padahal ananda sebenarnya <strong>Hadir, Izin, atau Sakit</strong>?
+          Ajukan crosscheck agar langsung dikirim lewat WA Bot ke <strong>Guru Jilid</strong> dan <strong>Admin TPQ</strong> untuk dikoreksi.
+        </p>
+        <div class="alfa-alert-list">
+          <button
+            v-for="m in unreportedAlfas"
+            :key="keyOf(m)"
+            type="button"
+            class="alfa-alert-btn"
+            @click="jumpToReport(m)"
+          >
+            <span>Crosscheck {{ shortDate(m.date) }} ({{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }})</span>
+            <span aria-hidden="true">›</span>
+          </button>
+        </div>
+      </section>
+
       <h2 class="w-section-title">Pertemuan</h2>
       <p v-if="!data.meetings.length" class="w-card empty">Belum ada catatan KBM untuk ananda di bulan ini.</p>
       <ul v-else class="meetings">
-        <li v-for="(m, i) in data.meetings" :key="`${m.date}-${i}`" class="w-card meeting">
+        <li v-for="(m, i) in data.meetings" :id="`mt-${keyOf(m)}`" :key="`${m.date}-${i}`" class="w-card meeting">
           <div class="meeting-head">
             <span class="meeting-date">{{ shortDate(m.date) }}<span class="meeting-slot"> · {{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }}</span></span>
             <span class="w-pill" :class="`is-${STATUS_META[m.status].tone}`">{{ STATUS_META[m.status].label }}</span>
@@ -58,17 +81,34 @@
             </p>
           </template>
           <template v-else-if="canReport(m)">
-            <button v-if="formKey !== keyOf(m)" type="button" class="report-open" @click="openForm(m)">Absen ini keliru? Laporkan</button>
+            <button v-if="formKey !== keyOf(m)" type="button" class="report-open" @click="openForm(m)">
+              <span>Absen ini keliru? Crosscheck / Koreksi</span>
+              <span aria-hidden="true">›</span>
+            </button>
             <form v-else class="report-form" @submit.prevent="sendReport(m)">
-              <p :id="`rp-${keyOf(m)}`" class="report-q">Yang benar, ananda:</p>
+              <p :id="`rp-${keyOf(m)}`" class="report-q">Yang benar, ananda pada hari tersebut:</p>
               <div class="w-chips" role="radiogroup" :aria-labelledby="`rp-${keyOf(m)}`">
-                <button v-for="o in WANTS" :key="o.key" type="button" role="radio" class="w-chip" :aria-checked="form.want === o.key" @click="form.want = o.key">
+                <button v-for="o in WANTS" :key="o.key" type="button" role="radio" class="w-chip" :aria-checked="form.want === o.key" @click="pickWant(o.key)">
                   {{ o.label }}
                 </button>
               </div>
-              <label class="report-label" :for="`rn-${keyOf(m)}`">Keterangan</label>
+              <div v-if="form.want && QUICK_NOTES[form.want]?.length" class="report-quick">
+                <button
+                  v-for="qn in QUICK_NOTES[form.want]"
+                  :key="qn"
+                  type="button"
+                  class="report-quick-btn"
+                  @click="form.note = qn"
+                >
+                  {{ qn }}
+                </button>
+              </div>
+              <label class="report-label" :for="`rn-${keyOf(m)}`">Alasan / Keterangan Crosscheck</label>
               <textarea :id="`rn-${keyOf(m)}`" v-model="form.note" class="w-input report-note" rows="2" maxlength="300"
-                placeholder="Misalnya: ananda datang terlambat pukul 15.30"></textarea>
+                placeholder="Misalnya: ananda hadir mengikuti ngaji hari tersebut / datang terlambat pukul 15.30"></textarea>
+              <p class="w-help report-hint">
+                Laporan ini dikirim lewat WA Bot ke Guru Jilid ananda &amp; Admin TPQ. Setelah disetujui, konfirmasi perubahan absen dikirim ke WhatsApp Bapak/Ibu.
+              </p>
               <p v-if="formError" class="w-error" role="alert">{{ formError }}</p>
               <div class="report-actions">
                 <button type="button" class="w-btn w-btn-ghost" @click="formKey = ''">Batal</button>
@@ -90,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
@@ -118,6 +158,11 @@ const WANTS = [
   { key: 'izin', label: 'Izin' },
   { key: 'sakit', label: 'Sakit' },
 ]
+const QUICK_NOTES = {
+  hadir: ['Ananda hadir mengikuti ngaji hari tersebut', 'Ananda hadir namun datang terlambat'],
+  izin: ['Ananda izin acara keluarga', 'Ananda izin kegiatan sekolah'],
+  sakit: ['Ananda sakit dan istirahat di rumah', 'Ananda kurang enak badan'],
+}
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 
@@ -155,6 +200,9 @@ const reportOf = (m) => reports.value[keyOf(m)] || null
 const wibToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
 const weekAgo = () => new Date(Date.now() + 7 * 3600 * 1000 - 7 * 86400000).toISOString().slice(0, 10)
 const canReport = (m) => m.status === 'alfa' && m.date >= weekAgo() && m.date <= wibToday()
+const unreportedAlfas = computed(() =>
+  (data.value?.meetings || []).filter((m) => canReport(m) && !reportOf(m)),
+)
 
 async function loadReports() {
   try {
@@ -169,8 +217,21 @@ async function loadReports() {
 
 function openForm(m) {
   formKey.value = keyOf(m)
-  form.value = { want: '', note: '' }
+  form.value = { want: 'hadir', note: '' }
   formError.value = ''
+}
+
+function pickWant(key) {
+  form.value.want = key
+}
+
+async function jumpToReport(m) {
+  openForm(m)
+  await nextTick()
+  const el = document.getElementById(`mt-${keyOf(m)}`)
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 }
 
 async function sendReport(m) {
@@ -198,6 +259,13 @@ async function load() {
       loadReports(),
     ])
     data.value = res.data
+    const kor = typeof route.query.koreksi === 'string' ? route.query.koreksi : ''
+    if (kor && unreportedAlfas.value.length) {
+      const target = kor === 'terbaru'
+        ? unreportedAlfas.value[0]
+        : unreportedAlfas.value.find((m) => m.date === kor) || unreportedAlfas.value[0]
+      if (target) jumpToReport(target)
+    }
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Progres belum bisa dimuat. Periksa koneksi lalu muat ulang.'
   } finally {
@@ -213,18 +281,91 @@ onMounted(load)
 </script>
 
 <style scoped>
+.alfa-alert {
+  margin-top: 14px;
+  padding: 14px 15px;
+  background: #fff8ed;
+  border-color: #f1cf94;
+}
+
+.alfa-alert-top strong {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #7c3a0d;
+}
+
+.alfa-alert-text {
+  margin: 4px 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #5b3a06;
+}
+
+.alfa-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.alfa-alert-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(180, 83, 9, 0.35);
+  background: #fff;
+  color: #7c3a0d;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
 .report-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: 10px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 6px 14px;
   border-radius: 12px;
   border: 1.5px solid rgba(142, 27, 18, 0.3);
   background: #fff;
   color: #8e1b12;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
+  text-align: left;
   cursor: pointer;
+}
+
+.report-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.report-quick-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 92, 64, 0.22);
+  background: #eef6f1;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.report-hint {
+  margin: 0;
 }
 
 .report-open:focus-visible {
