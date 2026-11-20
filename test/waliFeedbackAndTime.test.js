@@ -58,4 +58,9 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
 
   const layout = read("src/views/dashboard/DashboardLayout.vue");
   assert.ok(has(layout, "{ to: '/dashboard/masukan-wali', label: 'Saran & Kritik Wali', icon: ICON.chat, badge: 'masukan' }"));
+  assert.ok(has(layout, "{ to: '/dashboard/izin-santri', label: 'Izin Santri', icon: ICON.absensi }"));
+
+  const izinView = read("src/views/dashboard/guru/IzinSantriView.vue");
+  assert.ok(has(izinView, "api.get('/santri-presence/izin'"));
+  assert.ok(has(izinView, "api.post('/santri-presence/izin'"));
 });

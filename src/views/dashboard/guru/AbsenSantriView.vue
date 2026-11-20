@@ -12,6 +12,7 @@
       </label>
       <!-- a child who goes to another sesi / teacher (Jilid 4 coming at malam) -->
       <button type="button" class="as-titip-btn" :disabled="!sheet" @click="titipOpen = true">Titip santri</button>
+      <router-link to="/dashboard/izin-santri" class="as-titip-btn as-izin-link">Izin / sakit santri</router-link>
     </div>
     <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
     <p v-if="sheet && sheet.daysBack === 0" class="as-hint">
@@ -58,6 +59,9 @@
       <button v-if="otherSlot && sheetOf(otherSlot.id)?.canEdit" type="button" class="as-jump" @click="setSlot(otherSlot.id)">
         Buka absen sesi {{ otherSlot.label }} ›
       </button>
+      <router-link to="/dashboard/izin-santri" class="as-jump">
+        Catat izin / sakit santri (hari ini / beberapa hari) ›
+      </router-link>
     </div>
 
     <template v-else-if="sheet">
@@ -844,6 +848,9 @@ onBeforeUnmount(() => {
 }
 
 .as-titip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 46px;
   padding: 0 16px;
   border-radius: 12px;
@@ -852,6 +859,8 @@ onBeforeUnmount(() => {
   font: inherit;
   font-weight: 700;
   color: var(--emerald);
+  text-decoration: none;
+  box-sizing: border-box;
   cursor: pointer;
 }
 
