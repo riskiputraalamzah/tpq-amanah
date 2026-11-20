@@ -64,3 +64,29 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
   assert.ok(has(izinView, "api.get('/santri-presence/izin'"));
   assert.ok(has(izinView, "api.post('/santri-presence/izin'"));
 });
+
+test("Liburkan Sesi (Admin) and Mode Hujan / Toleransi Cuaca are wired cleanly across Absen Santri and KBM views", () => {
+  const holidaySheet = read("src/components/absen/SessionHolidaySheet.vue");
+  assert.ok(has(holidaySheet, "api.get('/santri-presence/session-holidays/preview'"));
+  assert.ok(has(holidaySheet, "api.post('/santri-presence/session-holidays'"));
+  assert.ok(has(holidaySheet, "api.delete(`/santri-presence/session-holidays/${encodeURIComponent(h.id)}`)"));
+
+  const absen = read("src/views/dashboard/guru/AbsenSantriView.vue");
+  assert.ok(has(absen, '<SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />'));
+  assert.ok(has(absen, 'v-else-if="sheet && sheet.sessionHoliday"'));
+
+  const daily = read("src/views/dashboard/guru/DailyWorkspace.vue");
+  assert.ok(has(daily, "function toggleRainMode()"));
+  assert.ok(has(daily, "santri.status = santri.status === status ? '' : status;"));
+  assert.ok(has(daily, "clearedSantriIds"));
+
+  const stuAtt = read("src/views/dashboard/guru/StudentAttendanceView.vue");
+  assert.ok(has(stuAtt, "const applyRainMode = () =>"));
+  assert.ok(has(stuAtt, "const toggleStatus = (row, targetStatus) =>"));
+  assert.ok(has(stuAtt, "const recordedRows = roster.value.filter((row) => !!row.status);"));
+
+  const waliProg = read("src/views/wali/WaliProgress.vue");
+  assert.ok(has(waliProg, "libur: { label: 'Libur Sesi', tone: 'holiday' }"));
+  assert.ok(has(waliProg, "Sesi ini diliburkan dan tidak memengaruhi rekap kehadiran ananda."));
+  assert.ok(has(absen, "Sesi {{ slotLabel }} diliburkan"));
+});

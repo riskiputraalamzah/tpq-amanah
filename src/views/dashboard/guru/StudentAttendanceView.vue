@@ -136,6 +136,11 @@
                 <span class="label">Alfa:</span>
                 <strong class="count">{{ attendanceSummary.alfa }}</strong>
               </div>
+              <div v-if="attendanceSummary.kosong > 0" class="tally-chip kosong">
+                <span class="dot"></span>
+                <span class="label">Kosong:</span>
+                <strong class="count">{{ attendanceSummary.kosong }}</strong>
+              </div>
             </div>
           </div>
         </section>
@@ -155,19 +160,34 @@
               <h2>Daftar Santri ({{ roster.length }})</h2>
               <span class="roster-class-pill">{{ levelName }}</span>
             </div>
-            <button
-              type="button"
-              class="btn btn-secondary btn-all-present"
-              :disabled="roster.length === 0 || saving || sessionLocked"
-              @click="markAllPresent"
-              title="Set semua santri menjadi Hadir"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span>Semua Hadir</span>
-            </button>
+            <div class="roster-toolbar-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-all-present"
+                :disabled="roster.length === 0 || saving || sessionLocked"
+                @click="markAllPresent"
+                title="Set semua santri menjadi Hadir"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>Semua Hadir</span>
+              </button>
+              <button
+                type="button"
+                class="btn btn-rain-mode"
+                :disabled="roster.length === 0 || saving || sessionLocked"
+                @click="applyRainMode"
+                title="Toleransi cuaca / hujan: kosongkan santri alfa atau tidak datang agar tidak dicatat alfa"
+              >
+                <span>🌧️ Mode Hujan</span>
+              </button>
+            </div>
           </div>
+
+          <p v-if="roster.length > 0 && !sessionLocked" class="rain-helper-note">
+            <strong>Toleransi cuaca / hujan:</strong> ketuk ulang status aktif (atau tekan <em>Mode Hujan</em>) untuk mengosongkan santri yang tidak datang agar tidak tercatat alfa &amp; tidak mengirim WA ke wali.
+          </p>
 
           <div v-if="roster.length === 0" class="alert alert-error">
             Belum ada santri terdaftar pada {{ levelName }}.
@@ -188,15 +208,16 @@
                   <tr
                     v-for="(row, idx) in roster"
                     :key="row.id"
-                    :class="'row-status-' + row.status"
+                    :class="'row-status-' + (row.status || 'kosong')"
                   >
                     <td class="text-center text-muted font-semibold">{{ idx + 1 }}</td>
                     <td>
                       <div class="student-name-cell">
-                        <div class="student-avatar" :class="'avatar-' + row.status">
+                        <div class="student-avatar" :class="'avatar-' + (row.status || 'kosong')">
                           {{ getInitials(row.name) }}
                         </div>
                         <span class="student-name">{{ row.name }}</span>
+                        <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
                         <button
                           type="button"
                           class="btn-rename-santri"
@@ -218,7 +239,7 @@
                             type="button"
                             class="seg-btn seg-hadir"
                             :class="{ active: row.status === 'hadir' }"
-                            @click="setStatus(row, 'hadir')"
+                            @click="toggleStatus(row, 'hadir')"
                           >
                             Hadir
                           </button>
@@ -226,7 +247,7 @@
                             type="button"
                             class="seg-btn seg-izin"
                             :class="{ active: row.status === 'izin' }"
-                            @click="setStatus(row, 'izin')"
+                            @click="toggleStatus(row, 'izin')"
                           >
                             Izin
                           </button>
@@ -234,7 +255,7 @@
                             type="button"
                             class="seg-btn seg-sakit"
                             :class="{ active: row.status === 'sakit' }"
-                            @click="setStatus(row, 'sakit')"
+                            @click="toggleStatus(row, 'sakit')"
                           >
                             Sakit
                           </button>
@@ -242,7 +263,7 @@
                             type="button"
                             class="seg-btn seg-alfa"
                             :class="{ active: row.status === 'alfa' }"
-                            @click="setStatus(row, 'alfa')"
+                            @click="toggleStatus(row, 'alfa')"
                           >
                             Alfa
                           </button>
@@ -276,16 +297,17 @@
                 v-for="(row, idx) in roster"
                 :key="row.id"
                 class="roster-card"
-                :class="'card-status-' + row.status"
+                :class="'card-status-' + (row.status || 'kosong')"
               >
                 <div class="roster-card-top">
-                  <div class="student-avatar" :class="'avatar-' + row.status">
+                  <div class="student-avatar" :class="'avatar-' + (row.status || 'kosong')">
                     {{ getInitials(row.name) }}
                   </div>
                   <div class="roster-info">
                     <span class="roster-num">#{{ idx + 1 }}</span>
                     <div class="roster-name-row">
                       <span class="roster-name">{{ row.name }}</span>
+                      <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
                       <button
                         type="button"
                         class="btn-rename-santri"
@@ -306,7 +328,7 @@
                     type="button"
                     class="seg-btn seg-hadir"
                     :class="{ active: row.status === 'hadir' }"
-                    @click="setStatus(row, 'hadir')"
+                    @click="toggleStatus(row, 'hadir')"
                   >
                     Hadir
                   </button>
@@ -314,7 +336,7 @@
                     type="button"
                     class="seg-btn seg-izin"
                     :class="{ active: row.status === 'izin' }"
-                    @click="setStatus(row, 'izin')"
+                    @click="toggleStatus(row, 'izin')"
                   >
                     Izin
                   </button>
@@ -322,7 +344,7 @@
                     type="button"
                     class="seg-btn seg-sakit"
                     :class="{ active: row.status === 'sakit' }"
-                    @click="setStatus(row, 'sakit')"
+                    @click="toggleStatus(row, 'sakit')"
                   >
                     Sakit
                   </button>
@@ -330,7 +352,7 @@
                     type="button"
                     class="seg-btn seg-alfa"
                     :class="{ active: row.status === 'alfa' }"
-                    @click="setStatus(row, 'alfa')"
+                    @click="toggleStatus(row, 'alfa')"
                   >
                     Alfa
                   </button>
@@ -658,20 +680,22 @@ const isTeaching = computed(() =>
 const isFuture = computed(() => isSessionFuture(session.value.date));
 
 const statusOptionsFor = (row) => {
-  if (STATUS_OPTIONS.some((o) => o.value === row.status)) return STATUS_OPTIONS;
-  return [{ value: row.status, label: row.status }, ...STATUS_OPTIONS];
+  const base = [{ value: "", label: "Dikosongkan (Toleransi Cuaca)" }, ...STATUS_OPTIONS];
+  if (base.some((o) => o.value === row.status)) return base;
+  return [{ value: row.status, label: row.status }, ...base];
 };
 
 const formatDate = (val) => formatSessionDateID(val);
 
 const attendanceSummary = computed(() => {
-  const s = { total: roster.value.length, hadir: 0, izin: 0, sakit: 0, alfa: 0 };
+  const s = { total: roster.value.length, hadir: 0, izin: 0, sakit: 0, alfa: 0, kosong: 0 };
   for (const r of roster.value) {
     const st = String(r.status || "").toLowerCase();
     if (st === "hadir" || st === "present") s.hadir += 1;
     else if (st === "izin") s.izin += 1;
     else if (st === "sakit") s.sakit += 1;
     else if (st === "alfa" || st === "alpa") s.alfa += 1;
+    else s.kosong += 1;
   }
   return s;
 });
@@ -684,6 +708,27 @@ const attendancePercent = computed(() => {
 const setStatus = (row, newStatus) => {
   if (sessionLocked.value || row.status === newStatus) return;
   row.status = newStatus;
+  onEdit();
+};
+
+const toggleStatus = (row, targetStatus) => {
+  if (sessionLocked.value) return;
+  if (row.status === targetStatus) {
+    row.status = "";
+    onEdit();
+    return;
+  }
+  setStatus(row, targetStatus);
+};
+
+const applyRainMode = () => {
+  if (sessionLocked.value) return;
+  const hasAlfa = roster.value.some((r) => ["alfa", "alpa"].includes(String(r.status || "").toLowerCase()));
+  roster.value = roster.value.map((r) => {
+    const st = String(r.status || "").toLowerCase();
+    if (hasAlfa) return ["alfa", "alpa"].includes(st) ? { ...r, status: "" } : r;
+    return st === "hadir" ? { ...r, status: "" } : r;
+  });
   onEdit();
 };
 
@@ -749,12 +794,15 @@ const fetchData = async () => {
         (session.value.studentAttendances || []).map((s) => [s.santriId, s.status]),
       );
 
-      // Saved status in one spelling ("alpa" from older KBM is Alfa); a santri not in this KBM yet starts as Hadir.
-      roster.value = activeSantri.map((s) => ({
-        id: s.id,
-        name: s.name,
-        status: normalizeStudentStatus(existing.get(s.id)) || "hadir",
-      }));
+      // Saved status in one spelling ("alpa" from older KBM is Alfa); if attendance was already saved, omitted students stay empty (Mode Hujan).
+      const hasExisting = existing.size > 0;
+      roster.value = activeSantri
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          status: normalizeStudentStatus(existing.get(s.id)) || "hadir",
+        }))
+        .map((s) => (hasExisting && !existing.has(s.id) ? { ...s, status: "" } : s));
       dirty.value = existing.size === 0 && roster.value.length > 0;
       saveStatus.value = resolveInitialStatus(existing.size, roster.value.length);
       saveMessage.value = "";
@@ -774,12 +822,17 @@ const fetchData = async () => {
 
 const save = async () => {
   if (!dirty.value || saving.value || sessionLocked.value) return;
+  const recordedRows = roster.value.filter((row) => !!row.status);
+  if (recordedRows.length === 0) {
+    warning("Pilih status minimal 1 santri sebelum menyimpan.");
+    return;
+  }
   saving.value = true;
   saveStatus.value = "saving";
   saveMessage.value = "";
   try {
     await api.put(`/teaching_sessions/${sessionId}`, {
-      studentAttendances: roster.value.map((row) => ({
+      studentAttendances: recordedRows.map((row) => ({
         santriId: row.id,
         name: row.name,
         status: row.status,
@@ -1160,6 +1213,16 @@ onMounted(fetchData);
   background: #dc2626;
 }
 
+.tally-chip.kosong {
+  grid-column: 1 / -1;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px dashed #cbd5e1;
+}
+.tally-chip.kosong .dot {
+  background: #64748b;
+}
+
 .tally-chip .count {
   margin-left: auto;
   font-weight: 800;
@@ -1225,6 +1288,71 @@ onMounted(fetchData);
   border-color: #0a5c40;
   box-shadow: 0 4px 14px rgba(10, 92, 64, 0.25);
   transform: translateY(-1px);
+}
+
+.roster-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-rain-mode {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1.5px solid #bae6fd;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-rain-mode:hover:not(:disabled) {
+  background: #0369a1;
+  color: #ffffff;
+  border-color: #0369a1;
+}
+
+.rain-helper-note {
+  margin: -6px 0 14px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #075985;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.student-avatar.avatar-kosong {
+  background: #94a3b8;
+}
+
+.row-status-kosong td {
+  background: #f8fafc;
+}
+
+.roster-card.card-status-kosong {
+  background: #f8fafc;
+  border-style: dashed;
+  border-color: #cbd5e1;
+}
+
+.kosong-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .btn-all-present:disabled {
@@ -1634,9 +1762,18 @@ onMounted(fetchData);
     align-items: stretch;
   }
 
+  .roster-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
   .roster-toolbar .btn {
     min-height: 44px;
     width: 100%;
+    padding: 8px 10px;
+    font-size: 0.82rem;
     justify-content: center;
   }
 

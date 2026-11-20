@@ -537,7 +537,7 @@ onMounted(load)
   display: grid;
   place-items: center;
   min-height: 46px;
-  padding: 6px 10px;
+  padding: 10px 14px;
   border-radius: 12px;
   border: 1.5px dashed rgba(11, 59, 42, 0.25);
   color: #0a5c40;
@@ -545,6 +545,10 @@ onMounted(load)
   font-weight: 700;
   text-align: center;
   text-decoration: none;
+}
+
+.add-link:only-child {
+  grid-column: 1 / -1;
 }
 
 .add-link:focus-visible,

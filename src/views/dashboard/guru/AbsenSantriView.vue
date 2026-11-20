@@ -13,8 +13,10 @@
       <!-- a child who goes to another sesi / teacher (Jilid 4 coming at malam) -->
       <button type="button" class="as-titip-btn" :disabled="!sheet" @click="titipOpen = true">Titip santri</button>
       <router-link to="/dashboard/izin-santri" class="as-titip-btn as-izin-link">Izin / sakit santri</router-link>
+      <button v-if="isAdmin" type="button" class="as-titip-btn as-holiday-btn" @click="holidayOpen = true">Liburkan sesi</button>
     </div>
     <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
+    <SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />
     <p v-if="sheet && sheet.daysBack === 0" class="as-hint">
       Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
       sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
@@ -29,21 +31,65 @@
         <button v-for="s in SLOTS" :key="s.id" type="button" class="as-slot" :aria-pressed="slot === s.id" @click="setSlot(s.id)">
           <span class="as-slot-top">
             <span class="as-slot-name">{{ s.label }}</span>
-            <span v-if="slotCount(s.id) !== null" class="as-slot-count">{{ slotCount(s.id) }} dicatat</span>
+            <span v-if="sheetOf(s.id)?.sessionHoliday" class="as-slot-count">Diliburkan</span>
+            <span v-else-if="slotCount(s.id) !== null" class="as-slot-count">{{ slotCount(s.id) }} dicatat</span>
           </span>
           <span class="as-slot-meta">{{ slotJilid(s.id) }}</span>
         </button>
       </div>
       <div v-if="sheet" class="as-summary" role="status" aria-live="polite">
-        <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
-        <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
-        <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
-        <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
+        <template v-if="sheet.sessionHoliday">
+          <span class="is-holiday-bar">
+            <strong>Sesi {{ slotLabel }} diliburkan</strong><template v-if="sheet.sessionHoliday.reason"> · {{ sheet.sessionHoliday.reason }}</template>
+          </span>
+          <span v-if="counts.izin + counts.sakit > 0" class="is-izin">
+            ({{ counts.izin + counts.sakit }} izin/sakit wali tercatat sebelumnya)
+          </span>
+        </template>
+        <template v-else>
+          <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
+          <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
+          <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
+          <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
+        </template>
       </div>
     </div>
 
     <PageSkeleton v-if="loading && !sheet" :rows="6" label="Memuat daftar santri" />
     <p v-else-if="loadError" class="as-note is-danger" role="alert">{{ loadError }}</p>
+
+    <!-- emergency session holiday set by admin (Opsi 2: teacher dispensation, santri attendance left empty) -->
+    <div v-else-if="sheet && sheet.sessionHoliday" class="as-holiday-card" role="status">
+      <span class="as-holiday-icon" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <path d="m9.5 14.5 5 5m0-5-5 5" />
+        </svg>
+      </span>
+      <p class="as-closed-title">Sesi {{ slotLabel }} diliburkan</p>
+      <p class="as-holiday-reason">{{ sheet.sessionHoliday.reason }}</p>
+      <p class="as-closed-text">
+        Absen santri sesi ini dikosongkan (tidak dicatat alfa maupun izin).
+        <template v-if="sheet.sessionHoliday.grantDispensation">
+          {{ sheet.sessionHoliday.affectedGurus?.length || 0 }} guru sesi mendapat dispensasi Hadir &amp; Non-KBM.
+        </template>
+      </p>
+      <p class="as-closed-wali">
+        Ditetapkan oleh {{ sheet.sessionHoliday.createdByName || 'Admin TPQ' }}.
+      </p>
+      <div class="as-holiday-actions">
+        <button v-if="otherSlot" type="button" class="as-jump" @click="setSlot(otherSlot.id)">
+          <span>Buka sesi {{ otherSlot.label }}</span>
+          <span aria-hidden="true">›</span>
+        </button>
+        <button v-if="isAdmin" type="button" class="as-holiday-cancel" :disabled="holidayBusy" @click="cancelCurrentHoliday">
+          {{ holidayBusy ? 'Membatalkan…' : 'Batalkan libur sesi' }}
+        </button>
+      </div>
+    </div>
 
     <!-- the sesi has not started: nothing is recorded yet (a child is not "alfa" for a lesson still to come) -->
     <div v-else-if="sheet && sheet.notOpenYet" class="as-closed" role="status">
@@ -158,11 +204,14 @@ import PageSkeleton from '@/components/PageSkeleton.vue'
 import AbsenReports from '@/components/absen/AbsenReports.vue'
 import EarlyAudit from '@/components/absen/EarlyAudit.vue'
 import TitipSheet from '@/components/absen/TitipSheet.vue'
+import SessionHolidaySheet from '@/components/absen/SessionHolidaySheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDialog } from '@/composables/useDialog'
+import { useToast } from '@/composables/useToast'
 
 const authStore = useAuthStore()
 const { ask } = useDialog()
+const { success, error: showError } = useToast()
 const isAdmin = computed(() => authStore.user?.role === 'admin')
 
 const SLOTS = [
@@ -199,6 +248,8 @@ const saveState = ref('idle')
 const saveNote = ref('')
 const unlocked = ref({}) // santri whose parent's izin the person confirmed to change
 const titipOpen = ref(false)
+const holidayOpen = ref(false)
+const holidayBusy = ref(false)
 const confirmed = ref({}) // `${date}|${slot}` (a past day) or `${date}|${slot}|${santriId}` (a kabar alfa sent): asked once
 const reportsBox = ref(null)
 const auditBox = ref(null)
@@ -499,6 +550,34 @@ async function markRest(g) {
 // a titip set or ended: the groups of this sheet (and the other sesi's count) change
 function onTitipChanged() {
   if (!pending.size) load({ silent: true })
+}
+
+// a session holiday was set or cancelled: reload both sesi of this day
+function onHolidayChanged() {
+  if (!pending.size) load({ silent: true })
+}
+
+async function cancelCurrentHoliday() {
+  const h = sheet.value?.sessionHoliday
+  if (!h || holidayBusy.value) return
+  const ok = await ask({
+    title: `Batalkan libur ${h.slotLabel || `Sesi ${slotLabel.value}`}?`,
+    message: `Libur sesi (${h.reason}) akan dibatalkan beserta dispensasi Hadir & Non-KBM otomatis untuk guru sesi ini.`,
+    confirmText: 'Ya, batalkan',
+    cancelText: 'Tutup',
+    tone: 'danger',
+  })
+  if (!ok) return
+  holidayBusy.value = true
+  try {
+    await api.delete(`/santri-presence/session-holidays/${encodeURIComponent(h.id)}`)
+    success(`Libur ${h.slotLabel || `Sesi ${slotLabel.value}`} dibatalkan.`)
+    await load()
+  } catch (err) {
+    showError(err.response?.data?.error || 'Gagal membatalkan libur sesi.')
+  } finally {
+    holidayBusy.value = false
+  }
 }
 
 // a report answered or an early record cleared: the sheet on screen may show it
@@ -822,8 +901,81 @@ onBeforeUnmount(() => {
     flex: 1 1 100%;
   }
   .as-controls .as-titip-btn {
-    flex: 1 1 calc(50% - 6px);
+    flex: 1 1 calc(50% - 5px);
+    padding: 0 10px;
+    font-size: 0.84rem;
   }
+  .as-controls .as-holiday-btn {
+    flex: 1 1 100%;
+  }
+}
+
+.as-holiday-btn {
+  border-color: rgba(3, 105, 161, 0.35);
+  color: #0369a1;
+  background: #f0f9ff;
+}
+
+.as-holiday-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 24px 16px;
+  border-radius: 16px;
+  border: 1px solid #bae6fd;
+  background: #f0f9ff;
+  text-align: center;
+}
+
+.as-holiday-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.as-holiday-reason {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.as-holiday-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.as-holiday-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(180, 35, 24, 0.35);
+  background: #fff;
+  color: #b42318;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.as-holiday-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* the sesi has not started yet */
@@ -986,6 +1138,8 @@ onBeforeUnmount(() => {
 .as-summary .is-izin strong { color: #1d4f8a; }
 .as-summary .is-sakit strong { color: #7c3a0d; }
 .as-summary .is-alfa strong { color: #8e1b12; }
+.as-summary .is-holiday-bar { color: #075985; }
+.as-summary .is-holiday-bar strong { color: #0369a1; }
 
 .as-save {
   margin-left: auto;

@@ -58,15 +58,28 @@
       <h2 class="w-section-title">Pertemuan</h2>
       <p v-if="!data.meetings.length" class="w-card empty">Belum ada catatan KBM untuk ananda di bulan ini.</p>
       <ul v-else class="meetings">
-        <li v-for="(m, i) in data.meetings" :id="`mt-${keyOf(m)}`" :key="`${m.date}-${i}`" class="w-card meeting">
+        <li
+          v-for="(m, i) in data.meetings"
+          :id="`mt-${keyOf(m)}`"
+          :key="`${m.date}-${i}`"
+          class="w-card meeting"
+          :class="{ 'is-holiday': m.status === 'libur' }"
+        >
           <div class="meeting-head">
             <span class="meeting-date">{{ shortDate(m.date) }}<span class="meeting-slot"> · {{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }}</span></span>
-            <span class="w-pill" :class="`is-${STATUS_META[m.status].tone}`">{{ STATUS_META[m.status].label }}</span>
+            <span class="w-pill" :class="`is-${STATUS_META[m.status]?.tone || 'info'}`">{{ STATUS_META[m.status]?.label || m.status }}</span>
           </div>
-          <p v-if="m.material" class="meeting-material">{{ m.material }}</p>
-          <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
-          <p v-if="m.supportingMaterial" class="meeting-support">Pendukung: {{ m.supportingMaterial }}</p>
-          <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
+          <template v-if="m.status === 'libur'">
+            <p class="meeting-holiday-reason">{{ m.holidayReason || 'Sesi diliburkan oleh TPQ' }}</p>
+            <p class="meeting-support">Sesi ini diliburkan dan tidak memengaruhi rekap kehadiran ananda.</p>
+          </template>
+          <template v-else>
+            <p v-if="m.material" class="meeting-material">{{ m.material }}</p>
+            <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
+            <p v-if="m.supportingMaterial" class="meeting-support">Pendukung: {{ m.supportingMaterial }}</p>
+            <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
+            <p v-if="m.holidayReason" class="meeting-holiday-note">Catatan: Sesi ini kemudian diliburkan TPQ ({{ m.holidayReason }}).</p>
+          </template>
 
           <!-- "Laporkan absen keliru": checked by the ustadz/ustadzah, the answer comes by WhatsApp -->
           <template v-if="reportOf(m)">
@@ -152,6 +165,7 @@ const STATUS_META = {
   izin: { label: 'Izin', tone: 'info' },
   sakit: { label: 'Sakit', tone: 'warn' },
   alfa: { label: 'Alfa', tone: 'danger' },
+  libur: { label: 'Libur Sesi', tone: 'holiday' },
 }
 const WANTS = [
   { key: 'hadir', label: 'Hadir' },
@@ -578,6 +592,31 @@ onMounted(load)
   margin: 0;
   font-size: 0.85rem;
   color: #5b6b62;
+}
+
+.meeting.is-holiday {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.w-pill.is-holiday {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.meeting-holiday-reason {
+  margin: 2px 0 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #075985;
+  overflow-wrap: anywhere;
+}
+
+.meeting-holiday-note {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0369a1;
 }
 
 .empty {

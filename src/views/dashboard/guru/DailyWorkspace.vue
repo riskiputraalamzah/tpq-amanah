@@ -335,16 +335,46 @@
 
           <!-- Quick Actions & Stats -->
           <div class="roster-toolbar">
-            <button type="button" class="btn btn-outline-success btn-sm" @click="markAllPresent">
-              ✓ Semua Hadir
-            </button>
+            <div class="roster-actions">
+              <button type="button" class="btn btn-outline-success btn-sm" @click="markAllPresent">
+                ✓ Semua Hadir
+              </button>
+              <button
+                type="button"
+                class="btn btn-rain btn-sm"
+                :class="{ active: rainMode }"
+                @click="toggleRainMode"
+                title="Toleransi cuaca / hujan: kosongkan santri yang tidak datang agar tidak dicatat alfa"
+              >
+                🌧️ {{ rainMode ? 'Mode Hujan Aktif' : 'Mode Hujan' }}
+              </button>
+            </div>
 
-            <div class="roster-stats-chips">
+            <div class="roster-stats-chips" :class="{ 'has-kosong': stats.kosong > 0 }">
               <span class="chip chip-hadir">{{ stats.hadir }} Hadir</span>
               <span class="chip chip-sakit">{{ stats.sakit }} Sakit</span>
               <span class="chip chip-izin">{{ stats.izin }} Izin</span>
               <span class="chip chip-alpa">{{ stats.alfa }} Alfa</span>
+              <span v-if="stats.kosong > 0" class="chip chip-kosong">{{ stats.kosong }} Kosong</span>
             </div>
+          </div>
+
+          <div v-if="rainMode || stats.kosong > 0" class="rain-mode-banner" role="status">
+            <div class="rain-banner-text">
+              <strong>Mode Hujan / Toleransi Cuaca</strong>
+              <p>
+                Santri yang <strong>dikosongkan</strong> tidak dicatat Alfa dan tidak memicu pesan WA ke wali.
+                Ketuk status santri yang hadir saja (atau ketuk ulang tombol status aktif untuk mengosongkan).
+              </p>
+            </div>
+            <button
+              v-if="stats.alfa > 0"
+              type="button"
+              class="btn-rain-clear-alfa"
+              @click="clearAlfaToEmpty"
+            >
+              Kosongkan {{ stats.alfa }} Alfa
+            </button>
           </div>
 
           <!-- Santri Search -->
@@ -370,11 +400,12 @@
               v-for="santri in filteredRoster"
               :key="santri.santriId"
               class="santri-item"
-              :class="`status-${santri.status}`"
+              :class="santri.status ? `status-${santri.status}` : 'status-kosong'"
             >
               <div class="santri-name-col">
-                <span class="santri-avatar">{{ santri.name.charAt(0).toUpperCase() }}</span>
+                <span class="santri-avatar" :class="{ 'is-kosong': !santri.status }">{{ santri.name.charAt(0).toUpperCase() }}</span>
                 <span class="santri-name">{{ santri.name }}</span>
+                <span v-if="!santri.status" class="kosong-badge">Dikosongkan</span>
                 <span v-if="santri.titip" class="titip-badge">Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}</span>
                 <button
                   v-if="!santri.titip"
@@ -580,9 +611,11 @@
               <span class="check-icon">{{ selectedLevelId ? '✓' : '○' }}</span>
               <span>Jilid: {{ currentLevelName || 'Belum Dipilih' }}</span>
             </li>
-            <li class="check-item" :class="{ ok: roster.length > 0 }">
-              <span class="check-icon">{{ roster.length > 0 ? '✓' : '○' }}</span>
-              <span>Santri: {{ stats.hadir }} Hadir (Total {{ roster.length }})</span>
+            <li class="check-item" :class="{ ok: recordedCount > 0 }">
+              <span class="check-icon">{{ recordedCount > 0 ? '✓' : '○' }}</span>
+              <span>
+                Santri: {{ stats.hadir }} Hadir<template v-if="stats.kosong > 0"> · {{ stats.kosong }} Kosong</template> (Total {{ roster.length }})
+              </span>
             </li>
             <li class="check-item" :class="{ ok: !!journalForm.material.trim() }">
               <span class="check-icon">{{ journalForm.material.trim() ? '✓' : '○' }}</span>
@@ -605,7 +638,7 @@
               Pilih Jilid / Marhalah lain di atas untuk mengisi kelas berikutnya.
             </p>
             <p v-else-if="!canSubmit && selectedLevelId" class="text-center text-xs text-gray-500 mt-2">
-              Lengkapi materi jurnal untuk menyimpan.
+              {{ recordedCount === 0 ? 'Pilih status minimal 1 santri untuk menyimpan.' : 'Lengkapi materi jurnal untuk menyimpan.' }}
             </p>
           </div>
         </div>
@@ -624,7 +657,7 @@
   
           <div class="modal-summary-box">
             <div>✓ Sesi Mengajar Tersimpan</div>
-            <div>✓ Absensi {{ roster.length }} Santri</div>
+            <div>✓ Absensi {{ recordedCount }} Santri<template v-if="stats.kosong > 0"> ({{ stats.kosong }} dikosongkan)</template></div>
             <div>✓ Jurnal Pembelajaran Terarsip</div>
           </div>
   
@@ -810,6 +843,7 @@ const selectedLevelId = ref('');
 // The sesi is set for the teacher (admin schedule -> latest KBM -> time of day); the picker opens only on "Ganti".
 const slotPickerOpen = ref(false);
 const roster = ref([]);
+const rainMode = ref(false);
 const inactiveSantri = ref([]);
 const presenceNote = ref(null);
 const titipAway = ref([]); // children of this jilid dititipkan elsewhere that day (not on this form)
@@ -1029,17 +1063,19 @@ const filteredRoster = computed(() => {
 
 // Roster Attendance Counts
 const stats = computed(() => {
-  const count = { hadir: 0, sakit: 0, izin: 0, alfa: 0 };
+  const count = { hadir: 0, sakit: 0, izin: 0, alfa: 0, kosong: 0 };
   for (const s of roster.value) {
     const status = normalizeStudentStatus(s.status);
     if (status && count[status] !== undefined) {
       count[status]++;
     } else {
-      count.hadir++;
+      count.kosong++;
     }
   }
   return count;
 });
+
+const recordedCount = computed(() => stats.value.hadir + stats.value.sakit + stats.value.izin + stats.value.alfa);
 
 // Check if a level is already saved for the selected slot
 function isLevelSavedInSelectedSlot(levelId) {
@@ -1118,7 +1154,7 @@ const canSubmit = computed(() => {
     !isAlreadySavedForCurrentSlot.value &&
     !!selectedSlotId.value &&
     !!selectedLevelId.value &&
-    roster.value.length > 0 &&
+    recordedCount.value > 0 &&
     !!journalForm.value.material.trim()
   );
 });
@@ -1155,6 +1191,7 @@ const slotSourceText = computed(() => {
 function clearLevelSelection() {
   selectedLevelId.value = '';
   roster.value = [];
+  rainMode.value = false;
   titipAway.value = [];
   inactiveSantri.value = [];
   curriculum.value = null;
@@ -1193,16 +1230,48 @@ async function selectLevel(levelId) {
 
 // Set all santri to present
 function markAllPresent() {
+  rainMode.value = false;
   for (const s of roster.value) {
     s.status = 'hadir';
   }
 }
 
-// Set individual santri status
+// Mode Hujan / Toleransi Cuaca: leave absent students empty so they are not marked alfa or messaged via WA
+function toggleRainMode() {
+  if (!rainMode.value) {
+    rainMode.value = true;
+    const hasPrefilled = roster.value.some((s) => s.fromPresence);
+    const hasAlfa = roster.value.some((s) => normalizeStudentStatus(s.status) === 'alfa');
+    for (const s of roster.value) {
+      const st = normalizeStudentStatus(s.status);
+      if (hasPrefilled) {
+        if (!s.fromPresence || st === 'alfa') s.status = '';
+      } else if (hasAlfa) {
+        if (st === 'alfa') s.status = '';
+      } else {
+        s.status = '';
+      }
+    }
+  } else {
+    rainMode.value = false;
+    for (const s of roster.value) {
+      if (!normalizeStudentStatus(s.status)) s.status = 'hadir';
+    }
+  }
+}
+
+function clearAlfaToEmpty() {
+  rainMode.value = true;
+  for (const s of roster.value) {
+    if (normalizeStudentStatus(s.status) === 'alfa') s.status = '';
+  }
+}
+
+// Set individual santri status (tap active pill again to leave empty / dikosongkan)
 function setSantriStatus(santriId, status) {
   const santri = roster.value.find(s => s.santriId === santriId);
   if (santri) {
-    santri.status = status;
+    santri.status = santri.status === status ? '' : status;
   }
 }
 
@@ -1314,9 +1383,11 @@ async function loadLevelContext(levelId) {
     roster.value = (data.roster || []).map(s => ({
       santriId: s.santriId,
       name: s.name,
-      status: s.status || 'hadir',
+      status: data.existingSession ? (normalizeStudentStatus(s.status) || '') : (normalizeStudentStatus(s.status) || 'hadir'),
+      fromPresence: !!s.fromPresence,
       ...(s.titip ? { titip: s.titip } : {})
     }));
+    rainMode.value = roster.value.some(s => !s.status);
     titipAway.value = data.titipAway || [];
 
     inactiveSantri.value = data.inactiveSantri || [];
@@ -1369,6 +1440,17 @@ async function submitKbm() {
 
   submitting.value = true;
   try {
+    const recordedAttendances = roster.value
+      .filter(s => !!normalizeStudentStatus(s.status))
+      .map(s => ({
+        santriId: s.santriId,
+        name: s.name,
+        status: normalizeStudentStatus(s.status)
+      }));
+    const clearedSantriIds = roster.value
+      .filter(s => s.fromPresence && !normalizeStudentStatus(s.status))
+      .map(s => s.santriId);
+
     const payload = {
       ...(late.confirmLate ? { confirmLate: true } : {}),
       date: targetDate.value,
@@ -1382,11 +1464,8 @@ async function submitKbm() {
         supportingMaterial: journalForm.value.supportingMaterial.trim(),
         notes: journalForm.value.notes.trim()
       },
-      studentAttendances: roster.value.map(s => ({
-        santriId: s.santriId,
-        name: s.name,
-        status: s.status
-      }))
+      studentAttendances: recordedAttendances,
+      ...(clearedSantriIds.length ? { clearedSantriIds } : {})
     };
 
     await api.post('/teaching_sessions', payload);
@@ -2360,6 +2439,76 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+.roster-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-rain {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  font-weight: 700;
+}
+
+.btn-rain:hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.btn-rain.active {
+  background: #0369a1;
+  color: #fff;
+  border-color: #0369a1;
+}
+
+.rain-mode-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #075985;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.rain-banner-text {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.rain-banner-text strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #0c4a6e;
+}
+
+.rain-banner-text p {
+  margin: 0;
+}
+
+.btn-rain-clear-alfa {
+  flex: none;
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #0284c7;
+  background: #fff;
+  color: #0369a1;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
   .roster-toolbar {
     flex-direction: column;
@@ -2367,9 +2516,22 @@ onMounted(async () => {
     gap: 0.65rem;
   }
 
+  .roster-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
   .roster-toolbar .btn {
     width: 100%;
+    min-height: 42px;
     justify-content: center;
+  }
+
+  .btn-rain-clear-alfa {
+    width: 100%;
+    min-height: 40px;
   }
 }
 
@@ -2385,6 +2547,9 @@ onMounted(async () => {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.35rem;
     width: 100%;
+  }
+  .roster-stats-chips.has-kosong .chip-kosong {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2407,6 +2572,29 @@ onMounted(async () => {
 .chip-sakit { background: #fef3c7; color: #92400e; }
 .chip-izin { background: #e0e7ff; color: #3730a3; }
 .chip-alpa { background: #fee2e2; color: #991b1b; }
+.chip-kosong { background: #f1f5f9; color: #475569; border: 1px dashed #cbd5e1; }
+
+.santri-item.status-kosong {
+  background: #f8fafc;
+  border-style: dashed;
+  border-color: #cbd5e1;
+}
+
+.santri-avatar.is-kosong {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.kosong-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 .roster-search-box {
   margin-bottom: 1rem;
