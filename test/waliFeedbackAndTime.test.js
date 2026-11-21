@@ -89,4 +89,7 @@ test("Liburkan Sesi (Admin) and Mode Hujan / Toleransi Cuaca are wired cleanly a
   assert.ok(has(waliProg, "libur: { label: 'Libur Sesi', tone: 'holiday' }"));
   assert.ok(has(waliProg, "Sesi ini diliburkan dan tidak memengaruhi rekap kehadiran ananda."));
   assert.ok(has(absen, "Sesi {{ slotLabel }} diliburkan"));
+  assert.ok(has(absen, 'v-else-if="sheet && sheet.dayOff"'));
+  assert.ok(has(absen, "← Buka hari aktif terakhir ({{ shortDayLabel(sheet.dayOff.lastActiveDay) }})"));
+  assert.ok(has(holidaySheet, "isWeekendSelected"));
 });

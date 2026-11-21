@@ -48,7 +48,7 @@
           <h3>Tetapkan libur sesi baru</h3>
 
           <label class="sh-field">
-            <span>Tanggal</span>
+            <span>Tanggal (Senin–Jumat)</span>
             <input
               v-model="date"
               type="date"
@@ -56,6 +56,9 @@
               required
               @change="loadPreview"
             />
+            <p v-if="isWeekendSelected" class="sh-warn-inline" role="status">
+              Tanggal ini akhir pekan (Sabtu/Minggu). Liburkan sesi hanya untuk hari aktif Senin–Jumat.
+            </p>
           </label>
 
           <div class="sh-field">
@@ -211,6 +214,19 @@ const dayText = (iso) => {
   return `${DAYS[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`
 }
 const wibToday = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+const isWeekendIso = (iso) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))) return false
+  const wd = new Date(`${iso}T12:00:00Z`).getUTCDay()
+  return wd === 0 || wd === 6
+}
+const lastWeekdayIso = (iso) => {
+  let cur = iso
+  for (let i = 0; i < 7; i += 1) {
+    if (!isWeekendIso(cur)) return cur
+    cur = new Date(new Date(`${cur}T12:00:00Z`).getTime() - 86400000).toISOString().slice(0, 10)
+  }
+  return iso
+}
 
 const date = ref(wibToday())
 const slotMode = ref('wave_2')
@@ -251,8 +267,11 @@ const alreadyMarkedMessage = computed(() => {
   return `${labels} pada tanggal ini sudah ditandai libur. Batalkan dulu di daftar atas jika ingin mengubah.`
 })
 
+const isWeekendSelected = computed(() => isWeekendIso(date.value))
+
 const ready = computed(() => (
   /^\d{4}-\d{2}-\d{2}$/.test(date.value)
+  && !isWeekendSelected.value
   && reason.value.trim().length >= 3
   && existingForSelection.value.length === 0
 ))
@@ -390,7 +409,7 @@ watch(
     loadError.value = ''
     error.value = ''
     showAllGurus.value = false
-    date.value = props.defaultDate || wibToday()
+    date.value = lastWeekdayIso(props.defaultDate || wibToday())
     slotMode.value = props.defaultSlot || 'wave_2'
     loadList()
     loadPreview()

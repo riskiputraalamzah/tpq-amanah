@@ -1303,14 +1303,13 @@ async function loadDailyContext(isAddingNewSession = false) {
       return;
     }
 
-    const isLpjBackfill = (data.isBackfill || isBackfill.value) && data.lpj?.eligible;
-    if (!isLpjBackfill && (!data.teacherAttendance?.exists || data.teacherAttendance?.status !== 'hadir')) {
+    if (data.holiday?.isWeekend && !data.teacherAttendance?.exists) {
       blockingError.value = {
-        icon: '⚠️',
-        title: 'Absensi Guru Belum Hadir',
-        message: 'Absensi guru untuk tanggal ini belum tercatat sebagai hadir. Silakan lakukan absensi terlebih dahulu.',
-        actionLink: '/dashboard/attendance',
-        actionLabel: 'Isi Absensi Guru'
+        icon: '☀️',
+        title: isTodayTarget.value ? 'Hari Ini Akhir Pekan' : 'Tanggal Akhir Pekan',
+        message: 'KBM hanya untuk hari aktif Senin sampai Jumat. Silakan kembali ke kalender KBM untuk memilih hari aktif lainnya.',
+        actionLink: kbmDayLink.value,
+        actionLabel: 'Buka Kalender KBM'
       };
       return;
     }
@@ -1320,6 +1319,18 @@ async function loadDailyContext(isAddingNewSession = false) {
         icon: '🎉',
         title: 'Hari Libur',
         message: `${isTodayTarget.value ? 'Hari ini' : 'Tanggal ini'} libur: ${data.holiday.name}. Tidak ada KBM yang perlu diisi.`
+      };
+      return;
+    }
+
+    const isLpjBackfill = (data.isBackfill || isBackfill.value) && data.lpj?.eligible;
+    if (!isLpjBackfill && (!data.teacherAttendance?.exists || data.teacherAttendance?.status !== 'hadir')) {
+      blockingError.value = {
+        icon: '⚠️',
+        title: 'Absensi Guru Belum Hadir',
+        message: 'Absensi guru untuk tanggal ini belum tercatat sebagai hadir. Silakan lakukan absensi terlebih dahulu.',
+        actionLink: '/dashboard/attendance',
+        actionLabel: 'Isi Absensi Guru'
       };
       return;
     }

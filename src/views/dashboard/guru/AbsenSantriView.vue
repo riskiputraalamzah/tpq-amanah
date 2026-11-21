@@ -17,7 +17,7 @@
     </div>
     <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
     <SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />
-    <p v-if="sheet && sheet.daysBack === 0" class="as-hint">
+    <p v-if="sheet && sheet.daysBack === 0 && !sheet.dayOff" class="as-hint">
       Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
       sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
     </p>
@@ -31,14 +31,20 @@
         <button v-for="s in SLOTS" :key="s.id" type="button" class="as-slot" :aria-pressed="slot === s.id" @click="setSlot(s.id)">
           <span class="as-slot-top">
             <span class="as-slot-name">{{ s.label }}</span>
-            <span v-if="sheetOf(s.id)?.sessionHoliday" class="as-slot-count">Diliburkan</span>
+            <span v-if="sheetOf(s.id)?.dayOff" class="as-slot-count">Libur</span>
+            <span v-else-if="sheetOf(s.id)?.sessionHoliday" class="as-slot-count">Diliburkan</span>
             <span v-else-if="slotCount(s.id) !== null" class="as-slot-count">{{ slotCount(s.id) }} dicatat</span>
           </span>
           <span class="as-slot-meta">{{ slotJilid(s.id) }}</span>
         </button>
       </div>
       <div v-if="sheet" class="as-summary" role="status" aria-live="polite">
-        <template v-if="sheet.sessionHoliday">
+        <template v-if="sheet.dayOff">
+          <span class="is-dayoff-bar">
+            <strong>{{ sheet.dayOff.title }}</strong> · {{ sheet.dayOff.kind === 'weekend' ? 'Senin sampai Jumat' : sheet.dayOff.name }}
+          </span>
+        </template>
+        <template v-else-if="sheet.sessionHoliday">
           <span class="is-holiday-bar">
             <strong>Sesi {{ slotLabel }} diliburkan</strong><template v-if="sheet.sessionHoliday.reason"> · {{ sheet.sessionHoliday.reason }}</template>
           </span>
@@ -57,6 +63,46 @@
 
     <PageSkeleton v-if="loading && !sheet" :rows="6" label="Memuat daftar santri" />
     <p v-else-if="loadError" class="as-note is-danger" role="alert">{{ loadError }}</p>
+
+    <!-- weekend or full-day holiday: closed like Absensi Guru, with 1-tap shortcut back to the previous school day -->
+    <div v-else-if="sheet && sheet.dayOff" class="as-dayoff-card" :class="`is-${sheet.dayOff.kind}`" role="status">
+      <span class="as-dayoff-icon" aria-hidden="true">
+        <svg v-if="sheet.dayOff.kind === 'weekend'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" /><path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" /><path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+        </svg>
+        <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <path d="m9.5 14.5 5 5m0-5-5 5" />
+        </svg>
+      </span>
+      <p class="as-closed-title">{{ sheet.dayOff.title }}</p>
+      <p v-if="sheet.dayOff.kind === 'holiday' && sheet.dayOff.name" class="as-holiday-reason">{{ sheet.dayOff.name }}</p>
+      <p class="as-closed-text">{{ sheet.reason }}</p>
+      <p class="as-closed-wali">
+        Untuk mengecek atau mengubah absen hari aktif sebelumnya, pilih tanggal di atas atau buka hari aktif terakhir.
+      </p>
+      <div class="as-holiday-actions">
+        <button
+          v-if="sheet.dayOff.lastActiveDay"
+          type="button"
+          class="as-jump"
+          @click="setDate(sheet.dayOff.lastActiveDay)"
+        >
+          <span>← Buka hari aktif terakhir ({{ shortDayLabel(sheet.dayOff.lastActiveDay) }})</span>
+        </button>
+        <router-link to="/dashboard/izin-santri" class="as-jump">
+          <span>Catat izin / sakit santri</span>
+          <span aria-hidden="true">›</span>
+        </router-link>
+      </div>
+    </div>
 
     <!-- emergency session holiday set by admin (Opsi 2: teacher dispensation, santri attendance left empty) -->
     <div v-else-if="sheet && sheet.sessionHoliday" class="as-holiday-card" role="status">
@@ -230,9 +276,20 @@ const SAVE_TEXT = { idle: '', saving: 'Menyimpan…', saved: 'Tersimpan ✓', er
 const wibNow = () => new Date(Date.now() + 7 * 3600 * 1000)
 const today = wibNow().toISOString().slice(0, 10)
 const defaultMin = new Date(Date.now() + 7 * 3600 * 1000 - 2 * 86400000).toISOString().slice(0, 10)
-// the admin (or a guru given "Absen Santri tanpa batas hari") may open any past day
-const minDate = computed(() => (sheet.value && sheet.value.daysBack === null ? undefined : defaultMin))
+// the admin (or a guru given "Absen Santri tanpa batas hari") may open any past day; on a weekend/holiday, always allow jumping to lastActiveDay
+const minDate = computed(() => {
+  if (sheet.value && sheet.value.daysBack === null) return undefined
+  const last = sheet.value?.dayOff?.lastActiveDay
+  return last && last < defaultMin ? last : defaultMin
+})
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
+const DAYS_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+const shortDayLabel = (iso) => {
+  if (!iso) return ''
+  const d = new Date(`${iso}T12:00:00Z`)
+  return `${DAYS_ID[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
+}
 
 const date = ref(today)
 // from 18:00 WIB (when it opens) the malam sesi
@@ -936,6 +993,46 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   background: #e0f2fe;
   color: #0369a1;
+}
+
+.as-dayoff-card {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 26px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(11, 59, 42, 0.14);
+  background: #fff;
+  text-align: center;
+}
+
+.as-dayoff-card.is-holiday {
+  background: #fffdf5;
+  border-color: #f3d58b;
+}
+
+.as-dayoff-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #f1f5f3;
+  color: #0b3b2a;
+}
+
+.as-dayoff-card.is-holiday .as-dayoff-icon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.as-summary .is-dayoff-bar {
+  color: #475a50;
+}
+
+.as-summary .is-dayoff-bar strong {
+  color: var(--ink);
 }
 
 .as-holiday-reason {

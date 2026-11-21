@@ -58,12 +58,17 @@
           <div class="ts-field">
             <span id="ts-mode">Lamanya</span>
             <div class="ts-chips" role="radiogroup" aria-labelledby="ts-mode">
-              <button type="button" role="radio" class="ts-chip" :aria-checked="form.mode === 'today'" @click="form.mode = 'today'">Hari ini saja</button>
+              <button type="button" role="radio" class="ts-chip" :disabled="todayIsWeekend" :aria-checked="form.mode === 'today'" @click="form.mode = 'today'">Hari ini saja</button>
               <button type="button" role="radio" class="ts-chip" :aria-checked="form.mode === 'date'" @click="form.mode = 'date'">Tanggal lain</button>
               <button type="button" role="radio" class="ts-chip" :aria-checked="form.mode === 'tetap'" @click="form.mode = 'tetap'">Tetap</button>
             </div>
             <input v-if="form.mode === 'date'" v-model="form.date" type="date" class="ts-input" :min="today" :max="maxDay" aria-label="Tanggal titipan" />
-            <p class="ts-help">{{ form.mode === 'tetap' ? 'Berlaku mulai hari ini sampai diakhiri.' : 'Hanya untuk tanggal itu.' }}</p>
+            <p v-if="form.mode === 'date' && isWeekendDate(form.date)" class="ts-error" role="alert">
+              Pilih hari aktif Senin–Jumat untuk titipan harian.
+            </p>
+            <p class="ts-help">
+              {{ form.mode === 'tetap' ? 'Berlaku mulai hari ini sampai diakhiri.' : todayIsWeekend && form.mode !== 'date' ? 'Hari ini akhir pekan; pilih Tanggal lain (Senin–Jumat) atau Tetap.' : 'Hanya untuk tanggal aktif (Senin–Jumat) itu.' }}
+            </p>
           </div>
 
           <p v-if="error" class="ts-error" role="alert">{{ error }}</p>
@@ -99,7 +104,22 @@ const dayText = (iso) => {
   return `${DAYS[d.getUTCDay()]}, ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
 }
 const wibDay = (ms = 0) => new Date(Date.now() + ms + 7 * 3600 * 1000).toISOString().slice(0, 10)
+const isWeekendDate = (iso) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ''))) return false
+  const wd = new Date(`${iso}T12:00:00Z`).getUTCDay()
+  return wd === 0 || wd === 6
+}
+const nextWeekday = (iso) => {
+  let cur = iso
+  for (let i = 0; i < 7; i += 1) {
+    if (!isWeekendDate(cur)) return cur
+    cur = new Date(new Date(`${cur}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10)
+  }
+  return iso
+}
 const today = wibDay()
+const todayIsWeekend = isWeekendDate(today)
+const defaultDay = nextWeekday(today)
 const maxDay = wibDay(14 * 86400000)
 
 const active = ref([])
@@ -108,7 +128,7 @@ const classIds = ref([]) // null: every jilid
 const loadError = ref('')
 const error = ref('')
 const busy = ref(false)
-const form = ref({ santriId: '', slot: 'wave_2', hostGuruId: '', mode: 'today', date: today })
+const form = ref({ santriId: '', slot: 'wave_2', hostGuruId: '', mode: todayIsWeekend ? 'date' : 'today', date: defaultDay })
 
 const choosable = computed(() => props.santri.filter((s) => classIds.value === null || classIds.value.includes(String(s.classId))))
 const choosableGroups = computed(() => {
@@ -119,7 +139,12 @@ const choosableGroups = computed(() => {
   }
   return [...map.entries()].map(([classId, items]) => ({ classId, items }))
 })
-const ready = computed(() => form.value.santriId && form.value.hostGuruId && form.value.slot && (form.value.mode !== 'date' || form.value.date))
+const ready = computed(() => {
+  if (!form.value.santriId || !form.value.hostGuruId || !form.value.slot) return false
+  if (form.value.mode === 'today') return !todayIsWeekend
+  if (form.value.mode === 'date') return !!form.value.date && !isWeekendDate(form.value.date)
+  return true
+})
 const me = computed(() => authStore.user?.id || authStore.user?.uid || '')
 const canEnd = (t) => classIds.value === null || classIds.value.includes(String(t.classId)) || t.hostGuruId === me.value
 
@@ -155,7 +180,7 @@ async function save() {
       mode: f.mode === 'tetap' ? 'tetap' : 'hari',
       date: f.mode === 'date' ? f.date : today,
     })
-    form.value = { santriId: '', slot: 'wave_2', hostGuruId: '', mode: 'today', date: today }
+    form.value = { santriId: '', slot: 'wave_2', hostGuruId: '', mode: todayIsWeekend ? 'date' : 'today', date: defaultDay }
     await load()
     emit('changed')
   } catch (err) {
@@ -324,6 +349,10 @@ watch(() => props.open, (v) => { if (v) load() }, { immediate: true })
   font-weight: 700;
   color: #0b3b2a;
   cursor: pointer;
+}
+.ts-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .ts-chip[aria-checked="true"] {
   border-color: #0a5c40;

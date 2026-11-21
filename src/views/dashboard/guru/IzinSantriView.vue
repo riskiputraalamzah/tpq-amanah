@@ -311,14 +311,18 @@ const SLOTS = [
   { id: 'wave_2', label: 'Sesi Malam' },
 ]
 
-const PRESETS = [
-  { key: '1d', label: 'Hari ini (1 hari)' },
-  { key: '2d', label: '2 hari' },
-  { key: '3d', label: '3 hari' },
-  { key: '5d', label: '1 minggu (5 hari)' },
-  { key: 'pick', label: 'Pilih hari' },
-  { key: 'range', label: 'Rentang tanggal' },
-]
+const PRESETS = computed(() => {
+  const first = availableDays.value[0]
+  const oneDayLabel = first && first !== today.value ? `1 hari (${shortDayFull(first)})` : 'Hari ini (1 hari)'
+  return [
+    { key: '1d', label: oneDayLabel },
+    { key: '2d', label: '2 hari' },
+    { key: '3d', label: '3 hari' },
+    { key: '5d', label: '1 minggu (5 hari)' },
+    { key: 'pick', label: 'Pilih hari' },
+    { key: 'range', label: 'Rentang tanggal' },
+  ]
+})
 
 const QUICK_REASONS = {
   izin: ['Acara keluarga', 'Pulang kampung / luar kota', 'Kegiatan sekolah', 'Keperluan keluarga'],
