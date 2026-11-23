@@ -44,7 +44,7 @@
               <router-link to="/dashboard/absen-santri" class="gd-task" :class="rollDone ? 'is-done' : 'is-todo'">
                 <span class="gd-task-mark" aria-hidden="true"><LineIcon :name="rollDone ? 'check' : 'users'" :size="18" :stroke="2.4" /></span>
                 <span class="gd-task-text">
-                  <strong>Absen santri jilid saya</strong>
+                  <strong>{{ d.scope.source === 'feature' ? 'Absen santri semua jilid' : 'Absen santri jilid saya' }}</strong>
                   <small>{{ d.tasks.rollCall.recorded }} dari {{ d.tasks.rollCall.total }} santri sudah dicatat</small>
                 </span>
                 <span class="gd-go" aria-hidden="true">›</span>
@@ -56,8 +56,11 @@
         <!-- 2. izin from the parents -->
         <section class="gd-card" aria-labelledby="gd-izin">
           <div class="gd-title-row">
-            <h2 id="gd-izin" class="gd-title">Izin dari wali</h2>
-            <span v-if="d.izin.length" class="gd-count">{{ d.izin.length }}</span>
+            <div class="gd-title-main">
+              <h2 id="gd-izin" class="gd-title">Izin dari wali</h2>
+              <span v-if="d.izin.length" class="gd-count">{{ d.izin.length }}</span>
+            </div>
+            <router-link to="/dashboard/izin-santri" class="gd-link">Kalender ›</router-link>
           </div>
           <p v-if="!d.izin.length" class="gd-muted">Tidak ada izin atau sakit dari wali untuk 7 hari ke depan.</p>
           <ul v-else class="gd-izin">
@@ -123,7 +126,7 @@
 
         <!-- 5. my jilid -->
         <section class="gd-card" aria-labelledby="gd-jilid">
-          <h2 id="gd-jilid" class="gd-title">Jilid saya</h2>
+          <h2 id="gd-jilid" class="gd-title">{{ d.scope.source === 'feature' ? 'Semua jilid' : 'Jilid saya' }}</h2>
           <p v-if="d.scope.source === 'none'" class="gd-warn">Jilid Antum belum diatur dan belum ada riwayat KBM. Minta admin mengaturnya.</p>
           <template v-else>
             <ul class="gd-jilid">
@@ -302,6 +305,20 @@ onBeforeUnmount(() => clearInterval(timer))
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+}
+
+.gd-title-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gd-title-main .gd-title {
+  margin-bottom: 12px;
+}
+
+.gd-title-main .gd-count {
+  margin-bottom: 12px;
 }
 
 .gd-count {

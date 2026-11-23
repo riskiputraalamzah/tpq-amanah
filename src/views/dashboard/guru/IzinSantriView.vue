@@ -4,7 +4,8 @@
       <div class="iz-head-text">
         <h1>Izin &amp; Sakit Santri</h1>
         <p>
-          <template v-if="!isAdmin && scopeLabel">Jilid Antum: <strong>{{ scopeLabel }}</strong> · </template>
+          <template v-if="isAllJilidView">Akses pantau <strong>semua jilid</strong> · </template>
+          <template v-else-if="!isAdmin && scopeLabel">Jilid Antum: <strong>{{ scopeLabel }}</strong> · </template>
           Pantau jadwal izin per tanggal di kalender dan catat izin satu atau beberapa hari.
         </p>
       </div>
@@ -33,7 +34,12 @@
     <template v-else>
       <AbsenReports @changed="load({ quiet: true })" />
 
-      <p v-if="!isAdmin && classIds && !classIds.length" class="iz-note is-warn" role="status">
+      <p v-if="isAllJilidView" class="iz-note" role="status">
+        Antum diberi akses memantau <strong>semua jilid</strong> oleh admin.
+        <template v-if="actScopeLabel"> Mencatat &amp; membatalkan izin tetap khusus jilid Antum (<strong>{{ actScopeLabel }}</strong>).</template>
+        <template v-else> Jilid yang Antum ampu belum diatur admin, jadi tampilan ini hanya untuk memantau.</template>
+      </p>
+      <p v-else-if="!isAdmin && classIds && !classIds.length" class="iz-note is-warn" role="status">
         Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
       </p>
 
@@ -70,7 +76,7 @@
                 class="iz-cal-select"
                 aria-label="Saring jilid di kalender"
               >
-                <option value="">{{ isAdmin ? 'Semua jilid' : 'Semua jilid saya' }}</option>
+                <option value="">{{ isAdmin || classIds === null ? 'Semua jilid' : 'Semua jilid saya' }}</option>
                 <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
               </select>
             </div>
@@ -258,7 +264,7 @@
             class="iz-input iz-jilid-select"
             aria-label="Saring jilid daftar izin"
           >
-            <option value="">{{ isAdmin ? 'Semua jilid' : 'Semua jilid saya' }}</option>
+            <option value="">{{ isAdmin || classIds === null ? 'Semua jilid' : 'Semua jilid saya' }}</option>
             <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
         </div>
@@ -326,7 +332,10 @@
           <header class="iz-sheet-head">
             <div>
               <h2 id="iz-sheet-title">Catat Izin / Sakit Santri</h2>
-              <p class="iz-sub">Langsung masuk ke Absen Santri &amp; mengabari guru jilidnya.</p>
+              <p class="iz-sub">
+                <template v-if="isAllJilidView && actScopeLabel">Khusus {{ actScopeLabel }} · </template>
+                Langsung masuk ke Absen Santri &amp; mengabari guru jilidnya.
+              </p>
             </div>
             <button type="button" class="iz-close" aria-label="Tutup" @click="closeComposer">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -352,7 +361,7 @@
               </div>
 
               <div v-else class="iz-picker">
-                <div v-if="classOptions.length > 1" class="iz-jilid-strip" role="group" aria-label="Filter jilid">
+                <div v-if="actClassOptions.length > 1" class="iz-jilid-strip" role="group" aria-label="Filter jilid">
                   <button
                     type="button"
                     class="iz-mini-chip"
@@ -362,7 +371,7 @@
                     Semua
                   </button>
                   <button
-                    v-for="c in classOptions"
+                    v-for="c in actClassOptions"
                     :key="c.value"
                     type="button"
                     class="iz-mini-chip"
@@ -600,7 +609,8 @@ const saving = ref(false)
 const cancellingId = ref('')
 const formError = ref('')
 
-const classIds = ref(null) // null = admin (all jilid), array = guru's jilid
+const classIds = ref(null) // view scope: null = admin or guru with "all-jilid", array = guru's jilid
+const actClassIds = ref(null) // act scope (create/cancel): null = admin, array = guru's taught jilid
 const scopeSource = ref('admin')
 const initialToday = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
 const today = ref(initialToday)
@@ -638,7 +648,8 @@ const listStatusFilter = ref('active')
 const now = ref(new Date())
 let clockTimer = null
 
-const canCreate = computed(() => isAdmin.value || (Array.isArray(classIds.value) && classIds.value.length > 0))
+const isAllJilidView = computed(() => !isAdmin.value && scopeSource.value === 'feature' && classIds.value === null)
+const canCreate = computed(() => isAdmin.value || (Array.isArray(actClassIds.value) && actClassIds.value.length > 0))
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Tanpa jilid')
 const slotLabel = (s) => (s === 'wave_2' ? 'Sesi Malam' : 'Sesi Sore')
 
@@ -646,10 +657,15 @@ const classOptions = computed(() => {
   if (isAdmin.value || classIds.value === null) return CLASS_OPTIONS
   return CLASS_OPTIONS.filter((c) => (classIds.value || []).includes(c.value))
 })
+const actClassOptions = computed(() => {
+  if (isAdmin.value || actClassIds.value === null) return CLASS_OPTIONS
+  return CLASS_OPTIONS.filter((c) => (actClassIds.value || []).includes(c.value))
+})
 const scopeLabel = computed(() => classOptions.value.map((c) => c.label).join(', '))
+const actScopeLabel = computed(() => actClassOptions.value.map((c) => c.label).join(', '))
 const activeScopeText = computed(() => {
   if (listClassFilter.value) return `di ${levelName(listClassFilter.value)}`
-  return isAdmin.value ? 'di semua jilid' : `di ${scopeLabel.value || 'jilid Antum'}`
+  return isAdmin.value || classIds.value === null ? 'di semua jilid' : `di ${scopeLabel.value || 'jilid Antum'}`
 })
 
 const addDaysIso = (iso, n) => new Date(new Date(`${iso}T12:00:00Z`).getTime() + n * 86400000).toISOString().slice(0, 10)
@@ -884,7 +900,7 @@ function openComposer({ santriId = '', date = '' } = {}) {
   } else {
     form.value.santriId = ''
     santriSearch.value = ''
-    formClassFilter.value = listClassFilter.value || ''
+    formClassFilter.value = actClassOptions.value.some((c) => c.value === listClassFilter.value) ? listClassFilter.value : ''
     pickerOpen.value = true
   }
 
@@ -974,6 +990,7 @@ async function load({ quiet = false } = {}) {
   try {
     const { data } = await api.get('/santri-presence/izin', { cache: false })
     classIds.value = data.classIds === null ? null : data.classIds || []
+    actClassIds.value = data.actClassIds === undefined ? classIds.value : data.actClassIds === null ? null : data.actClassIds || []
     scopeSource.value = data.scopeSource || 'admin'
     if (data.today) {
       const wasInitial = selectedDate.value === today.value

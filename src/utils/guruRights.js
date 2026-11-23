@@ -28,7 +28,7 @@ export const ACCESS_CARDS = [
   { id: 'pendaftaran', label: 'Pendaftaran santri', hint: 'Pendaftar baru dan usulan santri dari guru', to: '/dashboard/pendaftaran', icon: 'file' },
   { id: 'wa-log', label: 'Riwayat WA Bot', hint: 'Semua pesan bot WhatsApp', to: '/dashboard/wa-log', icon: 'clock' },
   { id: 'kegiatan-manage', label: 'Kelola kegiatan', hint: 'Buat dan ubah kegiatan, peserta semua jilid', to: '/dashboard/kegiatan', icon: 'star' },
-  { id: 'all-jilid', label: 'Semua jilid', hint: 'Lihat santri dan data wali semua jilid', to: '/dashboard/santri', icon: 'users' },
+  { id: 'all-jilid', label: 'Semua jilid', hint: 'Lihat santri, data wali, dan izin semua jilid', to: '/dashboard/santri', icon: 'users' },
   { id: 'absen-santri-backdate', label: 'Absen Santri tanpa batas hari', hint: 'Isi atau ubah absen hari-hari lalu', to: '/dashboard/absen-santri', icon: 'calendar' },
 ]
 

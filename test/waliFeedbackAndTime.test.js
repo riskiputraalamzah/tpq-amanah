@@ -66,8 +66,12 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
   assert.ok(has(izinView, "const todayItems = computed("), "Izin Santri leads with today's izin status");
   assert.ok(has(izinView, "const calendarCells = computed("), "Izin Santri renders dynamic interactive izin calendar");
   assert.ok(has(izinView, "function spanText(dates)"), "Izin Santri displays clear date-span labels");
+  assert.ok(has(izinView, "isAllJilidView"), "Izin Santri handles all-jilid view scope separately from taught act scope");
+  assert.ok(has(izinView, "actClassIds"), "Izin Santri respects actClassIds for creating/cancelling izin");
   assert.ok(has(izinView, "function pickSantri(s)"), "Izin Santri uses unified search+tap picker without native select");
   assert.ok(!has(izinView, 'v-model="form.santriId"'), "no redundant native select for santri");
+  const guruDash = read("src/views/dashboard/guru/GuruDashboard.vue");
+  assert.ok(has(guruDash, 'to="/dashboard/izin-santri"'), "GuruDashboard links directly from Izin dari wali card to Izin Santri calendar");
 });
 
 test("Liburkan Sesi (Admin) and Mode Hujan / Toleransi Cuaca are wired cleanly across Absen Santri and KBM views", () => {
