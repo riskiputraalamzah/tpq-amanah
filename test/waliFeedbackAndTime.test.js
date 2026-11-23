@@ -63,6 +63,9 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
   const izinView = read("src/views/dashboard/guru/IzinSantriView.vue");
   assert.ok(has(izinView, "api.get('/santri-presence/izin'"));
   assert.ok(has(izinView, "api.post('/santri-presence/izin'"));
+  assert.ok(has(izinView, "const todayItems = computed("), "Izin Santri leads with today's izin status");
+  assert.ok(has(izinView, "function pickSantri(s)"), "Izin Santri uses unified search+tap picker without native select");
+  assert.ok(!has(izinView, 'v-model="form.santriId"'), "no redundant native select for santri");
 });
 
 test("Liburkan Sesi (Admin) and Mode Hujan / Toleransi Cuaca are wired cleanly across Absen Santri and KBM views", () => {

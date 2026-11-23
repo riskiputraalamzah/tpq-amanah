@@ -28,18 +28,26 @@
       <template v-if="scope.source === 'kbm'"> Diambil dari riwayat KBM 60 hari terakhir, belum ditetapkan admin.</template>
     </p>
 
-    <!-- summary -->
+    <!-- summary (clickable quick-jumps) -->
     <section class="wv-summary" aria-label="Ringkasan">
-      <div><strong>{{ stats.linked }}/{{ rows.length }}</strong><span>santri tertaut wali</span></div>
-      <div><strong>{{ stats.verified }}</strong><span>data terverifikasi</span></div>
-      <div :class="{ 'is-attn': stats.toCheck }"><strong>{{ stats.toCheck }}</strong><span>menunggu dicek</span></div>
-      <div :class="{ 'is-attn': requests.length }"><strong>{{ requests.length }}</strong><span>pengajuan tautan</span></div>
+      <button type="button" class="wv-stat" @click="jumpSummary('all')">
+        <strong>{{ stats.linked }}/{{ rows.length }}</strong><span>santri tertaut wali</span>
+      </button>
+      <button type="button" class="wv-stat" @click="jumpSummary('verified')">
+        <strong>{{ stats.verified }}</strong><span>data terverifikasi</span>
+      </button>
+      <button type="button" class="wv-stat" :class="{ 'is-attn': stats.toCheck }" @click="jumpSummary('tocheck')">
+        <strong>{{ stats.toCheck }}</strong><span>menunggu dicek</span>
+      </button>
+      <button type="button" class="wv-stat" :class="{ 'is-attn': requests.length }" @click="tab = 'requests'">
+        <strong>{{ requests.length }}</strong><span>pengajuan tautan</span>
+      </button>
     </section>
 
     <div class="wv-tabs" role="tablist">
       <button type="button" role="tab" :aria-selected="tab === 'santri'" :class="{ active: tab === 'santri' }" @click="tab = 'santri'">Santri</button>
       <button type="button" role="tab" :aria-selected="tab === 'requests'" :class="{ active: tab === 'requests' }" @click="tab = 'requests'">
-        Pengajuan tautan <span v-if="requests.length" class="wv-count">{{ requests.length }}</span>
+        Pengajuan <span v-if="requests.length" class="wv-count">{{ requests.length }}</span>
       </button>
       <button v-if="isAdmin" type="button" role="tab" :aria-selected="tab === 'alfa'" :class="{ active: tab === 'alfa' }" @click="openAlfa">Kabar alfa</button>
     </div>
@@ -49,29 +57,86 @@
 
     <!-- santri -->
     <template v-else-if="tab === 'santri'">
-      <div class="wv-filters">
-        <label class="sr-only" for="wv-class">Jilid</label>
-        <select id="wv-class" v-model="classFilter" class="wv-input">
-          <option value="">{{ isAdmin ? 'Semua jilid' : 'Semua jilid saya' }}</option>
-          <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
-        </select>
-        <label class="sr-only" for="wv-search">Cari nama</label>
-        <input id="wv-search" v-model="search" class="wv-input" placeholder="Cari nama santri" />
-      </div>
-      <div class="wv-chips" role="group" aria-label="Saring status">
-        <button v-for="f in STATUS_FILTERS" :key="f.value" type="button" class="wv-chip" :aria-pressed="statusFilter === f.value"
-          @click="statusFilter = f.value">{{ f.label }} <span>{{ countFor(f.value) }}</span></button>
-      </div>
+      <div class="wv-toolbar">
+        <div class="wv-search-row">
+          <div class="wv-search-box">
+            <svg class="wv-search-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <label class="sr-only" for="wv-search">Cari nama</label>
+            <input id="wv-search" v-model="search" type="search" class="wv-input wv-search-input" placeholder="Cari nama santri…" />
+          </div>
+          <button
+            type="button"
+            class="wv-filter-toggle"
+            :aria-expanded="controlsOpen"
+            :class="{ 'has-active': activeControlCount > 0 }"
+            @click="controlsOpen = !controlsOpen"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+              <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+              <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
+            </svg>
+            <span>Filter</span>
+            <span v-if="activeControlCount" class="wv-filter-badge">{{ activeControlCount }}</span>
+          </button>
+        </div>
 
-      <!-- how the list is laid out: one list, by jilid, or by the wali's number (one number, several children) -->
-      <div class="wv-groupby" role="group" aria-label="Kelompokkan dan urutkan">
-        <span class="wv-groupby-label">Urutkan</span>
-        <button v-for="s in SORTS" :key="s.value" type="button" class="wv-chip" :aria-pressed="sortBy === s.value" @click="sortBy = s.value">{{ s.label }}</button>
-        <span class="wv-groupby-label">Kelompokkan</span>
-        <button v-for="o in GROUPINGS" :key="o.value" type="button" class="wv-chip" :aria-pressed="groupBy === o.value" @click="setGroupBy(o.value)">{{ o.label }}</button>
-        <label v-if="groupBy === 'phone'" class="wv-check wv-groupby-only">
-          <input v-model="onlyShared" type="checkbox" /> Hanya nomor dengan lebih dari 1 santri
-        </label>
+        <!-- Single-row horizontal-scroll status strip (replaces 3 wrapping rows of pills) -->
+        <div class="wv-chips" role="group" aria-label="Saring status">
+          <button
+            v-for="f in STATUS_FILTERS"
+            :key="f.value"
+            type="button"
+            class="wv-chip"
+            :aria-pressed="statusFilter === f.value"
+            @click="statusFilter = f.value"
+          >
+            {{ f.label }} <span>{{ countFor(f.value) }}</span>
+          </button>
+        </div>
+
+        <!-- Compact dropdowns for Jilid, Urutkan, Kelompokkan (always inline on desktop; collapsible on mobile) -->
+        <div class="wv-controls-panel" :class="{ 'is-open': controlsOpen }">
+          <label v-if="classOptions.length > 1" class="wv-ctrl-field" for="wv-class">
+            <span>Jilid</span>
+            <select id="wv-class" v-model="classFilter" class="wv-select">
+              <option value="">{{ isAdmin ? 'Semua jilid' : 'Semua jilid saya' }}</option>
+              <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
+            </select>
+          </label>
+          <label class="wv-ctrl-field" for="wv-sort">
+            <span>Urutkan</span>
+            <select id="wv-sort" v-model="sortBy" class="wv-select">
+              <option v-for="s in SORTS" :key="s.value" :value="s.value">{{ s.label }}</option>
+            </select>
+          </label>
+          <label class="wv-ctrl-field" for="wv-group">
+            <span>Kelompokkan</span>
+            <select id="wv-group" :value="groupBy" class="wv-select" @change="setGroupBy($event.target.value)">
+              <option v-for="o in GROUPINGS" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </label>
+          <label v-if="groupBy === 'phone'" class="wv-check wv-groupby-only">
+            <input v-model="onlyShared" type="checkbox" /> Hanya nomor dengan lebih dari 1 santri
+          </label>
+        </div>
+
+        <!-- Active non-default filter summary pills on mobile when panel is collapsed -->
+        <div v-if="!controlsOpen && activeControlCount" class="wv-active-tags">
+          <button v-if="classFilter" type="button" class="wv-tag-clear" @click="classFilter = ''">
+            {{ levelName(classFilter) }} ×
+          </button>
+          <button v-if="sortBy !== 'newest'" type="button" class="wv-tag-clear" @click="sortBy = 'newest'">
+            Urut: {{ SORTS.find((s) => s.value === sortBy)?.label }} ×
+          </button>
+          <button v-if="groupBy !== 'none'" type="button" class="wv-tag-clear" @click="setGroupBy('none')">
+            {{ GROUPINGS.find((g) => g.value === groupBy)?.label }} ×
+          </button>
+        </div>
       </div>
 
       <p v-if="statusFilter === 'remind' && visibleRows.length" class="wv-note">
@@ -425,6 +490,11 @@ const tab = ref('santri')
 const classFilter = ref('')
 const search = ref('')
 const statusFilter = ref('all')
+const controlsOpen = ref(false)
+function jumpSummary(status) {
+  tab.value = 'santri'
+  statusFilter.value = status
+}
 const busy = ref(false)
 const choice = ref({})
 const codeSheet = ref(null)
@@ -558,6 +628,9 @@ const readGroupBy = () => {
 }
 const groupBy = ref(readGroupBy())
 const onlyShared = ref(false)
+const activeControlCount = computed(() =>
+  (classFilter.value ? 1 : 0) + (sortBy.value !== 'newest' ? 1 : 0) + (groupBy.value !== 'none' ? 1 : 0),
+)
 function setGroupBy(v) {
   groupBy.value = v
   try {
@@ -998,13 +1071,23 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-.wv-summary > div {
+.wv-stat {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
 }
 
-.wv-summary > div + div {
+.wv-stat:hover {
+  background: #f6faf8;
+}
+
+.wv-stat + .wv-stat {
   border-left: 1px solid rgba(11, 59, 42, 0.08);
 }
 
@@ -1029,8 +1112,7 @@ onBeforeUnmount(() => {
 
 .wv-tabs {
   display: flex;
-  overflow-x: auto;
-  gap: 6px;
+  gap: 4px;
   margin-bottom: 12px;
   padding: 4px;
   border-radius: 12px;
@@ -1048,6 +1130,7 @@ onBeforeUnmount(() => {
   border-radius: 9px;
   background: transparent;
   font: inherit;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #3b4a42;
   cursor: pointer;
@@ -1071,11 +1154,81 @@ onBeforeUnmount(() => {
   font-size: 0.72rem;
 }
 
-.wv-filters {
-  display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+/* Streamlined Toolbar: search + filter trigger, single-line status strip, compact dropdown controls */
+.wv-toolbar {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.wv-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wv-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.wv-search-ico {
+  position: absolute;
+  left: 12px;
+  color: #5b6b62;
+  pointer-events: none;
+}
+
+.wv-search-input {
+  padding-left: 36px;
+}
+
+.wv-filter-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(11, 59, 42, 0.22);
+  background: #fff;
+  color: #0b3b2a;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.wv-filter-toggle.has-active,
+.wv-filter-toggle[aria-expanded="true"] {
+  border-color: #0a5c40;
+  background: #edf7f2;
+  color: #0a5c40;
+}
+
+.wv-filter-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #0a5c40;
+  color: #fff;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .wv-filter-toggle {
+    display: none;
+  }
 }
 
 .wv-input {
@@ -1096,27 +1249,44 @@ textarea.wv-input {
 
 .wv-chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 6px;
-  margin-bottom: 12px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.wv-chips::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .wv-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 .wv-chip {
+  flex: none;
   min-height: 36px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid rgba(11, 59, 42, 0.2);
+  border: 1px solid rgba(11, 59, 42, 0.16);
   background: #fff;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   font-weight: 600;
   color: #2f4339;
+  white-space: nowrap;
   cursor: pointer;
 }
 
 .wv-chip span {
   margin-left: 4px;
   color: #5b6b62;
+  font-variant-numeric: tabular-nums;
 }
 
 .wv-chip[aria-pressed="true"] {
@@ -1127,6 +1297,76 @@ textarea.wv-input {
 
 .wv-chip[aria-pressed="true"] span {
   color: #d9efe4;
+}
+
+.wv-controls-panel {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f5f9f6;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+}
+
+.wv-controls-panel.is-open {
+  display: grid;
+}
+
+@media (min-width: 768px) {
+  .wv-controls-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+}
+
+.wv-ctrl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #5b6b62;
+}
+
+.wv-select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 59, 42, 0.2);
+  background: #fff;
+  color: #0b3b2a;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.wv-active-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (min-width: 768px) {
+  .wv-active-tags {
+    display: none;
+  }
+}
+
+.wv-tag-clear {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 92, 64, 0.25);
+  background: #e9f5ef;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .wv-list {
@@ -1378,24 +1618,9 @@ textarea.wv-input {
   font-weight: 600;
 }
 
-/* laying out the list */
-.wv-groupby {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin: -4px 0 12px;
-}
-
-.wv-groupby-label {
-  margin-right: 4px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #5b6b62;
-}
-
 .wv-groupby-only {
-  margin: 0 0 0 6px;
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
 }
 
 .wv-block + .wv-block {
@@ -1662,16 +1887,23 @@ textarea.wv-input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .wv-summary > div:nth-child(3) {
+  .wv-stat:nth-child(3) {
     border-left: 0;
   }
 
-  .wv-summary > div:nth-child(n + 3) {
+  .wv-stat:nth-child(n + 3) {
     border-top: 1px solid rgba(11, 59, 42, 0.08);
   }
 
-  .wv-filters {
-    grid-template-columns: minmax(0, 1fr);
+  .wv-tabs {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .wv-tabs button {
+    flex: 1 1 0;
+    padding: 0 8px;
+    font-size: 0.84rem;
   }
 
   .wv-row {
