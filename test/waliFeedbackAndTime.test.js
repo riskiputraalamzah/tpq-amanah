@@ -68,6 +68,7 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
   assert.ok(has(izinView, "function spanText(dates)"), "Izin Santri displays clear date-span labels");
   assert.ok(has(izinView, "isAllJilidView"), "Izin Santri handles all-jilid view scope separately from taught act scope");
   assert.ok(has(izinView, "actClassIds"), "Izin Santri respects actClassIds for creating/cancelling izin");
+  assert.ok(has(izinView, "dayDrawerOpen"), "Izin Santri opens a mobile bottom drawer when tapping a calendar date");
   assert.ok(has(izinView, "function pickSantri(s)"), "Izin Santri uses unified search+tap picker without native select");
   assert.ok(!has(izinView, 'v-model="form.santriId"'), "no redundant native select for santri");
   const guruDash = read("src/views/dashboard/guru/GuruDashboard.vue");

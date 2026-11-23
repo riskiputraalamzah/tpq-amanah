@@ -43,8 +43,33 @@
         Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
       </p>
 
-      <!-- 1. PRIMARY: Kalender Izin Dinamis + Detail Tanggal Terpilih (default: Hari Ini) -->
+      <!-- 1. PRIMARY: Kalender Izin Dinamis + Detail Tanggal Terpilih (Desktop: panel samping | Mobile: bottom drawer) -->
       <section class="iz-board" aria-label="Kalender dan rincian izin santri">
+        <!-- Mobile-only compact Hari Ini strip (tapping slides up the bottom drawer for Today) -->
+        <button
+          type="button"
+          class="iz-today-strip"
+          :class="{ 'has-items': todayItems.length > 0 }"
+          @click="openTodayDrawer"
+        >
+          <div class="iz-today-strip-text">
+            <strong>Hari ini · {{ longDayLabel(today) }}</strong>
+            <span v-if="todayIsWeekend">Akhir pekan · ketuk tanggal aktif di kalender</span>
+            <span v-else-if="todayItems.length">{{ todayItems.length }} santri {{ activeScopeText }} · ketuk untuk rincian</span>
+            <span v-else>Tidak ada yang izin/sakit · semua terjadwal masuk</span>
+          </div>
+          <div class="iz-today-strip-right">
+            <template v-if="!todayIsWeekend && todayItems.length">
+              <span v-if="todayIzinCount" class="iz-pill is-info">{{ todayIzinCount }} Izin</span>
+              <span v-if="todaySakitCount" class="iz-pill is-warn">{{ todaySakitCount }} Sakit</span>
+            </template>
+            <span v-else-if="!todayIsWeekend" class="iz-pill is-ok">0 izin</span>
+            <svg class="iz-strip-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </button>
+
         <!-- Left: Interactive Monthly Calendar -->
         <div class="iz-cal-card">
           <div class="iz-cal-top">
@@ -125,6 +150,7 @@
               <button type="button" class="iz-legend-clear" @click="highlightedId = ''">Tutup</button>
             </span>
           </div>
+          <p class="iz-cal-tap-hint">Ketuk tanggal di kalender untuk membuka rincian izin.</p>
         </div>
 
         <!-- Right: Selected Date Detail Panel (auto-defaults to Hari Ini) -->
@@ -324,6 +350,136 @@
         </ul>
       </section>
     </template>
+
+    <!-- Mobile Bottom Drawer: Rincian Tanggal Kalender (< 960px, teleported to body, z-index 9985) -->
+    <Teleport to="body">
+      <Transition name="iz-drawer">
+        <div
+          v-if="dayDrawerOpen"
+          class="iz-drawer-overlay"
+          @click.self="closeDayDrawer"
+          @keydown.esc="closeDayDrawer"
+        >
+          <section
+            class="iz-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="iz-drawer-title"
+          >
+            <div class="iz-drawer-handle-wrap" aria-hidden="true">
+              <span class="iz-drawer-handle"></span>
+            </div>
+
+            <header class="iz-drawer-head">
+              <div class="iz-day-title-wrap">
+                <div class="iz-day-title-row">
+                  <h2 id="iz-drawer-title">{{ longDayLabel(selectedDate) }}</h2>
+                  <span v-if="selectedDate === today" class="iz-pill is-today">Hari ini</span>
+                  <span v-else-if="selectedIsWeekend" class="iz-pill is-idle">Akhir pekan</span>
+                </div>
+                <div v-if="!selectedIsWeekend && selectedDayItems.length" class="iz-today-badges">
+                  <span v-if="selectedIzinCount" class="iz-pill is-info">{{ selectedIzinCount }} Izin</span>
+                  <span v-if="selectedSakitCount" class="iz-pill is-warn">{{ selectedSakitCount }} Sakit</span>
+                </div>
+                <span v-else-if="!selectedIsWeekend" class="iz-pill is-ok">Semua terjadwal masuk</span>
+              </div>
+              <button type="button" class="iz-close" aria-label="Tutup rincian tanggal" @click="closeDayDrawer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </header>
+
+            <div class="iz-drawer-body">
+              <p v-if="selectedIsWeekend" class="iz-day-sub">
+                TPQ aktif Senin–Jumat. Pilih tanggal hari aktif di kalender untuk melihat atau mencatat izin.
+              </p>
+              <p v-else-if="selectedDayItems.length" class="iz-day-sub">
+                <strong>{{ selectedDayItems.length }} santri</strong>
+                {{ activeScopeText }} tercatat izin/sakit pada tanggal ini.
+              </p>
+              <p v-else class="iz-day-sub">
+                Tidak ada santri {{ activeScopeText }} yang izin atau sakit pada tanggal ini.
+              </p>
+
+              <ul v-if="selectedDayItems.length" class="iz-day-list">
+                <li
+                  v-for="item in selectedDayItems"
+                  :key="`drw-${item.id}`"
+                  class="iz-day-row"
+                  :class="{ 'is-highlighted': highlightedId === item.id }"
+                >
+                  <div class="iz-item-main">
+                    <div class="iz-item-top">
+                      <strong>{{ item.santriName }}</strong>
+                      <span class="iz-pill" :class="item.type === 'sakit' ? 'is-warn' : 'is-info'">
+                        {{ item.type === 'sakit' ? 'Sakit' : 'Izin' }}
+                      </span>
+                      <span class="iz-meta-tag">{{ levelName(item.classId) }} · {{ slotLabel(item.slot) }}</span>
+                    </div>
+
+                    <span class="iz-span-pill" :class="{ 'is-multi': (item.dates || []).length > 1 }">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <span>{{ spanText(item.dates) }}</span>
+                    </span>
+
+                    <p v-if="item.reason" class="iz-reason">"{{ item.reason }}"</p>
+                    <span class="iz-sub">
+                      Dicatat {{ item.byName || 'Wali' }}<template v-if="item.createdAt"> · <time :title="fullDateTime(item.createdAt)">{{ timeAgo(item.createdAt, now) }}</time></template>
+                    </span>
+                  </div>
+
+                  <div v-if="item.cancellable || (item.dates || []).length > 1" class="iz-item-side">
+                    <button
+                      v-if="(item.dates || []).length > 1"
+                      type="button"
+                      class="iz-btn iz-btn-ghost iz-btn-sm"
+                      @click="highlightFromDrawer(item)"
+                    >
+                      Sorot di kalender
+                    </button>
+                    <button
+                      v-if="item.cancellable"
+                      type="button"
+                      class="iz-btn iz-btn-ghost iz-btn-sm is-danger"
+                      :disabled="cancellingId === item.id"
+                      @click="cancelIzin(item)"
+                    >
+                      {{ cancellingId === item.id ? 'Membatalkan…' : 'Batalkan' }}
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <footer v-if="canCreate" class="iz-drawer-foot">
+              <button
+                v-if="canCreateOnSelectedDate"
+                type="button"
+                class="iz-btn iz-btn-primary iz-btn-full"
+                @click="openComposerFromDrawer(selectedDate)"
+              >
+                + Catat izin untuk {{ selectedDate === today ? 'hari ini' : shortDayFull(selectedDate) }}
+              </button>
+              <button
+                v-else
+                type="button"
+                class="iz-btn iz-btn-primary iz-btn-full"
+                @click="openComposerFromDrawer('')"
+              >
+                + Catat izin / sakit santri
+              </button>
+            </footer>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Bottom Sheet / Dialog Catat Izin & Sakit (Smart Picker tanpa native <select>) -->
     <Teleport to="body">
@@ -623,6 +779,8 @@ const selectedDate = ref(initialToday)
 const calYear = ref(Number(initialToday.slice(0, 4)))
 const calMonth = ref(Number(initialToday.slice(5, 7)) - 1) // 0..11
 const highlightedId = ref('')
+const isMobile = ref(false)
+const dayDrawerOpen = ref(false)
 
 const composerOpen = ref(false)
 const pickerOpen = ref(true)
@@ -770,6 +928,9 @@ const activeByDate = computed(() => {
 })
 
 const todayItems = computed(() => activeByDate.value.get(today.value) || [])
+const todayIsWeekend = computed(() => isWeekendIso(today.value))
+const todayIzinCount = computed(() => todayItems.value.filter((x) => x.type !== 'sakit').length)
+const todaySakitCount = computed(() => todayItems.value.filter((x) => x.type === 'sakit').length)
 const selectedDayItems = computed(() => activeByDate.value.get(selectedDate.value) || [])
 const selectedIsWeekend = computed(() => isWeekendIso(selectedDate.value))
 const selectedIzinCount = computed(() => selectedDayItems.value.filter((x) => x.type !== 'sakit').length)
@@ -843,6 +1004,31 @@ function selectCalendarDate(cell) {
     calYear.value = Number(cell.iso.slice(0, 4))
     calMonth.value = Number(cell.iso.slice(5, 7)) - 1
   }
+  if (isMobile.value) {
+    dayDrawerOpen.value = true
+  }
+}
+
+function openTodayDrawer() {
+  selectedDate.value = today.value
+  calYear.value = Number(today.value.slice(0, 4))
+  calMonth.value = Number(today.value.slice(5, 7)) - 1
+  highlightedId.value = ''
+  dayDrawerOpen.value = true
+}
+
+function closeDayDrawer() {
+  dayDrawerOpen.value = false
+}
+
+function highlightFromDrawer(item) {
+  highlightedId.value = item.id
+  dayDrawerOpen.value = false
+}
+
+function openComposerFromDrawer(date) {
+  dayDrawerOpen.value = false
+  openComposer(date ? { date } : {})
 }
 
 function jumpToday() {
@@ -1084,7 +1270,19 @@ async function cancelIzin(item) {
   }
 }
 
+let mobileMq = null
+function syncMobileViewport(e) {
+  isMobile.value = !!e.matches
+  if (!isMobile.value) dayDrawerOpen.value = false
+}
+
 onMounted(() => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    mobileMq = window.matchMedia('(max-width: 959px)')
+    syncMobileViewport(mobileMq)
+    if (mobileMq.addEventListener) mobileMq.addEventListener('change', syncMobileViewport)
+    else if (mobileMq.addListener) mobileMq.addListener(syncMobileViewport)
+  }
   clockTimer = setInterval(() => {
     now.value = new Date()
   }, 30000)
@@ -1092,6 +1290,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (mobileMq) {
+    if (mobileMq.removeEventListener) mobileMq.removeEventListener('change', syncMobileViewport)
+    else if (mobileMq.removeListener) mobileMq.removeListener(syncMobileViewport)
+  }
   if (clockTimer) clearInterval(clockTimer)
 })
 </script>
@@ -1166,16 +1368,89 @@ onBeforeUnmount(() => {
   color: #7a1810;
 }
 
+/* Mobile-only Hari Ini compact strip */
+.iz-today-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(11, 59, 42, 0.14);
+  background: #fff;
+  color: #0b3b2a;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.iz-today-strip.has-items {
+  background: #f5fbf7;
+  border-color: rgba(10, 92, 64, 0.28);
+}
+
+.iz-today-strip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.iz-today-strip-text strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0b3b2a;
+}
+
+.iz-today-strip-text span {
+  font-size: 0.78rem;
+  color: #475a50;
+}
+
+.iz-today-strip-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.iz-strip-chev {
+  color: #5b6b62;
+  flex: none;
+}
+
+.iz-cal-tap-hint {
+  margin: 8px 0 0;
+  font-size: 0.76rem;
+  color: #5b6b62;
+  text-align: center;
+}
+
 /* 1. PRIMARY: Interactive Calendar + Selected Day Detail Split */
 .iz-board {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
+  gap: 12px;
   align-items: start;
   margin-bottom: 24px;
 }
 
+@media (max-width: 959px) {
+  /* Mobile uses the bottom drawer instead of a stacked list below the calendar */
+  .iz-day-panel {
+    display: none;
+  }
+}
+
 @media (min-width: 960px) {
+  .iz-today-strip,
+  .iz-cal-tap-hint {
+    display: none;
+  }
+
   .iz-board {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
     gap: 16px;
@@ -1267,6 +1542,22 @@ onBeforeUnmount(() => {
   font: inherit;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .iz-cal-month {
+    min-width: 0;
+    font-size: 0.94rem;
+  }
+
+  .iz-cal-arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .iz-cal-select {
+    max-width: 132px;
+  }
 }
 
 .iz-cal-weekdays {
@@ -1813,6 +2104,107 @@ onBeforeUnmount(() => {
   border-color: rgba(153, 27, 27, 0.25);
 }
 
+.iz-btn-full {
+  width: 100%;
+}
+
+/* Mobile Day Bottom Drawer (teleported to body, z-index 9985 < composer 9990 < DialogHost 100000) */
+.iz-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9985;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(3, 25, 17, 0.45);
+}
+
+.iz-drawer {
+  width: 100%;
+  max-width: 560px;
+  max-height: 82dvh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px 22px 0 0;
+  background: #fbf9f3;
+  color: #0b3b2a;
+  box-shadow: 0 -14px 36px rgba(3, 25, 17, 0.22);
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.iz-drawer-handle-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 4px;
+  background: #fff;
+}
+
+.iz-drawer-handle {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(11, 59, 42, 0.2);
+}
+
+.iz-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 16px 12px;
+  background: #fff;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.iz-drawer-head h2 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0b3b2a;
+}
+
+.iz-drawer-body {
+  padding: 14px 16px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.iz-drawer-foot {
+  padding: 10px 16px 14px;
+  background: #fff;
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.iz-drawer-enter-active,
+.iz-drawer-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.iz-drawer-enter-active .iz-drawer,
+.iz-drawer-leave-active .iz-drawer {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.iz-drawer-enter-from,
+.iz-drawer-leave-to {
+  opacity: 0;
+}
+
+.iz-drawer-enter-from .iz-drawer,
+.iz-drawer-leave-to .iz-drawer {
+  transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iz-drawer-enter-active,
+  .iz-drawer-leave-active,
+  .iz-drawer-enter-active .iz-drawer,
+  .iz-drawer-leave-active .iz-drawer {
+    transition: none;
+  }
+}
+
 /* Composer Sheet (teleported to body, z-index 9990 < DialogHost 100000) */
 .iz-overlay {
   position: fixed;
@@ -2138,6 +2530,7 @@ onBeforeUnmount(() => {
 
 .iz-btn:focus-visible,
 .iz-close:focus-visible,
+.iz-today-strip:focus-visible,
 .iz-cal-arrow:focus-visible,
 .iz-cal-cell:focus-visible,
 .iz-cal-today-btn:focus-visible,
