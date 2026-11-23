@@ -16,7 +16,7 @@
           </router-link>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden lg:flex items-center gap-4 xl:gap-6">
+          <nav class="hidden lg:flex items-center gap-4 xl:gap-5">
             <a v-for="link in navLinks" :key="link.href" :href="link.href"
               :target="link.external ? '_blank' : undefined" :rel="link.external ? 'noopener noreferrer' : undefined"
               @click="link.external ? null : scrollToSection($event, link.href)"
@@ -30,25 +30,37 @@
               {{ link.label }}
             </a>
 
-            <router-link v-if="isAuthenticated" to="/dashboard" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
-              Dashboard
-            </router-link>
-            <router-link v-else to="/login" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
-              Login
-            </router-link>
+            <div class="flex items-center gap-2 pl-2 border-l border-amber-200/20">
+              <router-link to="/wali"
+                class="px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold whitespace-nowrap border border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20 hover:border-amber-200/70 transition-colors">
+                Portal Wali
+              </router-link>
+              <router-link v-if="isAuthenticated" to="/dashboard" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
+                Dashboard
+              </router-link>
+              <router-link v-else to="/login" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
+                Login Staf
+              </router-link>
+            </div>
           </nav>
 
-          <!-- Mobile Menu Button -->
-          <button type="button" @click="isMobileMenuOpen = !isMobileMenuOpen" :aria-expanded="isMobileMenuOpen" aria-label="Menu navigasi"
-            class="lg:hidden p-2.5 rounded-xl transition-all duration-300"
-            :class="isScrolled ? 'bg-white/10 text-white' : 'bg-white/20 text-white'">
-            <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <!-- Mobile Actions: Quick Portal Wali + Hamburger -->
+          <div class="lg:hidden flex items-center gap-2">
+            <router-link to="/wali"
+              class="inline-flex items-center min-h-[40px] px-3 rounded-xl text-xs font-bold whitespace-nowrap border border-amber-200/45 bg-white/10 text-amber-100 hover:bg-white/20 transition-colors">
+              Portal Wali
+            </router-link>
+            <button type="button" @click="isMobileMenuOpen = !isMobileMenuOpen" :aria-expanded="isMobileMenuOpen" aria-label="Menu navigasi"
+              class="p-2.5 rounded-xl transition-all duration-300"
+              :class="isScrolled ? 'bg-white/10 text-white' : 'bg-white/20 text-white'">
+              <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -71,14 +83,18 @@
               </svg>
               {{ link.label }}
             </a>
-            <div class="pt-4 border-t border-amber-200/15">
+            <div class="pt-4 border-t border-amber-200/15 grid grid-cols-2 gap-2.5">
+              <router-link to="/wali" @click="isMobileMenuOpen = false"
+                class="inline-flex items-center justify-center py-3 px-3 rounded-xl text-sm font-bold text-center border border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20">
+                Portal Wali
+              </router-link>
               <router-link v-if="isAuthenticated" to="/dashboard" @click="isMobileMenuOpen = false"
-                class="block w-full btn-accent py-3 text-center">
+                class="block w-full btn-accent py-3 text-center text-sm">
                 Dashboard
               </router-link>
               <router-link v-else to="/login" @click="isMobileMenuOpen = false"
-                class="block w-full btn-accent py-3 text-center">
-                Login
+                class="block w-full btn-accent py-3 text-center text-sm">
+                Login Staf
               </router-link>
             </div>
           </nav>
@@ -105,11 +121,9 @@ const navLinks = [
   { href: '#beranda', label: 'Beranda', section: 'beranda' },
   { href: '#pendaftaran', label: 'Pendaftaran', section: 'pendaftaran' },
   { href: '#keunggulan', label: 'Keunggulan', section: 'keunggulan' },
-  { href: '#tentang', label: 'Profil', section: 'tentang' },
   { href: '#program', label: 'Program', section: 'program' },
   { href: '#at-tartil', label: 'E-Kitab', section: 'at-tartil' },
   { href: '#jadwal', label: 'Jadwal', section: 'jadwal' },
-  { href: '#pengajar', label: 'Pengajar', section: 'pengajar' },
   { href: '#kontak', label: 'Kontak', section: 'kontak' }
 ]
 
@@ -137,7 +151,9 @@ const scrollToSection = (event, href) => {
 }
 
 const setupScrollSpy = () => {
-  const sections = document.querySelectorAll('section[id]')
+  const sections = navLinks
+    .map(link => document.querySelector(link.href))
+    .filter(Boolean)
 
   observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {

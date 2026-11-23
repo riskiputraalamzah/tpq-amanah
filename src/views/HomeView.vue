@@ -285,8 +285,8 @@
               Perkembangan Bisa Dipantau
             </h3>
             <p class="mt-1.5 text-sm leading-relaxed lp-body">
-              Capaian bacaan dicatat di Buku Prestasi, dan E-Kitab bisa dibuka
-              di rumah.
+              Kehadiran, halaman bacaan terakhir, dan izin/sakit terpantau dari
+              HP lewat Portal Wali &amp; E-Kitab.
             </p>
           </li>
           <li class="flex flex-col items-center px-6 text-center">
@@ -552,17 +552,20 @@
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg></StarBadge>
-            <h3 class="mb-2 text-lg font-bold text-white">Transparan &amp; Digital Terpadu</h3>
+            <h3 class="mb-2 text-lg font-bold text-white">Portal Wali &amp; Digital Terpadu</h3>
             <p class="text-sm leading-relaxed text-emerald-100/80">
-              Setiap selesai sesi, capaian bacaan dicatat di Buku Prestasi
-              Santri. Di rumah, orang tua bisa menyimak materi lewat E-Kitab
-              digital.
+              Kehadiran harian, halaman bacaan terakhir, rapor, dan izin/sakit
+              bisa dipantau langsung dari HP orang tua, lengkap dengan E-Kitab
+              &amp; kabar WhatsApp otomatis.
             </p>
             <span class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300">
               <i class="lp-diamond"></i>Amanah &amp; Terukur
             </span>
           </article>
         </div>
+
+        <!-- Interactive Portal Wali Santri preview -->
+        <WaliPortalShowcase />
       </div>
       <span class="lp-fringe-bottom" aria-hidden="true"></span>
     </section>
@@ -834,58 +837,65 @@
         <div class="max-w-6xl pb-6 mx-auto">
           <div
             class="lp-bar"
-            role="img"
-            aria-label="Pembagian 90 menit: 15 menit pembukaan, 45 menit bimbingan privat, 20 menit hafalan dan praktik ibadah, 10 menit penutup"
+            role="group"
+            aria-label="Pembagian 90 menit: pilih segmen untuk melihat rinciannya"
           >
-            <span style="flex: 15; background: #6ee7b7">15</span>
-            <span style="flex: 45; background: #fcd34d">45</span>
-            <span style="flex: 20; background: #34d399">20</span>
-            <span style="flex: 10; background: #fde68a">10</span>
+            <button
+              v-for="(seg, idx) in routineSegments"
+              :key="seg.range"
+              type="button"
+              :style="{ flex: seg.minutes, background: seg.color }"
+              :aria-pressed="activeRoutine === idx"
+              :aria-label="`${seg.minutes} menit: ${seg.title}`"
+              @click="activeRoutine = idx"
+            >
+              <span>{{ seg.minutes }}</span>
+              <span class="hidden sm:inline font-semibold opacity-80">mnt</span>
+            </button>
           </div>
-          <p class="mt-2 text-xs text-center text-emerald-200/70">menit</p>
+          <p class="mt-2.5 text-xs text-center text-emerald-200/80">
+            Ketuk segmen durasi di atas · Total 90 menit per pertemuan
+          </p>
 
-          <div class="grid gap-9 mt-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-amber-200/15">
-            <div class="lg:px-7 lg:first:pl-0 lg:last:pr-0">
-              <p class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300">
-                <i class="lp-diamond" style="color: #6ee7b7"></i>Menit 00 - 15
-              </p>
-              <h3 class="mb-2 text-lg font-bold text-white">Pembukaan &amp; Doa Klasikal</h3>
-              <p class="text-sm leading-relaxed text-emerald-100/80">
-                Membuka sesi dengan ikrar santri, membaca Asmaul Husna, membaca
-                surat Al-Fatihah, dan pembacaan bersama surat pendek pilihan.
-              </p>
+          <!-- Mobile focused detail card (< 640px) to keep mobile scroll crisp -->
+          <div class="mt-6 sm:hidden lp-routine-card is-active">
+            <p class="inline-flex items-center gap-2 mb-2 text-sm font-bold text-amber-300">
+              <i class="lp-diamond" :style="{ color: routineSegments[activeRoutine].color }"></i>
+              {{ routineSegments[activeRoutine].range }} ({{ routineSegments[activeRoutine].minutes }} menit)
+            </p>
+            <h3 class="mb-2 text-lg font-bold text-white">{{ routineSegments[activeRoutine].title }}</h3>
+            <p class="text-sm leading-relaxed text-emerald-100/85">{{ routineSegments[activeRoutine].desc }}</p>
+            <div class="flex flex-wrap gap-1.5 mt-4">
+              <button
+                v-for="(seg, idx) in routineSegments"
+                :key="`m-${seg.range}`"
+                type="button"
+                class="px-2.5 py-1.5 rounded-full text-xs font-bold border transition-colors"
+                :class="activeRoutine === idx ? 'bg-amber-300/20 border-amber-300 text-amber-100' : 'bg-white/5 border-white/15 text-emerald-100/75'"
+                @click="activeRoutine = idx"
+              >
+                {{ seg.minutes }} mnt · {{ seg.short }}
+              </button>
             </div>
-            <div class="lg:px-7">
+          </div>
+
+          <!-- Tablet & Desktop 4-column interactive grid (>= 640px) -->
+          <div class="hidden sm:grid gap-4 mt-8 sm:grid-cols-2 lg:grid-cols-4">
+            <button
+              v-for="(seg, idx) in routineSegments"
+              :key="`d-${seg.range}`"
+              type="button"
+              class="lp-routine-card"
+              :class="{ 'is-active': activeRoutine === idx }"
+              :aria-pressed="activeRoutine === idx"
+              @click="activeRoutine = idx"
+            >
               <p class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300">
-                <i class="lp-diamond" style="color: #fcd34d"></i>Menit 15 - 60
+                <i class="lp-diamond" :style="{ color: seg.color }"></i>{{ seg.range }}
               </p>
-              <h3 class="mb-2 text-lg font-bold text-white">Bimbingan Privat (Sorogan)</h3>
-              <p class="text-sm leading-relaxed text-emerald-100/80">
-                Setiap santri maju secara individual ke hadapan ustadz/ustadzah
-                untuk membaca jilid atau Al-Qur'an dengan evaluasi tajwid dan
-                makhraj perorangan.
-              </p>
-            </div>
-            <div class="lg:px-7">
-              <p class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300">
-                <i class="lp-diamond" style="color: #34d399"></i>Menit 60 - 80
-              </p>
-              <h3 class="mb-2 text-lg font-bold text-white">Hafalan &amp; Praktik Ibadah</h3>
-              <p class="text-sm leading-relaxed text-emerald-100/80">
-                Setoran surat pendek Juz 'Amma, mengulang doa-doa harian,
-                bimbingan gerakan shalat fardhu, dan pembacaan kisah teladan nabi.
-              </p>
-            </div>
-            <div class="lg:px-7 lg:last:pr-0">
-              <p class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300">
-                <i class="lp-diamond" style="color: #fde68a"></i>Menit 80 - 90
-              </p>
-              <h3 class="mb-2 text-lg font-bold text-white">Buku Prestasi &amp; Penutup</h3>
-              <p class="text-sm leading-relaxed text-emerald-100/80">
-                Pencatatan halaman capaian di Buku Prestasi Santri, pesan motivasi
-                akhlak mulia oleh guru, dan doa kafaratul majlis bersama.
-              </p>
-            </div>
+              <h3 class="mb-2 text-lg font-bold text-white">{{ seg.title }}</h3>
+              <p class="text-sm leading-relaxed text-emerald-100/80">{{ seg.desc }}</p>
+            </button>
           </div>
         </div>
       </div>
@@ -1020,7 +1030,7 @@
           <div class="grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:divide-x lg:divide-amber-700/15">
             <div v-for="stat in stats" :key="stat.label" class="px-3 text-center">
               <div
-                class="mb-1 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl lp-ink"
+                class="mb-1 text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl lg:text-5xl lp-ink"
                 :data-target="stat.rawValue"
               >
                 {{ stat.displayValue }}
@@ -1283,11 +1293,11 @@
           pendidikan Al-Qur'an putra-putrinya di TPQ Amanah.
         </SectionHeading>
 
-        <div class="grid gap-8 md:grid-cols-3">
+        <div ref="testiTrackRef" class="lp-testi-track md:grid md:gap-8 md:grid-cols-3" @scroll.passive="onTestiScroll">
           <figure
             v-for="(testi, idx) in testimonials"
             :key="idx"
-            class="flex flex-col justify-between p-7 lp-card sm:p-8"
+            class="lp-testi-slide flex flex-col justify-between p-7 lp-card sm:p-8"
           >
             <div>
               <div class="lp-quote-mark" aria-hidden="true">&ldquo;</div>
@@ -1309,6 +1319,21 @@
               </div>
             </figcaption>
           </figure>
+        </div>
+
+        <!-- Mobile swipe indicator dots -->
+        <div class="flex items-center justify-center gap-2 mt-5 md:hidden" role="tablist" aria-label="Geser testimoni wali">
+          <button
+            v-for="(testi, idx) in testimonials"
+            :key="`dot-${idx}`"
+            type="button"
+            role="tab"
+            :aria-selected="activeTesti === idx"
+            :aria-label="`Testimoni ${idx + 1}: ${testi.name}`"
+            class="h-2 rounded-full transition-all"
+            :class="activeTesti === idx ? 'w-6 bg-emerald-800' : 'w-2 bg-amber-700/30'"
+            @click="scrollToTesti(idx)"
+          ></button>
         </div>
       </div>
     </section>
@@ -1590,6 +1615,7 @@ import LegalDocuments from "@/components/LegalDocuments.vue";
 import SectionHeading from "@/components/landing/SectionHeading.vue";
 import StarBadge from "@/components/landing/StarBadge.vue";
 import JilidDemoStage from "@/components/landing/JilidDemoStage.vue";
+import WaliPortalShowcase from "@/components/landing/WaliPortalShowcase.vue";
 import "@/styles/landing.css";
 import api from "@/services/api";
 
@@ -1714,15 +1740,73 @@ const tartilBooks = [
   },
 ];
 
+// Interactive 90-Minute Routine Bar (default highlights the core 45-min sorogan session)
+const activeRoutine = ref(1);
+const routineSegments = [
+  {
+    minutes: 15,
+    range: "Menit 00 - 15",
+    short: "Pembukaan",
+    color: "#6ee7b7",
+    title: "Pembukaan & Doa Klasikal",
+    desc: "Membuka sesi dengan ikrar santri, membaca Asmaul Husna, membaca surat Al-Fatihah, dan pembacaan bersama surat pendek pilihan.",
+  },
+  {
+    minutes: 45,
+    range: "Menit 15 - 60",
+    short: "Sorogan",
+    color: "#fcd34d",
+    title: "Bimbingan Privat (Sorogan)",
+    desc: "Setiap santri maju secara individual ke hadapan ustadz/ustadzah untuk membaca jilid atau Al-Qur'an dengan evaluasi tajwid dan makhraj perorangan.",
+  },
+  {
+    minutes: 20,
+    range: "Menit 60 - 80",
+    short: "Hafalan",
+    color: "#34d399",
+    title: "Hafalan & Praktik Ibadah",
+    desc: "Setoran surat pendek Juz 'Amma, mengulang doa-doa harian, bimbingan gerakan shalat fardhu, dan pembacaan kisah teladan nabi.",
+  },
+  {
+    minutes: 10,
+    range: "Menit 80 - 90",
+    short: "Penutup",
+    color: "#fde68a",
+    title: "Buku Prestasi & Penutup",
+    desc: "Pencatatan halaman capaian di Buku Prestasi & Portal Wali, pesan motivasi akhlak mulia oleh guru, dan doa kafaratul majlis bersama.",
+  },
+];
+
+// Mobile testimonial carousel state
+const testiTrackRef = ref(null);
+const activeTesti = ref(0);
+const onTestiScroll = () => {
+  const el = testiTrackRef.value;
+  if (!el) return;
+  const card = el.firstElementChild;
+  if (!card) return;
+  const step = card.offsetWidth + 16;
+  if (step > 0) {
+    activeTesti.value = Math.min(testimonials.length - 1, Math.max(0, Math.round(el.scrollLeft / step)));
+  }
+};
+const scrollToTesti = (idx) => {
+  activeTesti.value = idx;
+  const el = testiTrackRef.value;
+  const card = el?.children?.[idx];
+  if (card) card.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+};
+
 // Stats Section with Counter Animation
 const statsRef = ref(null);
 const hasAnimated = ref(false);
+const counterTimers = [];
 
 const stats = ref([
-  { rawValue: 80, displayValue: "0+", label: "Santri Aktif" },
-  { rawValue: 6, displayValue: "0+", label: "Asatidz Bersertifikat" },
-  { rawValue: 10, displayValue: "0+", label: "Tahun Pengabdian" },
-  { rawValue: 100, displayValue: "0+", label: "Alumni Khatam Al-Qur'an" },
+  { rawValue: 80, suffix: "+", displayValue: "80+", label: "Santri Aktif" },
+  { rawValue: 6, suffix: "", displayValue: "6", label: "Asatidz Pembimbing" },
+  { rawValue: 10, suffix: "+", displayValue: "10+", label: "Tahun Pengabdian" },
+  { rawValue: 100, suffix: "+", displayValue: "100+", label: "Alumni Khatam Al-Qur'an" },
 ]);
 
 // Testimoni Data
@@ -1772,7 +1856,7 @@ const faqs = [
   },
   {
     q: "Bagaimana orang tua memantau perkembangan mengaji anak?",
-    a: "Setiap santri memiliki Buku Prestasi Santri yang diparaf ustadz atau ustadzah setiap selesai sesi, sehingga orang tua bisa melihat halaman capaian anak. Materi juga dapat disimak ulang di rumah lewat E-Kitab digital.",
+    a: "Orang tua bisa memantau langsung dari HP lewat Portal Wali Santri (kehadiran harian, halaman bacaan terakhir, rapor, hingga ajukan izin/sakit online) yang terhubung dengan notifikasi WhatsApp otomatis, Buku Prestasi Santri, dan E-Kitab digital.",
   },
   {
     q: "Bagaimana cara mendaftar?",
@@ -1862,27 +1946,35 @@ const fetchContent = async () => {
 };
 
 let lenis = null;
+let lenisRafId = null;
 
 onMounted(() => {
-  // Initialize Lenis Smooth Scroll
-  lenis = new Lenis({
-    duration: 1.2,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    orientation: "vertical",
-    gestureOrientation: "vertical",
-    smoothWheel: true,
-    wheelMultiplier: 1,
-    touchMultiplier: 2,
-  });
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function raf(time) {
-    if (lenis) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
+  // Initialize Lenis Smooth Scroll only when user does not prefer reduced motion
+  if (!prefersReducedMotion) {
+    lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      gestureOrientation: "vertical",
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    });
+
+    function raf(time) {
+      if (lenis) {
+        lenis.raf(time);
+        lenisRafId = requestAnimationFrame(raf);
+      }
     }
-  }
 
-  requestAnimationFrame(raf);
+    lenisRafId = requestAnimationFrame(raf);
+  }
 
   fetchTeachers();
   fetchContent();
@@ -1916,7 +2008,7 @@ onMounted(() => {
   }
 
   // Setup IntersectionObserver for Stats Counter Animation
-  if (statsRef.value) {
+  if (statsRef.value && !prefersReducedMotion) {
     const statsObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -1934,32 +2026,37 @@ onMounted(() => {
   }
 });
 
-// Counter Animation Function
+// Counter Animation Function (starts from 0 only when scrolled into view; safe default values stay visible if JS/IO skipped)
 const animateCounters = () => {
   stats.value.forEach((stat, index) => {
     let current = 0;
     const target = stat.rawValue;
-    const duration = 1800;
+    const suffix = stat.suffix || "";
+    const duration = 1200;
     const increment = target / (duration / 16);
 
     const timer = setInterval(() => {
       current += increment;
       if (current >= target) {
         current = target;
-        stats.value[index].displayValue = `${target}+`;
+        stats.value[index].displayValue = `${target}${suffix}`;
         clearInterval(timer);
       } else {
-        stats.value[index].displayValue = `${Math.floor(current)}+`;
+        stats.value[index].displayValue = `${Math.floor(current)}${suffix}`;
       }
     }, 16);
+    counterTimers.push(timer);
   });
 };
 
 onUnmounted(() => {
+  if (lenisRafId) cancelAnimationFrame(lenisRafId);
   if (lenis) {
     lenis.destroy();
     lenis = null;
   }
+  counterTimers.forEach((t) => clearInterval(t));
+  counterTimers.length = 0;
   mapObserver?.disconnect();
   ctaObserver?.disconnect();
 });

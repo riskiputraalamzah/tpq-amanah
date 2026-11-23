@@ -206,3 +206,17 @@ test("Curriculum 6 Jilid section renders interactive animated demo stages with o
   assert.ok(stageSrc.includes("togglePause"), "Provides manual play/pause control");
   assert.ok(stageSrc.includes('dir="rtl"'), "Renders Arabic examples in proper RTL direction");
 });
+
+test("Landing page surfaces Portal Wali entry, interactive 90-min routine, and monotonic navbar order", () => {
+  assert.ok(navbarSrc.includes('to="/wali"'), "Navbar provides direct Portal Wali entry");
+  const navOrder = ["#beranda", "#pendaftaran", "#keunggulan", "#program", "#at-tartil", "#jadwal", "#kontak"];
+  const navPositions = navOrder.map((id) => navbarSrc.indexOf(id));
+  const domPositions = navOrder.map((id) => homeViewSrc.indexOf(`id="${id.slice(1)}"`));
+  for (let i = 1; i < navOrder.length; i += 1) {
+    assert.ok(navPositions[i] > navPositions[i - 1], `Navbar keeps ${navOrder[i]} after ${navOrder[i - 1]}`);
+    assert.ok(domPositions[i] > domPositions[i - 1], `HomeView DOM keeps ${navOrder[i]} after ${navOrder[i - 1]}`);
+  }
+  assert.ok(homeViewSrc.includes("WaliPortalShowcase"), "HomeView showcases Portal Wali Santri interactively");
+  assert.ok(homeViewSrc.includes("activeRoutine"), "Rutinitas 90 Menit bar is interactive");
+  assert.ok(homeViewSrc.includes("lp-testi-track"), "Testimonials use mobile horizontal swipe track");
+});

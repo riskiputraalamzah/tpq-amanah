@@ -495,25 +495,96 @@
   box-shadow: 0 10px 16px -8px rgba(5, 61, 44, 0.45);
 }
 
-/* ------------------------------------------------------------ routine: proportional bar */
+/* ------------------------------------------------------------ routine: proportional interactive bar */
 .lp-bar {
   display: flex;
-  height: 3.25rem;
-  gap: 4px;
-  border-radius: 0.9rem;
-  overflow: hidden;
+  height: 3.5rem;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(252, 211, 77, 0.22);
 }
 
-.lp-bar > span {
+.lp-bar > button {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   min-width: 0;
-  font-size: 0.78rem;
+  border: 2px solid transparent;
+  border-radius: 0.72rem;
+  font: inherit;
+  font-size: 0.8rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
   color: #022c1e;
   white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.76;
+  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lp-bar > button:hover {
+  opacity: 0.94;
+}
+
+.lp-bar > button[aria-pressed="true"] {
+  opacity: 1;
+  border-color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.55);
+  transform: scale(1.015);
+}
+
+.lp-bar > button:focus-visible {
+  outline: 2.5px solid #fcd34d;
+  outline-offset: 2px;
+}
+
+.lp-routine-card {
+  padding: 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.22s ease, border-color 0.22s ease;
+}
+
+.lp-routine-card:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.lp-routine-card.is-active {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(252, 211, 77, 0.48);
+}
+
+.lp-routine-card:focus-visible {
+  outline: 2.5px solid #fcd34d;
+  outline-offset: 2px;
+}
+
+/* Mobile-only horizontal swipe carousel for testimonials */
+@media (max-width: 767px) {
+  .lp-testi-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 4px 2px 12px;
+    scrollbar-width: none;
+  }
+
+  .lp-testi-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lp-testi-slide {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+  }
 }
 
 /* ------------------------------------------------------------ teachers: arch portraits */
