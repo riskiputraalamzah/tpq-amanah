@@ -1163,6 +1163,14 @@ onBeforeUnmount(() => {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
     gap: 16px;
   }
+
+  .iz-cal-card {
+    position: sticky;
+    top: calc(var(--appbar-h, 0px) + 16px);
+    max-height: calc(100dvh - var(--appbar-h, 0px) - 32px);
+    overflow-y: auto;
+    z-index: 2;
+  }
 }
 
 .iz-cal-card {
