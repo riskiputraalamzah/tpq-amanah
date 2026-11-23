@@ -221,4 +221,8 @@ test("Landing page surfaces Portal Wali entry, interactive 90-min routine, and m
   assert.ok(homeViewSrc.includes("lp-testi-track"), "Testimonials use mobile horizontal swipe track");
   assert.ok(homeViewSrc.includes('api.get("/content/guru/list")'), "Dewan Pengajar syncs jilid badges from live Kelola Pengajar data");
   assert.ok(homeViewSrc.includes("Pengampu Jilid 6") && homeViewSrc.includes("Pengampu Marhalah"), "Teacher defaults match current jilid assignments");
+  assert.ok(homeViewSrc.includes("SessionRecommender"), "Jadwal section includes interactive SessionRecommender helper");
+  assert.ok(homeViewSrc.includes('api.get("/content/public-stats")'), "Stats section syncs live counts from /content/public-stats");
+  const footerSrc = fs.readFileSync(path.join(here, "../src/components/FooterComponent.vue"), "utf8");
+  assert.ok(footerSrc.includes('to="/daftar"') && footerSrc.includes('to="/wali"'), "Footer exposes direct Daftar and Portal Wali actions");
 });

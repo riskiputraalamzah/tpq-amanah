@@ -1205,16 +1205,8 @@
           </div>
         </div>
 
-        <p class="mt-10 text-sm text-center sm:text-base lp-body">
-          Belum yakin memilih sesi?
-          <a
-            :href="contactElla.waLink"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="font-bold underline text-emerald-700 underline-offset-4 decoration-amber-500 hover:text-emerald-900"
-            >Tanyakan ke koordinator</a
-          >, kami bantu menyesuaikan dengan jadwal sekolah anak.
-        </p>
+        <!-- Interactive Session & Cost Helper -->
+        <SessionRecommender :wa-link="contactElla.waLink" />
       </div>
     </section>
 
@@ -1616,6 +1608,7 @@ import SectionHeading from "@/components/landing/SectionHeading.vue";
 import StarBadge from "@/components/landing/StarBadge.vue";
 import JilidDemoStage from "@/components/landing/JilidDemoStage.vue";
 import WaliPortalShowcase from "@/components/landing/WaliPortalShowcase.vue";
+import SessionRecommender from "@/components/landing/SessionRecommender.vue";
 import "@/styles/landing.css";
 import api from "@/services/api";
 
@@ -1996,6 +1989,39 @@ const fetchContent = async () => {
   }
 };
 
+const fetchPublicStats = async () => {
+  try {
+    const { data } = await api.get("/content/public-stats");
+    if (data?.activeSantri > 0 || data?.activeTeachers > 0) {
+      if (hasAnimated.value) {
+        counterTimers.forEach((t) => clearInterval(t));
+        counterTimers.length = 0;
+        stats.value.forEach((s) => {
+          s.displayValue = `${s.rawValue}${s.suffix || ""}`;
+        });
+      }
+      if (data?.activeSantri > 0) {
+        stats.value[0] = {
+          ...stats.value[0],
+          rawValue: data.activeSantri,
+          suffix: "",
+          displayValue: String(data.activeSantri),
+        };
+      }
+      if (data?.activeTeachers > 0) {
+        stats.value[1] = {
+          ...stats.value[1],
+          rawValue: data.activeTeachers,
+          suffix: "",
+          displayValue: String(data.activeTeachers),
+        };
+      }
+    }
+  } catch {
+    // Keep clean fallback stats silently
+  }
+};
+
 let lenis = null;
 let lenisRafId = null;
 
@@ -2029,6 +2055,7 @@ onMounted(() => {
 
   fetchTeachers();
   fetchContent();
+  fetchPublicStats();
 
   ctaObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {

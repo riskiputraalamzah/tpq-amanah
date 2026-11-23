@@ -78,7 +78,7 @@
           </div>
         </div>
 
-        <!-- Links -->
+        <!-- Links + Layanan Online -->
         <div class="md:px-10">
           <h4 class="mb-4 text-base font-bold text-white">Navigasi Utama</h4>
           <ul class="text-sm">
@@ -90,6 +90,23 @@
               >
             </li>
           </ul>
+
+          <div class="pt-5 mt-5 border-t border-amber-200/15">
+            <h4 class="mb-3 text-xs font-bold tracking-wider uppercase text-amber-300">Layanan Online</h4>
+            <div class="flex flex-col gap-2">
+              <router-link to="/daftar" class="w-full lp-btn-gold !min-h-[44px] !text-sm">
+                Daftar Santri Baru
+              </router-link>
+              <div class="grid grid-cols-2 gap-2">
+                <router-link to="/wali" class="lp-btn-ghost !text-xs">
+                  Portal Wali
+                </router-link>
+                <router-link :to="isAuthenticated ? '/dashboard' : '/login'" class="lp-btn-ghost !text-xs">
+                  {{ isAuthenticated ? 'Dashboard' : 'Login Staf' }}
+                </router-link>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Schedule & contacts -->
@@ -155,8 +172,12 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
+import { useAuthStore } from "@/stores/auth";
 import OrnamentRule from "@/components/landing/OrnamentRule.vue";
 
+const authStore = useAuthStore();
+const isAuthenticated = computed(() => authStore.isAuthenticated);
 const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
 const links = [
