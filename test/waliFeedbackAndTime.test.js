@@ -64,6 +64,8 @@ test("Data Wali Santri defaults to newest first and connects Saran & Kritik Wali
   assert.ok(has(izinView, "api.get('/santri-presence/izin'"));
   assert.ok(has(izinView, "api.post('/santri-presence/izin'"));
   assert.ok(has(izinView, "const todayItems = computed("), "Izin Santri leads with today's izin status");
+  assert.ok(has(izinView, "const calendarCells = computed("), "Izin Santri renders dynamic interactive izin calendar");
+  assert.ok(has(izinView, "function spanText(dates)"), "Izin Santri displays clear date-span labels");
   assert.ok(has(izinView, "function pickSantri(s)"), "Izin Santri uses unified search+tap picker without native select");
   assert.ok(!has(izinView, 'v-model="form.santriId"'), "no redundant native select for santri");
 });

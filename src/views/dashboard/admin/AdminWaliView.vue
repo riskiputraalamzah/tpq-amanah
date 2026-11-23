@@ -1183,8 +1183,8 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.wv-search-input {
-  padding-left: 36px;
+.wv-input.wv-search-input {
+  padding-left: 38px;
 }
 
 .wv-filter-toggle {

@@ -5,7 +5,7 @@
         <h1>Izin &amp; Sakit Santri</h1>
         <p>
           <template v-if="!isAdmin && scopeLabel">Jilid Antum: <strong>{{ scopeLabel }}</strong> · </template>
-          Pantau santri izin hari ini dan catat izin satu atau beberapa hari tanpa terkunci jam sesi.
+          Pantau jadwal izin per tanggal di kalender dan catat izin satu atau beberapa hari.
         </p>
       </div>
       <div class="iz-head-actions">
@@ -37,78 +37,190 @@
         Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
       </p>
 
-      <!-- 1. PRIMARY: Izin / Sakit Hari Ini (langsung terlihat saat halaman dibuka) -->
-      <section class="iz-today" :class="{ 'has-items': todayItems.length > 0 }" aria-labelledby="iz-today-title">
-        <div class="iz-today-head">
-          <div class="iz-today-title-wrap">
-            <h2 id="iz-today-title">
-              {{ todayIsWeekend ? 'Akhir Pekan' : 'Izin Hari Ini' }}
-              <span class="iz-today-date">· {{ longDayLabel(today) }}</span>
-            </h2>
-            <p v-if="todayIsWeekend" class="iz-today-sub">
-              TPQ aktif Senin–Jumat.
-              <template v-if="nextSchoolDayItems.length">
-                Ada <strong>{{ nextSchoolDayItems.length }} santri</strong> izin untuk {{ shortDayFull(nextSchoolDay) }}.
-              </template>
-              <template v-else>Belum ada izin terjadwal untuk hari aktif berikutnya.</template>
-            </p>
-            <p v-else-if="todayItems.length" class="iz-today-sub">
-              <strong>{{ todayItems.length }} santri</strong>
-              {{ isAdmin ? 'di TPQ' : `di ${scopeLabel || 'jilid Antum'}` }} tercatat tidak masuk hari ini.
-            </p>
-            <p v-else class="iz-today-sub">
-              Belum ada santri {{ isAdmin ? 'di semua jilid' : `di ${scopeLabel || 'jilid Antum'}` }} yang izin atau sakit hari ini.
-            </p>
+      <!-- 1. PRIMARY: Kalender Izin Dinamis + Detail Tanggal Terpilih (default: Hari Ini) -->
+      <section class="iz-board" aria-label="Kalender dan rincian izin santri">
+        <!-- Left: Interactive Monthly Calendar -->
+        <div class="iz-cal-card">
+          <div class="iz-cal-top">
+            <div class="iz-cal-nav">
+              <button type="button" class="iz-cal-arrow" aria-label="Bulan sebelumnya" @click="shiftMonth(-1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <h2 class="iz-cal-month">{{ monthTitle }}</h2>
+              <button type="button" class="iz-cal-arrow" aria-label="Bulan berikutnya" @click="shiftMonth(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="iz-cal-tools">
+              <button
+                v-if="selectedDate !== today || calMonthKey !== today.slice(0, 7)"
+                type="button"
+                class="iz-cal-today-btn"
+                @click="jumpToday"
+              >
+                Hari ini
+              </button>
+              <select
+                v-if="classOptions.length > 1"
+                v-model="listClassFilter"
+                class="iz-cal-select"
+                aria-label="Saring jilid di kalender"
+              >
+                <option value="">{{ isAdmin ? 'Semua jilid' : 'Semua jilid saya' }}</option>
+                <option v-for="c in classOptions" :key="c.value" :value="c.value">{{ c.label }}</option>
+              </select>
+            </div>
           </div>
 
-          <div v-if="!todayIsWeekend && todayItems.length" class="iz-today-badges">
-            <span v-if="todayIzinCount" class="iz-pill is-info">{{ todayIzinCount }} Izin</span>
-            <span v-if="todaySakitCount" class="iz-pill is-warn">{{ todaySakitCount }} Sakit</span>
+          <!-- Weekday headers (Min..Sab) -->
+          <div class="iz-cal-weekdays" aria-hidden="true">
+            <span v-for="d in DAYS_SHORT" :key="d" :class="{ 'is-wknd': d === 'Min' || d === 'Sab' }">{{ d }}</span>
           </div>
-          <span v-else-if="!todayIsWeekend" class="iz-pill is-ok">Semua terjadwal masuk</span>
+
+          <!-- Calendar grid -->
+          <div class="iz-cal-grid" role="grid" :aria-label="`Kalender izin ${monthTitle}`">
+            <button
+              v-for="cell in calendarCells"
+              :key="cell.iso"
+              type="button"
+              class="iz-cal-cell"
+              :class="{
+                'is-out': !cell.inMonth,
+                'is-wknd': cell.isWeekend,
+                'is-today': cell.iso === today,
+                'is-selected': cell.iso === selectedDate,
+                'has-izin': cell.izinCount > 0,
+                'has-sakit-only': cell.izinCount === 0 && cell.sakitCount > 0,
+                'is-span-hi': highlightedDates.has(cell.iso),
+              }"
+              :aria-pressed="cell.iso === selectedDate"
+              :aria-label="cellAriaLabel(cell)"
+              @click="selectCalendarDate(cell)"
+            >
+              <span class="iz-cal-num">{{ cell.day }}</span>
+              <span v-if="cell.total > 0" class="iz-cal-marks">
+                <span v-if="cell.izinCount" class="iz-dot is-izin" aria-hidden="true"></span>
+                <span v-if="cell.sakitCount" class="iz-dot is-sakit" aria-hidden="true"></span>
+                <span class="iz-cal-cnt">{{ cell.total }}</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="iz-cal-legend">
+            <span><i class="iz-dot is-izin"></i> Izin</span>
+            <span><i class="iz-dot is-sakit"></i> Sakit</span>
+            <span><i class="iz-legend-ring"></i> Hari ini</span>
+            <span v-if="highlightedId" class="iz-legend-span">
+              <i class="iz-legend-hi"></i> Rentang dipilih
+              <button type="button" class="iz-legend-clear" @click="highlightedId = ''">Tutup</button>
+            </span>
+          </div>
         </div>
 
-        <ul v-if="featuredTodayItems.length" class="iz-today-list">
-          <li v-for="item in featuredTodayItems" :key="`today-${item.id}`" class="iz-today-row">
-            <div class="iz-item-main">
-              <div class="iz-item-top">
-                <strong>{{ item.santriName }}</strong>
-                <span class="iz-pill" :class="item.type === 'sakit' ? 'is-warn' : 'is-info'">
-                  {{ item.type === 'sakit' ? 'Sakit' : 'Izin' }}
-                </span>
-                <span class="iz-meta-tag">{{ levelName(item.classId) }} · {{ slotLabel(item.slot) }}</span>
+        <!-- Right: Selected Date Detail Panel (auto-defaults to Hari Ini) -->
+        <div class="iz-day-panel" :class="{ 'has-items': selectedDayItems.length > 0 }">
+          <div class="iz-day-head">
+            <div class="iz-day-title-wrap">
+              <div class="iz-day-title-row">
+                <h2>{{ longDayLabel(selectedDate) }}</h2>
+                <span v-if="selectedDate === today" class="iz-pill is-today">Hari ini</span>
+                <span v-else-if="selectedIsWeekend" class="iz-pill is-idle">Akhir pekan</span>
               </div>
-              <p v-if="item.reason" class="iz-reason">"{{ item.reason }}"</p>
-              <div class="iz-sub-row">
-                <span v-if="(item.dates || []).length > 1" class="iz-sub">
-                  {{ item.dates.length }} hari ({{ item.dates.map(shortDayFull).join(', ') }})
+              <p v-if="selectedIsWeekend" class="iz-day-sub">
+                TPQ aktif Senin–Jumat. Ketuk tanggal hari aktif di kalender untuk melihat atau mencatat izin.
+              </p>
+              <p v-else-if="selectedDayItems.length" class="iz-day-sub">
+                <strong>{{ selectedDayItems.length }} santri</strong>
+                {{ activeScopeText }} tercatat izin/sakit pada tanggal ini.
+              </p>
+              <p v-else class="iz-day-sub">
+                Tidak ada santri {{ activeScopeText }} yang izin atau sakit pada tanggal ini.
+              </p>
+            </div>
+
+            <div v-if="!selectedIsWeekend && selectedDayItems.length" class="iz-today-badges">
+              <span v-if="selectedIzinCount" class="iz-pill is-info">{{ selectedIzinCount }} Izin</span>
+              <span v-if="selectedSakitCount" class="iz-pill is-warn">{{ selectedSakitCount }} Sakit</span>
+            </div>
+            <span v-else-if="!selectedIsWeekend" class="iz-pill is-ok">Semua terjadwal masuk</span>
+          </div>
+
+          <ul v-if="selectedDayItems.length" class="iz-day-list">
+            <li
+              v-for="item in selectedDayItems"
+              :key="`sel-${item.id}`"
+              class="iz-day-row"
+              :class="{ 'is-highlighted': highlightedId === item.id, 'is-multi': (item.dates || []).length > 1 }"
+              @click="toggleHighlight(item)"
+            >
+              <div class="iz-item-main">
+                <div class="iz-item-top">
+                  <strong>{{ item.santriName }}</strong>
+                  <span class="iz-pill" :class="item.type === 'sakit' ? 'is-warn' : 'is-info'">
+                    {{ item.type === 'sakit' ? 'Sakit' : 'Izin' }}
+                  </span>
+                  <span class="iz-meta-tag">{{ levelName(item.classId) }} · {{ slotLabel(item.slot) }}</span>
+                </div>
+
+                <!-- Dynamic duration / range chip ("Sampai Rab 25 Nov · 3 hari") -->
+                <span class="iz-span-pill" :class="{ 'is-multi': (item.dates || []).length > 1 }">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span>{{ spanText(item.dates) }}</span>
                 </span>
+
+                <p v-if="item.reason" class="iz-reason">"{{ item.reason }}"</p>
                 <span class="iz-sub">
                   Dicatat {{ item.byName || 'Wali' }}<template v-if="item.createdAt"> · <time :title="fullDateTime(item.createdAt)">{{ timeAgo(item.createdAt, now) }}</time></template>
                 </span>
               </div>
-            </div>
-            <div v-if="item.cancellable" class="iz-item-side">
-              <button
-                type="button"
-                class="iz-btn iz-btn-ghost iz-btn-sm is-danger"
-                :disabled="cancellingId === item.id"
-                @click="cancelIzin(item)"
-              >
-                {{ cancellingId === item.id ? 'Membatalkan…' : 'Batalkan' }}
-              </button>
-            </div>
-          </li>
-        </ul>
+              <div v-if="item.cancellable" class="iz-item-side" @click.stop>
+                <button
+                  type="button"
+                  class="iz-btn iz-btn-ghost iz-btn-sm is-danger"
+                  :disabled="cancellingId === item.id"
+                  @click="cancelIzin(item)"
+                >
+                  {{ cancellingId === item.id ? 'Membatalkan…' : 'Batalkan' }}
+                </button>
+              </div>
+            </li>
+          </ul>
 
-        <div v-else-if="canCreate" class="iz-today-empty-action">
-          <button type="button" class="iz-btn iz-btn-ghost iz-btn-sm" @click="openComposer()">
-            + Catat izin / sakit santri sekarang
-          </button>
+          <!-- Quick CTA for selected date -->
+          <div v-if="canCreate" class="iz-day-foot">
+            <button
+              v-if="canCreateOnSelectedDate"
+              type="button"
+              class="iz-btn iz-btn-ghost iz-btn-sm"
+              @click="openComposer({ date: selectedDate })"
+            >
+              + Catat izin untuk {{ selectedDate === today ? 'hari ini' : shortDayFull(selectedDate) }}
+            </button>
+            <button
+              v-else
+              type="button"
+              class="iz-btn iz-btn-ghost iz-btn-sm"
+              @click="openComposer()"
+            >
+              + Catat izin / sakit santri
+            </button>
+            <span v-if="selectedDayItems.some((x) => (x.dates || []).length > 1)" class="iz-sub iz-tap-tip">
+              Ketuk kartu izin multi-hari untuk menyorot rentangnya di kalender.
+            </span>
+          </div>
         </div>
       </section>
 
-      <!-- 2. SECONDARY: Riwayat & Izin Mendatang (30 Hari) -->
+      <!-- 2. SECONDARY: Semua & Riwayat Izin (pencarian lintas tanggal) -->
       <section class="iz-history" aria-labelledby="iz-list-title">
         <div class="iz-list-head">
           <h2 id="iz-list-title" class="iz-section-title">Semua &amp; Riwayat Izin ({{ visibleList.length }})</h2>
@@ -172,8 +284,7 @@
                 </span>
               </div>
               <span class="iz-sub">
-                {{ levelName(item.classId) }} · {{ slotLabel(item.slot) }} ·
-                {{ (item.dates || []).map(shortDayFull).join(', ') }}
+                {{ levelName(item.classId) }} · {{ slotLabel(item.slot) }} · {{ spanText(item.dates) }}
               </span>
               <p v-if="item.reason" class="iz-reason">"{{ item.reason }}"</p>
               <span class="iz-sub">
@@ -184,8 +295,17 @@
               </span>
             </div>
 
-            <div v-if="item.cancellable" class="iz-item-side">
+            <div class="iz-item-side">
               <button
+                v-if="item.status === 'active' && (item.dates || []).length"
+                type="button"
+                class="iz-btn iz-btn-ghost iz-btn-sm"
+                @click="focusOnCalendar(item)"
+              >
+                Lihat di kalender
+              </button>
+              <button
+                v-if="item.cancellable"
                 type="button"
                 class="iz-btn iz-btn-ghost iz-btn-sm is-danger"
                 :disabled="cancellingId === item.id"
@@ -199,7 +319,7 @@
       </section>
     </template>
 
-    <!-- Bottom Sheet / Dialog Catat Izin & Sakit (tanpa native select dropdown panjang) -->
+    <!-- Bottom Sheet / Dialog Catat Izin & Sakit (Smart Picker tanpa native <select>) -->
     <Teleport to="body">
       <div v-if="composerOpen" class="iz-overlay" @click.self="closeComposer" @keydown.esc="closeComposer">
         <section class="iz-sheet" role="dialog" aria-modal="true" aria-labelledby="iz-sheet-title">
@@ -221,7 +341,6 @@
             <div class="iz-field">
               <span class="iz-label">Pilih Santri</span>
 
-              <!-- Selected state -->
               <div v-if="selectedSantri && !pickerOpen" class="iz-picked">
                 <div class="iz-picked-info">
                   <strong>{{ selectedSantri.name }}</strong>
@@ -232,7 +351,6 @@
                 </button>
               </div>
 
-              <!-- Search & tap list state -->
               <div v-else class="iz-picker">
                 <div v-if="classOptions.length > 1" class="iz-jilid-strip" role="group" aria-label="Filter jilid">
                   <button
@@ -298,7 +416,7 @@
                     role="radio"
                     class="iz-seg-btn"
                     :aria-checked="form.type === 'izin'"
-                    @click="form.type = 'izin'"
+                    @click="selectType('izin')"
                   >
                     Izin
                   </button>
@@ -307,7 +425,7 @@
                     role="radio"
                     class="iz-seg-btn"
                     :aria-checked="form.type === 'sakit'"
-                    @click="form.type = 'sakit'"
+                    @click="selectType('sakit')"
                   >
                     Sakit
                   </button>
@@ -473,6 +591,7 @@ const LIST_FILTERS = [
 
 const DAYS_FULL = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 const DAYS_SHORT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+const MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
 const loading = ref(true)
@@ -483,10 +602,17 @@ const formError = ref('')
 
 const classIds = ref(null) // null = admin (all jilid), array = guru's jilid
 const scopeSource = ref('admin')
-const today = ref(new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10))
+const initialToday = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+const today = ref(initialToday)
 const availableDays = ref([])
 const santriList = ref([])
 const izinList = ref([])
+
+// Dynamic Calendar state (defaults to Today)
+const selectedDate = ref(initialToday)
+const calYear = ref(Number(initialToday.slice(0, 4)))
+const calMonth = ref(Number(initialToday.slice(5, 7)) - 1) // 0..11
+const highlightedId = ref('')
 
 const composerOpen = ref(false)
 const pickerOpen = ref(true)
@@ -521,16 +647,19 @@ const classOptions = computed(() => {
   return CLASS_OPTIONS.filter((c) => (classIds.value || []).includes(c.value))
 })
 const scopeLabel = computed(() => classOptions.value.map((c) => c.label).join(', '))
+const activeScopeText = computed(() => {
+  if (listClassFilter.value) return `di ${levelName(listClassFilter.value)}`
+  return isAdmin.value ? 'di semua jilid' : `di ${scopeLabel.value || 'jilid Antum'}`
+})
 
 const addDaysIso = (iso, n) => new Date(new Date(`${iso}T12:00:00Z`).getTime() + n * 86400000).toISOString().slice(0, 10)
+const weekdayOf = (iso) => new Date(`${iso}T12:00:00Z`).getUTCDay()
+const isWeekendIso = (iso) => {
+  const wd = weekdayOf(iso)
+  return wd === 0 || wd === 6
+}
 const minAllowedDate = computed(() => addDaysIso(today.value, -7))
 const maxAllowedDate = computed(() => addDaysIso(today.value, 14))
-
-const todayIsWeekend = computed(() => {
-  const wd = new Date(`${today.value}T12:00:00Z`).getUTCDay()
-  return wd === 0 || wd === 6
-})
-const nextSchoolDay = computed(() => availableDays.value[0] || '')
 
 const longDayLabel = (iso) => {
   if (!iso) return ''
@@ -551,6 +680,46 @@ const shortDayFull = (iso) => {
   return `${DAYS_SHORT[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 }
 
+// Human-friendly duration label:
+// - 1 day: "Sen 23 Nov (1 hari)"
+// - Contiguous school days (Mon-Fri): "Sen 23 Nov s.d. Rab 25 Nov (3 hari)"
+// - Non-contiguous dates: "Sen 23 Nov, Kam 26 Nov (2 hari)"
+function isContiguousSchoolSpan(sortedDates) {
+  if (sortedDates.length < 2) return true
+  const expected = []
+  let cur = sortedDates[0]
+  const end = sortedDates[sortedDates.length - 1]
+  let guard = 0
+  while (cur <= end && guard <= 60) {
+    if (!isWeekendIso(cur)) expected.push(cur)
+    cur = addDaysIso(cur, 1)
+    guard += 1
+  }
+  return expected.length === sortedDates.length && expected.every((d, i) => d === sortedDates[i])
+}
+
+function spanText(dates) {
+  const arr = [...new Set(Array.isArray(dates) ? dates : [])].sort()
+  if (!arr.length) return '-'
+  if (arr.length === 1) return `${shortDayFull(arr[0])} (1 hari)`
+  if (isContiguousSchoolSpan(arr)) {
+    return `${shortDayFull(arr[0])} s.d. ${shortDayFull(arr[arr.length - 1])} (${arr.length} hari)`
+  }
+  if (arr.length <= 3) {
+    return `${arr.map(shortDayFull).join(', ')} (${arr.length} hari)`
+  }
+  return `${shortDayFull(arr[0])}, ${shortDayFull(arr[1])} … ${shortDayFull(arr[arr.length - 1])} (${arr.length} hari)`
+}
+
+function selectType(nextType) {
+  const prevType = form.value.type
+  form.value.type = nextType
+  const curReason = form.value.reason.trim()
+  if (!curReason || (QUICK_REASONS[prevType] || []).includes(curReason)) {
+    form.value.reason = QUICK_REASONS[nextType][0]
+  }
+}
+
 const PRESETS = computed(() => {
   const first = availableDays.value[0]
   const oneDayLabel = first && first !== today.value ? `1 hari (${shortDayFull(first)})` : 'Hari ini'
@@ -564,23 +733,118 @@ const PRESETS = computed(() => {
   ]
 })
 
-// Santri izin/sakit HARI INI (sudah otomatis sesuai scope admin = semua jilid, guru = jilid yang diampu)
-const todayItems = computed(() =>
-  izinList.value
-    .filter((x) => x.status === 'active' && Array.isArray(x.dates) && x.dates.includes(today.value))
-    .sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt)),
+// Active izin list filtered by Jilid selector (shared between Calendar & History)
+const filteredListByClass = computed(() =>
+  izinList.value.filter((x) => !listClassFilter.value || String(x.classId) === listClassFilter.value),
 )
-const todayIzinCount = computed(() => todayItems.value.filter((x) => x.type !== 'sakit').length)
-const todaySakitCount = computed(() => todayItems.value.filter((x) => x.type === 'sakit').length)
 
-const nextSchoolDayItems = computed(() => {
-  if (!nextSchoolDay.value) return []
-  return izinList.value
-    .filter((x) => x.status === 'active' && Array.isArray(x.dates) && x.dates.includes(nextSchoolDay.value))
-    .sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt))
+const activeByDate = computed(() => {
+  const map = new Map()
+  for (const item of filteredListByClass.value) {
+    if (item.status !== 'active') continue
+    for (const d of item.dates || []) {
+      if (!map.has(d)) map.set(d, [])
+      map.get(d).push(item)
+    }
+  }
+  for (const [, arr] of map) {
+    arr.sort((a, b) => timeOf(b.createdAt) - timeOf(a.createdAt))
+  }
+  return map
 })
 
-const featuredTodayItems = computed(() => (todayIsWeekend.value ? nextSchoolDayItems.value : todayItems.value))
+const todayItems = computed(() => activeByDate.value.get(today.value) || [])
+const selectedDayItems = computed(() => activeByDate.value.get(selectedDate.value) || [])
+const selectedIsWeekend = computed(() => isWeekendIso(selectedDate.value))
+const selectedIzinCount = computed(() => selectedDayItems.value.filter((x) => x.type !== 'sakit').length)
+const selectedSakitCount = computed(() => selectedDayItems.value.filter((x) => x.type === 'sakit').length)
+const canCreateOnSelectedDate = computed(
+  () => !selectedIsWeekend.value && selectedDate.value >= minAllowedDate.value && selectedDate.value <= maxAllowedDate.value,
+)
+
+const highlightedDates = computed(() => {
+  if (!highlightedId.value) return new Set()
+  const item = izinList.value.find((x) => x.id === highlightedId.value)
+  return new Set(item?.dates || [])
+})
+
+function toggleHighlight(item) {
+  if ((item.dates || []).length <= 1) return
+  highlightedId.value = highlightedId.value === item.id ? '' : item.id
+}
+
+// Monthly Calendar Grid (Sun..Sat)
+const calMonthKey = computed(() => `${calYear.value}-${String(calMonth.value + 1).padStart(2, '0')}`)
+const monthTitle = computed(() => `${MONTHS_FULL[calMonth.value]} ${calYear.value}`)
+
+const calendarCells = computed(() => {
+  const y = calYear.value
+  const m = calMonth.value
+  const first = new Date(Date.UTC(y, m, 1, 12, 0, 0))
+  const startOffset = first.getUTCDay() // 0 = Sun
+  const daysInMonth = new Date(Date.UTC(y, m + 1, 0, 12, 0, 0)).getUTCDate()
+  const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7
+  const startDate = new Date(Date.UTC(y, m, 1 - startOffset, 12, 0, 0))
+  const out = []
+  for (let i = 0; i < totalCells; i += 1) {
+    const dt = new Date(startDate.getTime() + i * 86400000)
+    const iso = dt.toISOString().slice(0, 10)
+    const wd = dt.getUTCDay()
+    const items = activeByDate.value.get(iso) || []
+    const izinCount = items.filter((x) => x.type !== 'sakit').length
+    const sakitCount = items.filter((x) => x.type === 'sakit').length
+    out.push({
+      iso,
+      day: dt.getUTCDate(),
+      inMonth: dt.getUTCMonth() === m,
+      isWeekend: wd === 0 || wd === 6,
+      izinCount,
+      sakitCount,
+      total: items.length,
+    })
+  }
+  return out
+})
+
+function cellAriaLabel(cell) {
+  const base = longDayLabel(cell.iso)
+  if (!cell.total) return `${base}, tidak ada izin`
+  return `${base}, ${cell.total} santri izin atau sakit`
+}
+
+function shiftMonth(delta) {
+  const next = new Date(Date.UTC(calYear.value, calMonth.value + delta, 1, 12, 0, 0))
+  calYear.value = next.getUTCFullYear()
+  calMonth.value = next.getUTCMonth()
+}
+
+function selectCalendarDate(cell) {
+  selectedDate.value = cell.iso
+  if (highlightedId.value && !highlightedDates.value.has(cell.iso)) {
+    highlightedId.value = ''
+  }
+  if (!cell.inMonth) {
+    calYear.value = Number(cell.iso.slice(0, 4))
+    calMonth.value = Number(cell.iso.slice(5, 7)) - 1
+  }
+}
+
+function jumpToday() {
+  selectedDate.value = today.value
+  calYear.value = Number(today.value.slice(0, 4))
+  calMonth.value = Number(today.value.slice(5, 7)) - 1
+  highlightedId.value = ''
+}
+
+function focusOnCalendar(item) {
+  const firstDate = [...(item.dates || [])].sort()[0]
+  if (!firstDate) return
+  selectedDate.value = firstDate
+  calYear.value = Number(firstDate.slice(0, 4))
+  calMonth.value = Number(firstDate.slice(5, 7)) - 1
+  highlightedId.value = (item.dates || []).length > 1 ? item.id : ''
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 // Smart Santri Picker (search + tap, zero native <select>)
 const selectedSantri = computed(() => santriList.value.find((s) => s.id === form.value.santriId) || null)
@@ -608,10 +872,10 @@ function reopenPicker() {
   nextTick(() => pickerSearchRef.value?.focus())
 }
 
-function openComposer(prefillSantriId = '') {
+function openComposer({ santriId = '', date = '' } = {}) {
   formError.value = ''
-  if (prefillSantriId) {
-    const found = santriList.value.find((s) => s.id === prefillSantriId)
+  if (santriId) {
+    const found = santriList.value.find((s) => s.id === santriId)
     if (found) {
       form.value.santriId = found.id
       if (found.defaultSlot) form.value.slot = found.defaultSlot
@@ -620,10 +884,20 @@ function openComposer(prefillSantriId = '') {
   } else {
     form.value.santriId = ''
     santriSearch.value = ''
-    formClassFilter.value = ''
+    formClassFilter.value = listClassFilter.value || ''
     pickerOpen.value = true
   }
-  if (!form.value.dates.length && availableDays.value.length) {
+
+  if (date && !isWeekendIso(date)) {
+    if (availableDays.value.includes(date)) {
+      presetMode.value = 'pick'
+      form.value.dates = [date]
+    } else {
+      presetMode.value = 'range'
+      form.value.startDate = date
+      form.value.endDate = date
+    }
+  } else if (!form.value.dates.length && availableDays.value.length) {
     applyPreset('1d')
   }
   composerOpen.value = true
@@ -677,10 +951,6 @@ const matchListStatus = (item, f) => {
   if (f === 'active') return item.status === 'active'
   return item.status !== 'active'
 }
-
-const filteredListByClass = computed(() =>
-  izinList.value.filter((x) => !listClassFilter.value || String(x.classId) === listClassFilter.value),
-)
 const countListFor = (f) => filteredListByClass.value.filter((x) => matchListStatus(x, f)).length
 
 const visibleList = computed(() => {
@@ -705,7 +975,15 @@ async function load({ quiet = false } = {}) {
     const { data } = await api.get('/santri-presence/izin', { cache: false })
     classIds.value = data.classIds === null ? null : data.classIds || []
     scopeSource.value = data.scopeSource || 'admin'
-    today.value = data.today || today.value
+    if (data.today) {
+      const wasInitial = selectedDate.value === today.value
+      today.value = data.today
+      if (wasInitial) {
+        selectedDate.value = data.today
+        calYear.value = Number(data.today.slice(0, 4))
+        calMonth.value = Number(data.today.slice(5, 7)) - 1
+      }
+    }
     availableDays.value = Array.isArray(data.days) ? data.days : []
     santriList.value = Array.isArray(data.santri) ? data.santri : []
     izinList.value = Array.isArray(data.list) ? data.list : []
@@ -715,7 +993,7 @@ async function load({ quiet = false } = {}) {
     }
     const querySantri = typeof route.query.santri === 'string' ? route.query.santri : ''
     if (!quiet && querySantri && santriList.value.some((s) => s.id === querySantri)) {
-      openComposer(querySantri)
+      openComposer({ santriId: querySantri })
     }
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Data izin santri belum bisa dimuat.'
@@ -746,6 +1024,13 @@ async function submitIzin() {
     const { data } = await api.post('/santri-presence/izin', payload)
     if (data?.izin) {
       izinList.value = [data.izin, ...izinList.value.filter((x) => x.id !== data.izin.id)]
+      const firstDate = [...(data.izin.dates || effectiveDates.value)].sort()[0]
+      if (firstDate) {
+        selectedDate.value = firstDate
+        calYear.value = Number(firstDate.slice(0, 4))
+        calMonth.value = Number(firstDate.slice(5, 7)) - 1
+        highlightedId.value = (data.izin.dates || []).length > 1 ? data.izin.id : ''
+      }
     } else {
       await load({ quiet: true })
     }
@@ -772,6 +1057,7 @@ async function cancelIzin(item) {
   cancellingId.value = item.id
   try {
     await api.delete(`/santri-presence/izin/${encodeURIComponent(item.id)}`)
+    if (highlightedId.value === item.id) highlightedId.value = ''
     showSuccess(`Izin ${item.santriName} dibatalkan`)
     await load({ quiet: true })
   } catch (err) {
@@ -863,21 +1149,297 @@ onBeforeUnmount(() => {
   color: #7a1810;
 }
 
-/* 1. Primary Today Status Section */
-.iz-today {
+/* 1. PRIMARY: Interactive Calendar + Selected Day Detail Split */
+.iz-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 960px) {
+  .iz-board {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+.iz-cal-card {
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+}
+
+.iz-cal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.iz-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iz-cal-month {
+  margin: 0;
+  min-width: 136px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0b3b2a;
+}
+
+.iz-cal-arrow {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 59, 42, 0.16);
+  background: #fff;
+  color: #0b3b2a;
+  cursor: pointer;
+}
+
+.iz-cal-arrow:hover {
+  background: #eef6f1;
+}
+
+.iz-cal-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.iz-cal-today-btn {
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(10, 92, 64, 0.28);
+  background: #eef6f1;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.iz-cal-select {
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 59, 42, 0.18);
+  background: #fff;
+  color: #0b3b2a;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.iz-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.iz-cal-weekdays span {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #5b6b62;
+  padding: 4px 0;
+}
+
+.iz-cal-weekdays span.is-wknd {
+  color: #9ca3af;
+}
+
+.iz-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.iz-cal-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  min-height: 50px;
+  padding: 6px 2px 5px;
+  border-radius: 11px;
+  border: 1.5px solid transparent;
+  background: #fbfcf9;
+  color: #0b3b2a;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+@media (max-width: 420px) {
+  .iz-cal-cell {
+    min-height: 46px;
+    padding: 5px 1px 4px;
+    border-radius: 9px;
+  }
+}
+
+.iz-cal-cell:hover {
+  background: #eef6f1;
+}
+
+.iz-cal-cell.is-out {
+  opacity: 0.36;
+}
+
+.iz-cal-cell.is-wknd {
+  background: #f5f6f5;
+  color: #8a968f;
+}
+
+.iz-cal-cell.has-izin {
+  background: #f0f9ff;
+  border-color: rgba(2, 132, 199, 0.22);
+}
+
+.iz-cal-cell.has-sakit-only {
+  background: #fffbeb;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+
+.iz-cal-cell.has-sakit-only .iz-cal-cnt {
+  color: #92400e;
+}
+
+.iz-cal-cell.is-span-hi {
+  background: #dcfce7;
+  border-color: #0a5c40;
+}
+
+.iz-cal-cell.is-today {
+  border-color: rgba(10, 92, 64, 0.55);
+}
+
+.iz-cal-cell.is-selected {
+  background: #0a5c40;
+  border-color: #0a5c40;
+  color: #fff;
+}
+
+.iz-cal-num {
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.iz-cal-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+.iz-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.iz-dot.is-izin { background: #0284c7; }
+.iz-dot.is-sakit { background: #d97706; }
+
+.iz-cal-cell.is-selected .iz-dot.is-izin { background: #bae6fd; }
+.iz-cal-cell.is-selected .iz-dot.is-sakit { background: #fde68a; }
+
+.iz-cal-cnt {
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #075985;
+}
+
+.iz-cal-cell.is-selected .iz-cal-cnt {
+  color: #e3f1ea;
+}
+
+.iz-cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #5b6b62;
+}
+
+.iz-cal-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.iz-legend-ring {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  border: 1.5px solid #0a5c40;
+}
+
+.iz-legend-hi {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 4px;
+  background: #dcfce7;
+  border: 1.5px solid #0a5c40;
+}
+
+.iz-legend-span {
+  margin-left: auto;
+  color: #0a5c40;
+}
+
+.iz-legend-clear {
+  border: 0;
+  background: transparent;
+  color: #0a5c40;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Selected Day Detail Panel */
+.iz-day-panel {
   padding: 16px;
   border-radius: 18px;
   background: #fff;
   border: 1px solid rgba(11, 59, 42, 0.12);
-  margin-bottom: 22px;
 }
 
-.iz-today.has-items {
+.iz-day-panel.has-items {
   background: #f8fcf9;
   border-color: rgba(10, 92, 64, 0.22);
 }
 
-.iz-today-head {
+.iz-day-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -885,27 +1447,29 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
-.iz-today-title-wrap {
+.iz-day-title-wrap {
   min-width: 0;
-  flex: 1 1 220px;
+  flex: 1 1 200px;
 }
 
-.iz-today-head h2 {
-  margin: 0 0 3px;
+.iz-day-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+}
+
+.iz-day-head h2 {
+  margin: 0;
   font-size: 1.08rem;
   font-weight: 800;
   color: #0b3b2a;
 }
 
-.iz-today-date {
-  font-weight: 600;
-  color: #5b6b62;
-  font-size: 0.92rem;
-}
-
-.iz-today-sub {
+.iz-day-sub {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   line-height: 1.45;
   color: #475a50;
 }
@@ -916,40 +1480,70 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
-.iz-today-list {
+.iz-day-list {
   display: grid;
   gap: 8px;
-  margin: 14px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.iz-today-row {
+.iz-day-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-  padding: 12px 14px;
+  padding: 12px 13px;
   border-radius: 14px;
   background: #fff;
-  border: 1px solid rgba(11, 59, 42, 0.1);
+  border: 1.5px solid rgba(11, 59, 42, 0.1);
 }
 
-.iz-today-empty-action {
+.iz-day-row.is-multi {
+  cursor: pointer;
+}
+
+.iz-day-row.is-highlighted {
+  border-color: #0a5c40;
+  background: #f0fdf4;
+}
+
+.iz-span-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 2px 9px;
+  border-radius: 8px;
+  background: #f1f5f3;
+  color: #2f4339;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.iz-span-pill.is-multi {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.iz-day-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   margin-top: 12px;
+}
+
+.iz-tap-tip {
+  font-size: 0.76rem;
 }
 
 .iz-meta-tag {
   font-size: 0.78rem;
   font-weight: 600;
   color: #5b6b62;
-}
-
-.iz-sub-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
 }
 
 /* 2. Secondary History Section */
@@ -1041,14 +1635,6 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.iz-search-input {
-  padding-left: 36px;
-}
-
-.iz-jilid-select {
-  min-width: 155px;
-}
-
 .iz-input {
   width: 100%;
   min-height: 44px;
@@ -1059,6 +1645,14 @@ onBeforeUnmount(() => {
   color: #0b3b2a;
   font: inherit;
   box-sizing: border-box;
+}
+
+.iz-input.iz-search-input {
+  padding-left: 38px;
+}
+
+.iz-jilid-select {
+  min-width: 155px;
 }
 
 .iz-empty {
@@ -1101,6 +1695,12 @@ onBeforeUnmount(() => {
   gap: 3px;
   min-width: 0;
   flex: 1 1 200px;
+}
+
+.iz-item-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .iz-item-top {
@@ -1513,6 +2113,11 @@ onBeforeUnmount(() => {
 
 .iz-btn:focus-visible,
 .iz-close:focus-visible,
+.iz-cal-arrow:focus-visible,
+.iz-cal-cell:focus-visible,
+.iz-cal-today-btn:focus-visible,
+.iz-cal-select:focus-visible,
+.iz-picker-item:focus-visible,
 .iz-chip:focus-visible,
 .iz-mini-chip:focus-visible,
 .iz-seg-btn:focus-visible,
