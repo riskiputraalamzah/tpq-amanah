@@ -1879,58 +1879,109 @@ const getInitials = (name) => {
     : "TP";
 };
 
-// 6 Guru with lightweight WebP photos (<15KB each)
+const formatJilidBadge = (classIds = []) => {
+  if (!Array.isArray(classIds) || !classIds.length) return "";
+  const sorted = [...new Set(classIds.map(String))].sort((a, b) => Number(a) - Number(b));
+  const labels = sorted.map((id) => (id === "7" ? "Marhalah" : `Jilid ${id}`));
+  if (labels.length === 1) return `Pengampu ${labels[0]}`;
+  if (labels.length === 2 && sorted.every((id) => id !== "7")) {
+    return `Pengampu Jilid ${sorted[0]} & ${sorted[1]}`;
+  }
+  return `Pengampu ${labels.join(", ")}`;
+};
+
+const inferSesiFromClasses = (classIds = []) => {
+  if (!Array.isArray(classIds) || !classIds.length) return "";
+  const hasSore = classIds.some((id) => Number(id) >= 1 && Number(id) <= 4);
+  const hasMalam = classIds.some((id) => Number(id) >= 5);
+  if (hasSore && hasMalam) return "Sesi Sore & Malam";
+  return hasMalam ? "Sesi Malam" : "Sesi Sore";
+};
+
+// 6 Guru with lightweight WebP photos (<15KB each), synced automatically with Kelola Pengajar jilid assignments
 const fetchTeachers = async () => {
-  teachers.value = [
+  const defaults = [
     {
       id: 1,
+      matchKey: "riski",
       name: "Ustadz Riski",
-      position: "Kepala Lembaga TPQ",
-      bio: "Berpengalaman membina pendidikan Al-Qur'an dan tahsin bersanad lebih dari 10 tahun.",
+      roleBase: "Kepala Lembaga TPQ",
+      position: "Kepala Lembaga TPQ · Sesi Malam",
+      bio: "Berpengalaman membina pendidikan Al-Qur'an, transisi ke mushaf, dan tahsin bersanad lebih dari 10 tahun.",
       photoURL: "/guru/riski.webp",
-      badge: "Kepala TPQ",
+      badge: "Pengampu Jilid 6",
     },
     {
       id: 2,
+      matchKey: "aini",
       name: "Ustadzah Aini",
-      position: "Guru Jilid Dasar",
-      bio: "Penuh kesabaran mendampingi santri usia dini dengan metode bermain dan bernyanyi islami.",
+      roleBase: "Pembimbing Al-Qur'an & Tahfidz",
+      position: "Pembimbing Al-Qur'an & Tahfidz · Sesi Malam",
+      bio: "Mendampingi santri kelas Al-Qur'an besar dan Marhalah dengan bimbingan tartil, kelancaran, dan hafalan yang sabar.",
       photoURL: "/guru/aini.webp",
-      badge: "Usia Dini",
+      badge: "Pengampu Marhalah",
     },
     {
       id: 3,
+      matchKey: "ella",
       name: "Ustadzah Ella",
-      position: "Guru Tajwid & Tahsin",
-      bio: "Ahli kaidah tajwid praktis, membimbing pelafalan makharijul huruf santri agar fasih.",
+      roleBase: "Koordinator Pendaftaran",
+      position: "Koordinator Pendaftaran · Sesi Sore",
+      bio: "Membimbing pengenalan huruf hijaiyah dasar hingga ritme mad thabi'i dengan pendekatan ramah dan telaten.",
       photoURL: "/guru/ella.webp",
-      badge: "Tajwid & Tahsin",
+      badge: "Pengampu Jilid 1 & 3",
     },
     {
       id: 4,
+      matchKey: "annifa",
       name: "Ustadzah Annifa",
-      position: "Guru Tahfidz",
-      bio: "Membimbing setoran hafalan Juz 30 dengan teknik mutqin dan muraja'ah teratur.",
+      roleBase: "Pengajar Huruf Sambung",
+      position: "Pengajar Huruf Sambung · Sesi Sore",
+      bio: "Telaten mendampingi santri merangkai huruf sambung dan pelafalan harakat kasrah serta dhammah dengan tepat.",
       photoURL: "/guru/annifa.webp",
-      badge: "Tahfidzul Qur'an",
+      badge: "Pengampu Jilid 2",
     },
     {
       id: 5,
+      matchKey: "febi",
       name: "Ustadzah Febi",
-      position: "Guru Al-Qur'an Lanjutan",
-      bio: "Mendampingi santri Al-Qur'an besar agar lancar, tartil, dan memahami tanda waqaf.",
+      roleBase: "Pengajar Tajwid & Qolqolah",
+      position: "Pengajar Tajwid & Qolqolah · Sesi Sore",
+      bio: "Membimbing ketepatan bacaan tanwin, huruf mati (sukun), serta pantulan qolqolah secara jernih dan terarah.",
       photoURL: "/guru/febi.webp",
-      badge: "Tartil Lanjutan",
+      badge: "Pengampu Jilid 4",
     },
     {
       id: 6,
+      matchKey: "nurul",
       name: "Ustadz Nurul",
-      position: "Pembina Adab & Ibadah",
-      bio: "Membina pembiasaan wudhu, shalat berjamaah, dan akhlakul karimah santri sehari-hari.",
+      roleBase: "Pembina Tajwid & Ibadah",
+      position: "Pembina Tajwid & Ibadah · Sesi Malam",
+      bio: "Membimbing penerapan tasydid, idgham, dengung (ghunnah), serta pembiasaan adab dan praktik ibadah sehari-hari.",
       photoURL: "/guru/nurul.webp",
-      badge: "Adab & Ibadah",
+      badge: "Pengampu Jilid 5",
     },
   ];
+  teachers.value = defaults;
+
+  // Non-blocking sync: if Admin updates a guru's jilid in Kelola Pengajar, reflect it automatically on the badge & sesi
+  try {
+    const { data } = await api.get("/content/guru/list");
+    if (!Array.isArray(data) || !data.length) return;
+    teachers.value = defaults.map((t) => {
+      const live = data.find((g) => String(g.name || "").toLowerCase().includes(t.matchKey));
+      if (!live || !Array.isArray(live.classIds) || !live.classIds.length) return t;
+      const badge = formatJilidBadge(live.classIds);
+      const sesi = inferSesiFromClasses(live.classIds);
+      return {
+        ...t,
+        badge: badge || t.badge,
+        position: sesi ? `${t.roleBase} · ${sesi}` : t.position,
+      };
+    });
+  } catch {
+    // Keep accurate defaults silently
+  }
 };
 
 const fetchContent = async () => {

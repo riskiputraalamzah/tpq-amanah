@@ -219,4 +219,6 @@ test("Landing page surfaces Portal Wali entry, interactive 90-min routine, and m
   assert.ok(homeViewSrc.includes("WaliPortalShowcase"), "HomeView showcases Portal Wali Santri interactively");
   assert.ok(homeViewSrc.includes("activeRoutine"), "Rutinitas 90 Menit bar is interactive");
   assert.ok(homeViewSrc.includes("lp-testi-track"), "Testimonials use mobile horizontal swipe track");
+  assert.ok(homeViewSrc.includes('api.get("/content/guru/list")'), "Dewan Pengajar syncs jilid badges from live Kelola Pengajar data");
+  assert.ok(homeViewSrc.includes("Pengampu Jilid 6") && homeViewSrc.includes("Pengampu Marhalah"), "Teacher defaults match current jilid assignments");
 });
