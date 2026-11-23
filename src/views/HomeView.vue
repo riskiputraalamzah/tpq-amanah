@@ -585,7 +585,7 @@
         <ol class="mb-16 lp-journey">
           <li class="lp-reveal">
             <StarBadge class="lp-node">1</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 1</span>
                 <span class="text-xs font-semibold text-amber-800">Dasar Hijaiyah</span>
@@ -601,11 +601,12 @@
                 Target: Fasih membedakan bentuk &amp; bunyi huruf tunggal
               </p>
             </article>
+            <JilidDemoStage :jilid="1" class="lp-journey-stage" />
           </li>
 
           <li class="lp-reveal">
             <StarBadge class="lp-node">2</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 2</span>
                 <span class="text-xs font-semibold text-amber-800">Rangkaian Huruf</span>
@@ -621,11 +622,12 @@
                 Target: Lancar membaca 3-4 huruf yang bersambung
               </p>
             </article>
+            <JilidDemoStage :jilid="2" class="lp-journey-stage" />
           </li>
 
           <li class="lp-reveal">
             <StarBadge class="lp-node">3</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 3</span>
                 <span class="text-xs font-semibold text-amber-800">Mad Thabi'i</span>
@@ -641,11 +643,12 @@
                 Target: Konsistensi ayunan ketukan 2 harakat
               </p>
             </article>
+            <JilidDemoStage :jilid="3" class="lp-journey-stage" />
           </li>
 
           <li class="lp-reveal">
             <StarBadge class="lp-node">4</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 4</span>
                 <span class="text-xs font-semibold text-amber-800">Tanwin &amp; Sukun</span>
@@ -661,11 +664,12 @@
                 Target: Penguasaan huruf mati &amp; qolqolah sempurna
               </p>
             </article>
+            <JilidDemoStage :jilid="4" class="lp-journey-stage" />
           </li>
 
           <li class="lp-reveal">
             <StarBadge class="lp-node">5</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 5</span>
                 <span class="text-xs font-semibold text-amber-800">Tajwid Aplikatif</span>
@@ -681,11 +685,12 @@
                 Target: Kesempurnaan dengung (ghunnah) 2 harakat
               </p>
             </article>
+            <JilidDemoStage :jilid="5" class="lp-journey-stage" />
           </li>
 
           <li class="lp-reveal">
             <StarBadge class="lp-node">6</StarBadge>
-            <article class="p-6 lp-card lp-lift sm:p-7">
+            <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 6</span>
                 <span class="text-xs font-semibold text-amber-800">Menuju Mushaf</span>
@@ -701,6 +706,7 @@
                 Target: Siap masuk Al-Qur'an besar &amp; tahfidz
               </p>
             </article>
+            <JilidDemoStage :jilid="6" class="lp-journey-stage" />
           </li>
         </ol>
 
@@ -1583,6 +1589,7 @@ import FooterComponent from "@/components/FooterComponent.vue";
 import LegalDocuments from "@/components/LegalDocuments.vue";
 import SectionHeading from "@/components/landing/SectionHeading.vue";
 import StarBadge from "@/components/landing/StarBadge.vue";
+import JilidDemoStage from "@/components/landing/JilidDemoStage.vue";
 import "@/styles/landing.css";
 import api from "@/services/api";
 

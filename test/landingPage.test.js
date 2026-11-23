@@ -191,3 +191,18 @@ test("WebP files exist in public folder and have small footprint (< 200KB each)"
     );
   }
 });
+
+test("Curriculum 6 Jilid section renders interactive animated demo stages with offscreen & reduced-motion guards", () => {
+  const stageSrc = fs.readFileSync(
+    path.join(here, "../src/components/landing/JilidDemoStage.vue"),
+    "utf8"
+  );
+  assert.ok(homeViewSrc.includes("JilidDemoStage"), "HomeView mounts JilidDemoStage");
+  for (let n = 1; n <= 6; n += 1) {
+    assert.ok(homeViewSrc.includes(`:jilid="${n}"`), `HomeView includes interactive demo for Jilid ${n}`);
+  }
+  assert.ok(stageSrc.includes("IntersectionObserver"), "Pauses animation loops when scrolled offscreen");
+  assert.ok(stageSrc.includes("prefers-reduced-motion"), "Provides accessible reduced-motion path");
+  assert.ok(stageSrc.includes("togglePause"), "Provides manual play/pause control");
+  assert.ok(stageSrc.includes('dir="rtl"'), "Renders Arabic examples in proper RTL direction");
+});
