@@ -13,7 +13,6 @@
       <button type="button" class="wa-tb wa-tb-mono" title="Monospace (```teks```)" aria-label="Monospace" :disabled="disabled" @click="fmt('mono')">
         &lt;/&gt;
       </button>
-      <span class="wa-tb-sep" aria-hidden="true"></span>
       <button type="button" class="wa-tb" title="Daftar poin (- )" aria-label="Daftar poin" :disabled="disabled" @click="fmt('bullet')">
         •
       </button>
@@ -64,7 +63,7 @@
     ></textarea>
 
     <div class="wa-ed-foot">
-      <span class="wa-ed-hint">Kompatibel WhatsApp: <code>*tebal*</code> <code>_miring_</code> <code>~coret~</code></span>
+      <span class="wa-ed-hint">Format WA: <code>*tebal*</code> <code>_miring_</code> <code>~coret~</code></span>
       <span class="wa-ed-count" :class="{ 'is-near': charCount > maxlength - 150 }">{{ charCount }}/{{ maxlength }}</span>
     </div>
 
@@ -170,32 +169,24 @@ defineExpose({ focusInput })
 }
 
 .wa-ed-bar {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 5px;
+  padding: 6px;
   border: 1px solid rgba(11, 59, 42, 0.2);
   border-bottom: 0;
   border-radius: 12px 12px 0 0;
   background: #f4f8f5;
 }
 
-.wa-ed-bar::-webkit-scrollbar {
-  display: none;
-}
-
 .wa-tb {
-  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
+  min-width: 0;
+  width: 100%;
   min-height: 36px;
-  padding: 0 10px;
+  padding: 0;
   border: 1px solid rgba(11, 59, 42, 0.16);
   border-radius: 9px;
   background: #fff;
@@ -278,12 +269,15 @@ defineExpose({ focusInput })
 
 .wa-ed-foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 4px 10px;
-  font-size: 0.78rem;
+  gap: 8px;
+  font-size: 0.76rem;
   color: #5b6b62;
+}
+
+.wa-ed-hint {
+  min-width: 0;
 }
 
 .wa-ed-hint code {
@@ -291,10 +285,11 @@ defineExpose({ focusInput })
   border-radius: 4px;
   background: #eef4f0;
   color: #0b3b2a;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
 }
 
 .wa-ed-count {
+  flex: none;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }

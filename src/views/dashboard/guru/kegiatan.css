@@ -1,6 +1,7 @@
 /* Kegiatan pages (list, detail, form). Mobile first: one column, 44px+ touch targets, sheets that rise from the bottom. */
 
-.kg {
+.kg,
+.kg-overlay {
   --ink: #0b3b2a;
   --body: #475a50;
   --muted: #5b6b62;
@@ -299,8 +300,8 @@ textarea.kg-input {
 }
 
 .kg-chip[aria-pressed="true"] {
-  background: var(--emerald);
-  border-color: var(--emerald);
+  background: var(--emerald, #0a5c40);
+  border-color: var(--emerald, #0a5c40);
   color: #fff;
 }
 
@@ -408,7 +409,7 @@ textarea.kg-input {
   flex: 1 1 200px;
 }
 
-/* sheets (form, add participants) */
+/* sheets (form, add participants, kirim info) */
 .kg-overlay {
   position: fixed;
   inset: 0;
@@ -416,19 +417,21 @@ textarea.kg-input {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  padding-top: max(12px, env(safe-area-inset-top));
   background: rgba(3, 29, 20, 0.55);
 }
 
 @media (min-width: 640px) {
   .kg-overlay {
     align-items: center;
+    padding: 16px;
   }
 }
 
 .kg-sheet {
   width: 100%;
   max-width: 560px;
-  max-height: 92dvh;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)));
   display: flex;
   flex-direction: column;
   border-radius: 20px 20px 0 0;
@@ -486,7 +489,12 @@ textarea.kg-input {
   width: 100%;
 }
 
-.kg-btn-wa {
+.kg-head-actions .kg-btn {
+  flex: 1 1 0;
+  min-height: 42px;
+}
+
+.kg-head-actions .kg-btn-wa {
   flex: 1 1 100%;
   min-height: 44px;
   font-size: 0.92rem;
@@ -496,10 +504,40 @@ textarea.kg-input {
   .kg-head-actions {
     width: auto;
   }
-  .kg-btn-wa {
+  .kg-head-actions .kg-btn,
+  .kg-head-actions .kg-btn-wa {
     flex: none;
     min-height: 38px;
     font-size: 0.85rem;
+  }
+}
+
+.kg-sheet-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.kg-sheet-chips .kg-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .kg-sheet-chips {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .kg-sheet-chips .kg-chip {
+    width: auto;
+    padding: 0 12px;
   }
 }
 
@@ -598,11 +636,13 @@ textarea.kg-input {
 }
 
 .kg-close {
-  width: 44px;
-  height: 44px;
+  flex: none;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   border: 1px solid rgba(11, 59, 42, 0.2);
   background: #fff;
+  color: var(--ink);
   font-size: 1.2rem;
   cursor: pointer;
 }
@@ -617,7 +657,7 @@ textarea.kg-input {
 .kg-sheet-foot {
   display: flex;
   gap: 8px;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(18px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
   background: #fbf9f3;
 }

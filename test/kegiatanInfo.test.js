@@ -136,4 +136,12 @@ test("kegiatan info & Portal Wali wiring: WYSIWYG sheet, sendNow, delete info, P
 
   const router = read("src/router/index.js");
   assert.ok(has(router, 'path: "santri/:santriId/kegiatan/:activityId/info", name: "WaliKegiatanInfo"'));
+
+  // Teleported sheets live under <body>, outside .kg, so .kg-overlay MUST declare the CSS tokens too
+  const css = read("src/views/dashboard/guru/kegiatan.css");
+  assert.ok(has(css, ".kg, .kg-overlay { --ink:"));
+
+  // Toolbar fits all 8 buttons symmetrically without clipping on mobile
+  const editor = read("src/components/WaRichEditor.vue");
+  assert.ok(has(editor, "grid-template-columns: repeat(8, minmax(0, 1fr))"));
 });

@@ -271,7 +271,7 @@
               <h3 id="kg-info-sheet-title">
                 {{ sheetSuccessResult ? 'Info berhasil dikirim' : 'Kirim info ke wali' }}
               </h3>
-              <span class="kg-sub">{{ a?.title }} · Satu arah via WA Bot &amp; Portal Wali</span>
+              <span class="kg-sub">{{ a?.title }} · Satu arah via WA Bot</span>
             </div>
             <button type="button" class="kg-close" aria-label="Tutup" @click="closeInfoSheet">×</button>
           </header>
@@ -334,7 +334,7 @@
                 <!-- 1. Target selector -->
                 <div class="kg-field">
                   <span class="kg-label">1. Sasaran peserta</span>
-                  <div class="kg-chips" role="group" aria-label="Pilih sasaran peserta">
+                  <div class="kg-chips kg-sheet-chips" role="group" aria-label="Pilih sasaran peserta">
                     <button type="button" class="kg-chip" :aria-pressed="infoTargetMode === 'all'" @click="infoTargetMode = 'all'">
                       Semua <span>{{ activeParticipants.length }}</span>
                     </button>
