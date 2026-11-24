@@ -1,11 +1,38 @@
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'is-sidebar-collapsed': sidebarCollapsed }">
     <!-- Announcement Banner (global, rendered via Teleport in component) -->
     <AnnouncementBanner />
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside
+      ref="sidebarEl"
+      class="sidebar"
+      :class="{ 'is-collapsed': sidebarCollapsed }"
+      aria-label="Navigasi dashboard"
+      @mouseleave="hideTooltip"
+    >
+      <!-- Desktop collapse / expand rail handle (Admin & Guru) -->
+      <button
+        type="button"
+        class="sidebar-collapse-btn"
+        :aria-expanded="!sidebarCollapsed"
+        :aria-label="sidebarCollapsed ? 'Perlebar sidebar' : 'Perkecil sidebar'"
+        :title="sidebarCollapsed ? 'Perlebar sidebar (Ctrl+B)' : 'Perkecil sidebar (Ctrl+B)'"
+        @click="toggleSidebar"
+      >
+        <svg class="sidebar-collapse-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
       <div class="sidebar-brand">
-        <router-link to="/" class="sidebar-header">
+        <router-link
+          to="/"
+          class="sidebar-header"
+          :title="sidebarCollapsed ? 'TPQ AMANAH · Beranda Website' : undefined"
+          @mouseenter="showTooltip($event, 'TPQ AMANAH · Beranda')"
+          @focus="showTooltip($event, 'TPQ AMANAH · Beranda')"
+          @blur="hideTooltip"
+        >
           <img :src="logoUrl" alt="TPQ AMANAH" class="sidebar-logo" />
           <span class="sidebar-title">TPQ AMANAH</span>
         </router-link>
@@ -15,13 +42,18 @@
           rel="noopener noreferrer"
           class="sidebar-nspq"
           :aria-label="`NSPQ ${tpqIdentity.nspq}, buka sertifikat LPQ di SIPDAR Kemenag (tab baru)`"
-          title="Buka sertifikat LPQ di SIPDAR Kemenag"
+          :title="sidebarCollapsed ? `NSPQ ${tpqIdentity.nspq} · Sertifikat SIPDAR` : 'Buka sertifikat LPQ di SIPDAR Kemenag'"
+          @mouseenter="showTooltip($event, `NSPQ ${tpqIdentity.nspq}`)"
+          @focus="showTooltip($event, `NSPQ ${tpqIdentity.nspq}`)"
+          @blur="hideTooltip"
         >
-          <svg class="sidebar-nspq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            <polyline points="9 12 11 14 15 10" />
-          </svg>
+          <span class="sidebar-nspq-icon-wrap" aria-hidden="true">
+            <svg class="sidebar-nspq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <polyline points="9 12 11 14 15 10" />
+            </svg>
+          </span>
           <span class="sidebar-nspq-text">
             <span class="sidebar-nspq-label">NSPQ</span>
             <span class="sidebar-nspq-number">{{ tpqIdentity.nspq }}</span>
@@ -35,30 +67,57 @@
         </a>
       </div>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" @scroll="hideTooltip">
         <!-- Beranda / Utama -->
-        <router-link to="/dashboard" class="sidebar-link" exact-active-class="active">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <router-link
+          to="/dashboard"
+          class="sidebar-link"
+          exact-active-class="active"
+          :aria-label="sidebarCollapsed ? 'Dashboard' : undefined"
+          :title="sidebarCollapsed ? 'Dashboard' : undefined"
+          @mouseenter="showTooltip($event, 'Dashboard')"
+          @focus="showTooltip($event, 'Dashboard')"
+          @blur="hideTooltip"
+        >
+          <svg class="sidebar-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          Dashboard
+          <span class="sidebar-link-label">Dashboard</span>
         </router-link>
 
         <!-- Menu groups by job (admin: santri & wali, KBM, keuangan, WhatsApp, pengaturan; guru: mengajar, santri,
-             akses khusus, akun). A group folds; the one holding the open page is always open. -->
+             akses khusus, akun). A group folds; the one holding the open page is always open.
+             When collapsed to the desktop icon rail, every group's icons stay one click away. -->
         <template v-for="g in menuGroups" :key="g.key">
-          <button type="button" class="sidebar-section sidebar-group-toggle" :aria-expanded="isGroupOpen(g)"
-            :aria-controls="`menu-group-${g.key}`" @click="toggleGroup(g)">
+          <button
+            type="button"
+            class="sidebar-section sidebar-group-toggle"
+            :aria-expanded="sidebarCollapsed || isGroupOpen(g)"
+            :aria-controls="`menu-group-${g.key}`"
+            :tabindex="sidebarCollapsed ? -1 : 0"
+            @click="!sidebarCollapsed && toggleGroup(g)"
+          >
             <span class="sidebar-group-title">{{ g.title }}</span>
-            <span v-if="!isGroupOpen(g) && groupBadge(g)" class="sidebar-badge is-small">{{ groupBadge(g) }}</span>
+            <span v-if="!sidebarCollapsed && !isGroupOpen(g) && groupBadge(g)" class="sidebar-badge is-small">{{ groupBadge(g) }}</span>
             <svg class="sidebar-chevron" :class="{ 'is-open': isGroupOpen(g) }" width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
           </button>
-          <div v-show="isGroupOpen(g)" :id="`menu-group-${g.key}`" class="sidebar-group">
-            <router-link v-for="m in g.items" :key="m.to" :to="m.to" class="sidebar-link" :class="{ active: isItemActive(m) }">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" v-html="m.icon"></svg>
-              {{ m.label }}
+          <div v-show="sidebarCollapsed || isGroupOpen(g)" :id="`menu-group-${g.key}`" class="sidebar-group">
+            <router-link
+              v-for="m in g.items"
+              :key="m.to"
+              :to="m.to"
+              class="sidebar-link"
+              :class="{ active: isItemActive(m) }"
+              :aria-label="sidebarCollapsed ? m.label : undefined"
+              :title="sidebarCollapsed ? m.label : undefined"
+              @mouseenter="showTooltip($event, m.label, m.badge ? badges[m.badge] : 0)"
+              @focus="showTooltip($event, m.label, m.badge ? badges[m.badge] : 0)"
+              @blur="hideTooltip"
+            >
+              <svg class="sidebar-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" v-html="m.icon"></svg>
+              <span class="sidebar-link-label">{{ m.label }}</span>
               <span v-if="m.badge && badges[m.badge]" class="sidebar-badge" :aria-label="`${badges[m.badge]} ${BADGE_LABEL[m.badge]}`">{{ badges[m.badge] }}</span>
             </router-link>
           </div>
@@ -66,7 +125,15 @@
       </nav>
 
       <div class="sidebar-footer">
-        <router-link to="/dashboard/profile" class="sidebar-user" v-if="user" title="Lihat & Edit Profil">
+        <router-link
+          to="/dashboard/profile"
+          class="sidebar-user"
+          v-if="user"
+          :title="sidebarCollapsed ? `${user.displayName} (${getRoleLabel(user.role)})` : 'Lihat & Edit Profil'"
+          @mouseenter="showTooltip($event, `${user.displayName} · ${getRoleLabel(user.role)}`)"
+          @focus="showTooltip($event, `${user.displayName} · ${getRoleLabel(user.role)}`)"
+          @blur="hideTooltip"
+        >
           <img v-if="user.photoURL" :src="user.photoURL" :alt="user.displayName" class="sidebar-user-avatar" />
           <div v-else class="sidebar-user-avatar-placeholder">
             {{ getInitials(user.displayName) }}
@@ -76,14 +143,35 @@
             <span class="sidebar-user-role">{{ getRoleLabel(user.role) }}</span>
           </div>
         </router-link>
-        <button class="sidebar-logout" @click="handleLogout">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button
+          type="button"
+          class="sidebar-logout"
+          :aria-label="sidebarCollapsed ? 'Logout' : undefined"
+          :title="sidebarCollapsed ? 'Logout' : undefined"
+          @click="handleLogout"
+          @mouseenter="showTooltip($event, 'Logout')"
+          @focus="showTooltip($event, 'Logout')"
+          @blur="hideTooltip"
+        >
+          <svg class="sidebar-link-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Logout
+          <span class="sidebar-logout-label">Logout</span>
         </button>
+      </div>
+
+      <!-- Floating hover/focus tooltip when collapsed (outside scrollable nav so it is never clipped) -->
+      <div
+        class="sidebar-tooltip"
+        :class="{ 'is-visible': sidebarCollapsed && tooltip.visible }"
+        :style="{ top: `${tooltip.top}px` }"
+        role="tooltip"
+        aria-hidden="true"
+      >
+        <span>{{ tooltip.text }}</span>
+        <span v-if="tooltip.badge" class="sidebar-tooltip-badge">{{ tooltip.badge }}</span>
       </div>
     </aside>
 
@@ -266,6 +354,56 @@ const menuGroups = computed(() => {
 })
 
 const isItemActive = (m) => isActive(m.to) || (m.also || []).some((p) => isActive(p))
+
+// Desktop collapsible sidebar state (Admin & Guru), persisted on this device
+const SIDEBAR_COLLAPSE_KEY = 'dashboard_sidebar_collapsed'
+const readSidebarCollapsed = () => {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+const sidebarCollapsed = ref(readSidebarCollapsed())
+const sidebarEl = ref(null)
+const tooltip = ref({ text: '', badge: 0, top: 0, visible: false })
+
+function toggleSidebar() {
+  sidebarCollapsed.value = !sidebarCollapsed.value
+  tooltip.value.visible = false
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSE_KEY, sidebarCollapsed.value ? '1' : '0')
+  } catch {
+    /* private mode: for this visit only */
+  }
+}
+
+function showTooltip(event, text, badge = 0) {
+  if (!sidebarCollapsed.value || !sidebarEl.value || !event?.currentTarget) return
+  const asideRect = sidebarEl.value.getBoundingClientRect()
+  const targetRect = event.currentTarget.getBoundingClientRect()
+  tooltip.value = {
+    text,
+    badge: Number(badge || 0),
+    top: Math.round(targetRect.top - asideRect.top + targetRect.height / 2),
+    visible: true,
+  }
+}
+
+function hideTooltip() {
+  if (tooltip.value.visible) tooltip.value.visible = false
+}
+
+function onSidebarShortcut(event) {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return
+  if (String(event.key || '').toLowerCase() !== 'b') return
+  const tag = String(event.target?.tagName || '').toLowerCase()
+  if (['input', 'textarea', 'select'].includes(tag) || event.target?.isContentEditable) return
+  if (window.innerWidth < 1024) return
+  event.preventDefault()
+  toggleSidebar()
+}
+
 // folded groups, remembered on this device; the admin starts with only the open page's group unfolded
 const FOLD_KEY = 'sidebar_folded_groups'
 const readFolded = () => {
@@ -391,6 +529,7 @@ onBeforeUnmount(() => {
   removeAfterEach();
   removeOnError();
   document.removeEventListener("visibilitychange", onVisible);
+  window.removeEventListener("keydown", onSidebarShortcut);
 });
 
 onMounted(() => {
@@ -403,6 +542,7 @@ onMounted(() => {
   if (isAdmin.value || isGuru.value) refreshWali({ force: true });
   if (isAdmin.value) refreshFeedback({ force: true });
   document.addEventListener("visibilitychange", onVisible);
+  window.addEventListener("keydown", onSidebarShortcut);
 });
 </script>
 
@@ -410,6 +550,8 @@ onMounted(() => {
 /* Dashboard shell: the landing page's language, kept quiet. A deep emerald rail with gold hairlines on an ivory
    work area. Positions, breakpoints and behaviour are unchanged; only the look is new. */
 .dashboard-layout {
+  --sidebar-w: 280px;
+  --sidebar-ease: cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   min-height: 100vh;
   background: var(--lp-ivory);
@@ -419,9 +561,14 @@ onMounted(() => {
   isolation: isolate;
 }
 
+.dashboard-layout.is-sidebar-collapsed {
+  --sidebar-w: 76px;
+}
+
 /* ------------------------------------------------------------ sidebar */
 .sidebar {
-  width: 280px;
+  width: var(--sidebar-w);
+  flex: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -434,6 +581,7 @@ onMounted(() => {
   background: linear-gradient(180deg, #03291d 0%, #04231a 62%, #021c13 100%);
   border-right: 1px solid rgba(252, 211, 77, 0.2);
   box-shadow: 10px 0 34px -14px rgba(2, 28, 19, 0.55);
+  transition: width 0.3s var(--sidebar-ease);
 }
 
 .sidebar::before {
@@ -459,20 +607,111 @@ onMounted(() => {
   }
 }
 
+/* Desktop collapse / expand rail button straddling the gold right border */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 24px;
+  right: -14px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(252, 211, 77, 0.48);
+  background: #042c20;
+  color: #fcd34d;
+  cursor: pointer;
+  box-shadow: 0 4px 14px -2px rgba(2, 28, 19, 0.55);
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+/* Generous invisible click target without making the rail button bulky */
+.sidebar-collapse-btn::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+}
+
+.sidebar-collapse-btn:hover {
+  background: #084833;
+  border-color: rgba(252, 211, 77, 0.85);
+  color: #fef08a;
+  box-shadow: 0 6px 18px -2px rgba(2, 28, 19, 0.65);
+}
+
+.sidebar-collapse-btn:focus-visible {
+  outline: 2px solid #fcd34d;
+  outline-offset: 2px;
+}
+
+.sidebar-collapse-icon {
+  transition: transform 0.3s var(--sidebar-ease);
+}
+
+.sidebar.is-collapsed .sidebar-collapse-icon {
+  transform: rotate(180deg);
+}
+
+/* Floating tooltip pill on collapsed rail (sits outside scrollable nav so it is never clipped) */
+.sidebar-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: #03291d;
+  border: 1px solid rgba(252, 211, 77, 0.42);
+  color: #f0fdf4;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 10px 26px -6px rgba(2, 28, 19, 0.55);
+  opacity: 0;
+  transform: translate(-6px, -50%);
+  transition: opacity 0.14s ease, transform 0.18s var(--sidebar-ease);
+}
+
+.sidebar-tooltip.is-visible {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.sidebar-tooltip-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fcd34d;
+  color: #3b2404;
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .sidebar-brand {
   padding-bottom: var(--space-md);
   border-bottom: 1px solid transparent;
   border-image: linear-gradient(90deg, transparent, rgba(252, 211, 77, 0.45), transparent) 1;
+  overflow: hidden;
 }
 
 .sidebar-header {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-lg) var(--space-lg) var(--space-sm);
+  padding: var(--space-lg) 16px var(--space-sm);
   cursor: pointer;
   text-decoration: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, gap 0.3s var(--sidebar-ease);
 }
 
 .sidebar-header:hover {
@@ -480,8 +719,9 @@ onMounted(() => {
 }
 
 .sidebar-logo {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   object-fit: contain;
 }
 
@@ -490,6 +730,12 @@ onMounted(() => {
   font-size: 1.125rem;
   letter-spacing: -0.01em;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 180px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.18s ease, max-width 0.3s var(--sidebar-ease), transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-nspq {
@@ -497,14 +743,15 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  margin: 0 var(--space-lg);
-  padding: 8px 12px;
+  margin: 0 var(--space-md);
+  padding: 8px 16px;
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(252, 211, 77, 0.3);
   color: #fff;
   text-decoration: none;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+  transition: background 0.2s ease, border-color 0.2s ease, gap 0.3s var(--sidebar-ease);
 }
 
 .sidebar-nspq:hover {
@@ -517,6 +764,14 @@ onMounted(() => {
   outline-offset: 2px;
 }
 
+.sidebar-nspq-icon-wrap {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
 .sidebar-nspq-icon {
   flex-shrink: 0;
   color: #fcd34d;
@@ -527,6 +782,12 @@ onMounted(() => {
   flex-direction: column;
   min-width: 0;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 170px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.16s ease, max-width 0.3s var(--sidebar-ease), transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-nspq-label {
@@ -548,12 +809,16 @@ onMounted(() => {
   flex-shrink: 0;
   margin-left: auto;
   color: rgba(209, 250, 229, 0.6);
+  opacity: 1;
+  max-width: 18px;
+  transition: opacity 0.15s ease, max-width 0.28s var(--sidebar-ease), margin 0.28s var(--sidebar-ease);
 }
 
 .sidebar-nav {
   flex: 1;
   padding: var(--space-md);
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: rgba(252, 211, 77, 0.3) transparent;
 }
@@ -562,12 +827,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: var(--space-lg) var(--space-md) var(--space-sm);
+  padding: var(--space-lg) 16px var(--space-sm);
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(252, 211, 77, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: padding 0.28s var(--sidebar-ease), gap 0.28s var(--sidebar-ease), opacity 0.2s ease;
 }
 
 .sidebar-group-toggle {
@@ -591,13 +859,19 @@ onMounted(() => {
 
 .sidebar-group-title {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+  opacity: 1;
+  transition: opacity 0.15s ease, max-width 0.28s var(--sidebar-ease);
 }
 
 .sidebar-chevron {
   flex: none;
   opacity: 0.8;
   transform: rotate(-90deg);
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease, width 0.24s var(--sidebar-ease);
 }
 
 .sidebar-chevron.is-open {
@@ -611,12 +885,6 @@ onMounted(() => {
   font-size: 0.68rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sidebar-chevron {
-    transition: none;
-  }
-}
-
 .sidebar-section::before {
   content: "";
   width: 5px;
@@ -624,6 +892,7 @@ onMounted(() => {
   flex: none;
   background: currentColor;
   transform: rotate(45deg);
+  transition: width 0.28s var(--sidebar-ease), height 0.28s var(--sidebar-ease), opacity 0.2s ease, transform 0.28s var(--sidebar-ease);
 }
 
 .sidebar-link {
@@ -631,16 +900,37 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  padding: var(--space-md) 16px;
   margin-bottom: var(--space-xs);
   border-radius: var(--radius-lg);
   color: rgba(209, 250, 229, 0.85);
   font-weight: 500;
-  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), gap 0.3s var(--sidebar-ease);
+}
+
+.sidebar-link-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-link-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.16s ease, max-width 0.3s var(--sidebar-ease), transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-badge {
   margin-left: auto;
+  flex-shrink: 0;
   display: inline-grid;
   place-items: center;
   min-width: 22px;
@@ -652,6 +942,7 @@ onMounted(() => {
   font-size: 0.75rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  transition: transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-link:hover {
@@ -679,22 +970,25 @@ onMounted(() => {
   flex: none;
   background: currentColor;
   transform: rotate(45deg);
+  transition: opacity 0.15s ease, width 0.2s ease, margin 0.2s ease;
 }
 
 .sidebar-footer {
   padding: var(--space-md);
   border-top: 1px solid transparent;
   border-image: linear-gradient(90deg, transparent, rgba(252, 211, 77, 0.4), transparent) 1;
+  overflow: hidden;
 }
 
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  padding: 10px 6px;
   margin-bottom: var(--space-sm);
   border-radius: var(--radius-lg);
-  transition: background-color 0.2s ease;
+  overflow: hidden;
+  transition: background-color 0.2s ease, gap 0.3s var(--sidebar-ease);
 }
 
 .sidebar-user:hover {
@@ -704,6 +998,7 @@ onMounted(() => {
 .sidebar-user-avatar {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border-radius: var(--radius-full);
   object-fit: cover;
   box-shadow: 0 0 0 2px rgba(252, 211, 77, 0.55);
@@ -712,6 +1007,7 @@ onMounted(() => {
 .sidebar-user-avatar-placeholder {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, #0b6b4a, #065f46);
   color: #fcd34d;
@@ -727,12 +1023,20 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 185px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.16s ease, max-width 0.3s var(--sidebar-ease), transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-user-name {
   font-weight: 600;
   color: #fff;
   font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar-user-role {
@@ -746,11 +1050,22 @@ onMounted(() => {
   gap: var(--space-md);
   width: 100%;
   min-height: 44px;
-  padding: var(--space-md);
+  padding: var(--space-md) 16px;
   border-radius: var(--radius-lg);
   color: #fca5a5;
   font-weight: 500;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color var(--transition-fast), color var(--transition-fast), gap 0.3s var(--sidebar-ease);
+}
+
+.sidebar-logout-label {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 160px;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.16s ease, max-width 0.3s var(--sidebar-ease), transform 0.24s var(--sidebar-ease);
 }
 
 .sidebar-logout:hover {
@@ -761,6 +1076,109 @@ onMounted(() => {
 .sidebar-logout:focus-visible {
   outline: 2px solid #fca5a5;
   outline-offset: -2px;
+}
+
+/* ------------------------------------------------------------ collapsed desktop icon rail */
+.sidebar.is-collapsed .sidebar-nav {
+  scrollbar-width: none;
+}
+
+.sidebar.is-collapsed .sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar.is-collapsed .sidebar-header,
+.sidebar.is-collapsed .sidebar-nspq,
+.sidebar.is-collapsed .sidebar-link,
+.sidebar.is-collapsed .sidebar-user,
+.sidebar.is-collapsed .sidebar-logout {
+  gap: 0;
+}
+
+.sidebar.is-collapsed .sidebar-title,
+.sidebar.is-collapsed .sidebar-nspq-text,
+.sidebar.is-collapsed .sidebar-link-label,
+.sidebar.is-collapsed .sidebar-user-info,
+.sidebar.is-collapsed .sidebar-logout-label {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+}
+
+.sidebar.is-collapsed .sidebar-nspq-external {
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Group headers collapse gracefully into quiet centered gold hairlines */
+.sidebar.is-collapsed .sidebar-section {
+  padding: 10px 10px 8px;
+  gap: 0;
+  justify-content: center;
+  cursor: default;
+  pointer-events: none;
+}
+
+.sidebar.is-collapsed .sidebar-section::before {
+  width: 24px;
+  height: 1px;
+  transform: rotate(0deg);
+  opacity: 0.38;
+}
+
+.sidebar.is-collapsed .sidebar-group-title,
+.sidebar.is-collapsed .sidebar-chevron {
+  max-width: 0;
+  width: 0;
+  flex: 0;
+  opacity: 0;
+}
+
+.sidebar.is-collapsed .sidebar-link.active::after {
+  width: 0;
+  margin-left: 0;
+  opacity: 0;
+}
+
+/* Compact corner badge over the icon when collapsed */
+.sidebar.is-collapsed .sidebar-link .sidebar-badge {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  margin-left: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.65rem;
+  box-shadow: 0 0 0 2px #03291d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .sidebar-collapse-icon,
+  .sidebar-tooltip,
+  .sidebar-header,
+  .sidebar-title,
+  .sidebar-nspq,
+  .sidebar-nspq-text,
+  .sidebar-nspq-external,
+  .sidebar-section,
+  .sidebar-section::before,
+  .sidebar-group-title,
+  .sidebar-chevron,
+  .sidebar-link,
+  .sidebar-link-label,
+  .sidebar-link.active::after,
+  .sidebar-badge,
+  .sidebar-user,
+  .sidebar-user-info,
+  .sidebar-logout,
+  .sidebar-logout-label {
+    transition: none;
+  }
 }
 
 /* ------------------------------------------------------------ main work area */
@@ -820,7 +1238,7 @@ onMounted(() => {
   }
 
   .loading-overlay {
-    left: 280px !important;
+    left: var(--sidebar-w) !important;
   }
 }
 
