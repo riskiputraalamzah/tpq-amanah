@@ -975,11 +975,29 @@ async function saveActivity(payload) {
     busy.value = false
   }
 }
-const toggleClosed = () => act(async () => {
+const toggleClosed = async () => {
   const x = a.value
-  await api.put(`/activities/${id}`, { ...x, status: x.status === 'open' ? 'closed' : 'open' })
-  await load(true)
-})
+  const closing = x.status === 'open'
+  const ok = await ask(
+    closing
+      ? {
+          title: 'Tutup kegiatan ini?',
+          message: `Status "${x.title}" akan berubah menjadi Selesai. Data peserta, pembayaran, persyaratan, dan riwayat info tetap aman (tidak terhapus), namun selama ditutup tidak bisa menambah peserta atau mengirim info WA baru. Kegiatan tetap bisa dibuka lagi kapan saja.`,
+          confirmText: 'Ya, tutup kegiatan',
+        }
+      : {
+          title: 'Buka lagi kegiatan ini?',
+          message: `Status "${x.title}" akan kembali menjadi Berjalan sehingga bisa menambah peserta dan mengirim info WA ke wali lagi.`,
+          confirmText: 'Ya, buka lagi',
+        },
+  )
+  if (!ok) return
+  return act(async () => {
+    await api.put(`/activities/${id}`, { ...x, status: closing ? 'closed' : 'open' })
+    await load(true)
+    toast.success(closing ? 'Kegiatan ditutup (status Selesai). Data tetap tersimpan aman.' : 'Kegiatan dibuka kembali (status Berjalan).')
+  })
+}
 const removeActivity = async () => {
   const ok = await ask({
     title: 'Hapus kegiatan?',

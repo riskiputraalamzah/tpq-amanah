@@ -114,6 +114,8 @@ test("kegiatan info & Portal Wali wiring: WYSIWYG sheet, sendNow, delete info, P
   assert.ok(has(detail, "v-model=\"infoSendNow\""));
   assert.ok(has(detail, "Salin WA"));
   assert.ok(has(detail, "Belum tertaut WA"));
+  assert.ok(has(detail, "title: 'Tutup kegiatan ini?'"));
+  assert.ok(has(detail, "title: 'Buka lagi kegiatan ini?'"));
 
   // Portal Wali: compact preview in Kegiatan -> dedicated DESC info page -> Pengumuman feed + badge
   const waliKegiatan = read("src/views/wali/WaliKegiatan.vue");
