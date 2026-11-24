@@ -434,6 +434,146 @@ textarea.kg-input {
   border-radius: 20px 20px 0 0;
   background: #fbf9f3;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.3);
+  animation: kg-sheet-up 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kg-sheet-lg {
+  max-width: 640px;
+}
+
+@keyframes kg-sheet-up {
+  from {
+    opacity: 0.7;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kg-sheet-title-wrap {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kg-head-info {
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.kg-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.kg-title-row h1 {
+  margin: 0;
+}
+
+.kg-title-row .kg-pill {
+  margin-left: 0;
+}
+
+.kg-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.kg-btn-wa {
+  flex: 1 1 100%;
+  min-height: 44px;
+  font-size: 0.92rem;
+}
+
+@media (min-width: 640px) {
+  .kg-head-actions {
+    width: auto;
+  }
+  .kg-btn-wa {
+    flex: none;
+    min-height: 38px;
+    font-size: 0.85rem;
+  }
+}
+
+.kg-head-sub {
+  margin: 2px 0 0;
+}
+
+.kg-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 12px 24px;
+}
+
+.kg-empty-box .kg-empty {
+  padding: 0;
+}
+
+.kg-contact-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #eef6f1;
+  border: 1px solid rgba(10, 92, 64, 0.18);
+}
+
+.kg-contact-chip-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kg-contact-editor {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.kg-link-btn {
+  border: 0;
+  background: none;
+  padding: 4px 6px;
+  color: var(--emerald);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kg-btn-copy-foot {
+  flex: 0 1 auto !important;
+  min-width: 104px;
+}
+
+.kg-btn-send-foot {
+  flex: 1 1 0 !important;
+}
+
+.kg-btn-copied {
+  background: #e3f1ea;
+  border-color: rgba(10, 92, 64, 0.35);
+  color: #0a5c40;
+}
+
+.kg-upd-card.is-newest {
+  border-color: rgba(10, 92, 64, 0.28);
+  background: #f5fbf7;
 }
 
 @media (min-width: 640px) {

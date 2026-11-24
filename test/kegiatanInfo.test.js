@@ -105,13 +105,14 @@ test("kegiatan access guard: restricted to admin and kegiatan-manage in router a
   assert.equal(guruSection.includes("/dashboard/kegiatan"), false);
 });
 
-test("kegiatan info & Portal Wali wiring: WYSIWYG, sendNow, delete info, Pengumuman feed & dedicated DESC info page", () => {
+test("kegiatan info & Portal Wali wiring: WYSIWYG sheet, sendNow, delete info, Pengumuman feed & dedicated DESC info page", () => {
   const detail = read("src/views/dashboard/guru/KegiatanDetailView.vue");
+  assert.ok(has(detail, "@click=\"openInfoSheet\""));
   assert.ok(has(detail, "<WaRichEditor"));
   assert.ok(has(detail, "api.post(`/activities/${id}/info`, payload)"));
   assert.ok(has(detail, "api.delete(`/activities/${id}/info/${u.id}`)"));
   assert.ok(has(detail, "v-model=\"infoSendNow\""));
-  assert.ok(has(detail, "Salin pesan (format WA)"));
+  assert.ok(has(detail, "Salin WA"));
   assert.ok(has(detail, "Belum tertaut WA"));
 
   // Portal Wali: compact preview in Kegiatan -> dedicated DESC info page -> Pengumuman feed + badge

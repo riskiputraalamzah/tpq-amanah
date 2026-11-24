@@ -15,13 +15,13 @@
       </button>
       <span class="wa-tb-sep" aria-hidden="true"></span>
       <button type="button" class="wa-tb" title="Daftar poin (- )" aria-label="Daftar poin" :disabled="disabled" @click="fmt('bullet')">
-        • List
+        •
       </button>
       <button type="button" class="wa-tb" title="Daftar bernomor (1. )" aria-label="Daftar bernomor" :disabled="disabled" @click="fmt('number')">
-        1. List
+        1.
       </button>
       <button type="button" class="wa-tb" title="Kutipan (> )" aria-label="Kutipan" :disabled="disabled" @click="fmt('quote')">
-        ❝ Kutip
+        ❝
       </button>
       <button
         type="button"
@@ -58,20 +58,26 @@
       :maxlength="maxlength"
       :placeholder="placeholder"
       :disabled="disabled"
-      rows="6"
+      :rows="rows"
       @input="$emit('update:modelValue', $event.target.value)"
       @keydown="onKeydown"
     ></textarea>
 
     <div class="wa-ed-foot">
-      <span class="wa-ed-hint">Format otomatis kompatibel WhatsApp: <code>*tebal*</code>, <code>_miring_</code>, <code>~coret~</code>, <code>- poin</code></span>
-      <span class="wa-ed-count" :class="{ 'is-near': charCount > maxlength - 150 }">{{ charCount }} / {{ maxlength }}</span>
+      <span class="wa-ed-hint">Kompatibel WhatsApp: <code>*tebal*</code> <code>_miring_</code> <code>~coret~</code></span>
+      <span class="wa-ed-count" :class="{ 'is-near': charCount > maxlength - 150 }">{{ charCount }}/{{ maxlength }}</span>
     </div>
 
     <div v-if="showPreview" class="wa-preview-box">
       <button type="button" class="wa-preview-toggle" :aria-expanded="previewOpen" @click="previewOpen = !previewOpen">
-        <span>Pratinjau Tampilan WhatsApp</span>
-        <span class="wa-preview-chev">{{ previewOpen ? 'Sembunyikan' : 'Tampilkan' }}</span>
+        <span class="wa-preview-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          Pratinjau pesan di WhatsApp
+        </span>
+        <span class="wa-preview-chev">{{ previewOpen ? 'Tutup ▴' : 'Lihat ▾' }}</span>
       </button>
       <div v-if="previewOpen" class="wa-preview-stage">
         <p v-if="previewCaption" class="wa-preview-cap">{{ previewCaption }}</p>
@@ -92,10 +98,12 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   inputId: { type: String, default: 'wa-rich-input' },
   maxlength: { type: Number, default: 2000 },
+  rows: { type: Number, default: 5 },
   placeholder: { type: String, default: 'Tulis informasi penting untuk wali santri…' },
   previewText: { type: String, default: '' },
   previewCaption: { type: String, default: '' },
   showPreview: { type: Boolean, default: true },
+  defaultPreviewOpen: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
 })
 
@@ -105,7 +113,7 @@ const EMOJIS = ['📌', '📅', '⏰', '📍', '📝', '✅', '⚠️', '🤲', 
 
 const taRef = ref(null)
 const showEmoji = ref(false)
-const previewOpen = ref(true)
+const previewOpen = ref(props.defaultPreviewOpen)
 
 const charCount = computed(() => String(props.modelValue || '').length)
 const previewHtml = computed(() => renderWaMarkdownHtml(props.previewText || props.modelValue || ''))
@@ -147,6 +155,12 @@ function onKeydown(event) {
     fmt('italic')
   }
 }
+
+function focusInput() {
+  taRef.value?.focus()
+}
+
+defineExpose({ focusInput })
 </script>
 
 <style scoped>
@@ -157,29 +171,37 @@ function onKeydown(event) {
 
 .wa-ed-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   border: 1px solid rgba(11, 59, 42, 0.2);
   border-bottom: 0;
   border-radius: 12px 12px 0 0;
   background: #f4f8f5;
 }
 
+.wa-ed-bar::-webkit-scrollbar {
+  display: none;
+}
+
 .wa-tb {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0 9px;
+  min-width: 38px;
+  min-height: 36px;
+  padding: 0 10px;
   border: 1px solid rgba(11, 59, 42, 0.16);
-  border-radius: 8px;
+  border-radius: 9px;
   background: #fff;
   color: #0b3b2a;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -201,6 +223,7 @@ function onKeydown(event) {
 }
 
 .wa-tb-sep {
+  flex: none;
   width: 1px;
   height: 20px;
   background: rgba(11, 59, 42, 0.16);
@@ -219,12 +242,12 @@ function onKeydown(event) {
 }
 
 .wa-emoji-btn {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
 }
 
@@ -234,7 +257,7 @@ function onKeydown(event) {
 
 .wa-ed-input {
   width: 100%;
-  min-height: 132px;
+  min-height: 120px;
   margin-top: -8px;
   padding: 12px;
   border: 1px solid rgba(11, 59, 42, 0.22);
@@ -242,7 +265,7 @@ function onKeydown(event) {
   background: #fff;
   color: #0b3b2a;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem; /* prevents iOS zoom on focus */
   line-height: 1.55;
   resize: vertical;
   box-sizing: border-box;
@@ -258,8 +281,8 @@ function onKeydown(event) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 6px 12px;
-  font-size: 0.8rem;
+  gap: 4px 10px;
+  font-size: 0.78rem;
   color: #5b6b62;
 }
 
@@ -268,7 +291,7 @@ function onKeydown(event) {
   border-radius: 4px;
   background: #eef4f0;
   color: #0b3b2a;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
 .wa-ed-count {
@@ -282,7 +305,7 @@ function onKeydown(event) {
 
 .wa-preview-box {
   border: 1px solid rgba(11, 59, 42, 0.14);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   background: #efeae2;
 }
@@ -292,10 +315,9 @@ function onKeydown(event) {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 40px;
+  min-height: 42px;
   padding: 8px 12px;
   border: 0;
-  border-bottom: 1px solid rgba(11, 59, 42, 0.1);
   background: #e7f1eb;
   color: #0b3b2a;
   font: inherit;
@@ -304,13 +326,21 @@ function onKeydown(event) {
   cursor: pointer;
 }
 
+.wa-preview-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
 .wa-preview-chev {
   color: #0a5c40;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .wa-preview-stage {
   padding: 12px;
+  border-top: 1px solid rgba(11, 59, 42, 0.1);
   background: radial-gradient(circle at 12px 12px, rgba(11, 59, 42, 0.04) 1px, transparent 0), #efeae2;
   background-size: 20px 20px;
 }
