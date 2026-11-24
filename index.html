@@ -147,6 +147,105 @@
         ]
       }
     </script>
+    <script>
+      (function () {
+        var BOOT_KEY = "tpq_boot_reload_at";
+        var COOLDOWN_MS = 30000;
+        var WATCHDOG_MS = 8000;
+
+        if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) {
+              reg.unregister();
+            });
+          }).catch(function () {});
+        }
+
+        function forceFreshReload() {
+          var next;
+          try {
+            var u = new URL(window.location.href);
+            u.searchParams.set("_r", String(Date.now()));
+            next = u.toString();
+          } catch (e) {
+            next = window.location.href;
+          }
+          var go = function () {
+            window.location.replace(next);
+          };
+          if ("caches" in window && caches.keys) {
+            Promise.race([
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+              }).catch(function () {}),
+              new Promise(function (resolve) { setTimeout(resolve, 150); })
+            ]).finally(go);
+          } else {
+            go();
+          }
+        }
+
+        function tryAutoReload() {
+          if (window.__TPQ_BOOTED__ || navigator.onLine === false) return false;
+          try {
+            var now = Date.now();
+            var last = Number(sessionStorage.getItem(BOOT_KEY));
+            if (isFinite(last) && last > 0 && now - last < COOLDOWN_MS) return false;
+            sessionStorage.setItem(BOOT_KEY, String(now));
+          } catch (e) {
+            return false;
+          }
+          forceFreshReload();
+          return true;
+        }
+
+        function showRecovery(msg) {
+          var apply = function () {
+            if (window.__TPQ_BOOTED__) return;
+            var box = document.getElementById("initial-loader-recovery");
+            var label = document.getElementById("initial-loader-msg");
+            var btn = document.getElementById("initial-loader-retry");
+            if (label && msg) label.textContent = msg;
+            if (box) box.style.display = "flex";
+            if (btn && !btn.dataset.bound) {
+              btn.dataset.bound = "1";
+              btn.addEventListener("click", forceFreshReload);
+            }
+          };
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", apply, { once: true });
+          } else {
+            apply();
+          }
+        }
+
+        window.addEventListener(
+          "error",
+          function (e) {
+            if (window.__TPQ_BOOTED__) return;
+            var el = e && e.target;
+            if (!el || (el.tagName !== "SCRIPT" && el.tagName !== "LINK")) return;
+            var src = el.src || el.href || "";
+            if (src.indexOf("/assets/") === -1) return;
+            if (!tryAutoReload()) {
+              showRecovery("Versi aplikasi baru sedang dimuat. Ketuk Muat Ulang.");
+            }
+          },
+          true
+        );
+
+        setTimeout(function () {
+          if (window.__TPQ_BOOTED__ || !document.getElementById("initial-loader")) return;
+          if (navigator.onLine === false) {
+            showRecovery("Periksa koneksi internet Anda, lalu muat ulang.");
+            return;
+          }
+          if (!tryAutoReload()) {
+            showRecovery("Aplikasi terlalu lama dimuat. Ketuk Muat Ulang.");
+          }
+        }, WATCHDOG_MS);
+      })();
+    </script>
   </head>
   <body>
     <div id="app">
@@ -249,6 +348,50 @@
               animation: shimmer 1.2s ease-in-out infinite;
             "
           ></div>
+
+          <!-- Recovery panel shown only if boot takes too long or user is offline -->
+          <div
+            id="initial-loader-recovery"
+            style="
+              display: none;
+              flex-direction: column;
+              align-items: center;
+              gap: 0.75rem;
+              margin-top: 0.5rem;
+              text-align: center;
+              padding: 0 1.25rem;
+            "
+          >
+            <p
+              id="initial-loader-msg"
+              style="
+                font-family: system-ui, sans-serif;
+                font-size: 0.85rem;
+                color: rgba(255, 255, 255, 0.9);
+                margin: 0;
+              "
+            >
+              Memuat lebih lama dari biasanya...
+            </p>
+            <button
+              id="initial-loader-retry"
+              type="button"
+              style="
+                font-family: system-ui, sans-serif;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #14532d;
+                background: #ffd54f;
+                border: none;
+                border-radius: 999px;
+                padding: 0.55rem 1.25rem;
+                cursor: pointer;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+              "
+            >
+              Muat Ulang
+            </button>
+          </div>
         </div>
       </div>
 

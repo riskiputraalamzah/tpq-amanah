@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { applyThemeColor } from "@/utils/themeColor";
+import { isChunkLoadError, recoverFromChunkError } from "@/utils/chunkRecovery";
 
 import HomeView from "../views/HomeView.vue";
 import { useAuthStore } from "../stores/auth";
@@ -375,18 +376,30 @@ function getSafeRedirect(redirect, fallback = "/dashboard") {
 
 let deferredAuthCheckScheduled = false;
 
-// Public pages must not wait for the Firebase SDK, so signed-in visitors are detected after first paint.
-function scheduleDeferredAuthCheck(authStore) {
+// Public pages must not wait for network/Firebase auth, so visitors never get stuck on the splash screen.
+function scheduleDeferredAuthCheck(authStore, delayMs = 1500) {
   if (deferredAuthCheckScheduled) return;
   deferredAuthCheckScheduled = true;
   setTimeout(async () => {
     if (authStore.authChecked) return;
-    await authStore.checkAuth();
+    try {
+      await authStore.checkAuth();
+    } catch {
+      return;
+    }
     const current = router.currentRoute.value;
     if (current.name === "Login" && authStore.isAuthenticated) {
-      router.replace(getSafeRedirect(current.query.redirect));
+      const isWali = authStore.user?.role === "wali";
+      const target = getSafeRedirect(current.query.redirect, homeFor(authStore.user));
+      router.replace(
+        isWali && !target.startsWith("/wali")
+          ? "/wali"
+          : !isWali && target.startsWith("/wali")
+            ? "/dashboard"
+            : target,
+      );
     }
-  }, 1500);
+  }, delayMs);
 }
 
 function revalidateCachedSession(authStore) {
@@ -407,10 +420,14 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
   if (!authStore.authChecked) {
-    if (to.meta.requiresAuth || authStore.token) {
-      await authStore.checkAuth();
+    if (to.meta.requiresAuth) {
+      try {
+        await authStore.checkAuth();
+      } catch {
+        // Guard against unexpected auth errors so initial navigation still resolves
+      }
     } else {
-      scheduleDeferredAuthCheck(authStore);
+      scheduleDeferredAuthCheck(authStore, authStore.token ? 0 : 1500);
     }
   } else {
     revalidateCachedSession(authStore);
@@ -457,11 +474,8 @@ router.beforeEach(async (to, from, next) => {
 
 // After a new deploy, chunks referenced by an already-open tab no longer exist.
 router.onError((error, to) => {
-  if (!/dynamically imported module|Importing a module script failed/i.test(error?.message || "")) return;
-  const reloadKey = `tpq_chunk_reload:${to.fullPath}`;
-  if (sessionStorage.getItem(reloadKey)) return;
-  sessionStorage.setItem(reloadKey, "1");
-  window.location.assign(to.fullPath);
+  if (!isChunkLoadError(error)) return;
+  recoverFromChunkError(to?.fullPath);
 });
 
 // The browser's own bars (status bar, address bar) take the colour of the area: dashboard and wali portal are dark green

@@ -6,6 +6,14 @@ import { withAliases } from '../utils/guruRights'
 const CACHED_USER_KEY = 'tpq_user'
 const SESSION_INVALID_STATUSES = [401, 403, 404]
 
+function readStoredToken() {
+    try {
+        return localStorage.getItem('tpq_token') || null
+    } catch {
+        return null
+    }
+}
+
 function readCachedUser() {
     try {
         const cached = JSON.parse(localStorage.getItem(CACHED_USER_KEY))
@@ -66,7 +74,7 @@ async function getFirebase() {
 }
 
 export const useAuthStore = defineStore('auth', () => {
-    const token = ref(localStorage.getItem('tpq_token') || null)
+    const token = ref(readStoredToken())
     const user = ref(token.value ? readCachedUser() : null)
     // an account that still has an old access id ("Export PDF") sees what it became ("Rekap Absensi")
     watch(user, (u) => {
@@ -100,10 +108,18 @@ export const useAuthStore = defineStore('auth', () => {
     const setToken = (newToken) => {
         token.value = newToken
         if (newToken) {
-            localStorage.setItem('tpq_token', newToken)
+            try {
+                localStorage.setItem('tpq_token', newToken)
+            } catch {
+                // Storage unavailable
+            }
             api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
         } else {
-            localStorage.removeItem('tpq_token')
+            try {
+                localStorage.removeItem('tpq_token')
+            } catch {
+                // Storage unavailable
+            }
             delete api.defaults.headers.common['Authorization']
         }
     }
@@ -166,47 +182,68 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function runAuthCheck() {
-        if (token.value) {
-            api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-            try {
-                const { data } = await api.get('/auth/verify', { cache: false })
-                user.value = data
-                authChecked.value = true
-                sessionVerified = true
-                return
-            } catch (err) {
-                if (!SESSION_INVALID_STATUSES.includes(err.response?.status)) {
-                    // Network or server trouble must not log the user out; the next load retries.
-                    authChecked.value = true
+        try {
+            if (token.value) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+                try {
+                    const { data } = await api.get('/auth/verify', { cache: false })
+                    user.value = data
+                    sessionVerified = true
                     return
-                }
-                console.log('Token expired, clearing...')
-                setToken(null)
-            }
-        }
-
-        // Also check Firebase auth state (lazy load Firebase)
-        const { auth: firebaseAuth } = await getFirebase()
-        const { onAuthStateChanged } = await import('firebase/auth')
-
-        return new Promise((resolve) => {
-            const unsubscribe = onAuthStateChanged(firebaseAuth, async (fbUser) => {
-                firebaseUser.value = fbUser
-                if (fbUser && !user.value) {
-                    try {
-                        const fbToken = await fbUser.getIdToken()
-                        api.defaults.headers.common['Authorization'] = `Bearer ${fbToken}`
-                        const { data } = await api.get('/users/me')
-                        user.value = data
-                    } catch (err) {
-                        console.error('Failed to get user profile:', err)
+                } catch (err) {
+                    if (!SESSION_INVALID_STATUSES.includes(err.response?.status)) {
+                        // Network or server trouble must not log the user out; the next load retries.
+                        return
                     }
+                    console.log('Token expired, clearing...')
+                    setToken(null)
                 }
-                authChecked.value = true
-                unsubscribe()
-                resolve()
+            }
+
+            if (!firebaseConfig.apiKey) return
+
+            // Also check Firebase auth state (lazy load Firebase), capped so a wedged IndexedDB never hangs boot
+            const { auth: firebaseAuth } = await getFirebase()
+            const { onAuthStateChanged } = await import('firebase/auth')
+
+            await new Promise((resolve) => {
+                let settled = false
+                let unsubscribe = null
+                const finish = () => {
+                    if (settled) return
+                    settled = true
+                    clearTimeout(timer)
+                    if (typeof unsubscribe === 'function') {
+                        try { unsubscribe() } catch {}
+                    }
+                    resolve()
+                }
+                const timer = setTimeout(finish, 4000)
+
+                unsubscribe = onAuthStateChanged(
+                    firebaseAuth,
+                    async (fbUser) => {
+                        firebaseUser.value = fbUser
+                        if (fbUser && !user.value) {
+                            try {
+                                const fbToken = await fbUser.getIdToken()
+                                api.defaults.headers.common['Authorization'] = `Bearer ${fbToken}`
+                                const { data } = await api.get('/users/me')
+                                user.value = data
+                            } catch (err) {
+                                console.error('Failed to get user profile:', err)
+                            }
+                        }
+                        finish()
+                    },
+                    () => finish()
+                )
             })
-        })
+        } catch (err) {
+            console.error('Auth check failed safely:', err)
+        } finally {
+            authChecked.value = true
+        }
     }
 
     // Login dengan username/password (untuk Admin dan Guru)
