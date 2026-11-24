@@ -240,6 +240,7 @@ const SPECIAL_MENUS = [
   { id: 'admin-attendance-view', to: '/dashboard/admin-attendance', label: 'Rekap Absensi', icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="M12 16v-4" /><path d="M8 16v-2" /><path d="M16 16v-3" />' },
   { id: 'kbm-monitor', to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: '<rect x="3" y="4" width="18" height="16" rx="2" /><polyline points="7 13 10 16 17 9" />' },
   { id: 'pendaftaran', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />' },
+  { id: 'kegiatan-manage', to: '/dashboard/kegiatan', label: 'Kegiatan', icon: '<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />' },
   { id: 'wa-log', to: '/dashboard/wa-log', label: 'Riwayat WA Bot', icon: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />' },
 ];
 // ---- the side menu, grouped by what the person is doing ----
@@ -337,7 +338,6 @@ const menuGroups = computed(() => {
       items: [
         { to: '/dashboard/santri', label: 'Data Santri', icon: ICON.santri },
         { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
-        { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
         { to: '/dashboard/savings', label: 'Tabungan', icon: ICON.coin },
       ],
     },

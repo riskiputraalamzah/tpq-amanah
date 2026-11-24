@@ -11,8 +11,7 @@
     <PageSkeleton v-if="loading" :rows="4" label="Memuat kegiatan" />
     <p v-else-if="loadError" class="kg-note is-danger" role="alert">{{ loadError }}</p>
     <p v-else-if="!activities.length" class="kg-empty">
-      Belum ada kegiatan.<template v-if="canManage"> Tekan <strong>+ Kegiatan baru</strong> untuk membuat yang pertama.</template>
-      <template v-else> Admin akan menambahkannya.</template>
+      Belum ada kegiatan. Tekan <strong>+ Kegiatan baru</strong> untuk membuat yang pertama.
     </p>
 
     <ul v-else class="kg-list">
@@ -22,7 +21,10 @@
             <strong>{{ a.title }}</strong>
             <span class="kg-pill" :class="a.status === 'open' ? 'is-ok' : 'is-idle'">{{ a.status === 'open' ? 'Berjalan' : 'Selesai' }}</span>
           </span>
-          <span class="kg-sub">{{ a.typeLabel }}<template v-if="a.date"> · {{ dayLabel(a.date) }}</template></span>
+          <span class="kg-sub">
+            {{ a.typeLabel }}<template v-if="a.date"> · {{ dayLabel(a.date) }}</template>
+            <template v-if="a.createdByName"> · oleh {{ a.createdByName }}</template>
+          </span>
           <span class="kg-meta">
             <span><strong>{{ a.participantCount }}</strong> peserta</span>
             <span v-if="a.fee">Biaya {{ formatRupiah(a.fee) }}</span>

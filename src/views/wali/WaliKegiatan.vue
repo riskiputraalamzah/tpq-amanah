@@ -39,6 +39,30 @@
           </ul>
           <p v-if="doneCount(k) < k.requirements.length && !k.closed" class="w-help">Hubungi ustadz/ustadzah untuk melengkapi persyaratan yang belum.</p>
         </div>
+
+        <div v-if="k.updates && k.updates.length" class="k-block k-updates">
+          <span class="k-label">Info terbaru kegiatan</span>
+          <ul class="k-upd-list">
+            <li v-for="u in k.updates" :key="u.id" class="k-upd-item">
+              <div class="k-upd-meta">
+                <span>{{ formatWibDateTime(u.createdAt) }}</span>
+                <span v-if="u.createdByName">· {{ u.createdByName }}</span>
+              </div>
+              <div class="k-upd-body wa-rich" v-html="renderWaMarkdownHtml(u.body)"></div>
+              <div v-if="normalizeWaPhone(u.contactPhone)" class="k-upd-contact">
+                <span class="w-help">Ada yang kurang jelas? Hubungi langsung pengajar:</span>
+                <a
+                  :href="`https://wa.me/${normalizeWaPhone(u.contactPhone)}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="k-wa-link"
+                >
+                  Hubungi {{ u.contactName || 'Ustadz/ustadzah' }} via WhatsApp ({{ formatLocalPhone(u.contactPhone) }})
+                </a>
+              </div>
+            </li>
+          </ul>
+        </div>
       </article>
 
       <h2 class="w-section-title">Tabungan ananda</h2>
@@ -68,6 +92,7 @@ import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { PAYMENT_TONE, STATUS_TONE, dayLabel, formatRupiah, paymentLine } from '@/utils/kegiatan'
+import { formatLocalPhone, formatWibDateTime, normalizeWaPhone, renderWaMarkdownHtml } from '@/utils/waFormat'
 
 const route = useRoute()
 const data = ref(null)
@@ -194,6 +219,101 @@ onMounted(async () => {
   width: 18px;
   text-align: center;
   font-weight: 800;
+}
+
+.k-updates {
+  width: 100%;
+}
+
+.k-upd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.k-upd-item {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f5f9f6;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+}
+
+.k-upd-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #5b6b62;
+}
+
+.k-upd-body {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #163024;
+  overflow-wrap: anywhere;
+}
+
+.k-upd-contact {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(11, 59, 42, 0.14);
+}
+
+.k-wa-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #e3f1ea;
+  border: 1px solid rgba(10, 92, 64, 0.25);
+  color: #0a5c40;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.k-wa-link:hover {
+  background: #d2eadf;
+}
+
+.wa-rich :deep(.wa-line) { min-height: 1.2em; }
+.wa-rich :deep(.wa-gap) { height: 8px; }
+.wa-rich :deep(.wa-quote) {
+  margin: 4px 0;
+  padding: 4px 10px;
+  border-left: 3px solid #0a5c40;
+  border-radius: 4px;
+  background: rgba(10, 92, 64, 0.07);
+}
+.wa-rich :deep(.wa-li) {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.wa-rich :deep(.wa-li-mark) {
+  flex: none;
+  font-weight: 700;
+}
+.wa-rich :deep(.wa-mono) {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(11, 59, 42, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+}
+.wa-rich :deep(.wa-link) {
+  color: #027eb5;
+  text-decoration: underline;
 }
 
 .t-total {

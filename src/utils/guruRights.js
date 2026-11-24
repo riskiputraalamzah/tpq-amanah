@@ -7,7 +7,6 @@ export const GURU_DEFAULT_RIGHTS = [
   'Data Santri jilidnya: naik jilid, ubah nama, usulkan santri baru',
   'Data Wali Santri jilidnya: kode dan slip, pengingat ke wali, pengajuan & lepas tautan',
   'Verifikasi data wali, NIK/KK, dan foto KK: hanya untuk jilid yang ditetapkan admin di Kelola Pengajar',
-  'Peserta kegiatan dari jilidnya',
 ]
 
 // What a guru never gets, whatever is ticked
@@ -27,7 +26,7 @@ export const ACCESS_CARDS = [
   { id: 'kbm-monitor', label: 'Monitor KBM', hint: 'Kelengkapan KBM semua guru', to: '/dashboard/kbm-monitor', icon: 'check' },
   { id: 'pendaftaran', label: 'Pendaftaran santri', hint: 'Pendaftar baru dan usulan santri dari guru', to: '/dashboard/pendaftaran', icon: 'file' },
   { id: 'wa-log', label: 'Riwayat WA Bot', hint: 'Semua pesan bot WhatsApp', to: '/dashboard/wa-log', icon: 'clock' },
-  { id: 'kegiatan-manage', label: 'Kelola kegiatan', hint: 'Buat dan ubah kegiatan, peserta semua jilid', to: '/dashboard/kegiatan', icon: 'star' },
+  { id: 'kegiatan-manage', label: 'Kelola kegiatan', hint: 'Buat kegiatan sendiri, lihat kegiatan admin, dan kirim info WA ke wali peserta', to: '/dashboard/kegiatan', icon: 'star' },
   { id: 'all-jilid', label: 'Semua jilid', hint: 'Lihat santri, data wali, dan izin semua jilid', to: '/dashboard/santri', icon: 'users' },
   { id: 'absen-santri-backdate', label: 'Absen Santri tanpa batas hari', hint: 'Isi atau ubah absen hari-hari lalu', to: '/dashboard/absen-santri', icon: 'calendar' },
 ]

@@ -292,13 +292,13 @@ const routes = [
         path: "kegiatan",
         name: "Kegiatan",
         component: () => import("../views/dashboard/guru/KegiatanView.vue"),
-        meta: { role: ["guru", "admin"] },
+        meta: { role: "admin", feature: "kegiatan-manage" },
       },
       {
         path: "kegiatan/:id",
         name: "KegiatanDetail",
         component: () => import("../views/dashboard/guru/KegiatanDetailView.vue"),
-        meta: { role: ["guru", "admin"] },
+        meta: { role: "admin", feature: "kegiatan-manage" },
       },
       {
         path: "tpq-profile",

@@ -511,6 +511,261 @@ textarea.kg-input {
   background: #fff;
 }
 
+.kg-pick-sm {
+  max-height: 240px;
+}
+
+.kg-pick-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+/* tabs */
+.kg-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: #e9f1ec;
+  border: 1px solid var(--line);
+}
+
+.kg-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--body);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kg-tab[aria-selected="true"] {
+  background: #fff;
+  color: var(--emerald);
+  box-shadow: 0 1px 3px rgba(11, 59, 42, 0.12);
+}
+
+.kg-tab:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.kg-tab-count {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(10, 92, 64, 0.12);
+  color: var(--emerald);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kg-wa-ok {
+  color: #0a5c40;
+  font-weight: 600;
+}
+
+.kg-wa-miss {
+  color: #9a4a0c;
+  font-weight: 600;
+}
+
+/* info ke wali composer & history */
+.kg-info-wrap {
+  display: grid;
+  gap: 12px;
+}
+
+.kg-info-form {
+  display: grid;
+  gap: 14px;
+}
+
+.kg-info-lead {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.kg-info-picker {
+  display: grid;
+  gap: 8px;
+}
+
+.kg-target-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kg-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .kg-contact-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.kg-check-urgent {
+  padding: 10px 12px;
+  align-items: flex-start;
+  background: #f5f9f6;
+  border: 1px solid var(--line);
+}
+
+.kg-block-sub {
+  display: block;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.kg-info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kg-info-actions .kg-btn {
+  flex: 1 1 200px;
+}
+
+.kg-result-note {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  border: 1px solid rgba(10, 92, 64, 0.25);
+}
+
+.kg-unlinked-box {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fffbeb;
+  border: 1px solid #f3d58b;
+}
+
+.kg-unlinked-box p {
+  margin: 4px 0 0;
+}
+
+.kg-unlinked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.kg-unlinked-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  font-weight: 600;
+}
+
+.kg-upd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.kg-upd-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fbfdfb;
+}
+
+.kg-upd-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.kg-upd-body {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.08);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #163024;
+  overflow-wrap: anywhere;
+}
+
+.kg-upd-contact {
+  margin: 0;
+}
+
+.kg-upd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kg-upd-actions {
+  padding-top: 2px;
+}
+
+/* shared WA formatted rich text inside history */
+.wa-rich .wa-line { min-height: 1.2em; }
+.wa-rich .wa-gap { height: 8px; }
+.wa-rich .wa-quote {
+  margin: 4px 0;
+  padding: 4px 10px;
+  border-left: 3px solid #0a5c40;
+  border-radius: 4px;
+  background: rgba(10, 92, 64, 0.07);
+}
+.wa-rich .wa-li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.wa-rich .wa-li-mark {
+  flex: none;
+  font-weight: 700;
+}
+.wa-rich .wa-mono {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(11, 59, 42, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+}
+.wa-rich .wa-link {
+  color: #027eb5;
+  text-decoration: underline;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
