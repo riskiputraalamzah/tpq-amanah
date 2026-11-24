@@ -21,3 +21,11 @@ test("Absen Santri: another sesi's jilid is not shown as a bare 0/N; it points t
   assert.ok(has(view, "...groups.value.filter((g) => g.own), ...groups.value.filter((g) => !g.own"), "this sesi's jilid first");
   assert.ok(has(view, "scrollAfterLoad = true"), "after switching sesi, back to the top of the list");
 });
+
+test("Absen Santri: guru has an optional 'Hanya jilid saya' checkbox defaulting to all jilids", () => {
+  assert.ok(has(view, "const onlyMyJilid = ref(false)"), "defaults to all jilids");
+  assert.ok(has(view, "api.get('/santri-changes/me', { cache: false })"), "reads guru's actual taught jilids even with all-jilid access");
+  assert.ok(has(view, `v-if="!isAdmin && myClassIds.length" class="as-my-toggle"`));
+  assert.ok(has(view, `v-model="onlyMyJilid" type="checkbox"`));
+  assert.ok(has(view, "Hanya jilid saya"));
+});

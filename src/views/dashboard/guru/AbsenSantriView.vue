@@ -53,6 +53,7 @@
           </span>
         </template>
         <template v-else>
+          <span v-if="onlyMyJilid && myJilidLabel" class="as-scope-tag">{{ myJilidLabel }}</span>
           <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
           <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
           <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
@@ -171,17 +172,29 @@
       </p>
 
       <!-- the parents told the TPQ ahead through the portal -->
-      <p v-if="fromWali.length" class="as-note as-wali-note" role="status">
-        <strong>{{ fromWali.length }} izin/sakit dari wali</strong> di sesi ini:
-        {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat dan barisnya dikunci supaya tidak
+      <p v-if="shownFromWali.length" class="as-note as-wali-note" role="status">
+        <strong>{{ shownFromWali.length }} izin/sakit dari wali</strong> di {{ onlyMyJilid && myJilidLabel ? myJilidLabel : 'sesi ini' }}:
+        {{ shownFromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat dan barisnya dikunci supaya tidak
         terubah tanpa sengaja<template v-if="sheet.canEdit">; ketuk "Ubah status" bila memang perlu menggantinya</template>.
       </p>
 
       <!-- why something was not saved (the server refused it, or the session ended) -->
       <p v-if="saveNote" class="as-note is-warn as-save-note" role="alert">{{ saveNote }}</p>
 
-      <label class="sr-only" for="as-search">Cari nama santri</label>
-      <input id="as-search" ref="listTop" v-model="search" class="as-input as-search" placeholder="Cari nama santri (semua jilid)" />
+      <div class="as-filter-row">
+        <label class="sr-only" for="as-search">Cari nama santri</label>
+        <input
+          id="as-search"
+          ref="listTop"
+          v-model="search"
+          class="as-input as-search"
+          :placeholder="onlyMyJilid && myJilidLabel ? `Cari nama santri (${myJilidLabel})` : 'Cari nama santri (semua jilid)'"
+        />
+        <label v-if="!isAdmin && myClassIds.length" class="as-my-toggle" :class="{ 'is-active': onlyMyJilid }">
+          <input v-model="onlyMyJilid" type="checkbox" />
+          <span>Hanya jilid saya <strong>({{ myJilidLabel }})</strong></span>
+        </label>
+      </div>
 
       <template v-for="g in shownGroups" :key="g.classId">
         <!-- each sesi keeps its own attendance: the other sesi's jilid are said to be so -->
@@ -234,7 +247,7 @@
       </template>
       <p v-if="!shownGroups.length" class="as-empty">Tidak ada santri yang cocok.</p>
 
-      <button v-if="!search && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
+      <button v-if="!search && !onlyMyJilid && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
         {{ showOthers ? 'Sembunyikan jilid lain' : `Ada santri jilid lain yang ikut sesi ${slotLabel}? Tampilkan jilid lain (${otherCount} santri)` }}
       </button>
       <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa. Baris izin/sakit dari wali terkunci.</p>
@@ -300,6 +313,11 @@ const loading = ref(false)
 const loadError = ref('')
 const search = ref('')
 const showOthers = ref(false)
+// Guru quick-focus filter: defaults to all jilids (false); when checked, focuses only on the jilid(s) the guru teaches
+const myClassIds = ref([])
+const onlyMyJilid = ref(false)
+const myJilidLabel = computed(() => myClassIds.value.map((id) => levelName(id)).join(', '))
+const isMyClass = (classId) => myClassIds.value.includes(String(classId || ''))
 const opened = ref({})
 const saveState = ref('idle')
 const saveNote = ref('')
@@ -322,9 +340,13 @@ const recordOf = (id) => records.value[id] || null
 const fromWali = computed(() =>
   Object.entries(records.value)
     .filter(([, r]) => r?.source === 'wali')
-    .map(([id, r]) => ({ id, status: r.status, name: sheet.value?.santri.find((s) => s.id === id)?.name || '' }))
+    .map(([id, r]) => {
+      const s = sheet.value?.santri.find((x) => x.id === id)
+      return { id, status: r.status, name: s?.name || '', classId: s?.classId || '' }
+    })
     .filter((x) => x.name),
 )
+const shownFromWali = computed(() => (onlyMyJilid.value && myClassIds.value.length ? fromWali.value.filter((x) => isMyClass(x.classId)) : fromWali.value))
 const statusOf = (id) => records.value[id]?.status || null
 
 // Titip santri (services/santri_titip_service.js): a child who goes to THIS sesi that day is in the "Titipan" group
@@ -389,7 +411,7 @@ const groupCountText = (g) => (g.own || g.searching
   ? `${g.recorded}/${g.items.length} dicatat`
   : g.recorded ? `${g.recorded} ikut sesi ${slotLabel.value}` : `belum ada yang ikut sesi ${slotLabel.value}`)
 const otherCount = computed(() => otherGroups.value.reduce((n, g) => n + g.items.length, 0))
-const shownGroups = computed(() => {
+const baseGroups = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (q) {
     // a search finds every child, also one dititipkan to the other sesi (shown in their jilid, with the note)
@@ -402,15 +424,36 @@ const shownGroups = computed(() => {
   // the sesi's own jilid first, then (on request, or when someone of another jilid is already recorded) the others
   return [...groups.value.filter((g) => g.own), ...groups.value.filter((g) => !g.own && (showOthers.value || g.recorded > 0))]
 })
+const shownGroups = computed(() => {
+  if (!onlyMyJilid.value || !myClassIds.value.length) return baseGroups.value
+  const q = search.value.trim().toLowerCase()
+  const mine = groups.value
+    .map((g) => {
+      if (g.titip) {
+        const items = g.items.filter((s) => isMyClass(s.classId))
+        return items.length ? { ...g, items, recorded: items.filter((s) => statusOf(s.id)).length } : null
+      }
+      return isMyClass(g.classId) ? g : null
+    })
+    .filter(Boolean)
+  if (!q) return mine
+  const away = (sheet.value?.santri || []).filter((s) => titipAway(s) && isMyClass(s.classId))
+  return mine
+    .map((g) => ({ ...g, items: [...g.items, ...(g.titip ? [] : away.filter((s) => s.classId === g.classId))] }))
+    .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
+    .filter((g) => g.items.length)
+})
 const firstOther = computed(() => shownGroups.value.find((g) => !g.own) || null)
-const isOpen = (g) => g.searching || (opened.value[g.classId] ?? g.own)
+const isOpen = (g) => g.searching || (opened.value[g.classId] ?? (onlyMyJilid.value || g.own))
 const toggle = (classId) => {
   const g = groups.value.find((x) => x.classId === classId)
   opened.value = { ...opened.value, [classId]: !isOpen(g) }
 }
 const counts = computed(() => {
   const c = { hadir: 0, izin: 0, sakit: 0, alfa: 0, none: 0 }
+  const filterMine = onlyMyJilid.value && myClassIds.value.length > 0
   for (const s of sheet.value?.santri || []) {
+    if (filterMine && !isMyClass(s.classId)) continue
     const st = statusOf(s.id)
     if (st) c[st] += 1
     else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1
@@ -787,7 +830,22 @@ onBeforeRouteLeave(async () => {
     tone: 'danger',
   })
 })
+async function loadMyClasses() {
+  if (isAdmin.value) {
+    myClassIds.value = []
+    return
+  }
+  try {
+    // /santri-changes/me always returns the guru's own taught jilid(s), even if they have the "all-jilid" view feature
+    const { data } = await api.get('/santri-changes/me', { cache: false })
+    myClassIds.value = Array.isArray(data?.taughtClassIds) ? data.taughtClassIds.map(String).filter(Boolean) : []
+  } catch {
+    myClassIds.value = []
+  }
+}
+
 onMounted(() => {
+  loadMyClasses()
   load()
   document.addEventListener('visibilitychange', onHide)
   window.addEventListener('online', onOnline)
@@ -1166,8 +1224,77 @@ onBeforeUnmount(() => {
   color: var(--muted);
 }
 
-.as-search {
+.as-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
   margin: 10px 0 12px;
+}
+
+.as-search {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+}
+
+.as-my-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(11, 59, 42, 0.22);
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.as-my-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--emerald);
+  cursor: pointer;
+}
+
+.as-my-toggle strong {
+  color: var(--emerald);
+  font-weight: 800;
+}
+
+.as-my-toggle.is-active {
+  background: #edf7f2;
+  border-color: var(--emerald);
+  color: var(--ink);
+}
+
+.as-my-toggle:has(input:focus-visible) {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-scope-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e3f1ea;
+  color: var(--emerald);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .as-my-toggle {
+    width: 100%;
+  }
 }
 
 .as-note {
