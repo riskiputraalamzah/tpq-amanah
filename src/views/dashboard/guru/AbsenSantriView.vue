@@ -84,7 +84,7 @@
           </span>
         </template>
         <template v-else>
-          <span v-if="onlyMyJilid && myJilidLabel" class="as-scope-tag">{{ myJilidLabel }}</span>
+          <span v-if="myJilidFilterActive && myJilidLabel" class="as-scope-tag">{{ myJilidLabel }}</span>
           <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
           <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
           <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
@@ -204,7 +204,7 @@
 
       <!-- the parents told the TPQ ahead through the portal -->
       <p v-if="shownFromWali.length" class="as-note as-wali-note" role="status">
-        <strong>{{ shownFromWali.length }} izin/sakit dari wali</strong> di {{ onlyMyJilid && myJilidLabel ? myJilidLabel : 'sesi ini' }}:
+        <strong>{{ shownFromWali.length }} izin/sakit dari wali</strong> di {{ myJilidFilterActive && myJilidLabel ? myJilidLabel : 'sesi ini' }}:
         {{ shownFromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat dan barisnya dikunci supaya tidak
         terubah tanpa sengaja<template v-if="sheet.canEdit">; ketuk "Ubah status" bila memang perlu menggantinya</template>.
       </p>
@@ -219,9 +219,9 @@
           ref="listTop"
           v-model="search"
           class="as-input as-search"
-          :placeholder="onlyMyJilid && myJilidLabel ? `Cari nama santri (${myJilidLabel})` : 'Cari nama santri (semua jilid)'"
+          :placeholder="myJilidFilterActive && myJilidLabel ? `Cari nama santri (${myJilidLabel})` : 'Cari nama santri (semua jilid)'"
         />
-        <label v-if="!isAdmin && myClassIds.length" class="as-my-toggle" :class="{ 'is-active': onlyMyJilid }">
+        <label v-if="!isAdmin && mySlotClassIds.length" class="as-my-toggle" :class="{ 'is-active': onlyMyJilid }">
           <input v-model="onlyMyJilid" type="checkbox" />
           <span>Hanya jilid saya <strong>({{ myJilidLabel }})</strong></span>
         </label>
@@ -278,7 +278,7 @@
       </template>
       <p v-if="!shownGroups.length" class="as-empty">Tidak ada santri yang cocok.</p>
 
-      <button v-if="!search && !onlyMyJilid && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
+      <button v-if="!search && !myJilidFilterActive && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
         {{ showOthers ? 'Sembunyikan jilid lain' : `Ada santri jilid lain yang ikut sesi ${slotLabel}? Tampilkan jilid lain (${otherCount} santri)` }}
       </button>
       <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa. Baris izin/sakit dari wali terkunci.</p>
@@ -344,11 +344,19 @@ const loading = ref(false)
 const loadError = ref('')
 const search = ref('')
 const showOthers = ref(false)
-// Guru quick-focus filter: defaults to all jilids (false); when checked, focuses only on the jilid(s) the guru teaches
+// Guru quick-focus filter: defaults to all jilids (false); only applies to the guru's jilid(s) scheduled in THIS sesi
 const myClassIds = ref([])
 const onlyMyJilid = ref(false)
-const myJilidLabel = computed(() => myClassIds.value.map((id) => levelName(id)).join(', '))
-const isMyClass = (classId) => myClassIds.value.includes(String(classId || ''))
+const myUid = computed(() => authStore.user?.id || authStore.user?.uid || '')
+const mySlotClassIds = computed(() => myClassIds.value.filter((id) => (sheet.value?.defaultClassIds || []).includes(id)))
+const myJilidFilterActive = computed(() => onlyMyJilid.value && mySlotClassIds.value.length > 0)
+const myJilidLabel = computed(() => mySlotClassIds.value.map((id) => levelName(id)).join(', '))
+const isMySlotClass = (classId) => mySlotClassIds.value.includes(String(classId || ''))
+const isMyTitip = (s) => titipHere(s) && (isMySlotClass(s.classId) || (!!myUid.value && s.titip?.hostGuruId === myUid.value))
+const isMyTitipId = (id) => {
+  const s = sheet.value?.santri?.find((x) => x.id === id)
+  return !!s && isMyTitip(s)
+}
 const opened = ref({})
 const saveState = ref('idle')
 const saveNote = ref('')
@@ -379,7 +387,7 @@ const fromWali = computed(() =>
     })
     .filter((x) => x.name),
 )
-const shownFromWali = computed(() => (onlyMyJilid.value && myClassIds.value.length ? fromWali.value.filter((x) => isMyClass(x.classId)) : fromWali.value))
+const shownFromWali = computed(() => (myJilidFilterActive.value ? fromWali.value.filter((x) => isMySlotClass(x.classId) || isMyTitipId(x.id)) : fromWali.value))
 const statusOf = (id) => records.value[id]?.status || null
 
 // Titip santri (services/santri_titip_service.js): a child who goes to THIS sesi that day is in the "Titipan" group
@@ -458,35 +466,36 @@ const baseGroups = computed(() => {
   return [...groups.value.filter((g) => g.own), ...groups.value.filter((g) => !g.own && (showOthers.value || g.recorded > 0))]
 })
 const shownGroups = computed(() => {
-  if (!onlyMyJilid.value || !myClassIds.value.length) return baseGroups.value
+  if (!myJilidFilterActive.value) return baseGroups.value
   const q = search.value.trim().toLowerCase()
   const mine = groups.value
+    .filter((g) => g.own)
     .map((g) => {
       if (g.titip) {
-        const items = g.items.filter((s) => isMyClass(s.classId))
+        const items = g.items.filter(isMyTitip)
         return items.length ? { ...g, items, recorded: items.filter((s) => statusOf(s.id)).length } : null
       }
-      return isMyClass(g.classId) ? g : null
+      return isMySlotClass(g.classId) ? g : null
     })
     .filter(Boolean)
   if (!q) return mine
-  const away = (sheet.value?.santri || []).filter((s) => titipAway(s) && isMyClass(s.classId))
+  const away = (sheet.value?.santri || []).filter((s) => titipAway(s) && isMySlotClass(s.classId))
   return mine
     .map((g) => ({ ...g, items: [...g.items, ...(g.titip ? [] : away.filter((s) => s.classId === g.classId))] }))
     .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
     .filter((g) => g.items.length)
 })
 const firstOther = computed(() => shownGroups.value.find((g) => !g.own) || null)
-const isOpen = (g) => g.searching || (opened.value[g.classId] ?? (onlyMyJilid.value || g.own))
+const isOpen = (g) => g.searching || (opened.value[g.classId] ?? g.own)
 const toggle = (classId) => {
   const g = groups.value.find((x) => x.classId === classId)
   opened.value = { ...opened.value, [classId]: !isOpen(g) }
 }
 const counts = computed(() => {
   const c = { hadir: 0, izin: 0, sakit: 0, alfa: 0, none: 0 }
-  const filterMine = onlyMyJilid.value && myClassIds.value.length > 0
+  const filterMine = myJilidFilterActive.value
   for (const s of sheet.value?.santri || []) {
-    if (filterMine && !isMyClass(s.classId)) continue
+    if (filterMine && !isMySlotClass(s.classId) && !isMyTitip(s)) continue
     const st = statusOf(s.id)
     if (st) c[st] += 1
     else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1
@@ -660,6 +669,27 @@ async function alfaToldOk(santriId, status) {
   return ok
 }
 
+// Recording a santri whose scheduled jilid belongs to the OTHER sesi (and not formally titipan here) asks first
+// so a stray tap can never accidentally place a Malam child into Sore (or vice versa). Clearing an existing record never blocks.
+async function otherSlotOk(santriId, nextStatus) {
+  if (!nextStatus) return true
+  const sh = sheet.value
+  const s = sh?.santri?.find((x) => x.id === santriId)
+  if (!s) return true
+  if (titipHere(s) || (sh.defaultClassIds || []).includes(s.classId)) return true
+  const key = `other|${sh.date}|${sh.slot}|${santriId}`
+  if (confirmed.value[key]) return true
+  const stLabel = STATUSES.find((x) => x.key === nextStatus)?.label?.toLowerCase() || nextStatus
+  const ok = await ask({
+    title: `Catat ${s.name} di sesi ${slotLabel.value}?`,
+    message: `${s.name} terdaftar di ${levelName(s.classId)} (jadwal sesi ${otherSlot.value?.label || 'lain'}). Yakin ingin mencatat ${stLabel} di sesi ${slotLabel.value}? Bila rutin pindah sesi, gunakan menu "Titip santri".`,
+    confirmText: `Ya, catat di sesi ${slotLabel.value}`,
+    cancelText: 'Batal',
+  })
+  if (ok) confirmed.value = { ...confirmed.value, [key]: true }
+  return ok
+}
+
 async function choose(santriId, status) {
   if (isLocked(santriId)) return
   const same = statusOf(santriId) === status
@@ -671,6 +701,7 @@ async function choose(santriId, status) {
   if (same && records.value[santriId]?.locked) return
   const view = `${date.value}|${slot.value}`
   if (!(await pastDayOk()) || !(await alfaToldOk(santriId, same ? null : status))) return
+  if (!(await otherSlotOk(santriId, same ? null : status))) return
   if (view !== `${date.value}|${slot.value}`) return // switched while the question was open
   queue(santriId, same ? null : status)
 }
@@ -820,6 +851,7 @@ function resetView() {
   records.value = {}
   otherSheet.value = null
   showOthers.value = false
+  onlyMyJilid.value = false
   saveNote.value = ''
   scrollAfterLoad = true
   load()

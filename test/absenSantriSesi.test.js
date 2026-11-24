@@ -22,12 +22,26 @@ test("Absen Santri: another sesi's jilid is not shown as a bare 0/N; it points t
   assert.ok(has(view, "scrollAfterLoad = true"), "after switching sesi, back to the top of the list");
 });
 
-test("Absen Santri: guru has an optional 'Hanya jilid saya' checkbox defaulting to all jilids", () => {
+test("Absen Santri: guru has an optional 'Hanya jilid saya' checkbox scoped strictly to the active sesi", () => {
   assert.ok(has(view, "const onlyMyJilid = ref(false)"), "defaults to all jilids");
   assert.ok(has(view, "api.get('/santri-changes/me', { cache: false })"), "reads guru's actual taught jilids even with all-jilid access");
-  assert.ok(has(view, `v-if="!isAdmin && myClassIds.length" class="as-my-toggle"`));
+  assert.ok(
+    has(view, "const mySlotClassIds = computed(() => myClassIds.value.filter((id) => (sheet.value?.defaultClassIds || []).includes(id)))"),
+    "only considers the guru's jilid(s) that actually belong to the currently selected sesi",
+  );
+  assert.ok(has(view, `v-if="!isAdmin && mySlotClassIds.length" class="as-my-toggle"`), "hidden on a sesi that does not contain the guru's jilid");
   assert.ok(has(view, `v-model="onlyMyJilid" type="checkbox"`));
   assert.ok(has(view, "Hanya jilid saya"));
+  assert.ok(has(view, "groups.value .filter((g) => g.own)"), "never pulls another sesi's jilid into the current sesi");
+  assert.ok(has(view, "const isOpen = (g) => g.searching || (opened.value[g.classId] ?? g.own)"), "another sesi's jilid never auto-expands");
+  assert.ok(has(view, "onlyMyJilid.value = false"), "resets filter when switching sesi or date");
+});
+
+test("Absen Santri: recording a non-titipan santri from another sesi requires explicit confirmation", () => {
+  assert.ok(has(view, "async function otherSlotOk(santriId, nextStatus)"));
+  assert.ok(has(view, "if (titipHere(s) || (sh.defaultClassIds || []).includes(s.classId)) return true"));
+  assert.ok(has(view, "if (!(await otherSlotOk(santriId, same ? null : status))) return"));
+  assert.ok(has(view, "title: `Catat ${s.name} di sesi ${slotLabel.value}?`"));
 });
 
 test("Absen Santri: long session window hint collapses into a compact tooltip on mobile", () => {
