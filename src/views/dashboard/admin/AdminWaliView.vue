@@ -21,7 +21,7 @@
       Jilid yang Antum ampu belum diatur admin dan belum ada riwayat KBM. Minta admin mengaturnya di menu Kelola Pengajar.
     </p>
     <p v-else-if="scope && !isAdmin && scope.source === 'feature'" class="wv-note wv-scope">
-      Antum diberi akses ke <strong>semua jilid</strong> oleh admin. NIK, KK, dan verifikasi data hanya untuk jilid yang Antum ampu.
+      Antum diberi akses ke <strong>semua jilid</strong> oleh admin. NIK, KK, lepas tautan, dan verifikasi data hanya untuk jilid yang Antum ampu; Antum tetap bisa mengirim pesan pembenahan untuk data terverifikasi.
     </p>
     <p v-else-if="scope && !isAdmin" class="wv-note wv-scope">
       Jilid Antum: <strong>{{ scopeLabel }}</strong>.
@@ -158,12 +158,16 @@
             </span>
             <span v-else class="wv-sub is-muted">Belum ada wali tertaut</span>
             <span v-if="r.lastReminder" class="wv-sub wv-reminded">{{ reminderText(r.lastReminder) }}</span>
+            <span v-if="r.verifiedNote" class="wv-sub wv-verified-note">
+              Catatan pembenahan: "{{ r.verifiedNote }}"<template v-if="r.verifiedNoteByName"> · {{ r.verifiedNoteByName }}</template><template v-if="r.verifiedNoteAt"> · {{ timeAgo(r.verifiedNoteAt, now) }}</template>
+            </span>
             <span v-if="routingText(r)" class="wv-sub wv-routing" :class="{ 'is-admin': r.routing.status === 'escalated' }">{{ routingText(r) }}</span>
           </div>
           <div class="wv-row-side">
             <span class="wv-pill" :class="`is-${(STATUS[r.profileStatus] || STATUS.empty).tone}`">
               {{ (STATUS[r.profileStatus] || STATUS.empty).label }}
             </span>
+            <span v-if="r.verifiedNote" class="wv-pill is-warn">Perlu dibenahi</span>
             <span v-if="r.hasPendingIdentity" class="wv-pill is-warn">Ubah identitas</span>
             <div class="wv-actions">
               <button v-if="canAct(r.classId) && r.guardians.length < 2" type="button" class="wv-btn wv-btn-ghost" @click="makeCode(r)">
@@ -171,6 +175,9 @@
               </button>
               <button v-if="canAct(r.classId) && needsReminder(r)" type="button" class="wv-btn wv-btn-ghost wv-btn-remind" @click="openRemind(r)">
                 Ingatkan
+              </button>
+              <button v-if="r.profileStatus === 'empty' && r.guardians.length && canAct(r.classId)" type="button" class="wv-btn wv-btn-ghost" @click="openGuardians(r)">
+                Kelola wali
               </button>
               <button v-if="r.profileStatus !== 'empty'" type="button" class="wv-btn wv-btn-primary" @click="openReview(r)">
                 Tinjau
@@ -371,6 +378,36 @@
       </div>
     </Teleport>
 
+    <!-- manage linked guardians when the santri's profile is still empty (e.g. linked to the wrong parent) -->
+    <Teleport to="body">
+      <div v-if="guardianSheet" class="wv-overlay" @click.self="guardianSheet = null" @keydown.esc="guardianSheet = null">
+        <section class="wv-sheet" role="dialog" aria-modal="true" aria-labelledby="guardians-title">
+          <header class="wv-sheet-head">
+            <div>
+              <h3 id="guardians-title">Wali tertaut · {{ guardianSheet.name }}</h3>
+              <span class="wv-sub">{{ levelName(guardianSheet.classId) }}<template v-if="guardianSheet.nomorInduk"> · {{ guardianSheet.nomorInduk }}</template></span>
+            </div>
+            <button type="button" class="wv-close" aria-label="Tutup" @click="guardianSheet = null"><LineIcon name="x" :size="18" /></button>
+          </header>
+          <div class="wv-sheet-body">
+            <p class="wv-sub">
+              Jika wali salah tertaut dengan santri ini, lepas tautannya agar santri bisa dibuatkan kode baru untuk wali yang sebenarnya. Wali yang dilepas akan dikabari otomatis lewat WA bot TPQ.
+            </p>
+            <ul v-if="guardianSheet.guardians.length" class="wv-guardian-list">
+              <li v-for="g in guardianSheet.guardians" :key="g.waliId" class="wv-guardian-item">
+                <div class="wv-guardian-meta">
+                  <strong>{{ relationLabel(g.relation) }} · {{ displayPhone(g.phone) }}</strong>
+                  <span class="wv-sub">Tertaut lewat {{ g.via === 'code' ? 'kode slip' : 'pengajuan' }}</span>
+                </div>
+                <button type="button" class="wv-btn wv-btn-ghost is-danger" :disabled="busy" @click="unlink(g, guardianSheet)">Lepas tautan</button>
+              </li>
+            </ul>
+            <p v-else class="wv-empty">Belum ada wali tertaut.</p>
+          </div>
+        </section>
+      </div>
+    </Teleport>
+
     <!-- review one santri's data -->
     <Teleport to="body">
       <div v-if="review" class="wv-overlay" @click.self="review = null">
@@ -378,7 +415,10 @@
           <header class="wv-sheet-head">
             <div>
               <h3 id="review-title">{{ review.santri.name }}</h3>
-              <span class="wv-pill" :class="`is-${(STATUS[review.profile.status] || STATUS.empty).tone}`">{{ (STATUS[review.profile.status] || STATUS.empty).label }}</span>
+              <div class="wv-head-pills">
+                <span class="wv-pill" :class="`is-${(STATUS[review.profile.status] || STATUS.empty).tone}`">{{ (STATUS[review.profile.status] || STATUS.empty).label }}</span>
+                <span v-if="review.profile.verifiedNote" class="wv-pill is-warn">Perlu dibenahi</span>
+              </div>
             </div>
             <button type="button" class="wv-close" aria-label="Tutup" @click="review = null"><LineIcon name="x" :size="18" /></button>
           </header>
@@ -396,6 +436,43 @@
               </div>
             </div>
 
+            <!-- advisory note for already-verified data: keeps status "verified" -->
+            <section v-if="review.profile.status === 'verified' && review.canSendVerifiedNote" class="wv-verified-card" aria-label="Pesan pembenahan data">
+              <div class="wv-verified-head">
+                <strong>Pesan pembenahan (tetap terverifikasi)</strong>
+                <span class="wv-sub">Status tetap Terverifikasi. Pesan tampil di portal wali dan dikirim otomatis lewat WA bot TPQ.</span>
+              </div>
+              <div v-if="review.profile.verifiedNote" class="wv-note is-warn wv-verified-active">
+                <div>
+                  <strong>Catatan aktif:</strong> {{ review.profile.verifiedNote }}
+                  <span class="wv-sub wv-block-sub">
+                    Dikirim<template v-if="review.profile.verifiedNoteByName"> oleh {{ review.profile.verifiedNoteByName }}</template><template v-if="review.profile.verifiedNoteAt"> · {{ timeAgo(review.profile.verifiedNoteAt, now) }}</template>
+                  </span>
+                </div>
+                <button type="button" class="wv-btn wv-btn-ghost" :disabled="verifiedNoteBusy" @click="clearVerifiedNote">
+                  Tandai selesai
+                </button>
+              </div>
+              <template v-if="review.guardians.length">
+                <label class="wv-label" for="verified-note">{{ review.profile.verifiedNote ? 'Perbarui atau kirim ulang pesan pembenahan' : 'Tulis pesan yang perlu dibenahi wali' }}</label>
+                <textarea
+                  id="verified-note"
+                  v-model="verifiedNoteInput"
+                  class="wv-input"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="Contoh: Mohon lengkapi RT/RW alamat atau unggah ulang foto KK yang lebih jelas"
+                ></textarea>
+                <p v-if="verifiedNoteError" class="wv-note is-danger" role="alert">{{ verifiedNoteError }}</p>
+                <div class="wv-request-actions">
+                  <button type="button" class="wv-btn wv-btn-wa" :disabled="verifiedNoteBusy || !verifiedNoteInput.trim()" @click="sendVerifiedNote">
+                    {{ verifiedNoteBusy ? 'Mengirim…' : 'Kirim pesan ke WA wali' }}
+                  </button>
+                </div>
+              </template>
+              <p v-else class="wv-sub">Belum ada wali tertaut untuk dikirimi pesan.</p>
+            </section>
+
             <div v-for="s in STEPS" :key="s.key" class="wv-group">
               <strong>{{ s.title }}</strong>
               <dl>
@@ -408,27 +485,37 @@
 
             <div class="wv-group">
               <strong>Wali tertaut</strong>
-              <ul class="wv-plain">
-                <li v-for="g in review.guardians" :key="g.waliId">
-                  {{ relationLabel(g.relation) }} · WA {{ displayPhone(g.phone) }} · lewat {{ g.via === 'code' ? 'kode' : 'pengajuan' }}
-                  <button v-if="isAdmin" type="button" class="wv-link is-danger" @click="unlink(g)">Lepas</button>
+              <ul v-if="review.guardians.length" class="wv-guardian-list">
+                <li v-for="g in review.guardians" :key="g.waliId" class="wv-guardian-item">
+                  <div class="wv-guardian-meta">
+                    <span>{{ relationLabel(g.relation) }} · WA {{ displayPhone(g.phone) }}</span>
+                    <span class="wv-sub">lewat {{ g.via === 'code' ? 'kode' : 'pengajuan' }}</span>
+                  </div>
+                  <button v-if="review.canUnlink" type="button" class="wv-link is-danger" :disabled="busy" @click="unlink(g)">Lepas</button>
                 </li>
               </ul>
+              <p v-else class="wv-sub">Belum ada wali tertaut.</p>
               <button v-if="review.canVerify && review.profile.hasKkPhoto" type="button" class="wv-btn wv-btn-ghost" @click="openKk">Lihat foto KK</button>
               <p v-else-if="!review.profile.hasKkPhoto" class="wv-sub">Foto KK tidak diunggah.</p>
             </div>
 
             <template v-if="review.canVerify && ['submitted', 'needs_fix', 'verified'].includes(review.profile.status)">
               <div class="wv-group">
+                <strong v-if="review.profile.status === 'verified'">Ubah status verifikasi / sinkron nama</strong>
                 <label v-if="nameDiffers" class="wv-check">
                   <input v-model="syncName" type="checkbox" /> Pakai nama "{{ valueAt(review.profile.data, 'santri.namaLengkap') }}" sebagai nama santri di sistem
                   (ikut berubah di absensi, nilai, dan tabungan)
                 </label>
                 <p class="wv-sub">
-                  Saat diverifikasi, jenis kelamin, tempat dan tanggal lahir<template v-if="nameDiffers && syncName">, serta nama</template>
-                  ikut tersimpan di data santri (Kelola Santri). NIK, KK, alamat, dan data orang tua tetap di sini, hanya admin dan guru jilidnya yang bisa melihat.
+                  <template v-if="review.profile.status === 'verified'">
+                    Gunakan tombol di bawah hanya bila status Terverifikasi perlu dicabut menjadi <strong>Perlu diperbaiki</strong>, atau untuk menyinkronkan ulang nama santri.
+                  </template>
+                  <template v-else>
+                    Saat diverifikasi, jenis kelamin, tempat dan tanggal lahir<template v-if="nameDiffers && syncName">, serta nama</template>
+                    ikut tersimpan di data santri (Kelola Santri). NIK, KK, alamat, dan data orang tua tetap di sini, hanya admin dan guru jilidnya yang bisa melihat.
+                  </template>
                 </p>
-                <label class="wv-label" for="fix-note">Catatan perbaikan untuk wali</label>
+                <label class="wv-label" for="fix-note">{{ review.profile.status === 'verified' ? 'Catatan jika mencabut verifikasi' : 'Catatan perbaikan untuk wali' }}</label>
                 <textarea id="fix-note" v-model="fixNote" class="wv-input" rows="2" placeholder="Contoh: NIK belum sesuai KK"></textarea>
               </div>
               <p v-if="reviewError" class="wv-note is-danger" role="alert">{{ reviewError }}</p>
@@ -437,7 +524,9 @@
                 <button type="button" class="wv-btn wv-btn-primary" :disabled="busy" @click="decideReview('verified')">Verifikasi</button>
               </div>
             </template>
-            <p v-else-if="!review.canVerify" class="wv-sub">Data ini diproses oleh guru jilidnya atau admin.</p>
+            <p v-else-if="!review.canVerify" class="wv-sub">
+              {{ review.profile.status === 'verified' ? 'NIK, KK, foto KK, lepas tautan, dan perubahan status verifikasi diproses oleh guru jilidnya atau admin.' : 'Data ini diproses oleh guru jilidnya atau admin.' }}
+            </p>
           </div>
         </section>
       </div>
@@ -504,9 +593,13 @@ const slipClass = ref('1')
 const slipOnlyUnlinked = ref(true)
 const slipError = ref('')
 const review = ref(null)
+const guardianSheet = ref(null)
 const fixNote = ref('')
 const syncName = ref(true)
 const reviewError = ref('')
+const verifiedNoteInput = ref('')
+const verifiedNoteError = ref('')
+const verifiedNoteBusy = ref(false)
 const scope = ref(null)
 const remind = ref(null)
 const alfa = ref(null)
@@ -945,16 +1038,61 @@ async function decide(q, approve) {
   }
 }
 
+/* ---- manage guardians (empty profile rows) */
+function openGuardians(r) {
+  guardianSheet.value = {
+    santriId: r.santriId,
+    name: r.name,
+    classId: r.classId,
+    nomorInduk: r.nomorInduk || '',
+    profileStatus: r.profileStatus,
+    guardians: [...(r.guardians || [])],
+  }
+}
+
 /* ---- review */
 async function openReview(r) {
   reviewError.value = ''
   fixNote.value = ''
+  verifiedNoteInput.value = ''
+  verifiedNoteError.value = ''
   syncName.value = true
   try {
     const { data } = await api.get(`/wali/admin/santri/${r.santriId}`, { cache: false })
     review.value = data
   } catch (err) {
     showError(err.response?.data?.error || 'Data belum bisa dibuka')
+  }
+}
+async function sendVerifiedNote() {
+  if (!review.value || !verifiedNoteInput.value.trim()) return
+  verifiedNoteBusy.value = true
+  verifiedNoteError.value = ''
+  try {
+    const { data } = await api.post(`/wali/admin/santri/${review.value.santri.id}/verified-note`, { note: verifiedNoteInput.value })
+    review.value = data
+    verifiedNoteInput.value = ''
+    showSuccess('Pesan pembenahan dikirim ke WA wali, status tetap terverifikasi')
+    load({ quiet: true })
+  } catch (err) {
+    verifiedNoteError.value = err.response?.data?.error || 'Pesan pembenahan belum bisa dikirim'
+  } finally {
+    verifiedNoteBusy.value = false
+  }
+}
+async function clearVerifiedNote() {
+  if (!review.value) return
+  verifiedNoteBusy.value = true
+  verifiedNoteError.value = ''
+  try {
+    const { data } = await api.delete(`/wali/admin/santri/${review.value.santri.id}/verified-note`)
+    review.value = data
+    showSuccess('Catatan pembenahan ditandai selesai')
+    load({ quiet: true })
+  } catch (err) {
+    verifiedNoteError.value = err.response?.data?.error || 'Gagal menandai selesai'
+  } finally {
+    verifiedNoteBusy.value = false
   }
 }
 async function decideReview(decision) {
@@ -996,21 +1134,34 @@ async function openKk() {
     showError(err.response?.data?.error || 'Foto KK tidak bisa dibuka')
   }
 }
-async function unlink(g) {
+async function unlink(g, sheetTarget = null) {
+  const santriId = sheetTarget ? sheetTarget.santriId : review.value?.santri?.id
+  const santriName = sheetTarget ? sheetTarget.name : review.value?.santri?.name
+  const hasFilledData = sheetTarget ? sheetTarget.profileStatus !== 'empty' : review.value?.profile?.status !== 'empty'
+  if (!santriId) return
   const ok = await ask({
     title: 'Lepas tautan wali?',
-    message: `${relationLabel(g.relation)} (WA ${displayPhone(g.phone)}) tidak lagi terhubung dengan ${review.value.santri.name}. Wali bisa menautkan lagi dengan kode baru.`,
+    message: `${relationLabel(g.relation)} (WA ${displayPhone(g.phone)}) tidak lagi terhubung dengan ${santriName} dan akan dikabari otomatis lewat WA bot TPQ.${hasFilledData ? ' Data yang sudah diisi tetap tersimpan.' : ' Setelah dilepas, santri bisa dibuatkan kode baru untuk wali yang sebenarnya.'}`,
     tone: 'danger',
     confirmText: 'Lepas tautan',
   })
   if (!ok) return
+  busy.value = true
   try {
-    await api.delete(`/wali/admin/guardians/${review.value.santri.id}/${g.waliId}`)
-    review.value = { ...review.value, guardians: review.value.guardians.filter((x) => x.waliId !== g.waliId) }
-    showSuccess('Tautan wali dilepas')
+    await api.delete(`/wali/admin/guardians/${santriId}/${g.waliId}`)
+    if (sheetTarget && guardianSheet.value) {
+      const next = guardianSheet.value.guardians.filter((x) => x.waliId !== g.waliId)
+      guardianSheet.value = next.length ? { ...guardianSheet.value, guardians: next } : null
+    }
+    if (review.value && review.value.santri.id === santriId) {
+      review.value = { ...review.value, guardians: review.value.guardians.filter((x) => x.waliId !== g.waliId) }
+    }
+    showSuccess('Tautan wali dilepas, wali dikabari lewat WA')
     load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal melepas tautan')
+  } finally {
+    busy.value = false
   }
 }
 
@@ -1419,6 +1570,7 @@ textarea.wv-input {
 
 .wv-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -1601,6 +1753,87 @@ textarea.wv-input {
 
 .wv-reminded {
   color: #92400e;
+}
+
+.wv-verified-note {
+  color: #7c3a0d;
+  font-weight: 600;
+}
+
+.wv-head-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wv-verified-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fffdf7;
+  border: 1px solid #f3d58b;
+}
+
+.wv-verified-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wv-verified-head strong {
+  color: #5b3a06;
+  font-size: 0.94rem;
+}
+
+.wv-verified-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.wv-block-sub {
+  display: block;
+  margin-top: 2px;
+}
+
+.wv-guardian-list {
+  list-style: none;
+  margin: 6px 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wv-guardian-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.12);
+  font-size: 0.88rem;
+}
+
+.wv-guardian-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wv-guardian-meta strong,
+.wv-guardian-meta > span:first-child {
+  color: var(--lp-ink, #0b3b2a);
+  font-weight: 700;
 }
 
 .wv-slip-active ul {

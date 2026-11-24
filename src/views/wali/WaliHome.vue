@@ -132,8 +132,26 @@
             </li>
           </ul>
 
+          <!-- Data ananda: verified with an active advisory note keeps the verified pill AND calls out what to update -->
+          <div v-if="s.profileStatus === 'verified' && s.verifiedNote" class="data-cta is-verified-note">
+            <div class="data-cta-head">
+              <strong>Data ananda</strong>
+              <span class="data-cta-pills">
+                <span class="w-pill is-ok">{{ status(s).label }}</span>
+                <span class="w-pill is-warn">Perlu dibenahi</span>
+              </span>
+            </div>
+            <p class="data-cta-text">
+              <span>
+                Catatan pengurus<template v-if="s.verifiedNoteByName"> ({{ s.verifiedNoteByName }})</template>:
+                <strong>{{ s.verifiedNote }}</strong>
+              </span>
+              <span class="data-cta-sub">Data tetap terverifikasi, mohon segera diperbarui ya Bapak/Ibu.</span>
+            </p>
+            <router-link :to="`/wali/santri/${s.santriId}`" class="w-btn w-btn-primary">Perbarui data sekarang</router-link>
+          </div>
           <!-- Data ananda: a quiet row when done, a clear call when something is needed -->
-          <router-link v-if="dataDone(s)" :to="`/wali/santri/${s.santriId}`" class="data-row">
+          <router-link v-else-if="dataDone(s)" :to="`/wali/santri/${s.santriId}`" class="data-row">
             <span class="data-row-label">Data ananda</span>
             <span class="w-pill" :class="`is-${status(s).tone}`">{{ status(s).label }}</span>
             <span class="data-row-hint">Lihat / ubah</span>
@@ -672,6 +690,30 @@ onMounted(load)
 
 .data-cta.is-danger .data-cta-text {
   color: #7a1810;
+}
+
+.data-cta-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 8px;
+}
+
+.data-cta-head strong {
+  font-size: 0.92rem;
+  color: #0b3b2a;
+}
+
+.data-cta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.data-cta-sub {
+  font-size: 0.82rem;
+  color: #7c5a1a;
 }
 
 .reg-card {

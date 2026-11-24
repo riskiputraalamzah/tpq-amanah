@@ -5,7 +5,7 @@ export const GURU_DEFAULT_RIGHTS = [
   'KBM, absensi diri, dan penilaian',
   'Absen Santri, sampai 2 hari ke belakang',
   'Data Santri jilidnya: naik jilid, ubah nama, usulkan santri baru',
-  'Data Wali Santri jilidnya: kode dan slip, pengingat ke wali, pengajuan tautan',
+  'Data Wali Santri jilidnya: kode dan slip, pengingat ke wali, pengajuan & lepas tautan',
   'Verifikasi data wali, NIK/KK, dan foto KK: hanya untuk jilid yang ditetapkan admin di Kelola Pengajar',
   'Peserta kegiatan dari jilidnya',
 ]

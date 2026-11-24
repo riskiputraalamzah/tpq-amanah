@@ -29,9 +29,17 @@
       <p v-if="status === 'needs_fix' && adminNote" class="w-note is-danger" role="alert">
         <span><strong>Perlu diperbaiki:</strong> {{ adminNote }}</span>
       </p>
-      <p v-else-if="status === 'verified'" class="w-note">
-        <span>Data sudah terverifikasi. Perubahan alamat dan kontak langsung tersimpan. Perubahan nama, jenis kelamin, tempat/tanggal lahir, NIK, atau KK dicek pengurus TPQ dulu.</span>
-      </p>
+      <template v-else-if="status === 'verified'">
+        <p v-if="verifiedNote" class="w-note is-warn" role="alert">
+          <span>
+            <strong>Mohon segera dibenahi{{ verifiedNoteByName ? ` (${verifiedNoteByName})` : '' }}:</strong> {{ verifiedNote }}
+            <br />Data ananda tetap berstatus <strong>Terverifikasi</strong>. Perbarui bagian yang dimaksud lalu tekan <strong>Simpan perubahan</strong> di langkah terakhir.
+          </span>
+        </p>
+        <p class="w-note">
+          <span>Data sudah terverifikasi. Perubahan alamat dan kontak langsung tersimpan. Perubahan nama, jenis kelamin, tempat/tanggal lahir, NIK, atau KK dicek pengurus TPQ dulu.</span>
+        </p>
+      </template>
       <p v-if="pendingIdentity.length" class="w-note is-warn">Ada perubahan identitas yang sedang dicek pengurus TPQ.</p>
 
       <!-- progress -->
@@ -188,6 +196,8 @@ const santri = ref({})
 const form = ref(mergeProfile())
 const status = ref('empty')
 const adminNote = ref('')
+const verifiedNote = ref('')
+const verifiedNoteByName = ref('')
 const pendingIdentity = ref([])
 const hasKkPhoto = ref(false)
 const step = ref(0)
@@ -234,6 +244,8 @@ function applyServer(data) {
   form.value = mergeProfile(data.profile.data)
   status.value = data.profile.status
   adminNote.value = data.profile.adminNote || ''
+  verifiedNote.value = data.profile.verifiedNote || ''
+  verifiedNoteByName.value = data.profile.verifiedNoteByName || ''
   pendingIdentity.value = data.profile.pendingIdentity || []
   hasKkPhoto.value = !!data.profile.hasKkPhoto
 }
