@@ -29,3 +29,10 @@ test("Absen Santri: guru has an optional 'Hanya jilid saya' checkbox defaulting 
   assert.ok(has(view, `v-model="onlyMyJilid" type="checkbox"`));
   assert.ok(has(view, "Hanya jilid saya"));
 });
+
+test("Absen Santri: long session window hint collapses into a compact tooltip on mobile", () => {
+  assert.ok(has(view, `class="as-hint-trigger"`));
+  assert.ok(has(view, `Ketentuan jam absen`));
+  assert.ok(has(view, `id="as-hint-tooltip" class="as-hint-popover" role="tooltip"`));
+  assert.ok(has(view, `@media (max-width: 639px)`));
+});

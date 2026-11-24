@@ -31,8 +31,8 @@
               </router-link>
             </li>
             <li>
-              <router-link to="/dashboard/kbm" class="gd-task" :class="kbmDone ? 'is-done' : d.tasks.kbm.onLeave ? 'is-rest' : 'is-todo'">
-                <span class="gd-task-mark" aria-hidden="true"><LineIcon :name="kbmDone ? 'check' : d.tasks.kbm.onLeave ? 'sun' : 'book'" :size="18" :stroke="2.4" /></span>
+              <router-link to="/dashboard/kbm" class="gd-task" :class="kbmDone ? 'is-done' : isOnLeave ? 'is-rest' : 'is-todo'">
+                <span class="gd-task-mark" aria-hidden="true"><LineIcon :name="kbmDone ? 'check' : isOnLeave ? 'sun' : 'book'" :size="18" :stroke="2.4" /></span>
                 <span class="gd-task-text">
                   <strong>KBM saya</strong>
                   <small>{{ kbmText }}</small>
@@ -41,11 +41,11 @@
               </router-link>
             </li>
             <li>
-              <router-link to="/dashboard/absen-santri" class="gd-task" :class="rollDone ? 'is-done' : 'is-todo'">
+              <router-link to="/dashboard/absen-santri" class="gd-task" :class="rollDone ? 'is-done' : isOnLeave ? 'is-rest' : 'is-todo'">
                 <span class="gd-task-mark" aria-hidden="true"><LineIcon :name="rollDone ? 'check' : 'users'" :size="18" :stroke="2.4" /></span>
                 <span class="gd-task-text">
                   <strong>{{ d.scope.source === 'feature' ? 'Absen santri semua jilid' : 'Absen santri jilid saya' }}</strong>
-                  <small>{{ d.tasks.rollCall.recorded }} dari {{ d.tasks.rollCall.total }} santri sudah dicatat</small>
+                  <small>{{ rollText }}</small>
                 </span>
                 <span class="gd-go" aria-hidden="true">›</span>
               </router-link>
@@ -173,16 +173,30 @@ const longToday = computed(() => {
   const [y, m, dd] = iso.split('-').map(Number)
   return `${DAYS[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]}, ${dd} ${MONTHS[m - 1]} ${y}`
 })
+const NON_HADIR = new Set(['izin', 'sakit', 'alfa', 'alpa', 'tidak_hadir'])
+const isOnLeave = computed(() => !!(d.value?.tasks?.kbm?.onLeave || NON_HADIR.has(String(d.value?.tasks?.attendance?.status || '').toLowerCase())))
 const kbmDone = computed(() => d.value && d.value.tasks.kbm.count > 0 && d.value.tasks.kbm.complete === d.value.tasks.kbm.count)
 const kbmText = computed(() => {
   const k = d.value.tasks.kbm
-  if (k.onLeave) return 'Antum izin/sakit hari ini'
+  if (isOnLeave.value) {
+    const label = attendanceWord(d.value.tasks.attendance.status).toLowerCase() || 'tidak hadir'
+    return `Tidak perlu mengisi KBM (status hari ini: ${label})`
+  }
   if (!k.count) return 'Belum ada KBM hari ini'
   if (kbmDone.value) return `${k.count} KBM lengkap`
   const open = k.sessions.filter((s) => !s.complete)
   return `${open.map((s) => s.label).join(', ')}: ${[...new Set(open.flatMap((s) => s.missing))].join(', ') || 'belum lengkap'}`
 })
 const rollDone = computed(() => d.value && d.value.tasks.rollCall.total > 0 && d.value.tasks.rollCall.recorded >= d.value.tasks.rollCall.total)
+const rollText = computed(() => {
+  const r = d.value.tasks.rollCall
+  if (isOnLeave.value) {
+    return r.recorded > 0
+      ? `Tidak perlu mengisi (diisi guru hadir: ${r.recorded} dari ${r.total} santri)`
+      : 'Tidak perlu mengisi (diisi guru yang hadir hari ini)'
+  }
+  return `${r.recorded} dari ${r.total} santri sudah dicatat`
+})
 
 async function load(fresh = false) {
   loading.value = true

@@ -17,10 +17,41 @@
     </div>
     <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
     <SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />
-    <p v-if="sheet && sheet.daysBack === 0 && !sheet.dayOff" class="as-hint">
-      Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
-      sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
-    </p>
+    <div v-if="sheet && sheet.daysBack === 0 && !sheet.dayOff" ref="hintWrap" class="as-hint-wrap">
+      <!-- Desktop: concise inline hint; Mobile: compact tooltip trigger so it does not eat screen space -->
+      <p class="as-hint as-hint-desktop">
+        Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
+        sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
+      </p>
+      <div class="as-hint-mobile">
+        <button
+          type="button"
+          class="as-hint-trigger"
+          :aria-expanded="hintOpen"
+          aria-controls="as-hint-tooltip"
+          @click="hintOpen = !hintOpen"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>Ketentuan jam absen</span>
+        </button>
+        <div
+          v-if="hintOpen"
+          id="as-hint-tooltip"
+          class="as-hint-popover"
+          role="tooltip"
+        >
+          <p>
+            Absen dibuka saat ngaji dimulai (Sore 15.00, Malam 18.00) dan bisa diubah sampai pukul 24.00 hari itu. Esok paginya masih bisa
+            sampai pukul 12.00 dengan konfirmasi (guru koordinator diberi kabar). Setelahnya hanya admin atau guru dengan akses khusus.
+          </p>
+          <button type="button" class="as-hint-close" aria-label="Tutup keterangan jam absen" @click="hintOpen = false">×</button>
+        </div>
+      </div>
+    </div>
 
     <AbsenReports ref="reportsBox" @changed="onOutsideChange" />
     <EarlyAudit v-if="isAdmin" ref="auditBox" @changed="onOutsideChange" />
@@ -333,6 +364,8 @@ const pendingCount = ref(0)
 const otherSheet = ref(null)
 const bar = ref(null)
 const listTop = ref(null)
+const hintWrap = ref(null)
+const hintOpen = ref(false)
 let jumpClass = '' // after switching sesi from "Lihat di sesi …": the jilid to open and show
 
 const recordOf = (id) => records.value[id] || null
@@ -844,10 +877,18 @@ async function loadMyClasses() {
   }
 }
 
+const onDocClick = (e) => {
+  if (hintOpen.value && hintWrap.value && !hintWrap.value.contains(e.target)) hintOpen.value = false
+}
+const onDocKey = (e) => {
+  if (hintOpen.value && e.key === 'Escape') hintOpen.value = false
+}
 onMounted(() => {
   loadMyClasses()
   load()
   document.addEventListener('visibilitychange', onHide)
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onDocKey)
   window.addEventListener('online', onOnline)
   window.addEventListener('beforeunload', onBeforeUnload)
   // a parent's izin may arrive while the page is open
@@ -858,6 +899,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   alive = false
   document.removeEventListener('visibilitychange', onHide)
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onDocKey)
   window.removeEventListener('online', onOnline)
   window.removeEventListener('beforeunload', onBeforeUnload)
   clearInterval(poll)
@@ -1218,10 +1261,108 @@ onBeforeUnmount(() => {
   color: #6b4a12;
 }
 
-.as-hint {
+.as-hint-wrap {
+  position: relative;
   margin: -4px 0 12px;
+}
+
+.as-hint {
+  margin: 0;
   font-size: 0.82rem;
   color: var(--muted);
+  line-height: 1.5;
+}
+
+.as-hint-mobile {
+  display: none;
+  position: relative;
+}
+
+.as-hint-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 59, 42, 0.18);
+  background: #f5f9f6;
+  color: var(--body);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.as-hint-trigger[aria-expanded="true"] {
+  border-color: var(--emerald);
+  background: #e9f5ef;
+  color: var(--emerald);
+}
+
+.as-hint-trigger:focus-visible,
+.as-hint-close:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-hint-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 15;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 14px;
+  background: #0b3b2a;
+  color: #ecfdf5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  box-shadow: 0 14px 30px -10px rgba(3, 41, 29, 0.45);
+}
+
+.as-hint-popover::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 22px;
+  width: 12px;
+  height: 12px;
+  background: #0b3b2a;
+  transform: rotate(45deg);
+}
+
+.as-hint-popover p {
+  margin: 0;
+  flex: 1;
+}
+
+.as-hint-close {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 639px) {
+  .as-hint-wrap {
+    margin: 0 0 10px;
+  }
+  .as-hint-desktop {
+    display: none;
+  }
+  .as-hint-mobile {
+    display: block;
+  }
 }
 
 .as-filter-row {
