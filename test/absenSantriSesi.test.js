@@ -50,3 +50,9 @@ test("Absen Santri: long session window hint collapses into a compact tooltip on
   assert.ok(has(view, `id="as-hint-tooltip" class="as-hint-popover" role="tooltip"`));
   assert.ok(has(view, `@media (max-width: 639px)`));
 });
+
+test("Absen Santri: verified santri nickname is displayed below full name and searchable", () => {
+  assert.ok(has(view, `<span v-if="s.nickname" class="as-nickname">Panggilan: <em>{{ s.nickname }}</em></span>`));
+  assert.ok(has(view, "const matchesSantri = (s, q) => (s.name || '').toLowerCase().includes(q) || (s.nickname || '').toLowerCase().includes(q)"));
+  assert.ok(has(view, "matchesSantri(s, q)"));
+});

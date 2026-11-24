@@ -219,7 +219,7 @@
           ref="listTop"
           v-model="search"
           class="as-input as-search"
-          :placeholder="myJilidFilterActive && myJilidLabel ? `Cari nama santri (${myJilidLabel})` : 'Cari nama santri (semua jilid)'"
+          :placeholder="myJilidFilterActive && myJilidLabel ? `Cari nama atau panggilan (${myJilidLabel})` : 'Cari nama atau panggilan (semua jilid)'"
         />
         <label v-if="!isAdmin && mySlotClassIds.length" class="as-my-toggle" :class="{ 'is-active': onlyMyJilid }">
           <input v-model="onlyMyJilid" type="checkbox" />
@@ -254,6 +254,7 @@
           <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id) }">
             <div class="as-name">
               <strong>{{ s.name }}</strong>
+              <span v-if="s.nickname" class="as-nickname">Panggilan: <em>{{ s.nickname }}</em></span>
               <span v-if="s.titip" class="as-titip">{{ titipNote(s) }}</span>
               <span v-if="recordOf(s.id)?.source === 'wali'" class="as-by is-wali">
                 {{ recordOf(s.id).status === 'sakit' ? 'Sakit' : 'Izin' }} dari {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).reason">: "{{ recordOf(s.id).reason }}"</template>
@@ -452,6 +453,7 @@ const groupCountText = (g) => (g.own || g.searching
   ? `${g.recorded}/${g.items.length} dicatat`
   : g.recorded ? `${g.recorded} ikut sesi ${slotLabel.value}` : `belum ada yang ikut sesi ${slotLabel.value}`)
 const otherCount = computed(() => otherGroups.value.reduce((n, g) => n + g.items.length, 0))
+const matchesSantri = (s, q) => (s.name || '').toLowerCase().includes(q) || (s.nickname || '').toLowerCase().includes(q)
 const baseGroups = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (q) {
@@ -459,7 +461,7 @@ const baseGroups = computed(() => {
     const away = (sheet.value?.santri || []).filter(titipAway)
     return groups.value
       .map((g) => ({ ...g, items: [...g.items, ...(g.titip ? [] : away.filter((s) => s.classId === g.classId))] }))
-      .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
+      .map((g) => ({ ...g, items: g.items.filter((s) => matchesSantri(s, q)), searching: true }))
       .filter((g) => g.items.length)
   }
   // the sesi's own jilid first, then (on request, or when someone of another jilid is already recorded) the others
@@ -482,7 +484,7 @@ const shownGroups = computed(() => {
   const away = (sheet.value?.santri || []).filter((s) => titipAway(s) && isMySlotClass(s.classId))
   return mine
     .map((g) => ({ ...g, items: [...g.items, ...(g.titip ? [] : away.filter((s) => s.classId === g.classId))] }))
-    .map((g) => ({ ...g, items: g.items.filter((s) => s.name.toLowerCase().includes(q)), searching: true }))
+    .map((g) => ({ ...g, items: g.items.filter((s) => matchesSantri(s, q)), searching: true }))
     .filter((g) => g.items.length)
 })
 const firstOther = computed(() => shownGroups.value.find((g) => !g.own) || null)
@@ -1646,6 +1648,25 @@ onBeforeUnmount(() => {
 
 .as-name strong {
   overflow-wrap: anywhere;
+}
+
+.as-nickname {
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef6f1;
+  border: 1px solid #cce3d6;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #35584a;
+  line-height: 1.4;
+}
+
+.as-nickname em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--emerald);
 }
 
 .as-by {
