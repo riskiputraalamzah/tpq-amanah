@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import BubbleNav from '@/components/BubbleNav.vue'
 import { useRoute } from 'vue-router'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
@@ -52,12 +52,16 @@ const showNav = computed(() => !route.meta.hideNav)
 const active = computed(() => {
   const p = route.path
   if (p === '/wali/izin' || /^\/wali\/santri\/[^/]+\/izin$/.test(p)) return 'izin'
-  if (p.startsWith('/wali/pengumuman')) return 'pengumuman'
+  if (p.startsWith('/wali/pengumuman') || (route.name === 'WaliKegiatanInfo' && route.query.from === 'pengumuman')) return 'pengumuman'
   if (p.startsWith('/wali/akun')) return 'akun'
   return 'home'
 })
 
 const activeIndex = computed(() => NAV.findIndex((item) => item.key === active.value))
+
+watch(() => route.path, () => {
+  refresh()
+})
 
 onMounted(() => refresh())
 </script>

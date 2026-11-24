@@ -41,27 +41,20 @@
         </div>
 
         <div v-if="k.updates && k.updates.length" class="k-block k-updates">
-          <span class="k-label">Info terbaru kegiatan</span>
-          <ul class="k-upd-list">
-            <li v-for="u in k.updates" :key="u.id" class="k-upd-item">
-              <div class="k-upd-meta">
-                <span>{{ formatWibDateTime(u.createdAt) }}</span>
-                <span v-if="u.createdByName">· {{ u.createdByName }}</span>
-              </div>
-              <div class="k-upd-body wa-rich" v-html="renderWaMarkdownHtml(u.body)"></div>
-              <div v-if="normalizeWaPhone(u.contactPhone)" class="k-upd-contact">
-                <span class="w-help">Ada yang kurang jelas? Hubungi langsung pengajar:</span>
-                <a
-                  :href="`https://wa.me/${normalizeWaPhone(u.contactPhone)}`"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="k-wa-link"
-                >
-                  Hubungi {{ u.contactName || 'Ustadz/ustadzah' }} via WhatsApp ({{ formatLocalPhone(u.contactPhone) }})
-                </a>
-              </div>
-            </li>
-          </ul>
+          <div class="k-upd-bar">
+            <span class="k-label">Info terbaru kegiatan</span>
+            <span class="w-pill is-ok">{{ k.updateCount || k.updates.length }} info</span>
+          </div>
+          <div class="k-upd-preview">
+            <div class="k-upd-meta">
+              <span>{{ formatWibDateTime(k.updates[0].createdAt) }}</span>
+              <span v-if="k.updates[0].createdByName">· {{ k.updates[0].createdByName }}</span>
+            </div>
+            <div class="k-upd-body k-upd-clamp wa-rich" v-html="renderWaMarkdownHtml(k.updates[0].body)"></div>
+          </div>
+          <router-link :to="`/wali/santri/${route.params.santriId}/kegiatan/${k.id}/info`" class="k-wa-link">
+            Lihat semua info kegiatan ({{ k.updateCount || k.updates.length }}) ›
+          </router-link>
         </div>
       </article>
 
@@ -92,7 +85,7 @@ import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { PAYMENT_TONE, STATUS_TONE, dayLabel, formatRupiah, paymentLine } from '@/utils/kegiatan'
-import { formatLocalPhone, formatWibDateTime, normalizeWaPhone, renderWaMarkdownHtml } from '@/utils/waFormat'
+import { formatWibDateTime, renderWaMarkdownHtml } from '@/utils/waFormat'
 
 const route = useRoute()
 const data = ref(null)
@@ -225,22 +218,23 @@ onMounted(async () => {
   width: 100%;
 }
 
-.k-upd-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
+.k-upd-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
   width: 100%;
 }
 
-.k-upd-item {
+.k-upd-preview {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 12px;
   border-radius: 12px;
   background: #f5f9f6;
   border: 1px solid rgba(11, 59, 42, 0.12);
+  box-sizing: border-box;
 }
 
 .k-upd-meta {
@@ -259,11 +253,11 @@ onMounted(async () => {
   overflow-wrap: anywhere;
 }
 
-.k-upd-contact {
-  display: grid;
-  gap: 6px;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(11, 59, 42, 0.14);
+.k-upd-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .k-wa-link {
@@ -271,15 +265,17 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 40px;
+  width: 100%;
+  min-height: 42px;
   padding: 6px 12px;
   border-radius: 10px;
   background: #e3f1ea;
   border: 1px solid rgba(10, 92, 64, 0.25);
   color: #0a5c40;
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   font-weight: 700;
   text-decoration: none;
+  box-sizing: border-box;
 }
 
 .k-wa-link:hover {

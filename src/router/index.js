@@ -335,6 +335,7 @@ const routes = [
       { path: "masukan", name: "WaliMasukan", component: () => import("../views/wali/WaliMasukan.vue") },
       { path: "santri/:santriId/progres", name: "WaliProgress", component: () => import("../views/wali/WaliProgress.vue") },
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
+      { path: "santri/:santriId/kegiatan/:activityId/info", name: "WaliKegiatanInfo", component: () => import("../views/wali/WaliKegiatanInfo.vue") },
       { path: "santri/:santriId/rapor", name: "WaliRapor", component: () => import("../views/wali/WaliRapor.vue") },
       { path: "santri/:santriId/izin", name: "WaliIzin", component: () => import("../views/wali/WaliIzin.vue") },
       // pendaftaran santri baru ("baru" starts one, or continues the unfinished one)

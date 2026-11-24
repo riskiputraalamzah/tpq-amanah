@@ -381,6 +381,14 @@
                 >
                   {{ openUnlinkedId === u.id ? 'Tutup daftar belum tertaut' : `Salin per santri (${u.unlinkedSantri.length})` }}
                 </button>
+                <button
+                  type="button"
+                  class="kg-btn kg-btn-sm kg-btn-danger"
+                  :disabled="deletingInfoId === u.id"
+                  @click="removeInfoItem(u)"
+                >
+                  {{ deletingInfoId === u.id ? 'Menghapus…' : 'Hapus' }}
+                </button>
               </div>
 
               <ul v-if="openUnlinkedId === u.id && u.unlinkedSantri.length" class="kg-unlinked-list">
@@ -498,6 +506,7 @@ const infoContactPhone = ref('')
 const infoBody = ref('')
 const infoSendNow = ref(false)
 const sendingInfo = ref(false)
+const deletingInfoId = ref('')
 const infoError = ref('')
 const lastInfoResult = ref(null)
 const openUnlinkedId = ref(null)
@@ -660,6 +669,45 @@ async function copyHistoryItem(u) {
   })
   if (await copyToClipboard(text)) toast.success('Pesan riwayat disalin dalam format WA.')
   else toast.error('Gagal menyalin pesan.')
+}
+
+async function removeInfoItem(u) {
+  const pendingWa = Number(u.wa?.queued || 0) + Number(u.wa?.held || 0)
+  const sentWa = Number(u.wa?.sent || 0)
+  const notes = ['Info ini akan dihapus permanen dari database, riwayat, dan Portal Wali.']
+  if (pendingWa > 0) notes.push(`${pendingWa} pesan WA yang masih antre akan ikut dibatalkan otomatis.`)
+  if (sentWa > 0) notes.push(`${sentWa} pesan WA yang sudah telanjur terkirim ke WhatsApp wali tidak dapat ditarik oleh bot.`)
+  const ok = await ask({
+    title: 'Hapus info kegiatan?',
+    message: notes.join(' '),
+    tone: 'danger',
+    confirmText: 'Hapus info',
+  })
+  if (!ok) return
+
+  deletingInfoId.value = u.id
+  infoError.value = ''
+  try {
+    const { data: res } = await api.delete(`/activities/${id}/info/${u.id}`)
+    if (data.value && Array.isArray(res.updates)) {
+      data.value.updates = res.updates
+    }
+    if (lastInfoResult.value?.updateId === u.id) {
+      lastInfoResult.value = null
+    }
+    if (openUnlinkedId.value === u.id) {
+      openUnlinkedId.value = null
+    }
+    toast.success(
+      res.messagesDropped
+        ? `Info dihapus & ${res.messagesDropped} antrean WA dibatalkan.`
+        : 'Info kegiatan dihapus dari riwayat & Portal Wali.',
+    )
+  } catch (err) {
+    infoError.value = err.response?.data?.error || 'Info belum bisa dihapus. Coba lagi.'
+  } finally {
+    deletingInfoId.value = ''
+  }
 }
 
 async function submitInfo() {

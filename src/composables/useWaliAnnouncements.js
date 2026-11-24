@@ -45,7 +45,13 @@ export function useWaliAnnouncements() {
     return pending
   }
   const unseen = computed(() => list.value.filter((a) => !seen.value.includes(a.id)).length)
-  const onHome = computed(() => list.value.filter((a) => !dismissed.value.includes(a.id)))
+  // Beranda stays focused on general TPQ announcements; activity info surfaces via Pengumuman tab + badge and Kegiatan.
+  const onHome = computed(() => list.value.filter((a) => a.kind !== 'kegiatan_info' && !dismissed.value.includes(a.id)))
+  function markSeen(id) {
+    if (!id || seen.value.includes(id)) return
+    seen.value = [...seen.value, id]
+    write(SEEN_KEY, seen.value)
+  }
   function markAllSeen() {
     seen.value = [...new Set([...seen.value, ...list.value.map((a) => a.id)])]
     write(SEEN_KEY, seen.value)
@@ -53,10 +59,7 @@ export function useWaliAnnouncements() {
   function dismiss(id) {
     dismissed.value = [...dismissed.value, id]
     write(DISMISS_KEY, dismissed.value)
-    if (!seen.value.includes(id)) {
-      seen.value = [...seen.value, id]
-      write(SEEN_KEY, seen.value)
-    }
+    markSeen(id)
   }
-  return { list, unseen, onHome, refresh, markAllSeen, dismiss }
+  return { list, unseen, onHome, refresh, markSeen, markAllSeen, dismiss }
 }

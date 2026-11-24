@@ -105,16 +105,32 @@ test("kegiatan access guard: restricted to admin and kegiatan-manage in router a
   assert.equal(guruSection.includes("/dashboard/kegiatan"), false);
 });
 
-test("kegiatan info & Portal Wali wiring: WYSIWYG editor, sendNow, copy-paste, and read-only Portal Wali contact", () => {
+test("kegiatan info & Portal Wali wiring: WYSIWYG, sendNow, delete info, Pengumuman feed & dedicated DESC info page", () => {
   const detail = read("src/views/dashboard/guru/KegiatanDetailView.vue");
   assert.ok(has(detail, "<WaRichEditor"));
   assert.ok(has(detail, "api.post(`/activities/${id}/info`, payload)"));
+  assert.ok(has(detail, "api.delete(`/activities/${id}/info/${u.id}`)"));
   assert.ok(has(detail, "v-model=\"infoSendNow\""));
   assert.ok(has(detail, "Salin pesan (format WA)"));
   assert.ok(has(detail, "Belum tertaut WA"));
 
-  const wali = read("src/views/wali/WaliKegiatan.vue");
-  assert.ok(has(wali, "Info terbaru kegiatan"));
-  assert.ok(has(wali, "renderWaMarkdownHtml(u.body)"));
-  assert.ok(has(wali, "https://wa.me/${normalizeWaPhone(u.contactPhone)}"));
+  // Portal Wali: compact preview in Kegiatan -> dedicated DESC info page -> Pengumuman feed + badge
+  const waliKegiatan = read("src/views/wali/WaliKegiatan.vue");
+  assert.ok(has(waliKegiatan, "Lihat semua info kegiatan"));
+  assert.ok(has(waliKegiatan, "/kegiatan/${k.id}/info"));
+
+  const waliInfo = read("src/views/wali/WaliKegiatanInfo.vue");
+  assert.ok(has(waliInfo, "renderWaMarkdownHtml(u.body)"));
+  assert.ok(has(waliInfo, "https://wa.me/${normalizeWaPhone(u.contactPhone)}"));
+  assert.ok(has(waliInfo, "Terbaru"));
+
+  const waliAnn = read("src/views/wali/WaliPengumuman.vue");
+  assert.ok(has(waliAnn, "a.kind === 'kegiatan_info'"));
+  assert.ok(has(waliAnn, "/kegiatan/${a.activityId}/info"));
+
+  const composable = read("src/composables/useWaliAnnouncements.js");
+  assert.ok(has(composable, "a.kind !== 'kegiatan_info'"), "Beranda stays focused on general TPQ announcements while Pengumuman badge counts both");
+
+  const router = read("src/router/index.js");
+  assert.ok(has(router, 'path: "santri/:santriId/kegiatan/:activityId/info", name: "WaliKegiatanInfo"'));
 });
