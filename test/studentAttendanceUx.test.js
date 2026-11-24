@@ -62,3 +62,9 @@ test("responsive layout smoke checks", () => {
   assert.ok(viewSrc.includes("min-height: 44px"), "touch targets");
   assert.ok(viewSrc.includes("aria-label"), "labeled controls");
 });
+
+test("verified santri nickname badge renders under full name on both desktop and mobile KBM views", () => {
+  assert.ok(viewSrc.includes('nickname: s.nickname || ""'), "preserves nickname from /api/santri");
+  const badgeCount = (viewSrc.match(/class="kbm-nickname">Panggilan: <em>\{\{ row\.nickname \}\}<\/em><\/span>/g) || []).length;
+  assert.equal(badgeCount, 2, "renders nickname badge in both desktop table and mobile card layouts");
+});

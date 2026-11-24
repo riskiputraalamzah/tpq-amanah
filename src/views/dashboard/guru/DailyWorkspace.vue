@@ -382,7 +382,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Cari nama santri..."
+              placeholder="Cari nama atau panggilan..."
               class="form-input search-input"
             />
           </div>
@@ -404,21 +404,26 @@
             >
               <div class="santri-name-col">
                 <span class="santri-avatar" :class="{ 'is-kosong': !santri.status }">{{ santri.name.charAt(0).toUpperCase() }}</span>
-                <span class="santri-name">{{ santri.name }}</span>
-                <span v-if="!santri.status" class="kosong-badge">Dikosongkan</span>
-                <span v-if="santri.titip" class="titip-badge">Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}</span>
-                <button
-                  v-if="!santri.titip"
-                  type="button"
-                  class="btn-rename-santri"
-                  @click.stop="openRenameModal(santri)"
-                  title="Ubah Nama Santri"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
+                <div class="santri-name-stack">
+                  <div class="santri-name-line">
+                    <span class="santri-name">{{ santri.name }}</span>
+                    <span v-if="!santri.status" class="kosong-badge">Dikosongkan</span>
+                    <span v-if="santri.titip" class="titip-badge">Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}</span>
+                    <button
+                      v-if="!santri.titip"
+                      type="button"
+                      class="btn-rename-santri"
+                      @click.stop="openRenameModal(santri)"
+                      title="Ubah Nama Santri"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <span v-if="santri.nickname" class="kbm-nickname">Panggilan: <em>{{ santri.nickname }}</em></span>
+                </div>
               </div>
 
               <div class="status-pills">
@@ -1054,11 +1059,13 @@ const currentLevelName = computed(() => {
   return found?.levelName || '';
 });
 
-// Filtered Roster by Search
+// Filtered Roster by Search (matches full name or verified nickname)
 const filteredRoster = computed(() => {
   if (!searchQuery.value.trim()) return roster.value;
   const q = searchQuery.value.toLowerCase();
-  return roster.value.filter(s => s.name.toLowerCase().includes(q));
+  return roster.value.filter(
+    s => (s.name || '').toLowerCase().includes(q) || (s.nickname || '').toLowerCase().includes(q)
+  );
 });
 
 // Roster Attendance Counts
@@ -1394,6 +1401,7 @@ async function loadLevelContext(levelId) {
     roster.value = (data.roster || []).map(s => ({
       santriId: s.santriId,
       name: s.name,
+      nickname: s.nickname || '',
       status: data.existingSession ? (normalizeStudentStatus(s.status) || '') : (normalizeStudentStatus(s.status) || 'hadir'),
       fromPresence: !!s.fromPresence,
       ...(s.titip ? { titip: s.titip } : {})
@@ -2653,6 +2661,42 @@ onMounted(async () => {
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
+}
+
+.santri-name-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+
+.santri-name-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.kbm-nickname {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef6f1;
+  border: 1px solid #cce3d6;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #35584a;
+  line-height: 1.4;
+}
+
+.kbm-nickname em {
+  font-style: normal;
+  font-weight: 700;
+  color: #0a5c40;
 }
 
 @media (max-width: 640px) {

@@ -39,3 +39,9 @@ test("Daily Workspace: an earlier day of a fillable month is open to every teach
   assert.ok(ws.includes("route.query.from === 'kbm' || targetDate.value < getTodayWibString()"));
   assert.ok(ws.includes("`/dashboard/kbm?date=${targetDate.value}`"), "back to the calendar on that day");
 });
+
+test("Daily Workspace: shows verified nickname badge under full name and searches both name and nickname", () => {
+  assert.ok(ws.includes("nickname: s.nickname || ''"), "preserves nickname from level-context roster");
+  assert.ok(ws.includes('<span v-if="santri.nickname" class="kbm-nickname">Panggilan: <em>{{ santri.nickname }}</em></span>'));
+  assert.ok(ws.includes("(s.nickname || '').toLowerCase().includes(q)"), "search also matches verified nickname");
+});

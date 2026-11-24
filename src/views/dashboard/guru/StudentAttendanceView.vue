@@ -216,19 +216,24 @@
                         <div class="student-avatar" :class="'avatar-' + (row.status || 'kosong')">
                           {{ getInitials(row.name) }}
                         </div>
-                        <span class="student-name">{{ row.name }}</span>
-                        <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
-                        <button
-                          type="button"
-                          class="btn-rename-santri"
-                          @click.stop="openRenameModal(row)"
-                          title="Ubah Nama Santri"
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
+                        <div class="student-name-stack">
+                          <div class="student-name-line">
+                            <span class="student-name">{{ row.name }}</span>
+                            <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
+                            <button
+                              type="button"
+                              class="btn-rename-santri"
+                              @click.stop="openRenameModal(row)"
+                              title="Ubah Nama Santri"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                            </button>
+                          </div>
+                          <span v-if="row.nickname" class="kbm-nickname">Panggilan: <em>{{ row.nickname }}</em></span>
+                        </div>
                       </div>
                     </td>
                     <td>
@@ -305,20 +310,23 @@
                   </div>
                   <div class="roster-info">
                     <span class="roster-num">#{{ idx + 1 }}</span>
-                    <div class="roster-name-row">
-                      <span class="roster-name">{{ row.name }}</span>
-                      <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
-                      <button
-                        type="button"
-                        class="btn-rename-santri"
-                        @click.stop="openRenameModal(row)"
-                        title="Ubah Nama Santri"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
+                    <div class="roster-name-stack">
+                      <div class="roster-name-row">
+                        <span class="roster-name">{{ row.name }}</span>
+                        <span v-if="!row.status" class="kosong-pill">Dikosongkan</span>
+                        <button
+                          type="button"
+                          class="btn-rename-santri"
+                          @click.stop="openRenameModal(row)"
+                          title="Ubah Nama Santri"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                      </div>
+                      <span v-if="row.nickname" class="kbm-nickname">Panggilan: <em>{{ row.nickname }}</em></span>
                     </div>
                   </div>
                 </div>
@@ -800,6 +808,7 @@ const fetchData = async () => {
         .map((s) => ({
           id: s.id,
           name: s.name,
+          nickname: s.nickname || "",
           status: normalizeStudentStatus(existing.get(s.id)) || "hadir",
         }))
         .map((s) => (hasExisting && !existing.has(s.id) ? { ...s, status: "" } : s));
@@ -1400,6 +1409,40 @@ onMounted(fetchData);
   gap: 12px;
 }
 
+.student-name-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.student-name-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.kbm-nickname {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef6f1;
+  border: 1px solid #cce3d6;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #35584a;
+  line-height: 1.4;
+}
+
+.kbm-nickname em {
+  font-style: normal;
+  font-weight: 700;
+  color: #0a5c40;
+}
+
 .student-avatar {
   width: 34px;
   height: 34px;
@@ -1711,14 +1754,26 @@ onMounted(fetchData);
 
   .roster-info {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
 
   .roster-num {
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--gray-400, #9ca3af);
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .roster-name-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+    min-width: 0;
   }
 
   .roster-name {
