@@ -10,7 +10,9 @@
           alt="TPQ AMANAH"
           class="w-16 h-16 rounded-full shadow-lg ring-1 ring-amber-200/40"
         />
-        <p class="mt-4 text-2xl font-bold tracking-tight text-white">TPQ AMANAH</p>
+        <p class="mt-4 text-2xl font-bold tracking-tight text-white">
+          TPQ AMANAH
+        </p>
         <p class="text-xs font-semibold text-amber-300">
           Sawotratap, Gedangan, Sidoarjo
         </p>
@@ -27,7 +29,9 @@
       >
         <!-- Address & registration -->
         <div class="md:pr-10">
-          <h4 class="mb-4 text-base font-bold text-white">Alamat &amp; Legalitas</h4>
+          <h4 class="mb-4 text-base font-bold text-white">
+            Alamat &amp; Legalitas
+          </h4>
           <div class="space-y-3 text-sm text-emerald-100/75">
             <p class="flex items-start gap-2.5">
               <svg
@@ -92,17 +96,27 @@
           </ul>
 
           <div class="pt-5 mt-5 border-t border-amber-200/15">
-            <h4 class="mb-3 text-xs font-bold tracking-wider uppercase text-amber-300">Layanan Online</h4>
+            <h4
+              class="mb-3 text-xs font-bold tracking-wider uppercase text-amber-300"
+            >
+              Layanan Online
+            </h4>
             <div class="flex flex-col gap-2">
-              <router-link to="/daftar" class="w-full lp-btn-gold !min-h-[44px] !text-sm">
+              <router-link
+                to="/daftar"
+                class="w-full lp-btn-gold !min-h-[44px] !text-sm"
+              >
                 Daftar Santri Baru
               </router-link>
               <div class="grid grid-cols-2 gap-2">
                 <router-link to="/wali" class="lp-btn-ghost !text-xs">
                   Portal Wali
                 </router-link>
-                <router-link :to="isAuthenticated ? '/dashboard' : '/login'" class="lp-btn-ghost !text-xs">
-                  {{ isAuthenticated ? 'Dashboard' : 'Login Staf' }}
+                <router-link
+                  :to="isAuthenticated ? '/dashboard' : '/login'"
+                  class="lp-btn-ghost !text-xs"
+                >
+                  {{ isAuthenticated ? "Dashboard" : "Login Asatidz/ah" }}
                 </router-link>
               </div>
             </div>
@@ -111,7 +125,9 @@
 
         <!-- Schedule & contacts -->
         <div class="md:pl-10">
-          <h4 class="mb-4 text-base font-bold text-white">Jadwal Sesi Mengaji</h4>
+          <h4 class="mb-4 text-base font-bold text-white">
+            Jadwal Sesi Mengaji
+          </h4>
           <div class="space-y-3 text-sm text-emerald-100/80">
             <p class="font-medium text-white/90">Hari Aktif: Senin s/d Jumat</p>
             <div class="space-y-2">

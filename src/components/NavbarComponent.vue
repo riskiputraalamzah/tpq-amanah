@@ -1,63 +1,134 @@
 <template>
-  <div class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
-    :class="isScrolled ? 'px-4 md:px-8 pt-3' : 'px-0 pt-0'">
-    <header class="transition-all duration-500" :class="isScrolled
-      ? 'bg-[#03291d]/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(0,0,0,0.45)] rounded-2xl py-3 navbar-floating'
-      : 'bg-transparent py-4 rounded-none'">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div
+    class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+    :class="isScrolled ? 'px-4 md:px-8 pt-3' : 'px-0 pt-0'"
+  >
+    <header
+      class="transition-all duration-500"
+      :class="
+        isScrolled
+          ? 'bg-[#03291d]/90 backdrop-blur-xl shadow-[0_14px_36px_-10px_rgba(0,0,0,0.45)] rounded-2xl py-3 navbar-floating'
+          : 'bg-transparent py-4 rounded-none'
+      "
+    >
+      <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div class="flex items-center justify-between">
           <!-- Logo -->
           <router-link to="/" class="flex items-center gap-3 group">
-            <img :src="logoUrl" alt="TPQ AMANAH"
-              class="w-12 h-12 transition-transform duration-300 group-hover:scale-110" />
-            <span class="hidden sm:block font-bold text-lg text-white">
+            <img
+              :src="logoUrl"
+              alt="TPQ AMANAH"
+              class="w-12 h-12 transition-transform duration-300 group-hover:scale-110"
+            />
+            <span class="hidden text-lg font-bold text-white sm:block">
               TPQ AMANAH
             </span>
           </router-link>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden lg:flex items-center gap-4 xl:gap-5">
-            <a v-for="link in navLinks" :key="link.href" :href="link.href"
-              :target="link.external ? '_blank' : undefined" :rel="link.external ? 'noopener noreferrer' : undefined"
+          <nav class="items-center hidden gap-4 lg:flex xl:gap-5">
+            <a
+              v-for="link in navLinks"
+              :key="link.href"
+              :href="link.href"
+              :target="link.external ? '_blank' : undefined"
+              :rel="link.external ? 'noopener noreferrer' : undefined"
               @click="link.external ? null : scrollToSection($event, link.href)"
-              class="nav-link whitespace-nowrap text-sm flex items-center gap-1 transition-colors duration-300 font-medium" :class="[
-                activeSection === link.section ? 'text-accent-300 font-semibold' : 'text-white/85 hover:text-accent-300'
-              ]">
-              <svg v-if="link.external" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              class="flex items-center gap-1 text-sm font-medium transition-colors duration-300 nav-link whitespace-nowrap"
+              :class="[
+                activeSection === link.section
+                  ? 'text-accent-300 font-semibold'
+                  : 'text-white/85 hover:text-accent-300',
+              ]"
+            >
+              <svg
+                v-if="link.external"
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
               </svg>
               {{ link.label }}
             </a>
 
-            <div class="flex items-center gap-2 pl-2 border-l border-amber-200/20">
-              <router-link to="/wali"
-                class="px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold whitespace-nowrap border border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20 hover:border-amber-200/70 transition-colors">
+            <div
+              class="flex items-center gap-2 pl-2 border-l border-amber-200/20"
+            >
+              <router-link
+                to="/wali"
+                class="px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold whitespace-nowrap border border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20 hover:border-amber-200/70 transition-colors"
+              >
                 Portal Wali
               </router-link>
-              <router-link v-if="isAuthenticated" to="/dashboard" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
+              <router-link
+                v-if="isAuthenticated"
+                to="/dashboard"
+                class="px-4 py-2 text-xs btn-accent xl:text-sm whitespace-nowrap"
+              >
                 Dashboard
               </router-link>
-              <router-link v-else to="/login" class="btn-accent px-4 py-2 text-xs xl:text-sm whitespace-nowrap">
-                Login Staf
+              <router-link
+                v-else
+                to="/login"
+                class="px-4 py-2 text-xs btn-accent xl:text-sm whitespace-nowrap"
+              >
+                Login Asatidz/ah
               </router-link>
             </div>
           </nav>
 
           <!-- Mobile Actions: Quick Portal Wali + Hamburger -->
-          <div class="lg:hidden flex items-center gap-2">
-            <router-link to="/wali"
-              class="inline-flex items-center min-h-[40px] px-3 rounded-xl text-xs font-bold whitespace-nowrap border border-amber-200/45 bg-white/10 text-amber-100 hover:bg-white/20 transition-colors">
+          <div class="flex items-center gap-2 lg:hidden">
+            <router-link
+              to="/wali"
+              class="inline-flex items-center min-h-[40px] px-3 rounded-xl text-xs font-bold whitespace-nowrap border border-amber-200/45 bg-white/10 text-amber-100 hover:bg-white/20 transition-colors"
+            >
               Portal Wali
             </router-link>
-            <button type="button" @click="isMobileMenuOpen = !isMobileMenuOpen" :aria-expanded="isMobileMenuOpen" aria-label="Menu navigasi"
+            <button
+              type="button"
+              @click="isMobileMenuOpen = !isMobileMenuOpen"
+              :aria-expanded="isMobileMenuOpen"
+              aria-label="Menu navigasi"
               class="p-2.5 rounded-xl transition-all duration-300"
-              :class="isScrolled ? 'bg-white/10 text-white' : 'bg-white/20 text-white'">
-              <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              :class="
+                isScrolled ? 'bg-white/10 text-white' : 'bg-white/20 text-white'
+              "
+            >
+              <svg
+                v-if="!isMobileMenuOpen"
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
-              <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                v-else
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -65,36 +136,79 @@
       </div>
 
       <!-- Mobile Menu -->
-      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 -translate-y-4"
-        enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100 translate-y-0" leave-to-class="opacity-0 -translate-y-4">
-        <div v-if="isMobileMenuOpen"
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="-translate-y-4 opacity-0"
+        enter-to-class="translate-y-0 opacity-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="translate-y-0 opacity-100"
+        leave-to-class="-translate-y-4 opacity-0"
+      >
+        <div
+          v-if="isMobileMenuOpen"
           class="lg:hidden mt-3 bg-[#03291d]/95 backdrop-blur-xl shadow-xl border border-amber-200/20 max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain"
-          :class="isScrolled ? 'rounded-xl mx-2' : 'rounded-b-2xl'">
+          :class="isScrolled ? 'rounded-xl mx-2' : 'rounded-b-2xl'"
+        >
           <nav class="px-4 py-6 space-y-2">
-            <a v-for="link in navLinks" :key="link.href" :href="link.href"
-              :target="link.external ? '_blank' : undefined" :rel="link.external ? 'noopener noreferrer' : undefined"
-              @click="link.external ? (isMobileMenuOpen = false) : scrollToSection($event, link.href)"
-              class="flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors"
-              :class="activeSection === link.section ? 'bg-white/10 text-accent-300' : 'text-white/85 hover:bg-white/10 hover:text-accent-300'">
-              <svg v-if="link.external" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            <a
+              v-for="link in navLinks"
+              :key="link.href"
+              :href="link.href"
+              :target="link.external ? '_blank' : undefined"
+              :rel="link.external ? 'noopener noreferrer' : undefined"
+              @click="
+                link.external
+                  ? (isMobileMenuOpen = false)
+                  : scrollToSection($event, link.href)
+              "
+              class="flex items-center gap-2 px-4 py-3 font-medium transition-colors rounded-xl"
+              :class="
+                activeSection === link.section
+                  ? 'bg-white/10 text-accent-300'
+                  : 'text-white/85 hover:bg-white/10 hover:text-accent-300'
+              "
+            >
+              <svg
+                v-if="link.external"
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
               </svg>
               {{ link.label }}
             </a>
-            <div class="pt-4 border-t border-amber-200/15 grid grid-cols-2 gap-2.5">
-              <router-link to="/wali" @click="isMobileMenuOpen = false"
-                class="inline-flex items-center justify-center py-3 px-3 rounded-xl text-sm font-bold text-center border border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20">
+            <div
+              class="pt-4 border-t border-amber-200/15 grid grid-cols-2 gap-2.5"
+            >
+              <router-link
+                to="/wali"
+                @click="isMobileMenuOpen = false"
+                class="inline-flex items-center justify-center px-3 py-3 text-sm font-bold text-center border rounded-xl border-amber-200/40 bg-white/10 text-amber-100 hover:bg-white/20"
+              >
                 Portal Wali
               </router-link>
-              <router-link v-if="isAuthenticated" to="/dashboard" @click="isMobileMenuOpen = false"
-                class="block w-full btn-accent py-3 text-center text-sm">
+              <router-link
+                v-if="isAuthenticated"
+                to="/dashboard"
+                @click="isMobileMenuOpen = false"
+                class="block w-full py-3 text-sm text-center btn-accent"
+              >
                 Dashboard
               </router-link>
-              <router-link v-else to="/login" @click="isMobileMenuOpen = false"
-                class="block w-full btn-accent py-3 text-center text-sm">
-                Login Staf
+              <router-link
+                v-else
+                to="/login"
+                @click="isMobileMenuOpen = false"
+                class="block w-full py-3 text-sm text-center btn-accent"
+              >
+                Login Asatidz/ah
               </router-link>
             </div>
           </nav>
@@ -105,82 +219,85 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
 
-const authStore = useAuthStore()
-const isAuthenticated = computed(() => authStore.isAuthenticated)
+const authStore = useAuthStore();
+const isAuthenticated = computed(() => authStore.isAuthenticated);
 
-const logoUrl = new URL('@/assets/logo-sm.png', import.meta.url).href
+const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
-const isScrolled = ref(false)
-const isMobileMenuOpen = ref(false)
-const activeSection = ref('beranda')
+const isScrolled = ref(false);
+const isMobileMenuOpen = ref(false);
+const activeSection = ref("beranda");
 
 const navLinks = [
-  { href: '#beranda', label: 'Beranda', section: 'beranda' },
-  { href: '#pendaftaran', label: 'Pendaftaran', section: 'pendaftaran' },
-  { href: '#keunggulan', label: 'Keunggulan', section: 'keunggulan' },
-  { href: '#program', label: 'Program', section: 'program' },
-  { href: '#at-tartil', label: 'E-Kitab', section: 'at-tartil' },
-  { href: '#jadwal', label: 'Jadwal', section: 'jadwal' },
-  { href: '#kontak', label: 'Kontak', section: 'kontak' }
-]
+  { href: "#beranda", label: "Beranda", section: "beranda" },
+  { href: "#pendaftaran", label: "Pendaftaran", section: "pendaftaran" },
+  { href: "#keunggulan", label: "Keunggulan", section: "keunggulan" },
+  { href: "#program", label: "Program", section: "program" },
+  { href: "#at-tartil", label: "E-Kitab", section: "at-tartil" },
+  { href: "#jadwal", label: "Jadwal", section: "jadwal" },
+  { href: "#kontak", label: "Kontak", section: "kontak" },
+];
 
-let observer = null
+let observer = null;
 
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 50
-}
+  isScrolled.value = window.scrollY > 50;
+};
 
 const scrollToSection = (event, href) => {
-  event.preventDefault()
-  isMobileMenuOpen.value = false
+  event.preventDefault();
+  isMobileMenuOpen.value = false;
 
-  if (href === '#beranda') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    return
+  if (href === "#beranda") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
   }
 
-  const element = document.querySelector(href)
+  const element = document.querySelector(href);
   if (element) {
-    const offset = 120 // Generous offset to ensure title is fully below floating navbar
-    const top = element.getBoundingClientRect().top + window.scrollY - offset
-    window.scrollTo({ top, behavior: 'smooth' })
+    const offset = 120; // Generous offset to ensure title is fully below floating navbar
+    const top = element.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: "smooth" });
   }
-}
+};
 
 const setupScrollSpy = () => {
   const sections = navLinks
-    .map(link => document.querySelector(link.href))
-    .filter(Boolean)
+    .map((link) => document.querySelector(link.href))
+    .filter(Boolean);
 
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        activeSection.value = entry.target.id
-      }
-    })
-  }, {
-    rootMargin: '-20% 0px -70% 0px',
-    threshold: 0
-  })
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id;
+        }
+      });
+    },
+    {
+      rootMargin: "-20% 0px -70% 0px",
+      threshold: 0,
+    },
+  );
 
-  sections.forEach(section => observer.observe(section))
-}
+  sections.forEach((section) => observer.observe(section));
+};
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll)
+  window.addEventListener("scroll", handleScroll);
   // Small delay to ensure DOM is ready
-  setTimeout(setupScrollSpy, 100)
-})
+  setTimeout(setupScrollSpy, 100);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener("scroll", handleScroll);
   if (observer) {
-    observer.disconnect()
+    observer.disconnect();
   }
-})
+});
 </script>
 
 <style scoped>
@@ -189,19 +306,25 @@ onUnmounted(() => {
 }
 
 .navbar-floating::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: 1rem;
   padding: 1.5px;
-  background: linear-gradient(135deg,
-      rgba(252, 211, 77, 0.55),
-      rgba(252, 211, 77, 0.12),
-      rgba(255, 255, 255, 0.14),
-      rgba(252, 211, 77, 0.12),
-      rgba(252, 211, 77, 0.55));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(
+    135deg,
+    rgba(252, 211, 77, 0.55),
+    rgba(252, 211, 77, 0.12),
+    rgba(255, 255, 255, 0.14),
+    rgba(252, 211, 77, 0.12),
+    rgba(252, 211, 77, 0.55)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
