@@ -1,22 +1,58 @@
 <template>
   <div class="santri-view">
-    <header class="page-header">
+    <header class="page-header sm-head">
       <div>
         <h1>{{ title }}</h1>
         <p>{{ subtitle }}</p>
+      </div>
+      <div v-if="adminMode" class="sm-head-actions">
+        <router-link to="/dashboard/pendaftaran/langsung" class="btn btn-ghost sm-head-btn">
+          Daftarkan langsung
+        </router-link>
+        <button
+          type="button"
+          class="btn btn-primary sm-head-btn"
+          :aria-expanded="addOpen"
+          @click="toggleAddForm"
+        >
+          {{ addOpen ? "Tutup form tambah" : "+ Tambah Santri" }}
+        </button>
       </div>
     </header>
 
     <PageSkeleton v-if="loading" :rows="8" label="Memuat data santri" />
 
     <div v-else>
-      <!-- naik jilid just done (to undo), and "usulan santri baru" (guru: propose; admin / coordinator: decide) -->
-      <SantriPromotions ref="promotionsPanel" :admin-mode="adminMode" @changed="reloadSantri" />
-      <SantriProposals :admin-mode="adminMode" :default-class-id="proposalClassId" @changed="reloadSantri" />
+      <!-- Admin segmented tabs: Daftar Santri (default) & Riwayat Naik Jilid -->
+      <div v-if="adminMode" class="sm-tabs" role="tablist" aria-label="Tampilan Kelola Santri">
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="adminTab === 'roster'"
+          :class="{ active: adminTab === 'roster' }"
+          @click="adminTab = 'roster'"
+        >
+          Daftar Santri <span class="sm-tab-num">{{ filtered.length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          :aria-selected="adminTab === 'promotions'"
+          :class="{ active: adminTab === 'promotions' }"
+          @click="adminTab = 'promotions'"
+        >
+          Riwayat Naik Jilid
+          <span v-if="promoRecentCount" class="sm-tab-badge" :title="`${promoRecentCount} kenaikan dalam 7 hari terakhir`">{{ promoRecentCount }}</span>
+          <span v-else-if="promoTotalCount" class="sm-tab-num">{{ promoTotalCount }}</span>
+        </button>
+      </div>
 
-      <!-- Form Tambah Santri (Hanya untuk Admin) -->
-      <section v-if="adminMode" class="glass-card">
-        <h2>Tambah Santri</h2>
+      <!-- Form Tambah Santri Cepat (Hanya Admin, muncul saat tombol "+ Tambah Santri" ditekan agar Daftar Santri langsung terlihat di atas) -->
+      <section v-if="adminMode && addOpen" class="glass-card sm-add-panel">
+        <div class="sm-add-head">
+          <h2>Tambah Santri Cepat</h2>
+          <button type="button" class="sm-add-close" aria-label="Tutup form tambah santri" @click="addOpen = false">×</button>
+        </div>
         <p class="add-hint">
           Santri baru dengan data lengkap dan wali?
           <router-link to="/dashboard/pendaftaran/langsung"
@@ -28,6 +64,7 @@
           <div class="form-group">
             <label>Nama Santri</label>
             <input
+              ref="addNameInput"
               v-model="newName"
               class="form-input"
               placeholder="Nama lengkap santri"
@@ -71,7 +108,17 @@
         </div>
       </section>
 
-      <section class="glass-card">
+      <!-- Admin: Riwayat Naik Jilid lives cleanly in its own tab; Guru: compact 24h undo bar above the roster -->
+      <div v-show="!adminMode || adminTab === 'promotions'">
+        <SantriPromotions ref="promotionsPanel" :admin-mode="adminMode" @changed="reloadSantri" />
+      </div>
+
+      <!-- "Usulan santri baru" (guru: propose; admin / coordinator: decide on Daftar Santri tab) -->
+      <div v-show="!adminMode || adminTab === 'roster'">
+        <SantriProposals :admin-mode="adminMode" :default-class-id="proposalClassId" @changed="reloadSantri" />
+      </div>
+
+      <section v-show="!adminMode || adminTab === 'roster'" class="glass-card">
         <div class="roster-toolbar">
           <h2>Daftar Santri ({{ filtered.length }})</h2>
           <button
@@ -892,6 +939,9 @@ const canEdit = () => true;
 
 const loading = ref(true);
 const adding = ref(false);
+const addOpen = ref(false);
+const addNameInput = ref(null);
+const adminTab = ref("roster");
 const saving = ref(false);
 const santri = ref([]);
 const classes = ref([]);
@@ -1349,6 +1399,16 @@ const LEVEL_ORDER = ["1", "2", "3", "4", "5", "6", "7"];
 const changeAccess = ref({ taughtClassIds: [], canDecide: false });
 const promotingId = ref("");
 const promotionsPanel = ref(null);
+const promoRecentCount = computed(() => Number(promotionsPanel.value?.recentCount || 0));
+const promoTotalCount = computed(() => Number(promotionsPanel.value?.totalCount || 0));
+const toggleAddForm = async () => {
+  addOpen.value = !addOpen.value;
+  if (addOpen.value) {
+    adminTab.value = "roster";
+    await nextTick();
+    addNameInput.value?.focus();
+  }
+};
 const levelShort = (id) => (String(id) === "7" ? "Marhalah" : `Jilid ${id}`);
 const loadChangeAccess = async () => {
   if (props.adminMode) return;
@@ -1564,8 +1624,10 @@ const saveSantri = async (row) => {
     const res = await api.put(`/santri/${row.id}`, payload);
     row.name = res.data.name || trimmedName;
     if (props.adminMode) {
+      const classChanged = String(row.currentClassId || "") !== String(editingLevel.value || "");
       row.currentClassId = editingLevel.value || null;
       row.status = editingStatus.value;
+      if (classChanged) promotionsPanel.value?.reload();
     }
     saving.value = false;
     closeEdit();
@@ -1603,7 +1665,142 @@ onMounted(fetchData);
 }
 
 .page-header {
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
+}
+
+.sm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.sm-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-head-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.sm-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(11, 59, 42, 0.06);
+  max-width: 100%;
+}
+
+.sm-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #3b4a42;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sm-tabs button.active {
+  background: #fff;
+  color: var(--lp-ink, #0b3b2a);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sm-tabs button:focus-visible,
+.sm-add-close:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.sm-tab-num {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #5b6b62;
+  font-variant-numeric: tabular-nums;
+}
+
+.sm-tab-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sm-add-panel {
+  border: 1px solid rgba(10, 92, 64, 0.22);
+}
+
+.sm-add-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.sm-add-head h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.sm-add-close {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 59, 42, 0.15);
+  background: #fff;
+  color: #3b4a42;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .sm-head-actions {
+    width: 100%;
+  }
+  .sm-head-btn {
+    flex: 1 1 0;
+  }
+  .sm-tabs {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .sm-tabs button {
+    flex: 1 1 0;
+    padding: 0 10px;
+    font-size: 0.84rem;
+  }
 }
 
 .page-header h1 {
