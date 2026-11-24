@@ -25,10 +25,10 @@
       </div>
 
       <div
-        class="grid gap-10 mt-14 md:grid-cols-3 md:gap-0 md:divide-x md:divide-amber-200/15"
+        class="grid mt-14 divide-y divide-amber-200/15 md:grid-cols-3 md:divide-y-0 md:divide-x"
       >
         <!-- Address & registration -->
-        <div class="md:pr-10">
+        <div class="pb-8 md:pb-0 md:pr-10">
           <h4 class="mb-4 text-base font-bold text-white">
             Alamat &amp; Legalitas
           </h4>
@@ -83,9 +83,9 @@
         </div>
 
         <!-- Links + Layanan Online -->
-        <div class="md:px-10">
+        <div class="py-8 md:py-0 md:px-10">
           <h4 class="mb-4 text-base font-bold text-white">Navigasi Utama</h4>
-          <ul class="text-sm">
+          <ul class="grid grid-cols-2 text-sm gap-x-4 gap-y-0.5 md:block">
             <li v-for="link in links" :key="link.href">
               <a
                 :href="link.href"
@@ -124,7 +124,7 @@
         </div>
 
         <!-- Schedule & contacts -->
-        <div class="md:pl-10">
+        <div class="pt-8 md:pt-0 md:pl-10">
           <h4 class="mb-4 text-base font-bold text-white">
             Jadwal Sesi Mengaji
           </h4>
@@ -151,12 +151,12 @@
               </div>
             </div>
 
-            <div class="flex flex-wrap gap-2 pt-2 text-xs">
+            <div class="grid grid-cols-1 gap-2 pt-2 text-xs sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
               <a
                 href="https://wa.me/6289530397058"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="lp-btn-ghost !justify-start"
+                class="w-full lp-btn-ghost !text-xs !px-3"
               >
                 <span>WA Ustadzah Ella (0895-3039-7058)</span>
               </a>
@@ -164,7 +164,7 @@
                 href="https://wa.me/6282233361877"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="lp-btn-ghost !justify-start"
+                class="w-full lp-btn-ghost !text-xs !px-3"
               >
                 <span>WA Ustadz Riski (0822-3336-1877)</span>
               </a>

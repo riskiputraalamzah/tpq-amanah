@@ -226,5 +226,8 @@ test("Landing page surfaces Portal Wali entry, interactive 90-min routine, and m
   const footerSrc = fs.readFileSync(path.join(here, "../src/components/FooterComponent.vue"), "utf8");
   assert.ok(footerSrc.includes('to="/daftar"') && footerSrc.includes('to="/wali"'), "Footer exposes direct Daftar and Portal Wali actions");
   assert.ok(footerSrc.includes("text-center border-t border-amber-200/15 sm:flex-row sm:gap-4 sm:text-left"), "Footer bottom copyright and tagline center symmetrically on mobile");
+  assert.ok(footerSrc.includes("grid grid-cols-2 text-sm gap-x-4 gap-y-0.5 md:block"), "Footer main navigation collapses into compact 2-column grid on mobile");
   assert.ok(homeViewSrc.includes("flex flex-col items-center justify-center max-w-md gap-2.5"), "Hero Kemenag registration shield stacks centered on mobile");
+  assert.ok(homeViewSrc.includes("rounded-t-[9rem] sm:rounded-t-[14rem] sm:pt-24"), "Mihrab registration panel scales arch proportionally on mobile");
+  assert.ok(homeViewSrc.includes("flex flex-col items-center gap-4 p-5 text-center lp-card sm:flex-row sm:items-start sm:text-left"), "Contact address card centers vertically on mobile");
 });

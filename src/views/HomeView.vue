@@ -554,7 +554,7 @@
 
           <!-- Hub: mihrab-topped panel -->
           <div
-            class="flex flex-col px-6 pt-24 pb-7 lp-dark-panel rounded-t-[14rem] sm:px-9 sm:pb-9 lg:col-span-5"
+            class="flex flex-col px-5 pt-16 pb-7 lp-dark-panel rounded-t-[9rem] sm:rounded-t-[14rem] sm:pt-24 sm:px-9 sm:pb-9 lg:col-span-5"
           >
             <div class="text-center">
               <span
@@ -648,12 +648,12 @@
                     >Koordinator pendaftaran</span
                   >
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
                   <a
                     :href="contactElla.waLink"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="lp-btn-ghost"
+                    class="lp-btn-ghost !text-xs !px-3 leading-tight"
                   >
                     WA Ustadzah Ella
                   </a>
@@ -661,7 +661,7 @@
                     :href="contactRiski.waLink"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="lp-btn-ghost"
+                    class="lp-btn-ghost !text-xs !px-3 leading-tight"
                   >
                     WA Ustadz Riski
                   </a>
@@ -1001,11 +1001,13 @@
         </ol>
 
         <!-- Complementary programs -->
-        <div class="p-8 lp-dark-panel sm:p-10 lg:p-12">
+        <div class="p-6 lp-dark-panel sm:p-10 lg:p-12">
           <div
-            class="grid gap-9 md:grid-cols-3 md:gap-0 md:divide-x md:divide-amber-200/15"
+            class="grid divide-y divide-amber-200/15 md:grid-cols-3 md:divide-y-0 md:divide-x"
           >
-            <div class="md:px-8 md:first:pl-0 md:last:pr-0">
+            <div
+              class="flex flex-col items-center pb-7 text-center md:items-start md:text-left md:pb-0 md:px-8 md:first:pl-0"
+            >
               <StarBadge gold class="mb-4">1</StarBadge>
               <h3 class="mb-1.5 text-lg font-bold text-white">
                 Al-Qur'an &amp; Tahsin Lanjutan
@@ -1015,7 +1017,9 @@
                 (sorogan) dengan pendalaman makhraj dan tartil bersanad.
               </p>
             </div>
-            <div class="md:px-8">
+            <div
+              class="flex flex-col items-center py-7 text-center md:items-start md:text-left md:py-0 md:px-8"
+            >
               <StarBadge gold class="mb-4">2</StarBadge>
               <h3 class="mb-1.5 text-lg font-bold text-white">
                 Tahfidzul Qur'an (Juz 'Amma)
@@ -1025,7 +1029,9 @@
                 metode sima'i dan muraja'ah rutin berjenjang.
               </p>
             </div>
-            <div class="md:px-8 md:last:pr-0">
+            <div
+              class="flex flex-col items-center pt-7 text-center md:items-start md:text-left md:pt-0 md:px-8 md:last:pr-0"
+            >
               <StarBadge gold class="mb-4">3</StarBadge>
               <h3 class="mb-1.5 text-lg font-bold text-white">
                 Praktik Shalat &amp; Doa Harian
@@ -1375,14 +1381,18 @@
         </div>
 
         <!-- Counters -->
-        <div ref="statsRef" class="p-8 lp-card sm:p-10">
+        <div ref="statsRef" class="p-5 lp-card sm:p-8 lg:p-10">
           <div
-            class="grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:divide-x lg:divide-amber-700/15"
+            class="grid grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-amber-700/15"
           >
             <div
-              v-for="stat in stats"
+              v-for="(stat, idx) in stats"
               :key="stat.label"
-              class="px-3 text-center"
+              class="px-3 py-5 text-center border-amber-700/15 lg:py-0 lg:border-0"
+              :class="[
+                idx < 2 ? 'border-b' : '',
+                idx % 2 === 0 ? 'border-r' : '',
+              ]"
             >
               <div
                 class="mb-1 text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl lg:text-5xl lp-ink"
@@ -1896,7 +1906,9 @@
               </div>
             </div>
 
-            <div class="flex items-start gap-4 p-5 lp-card sm:p-6">
+            <div
+              class="flex flex-col items-center gap-4 p-5 text-center lp-card sm:flex-row sm:items-start sm:text-left sm:p-6"
+            >
               <StarBadge
                 ><svg
                   class="w-6 h-6"
@@ -1932,7 +1944,7 @@
                   href="https://www.google.com/maps/dir/?api=1&amp;destination=-7.3688465,112.7361663"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="mt-3 lp-btn-line"
+                  class="w-full mt-4 lp-btn-line sm:w-auto sm:mt-3"
                 >
                   <span>Petunjuk Arah di Google Maps ↗</span>
                 </a>
@@ -1940,7 +1952,7 @@
             </div>
 
             <div
-              class="flex flex-col gap-4 p-6 lp-dark-panel sm:flex-row sm:items-center sm:justify-between"
+              class="flex flex-col items-center gap-4 p-6 text-center lp-dark-panel sm:flex-row sm:items-center sm:justify-between sm:text-left"
             >
               <div>
                 <h3 class="text-base font-bold text-white">
@@ -1953,7 +1965,7 @@
               </div>
               <router-link
                 to="/daftar"
-                class="px-6 text-sm text-nowrap lp-btn-gold"
+                class="w-full px-6 text-sm text-nowrap lp-btn-gold sm:w-auto"
               >
                 Daftar Sekarang
               </router-link>
