@@ -175,13 +175,15 @@
 
       <!-- Bottom -->
       <div
-        class="flex flex-col items-center justify-between gap-4 pt-8 mt-14 text-xs border-t border-amber-200/15 sm:flex-row text-emerald-100/60"
+        class="flex flex-col items-center justify-between gap-2.5 pt-8 mt-14 text-xs text-center border-t border-amber-200/15 sm:flex-row sm:gap-4 sm:text-left text-emerald-100/60"
       >
-        <p>
+        <p class="leading-relaxed text-balance">
           &copy; {{ new Date().getFullYear() }} TPQ AMANAH Sawotratap, Gedangan,
           Sidoarjo. Seluruh hak cipta dilindungi.
         </p>
-        <p>Membimbing dengan Hati • Metode At-Tartil 6 Jilid</p>
+        <p class="text-amber-200/70 sm:text-right shrink-0">
+          Membimbing dengan Hati &bull; Metode At-Tartil 6 Jilid
+        </p>
       </div>
     </div>
   </footer>

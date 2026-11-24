@@ -295,22 +295,26 @@
 
         <!-- Official registration: the number comes from the Tanda Daftar LPQ issued by Kemenag Sidoarjo -->
         <p
-          class="flex items-center justify-center max-w-2xl gap-2 mt-5 text-sm text-emerald-100/90"
+          class="flex flex-col items-center justify-center max-w-md gap-2.5 mt-6 text-sm leading-relaxed text-center text-balance sm:max-w-2xl sm:flex-row sm:gap-2 sm:mt-5 text-emerald-100/90"
         >
-          <svg
-            class="w-5 h-5 text-amber-300 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <span
+            class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-amber-300/10 border border-amber-300/30 shadow-[0_0_20px_rgba(252,211,77,0.12)] sm:w-auto sm:h-auto sm:bg-transparent sm:border-0 sm:shadow-none shrink-0"
             aria-hidden="true"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
+            <svg
+              class="w-6 h-6 sm:w-5 sm:h-5 text-amber-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
+            </svg>
+          </span>
           <span
             >Terdaftar resmi di Kementerian Agama Kabupaten Sidoarjo &middot;
             <span class="font-semibold text-white whitespace-nowrap"

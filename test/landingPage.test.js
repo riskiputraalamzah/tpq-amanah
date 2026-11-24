@@ -225,4 +225,6 @@ test("Landing page surfaces Portal Wali entry, interactive 90-min routine, and m
   assert.ok(homeViewSrc.includes('api.get("/content/public-stats")'), "Stats section syncs live counts from /content/public-stats");
   const footerSrc = fs.readFileSync(path.join(here, "../src/components/FooterComponent.vue"), "utf8");
   assert.ok(footerSrc.includes('to="/daftar"') && footerSrc.includes('to="/wali"'), "Footer exposes direct Daftar and Portal Wali actions");
+  assert.ok(footerSrc.includes("text-center border-t border-amber-200/15 sm:flex-row sm:gap-4 sm:text-left"), "Footer bottom copyright and tagline center symmetrically on mobile");
+  assert.ok(homeViewSrc.includes("flex flex-col items-center justify-center max-w-md gap-2.5"), "Hero Kemenag registration shield stacks centered on mobile");
 });
