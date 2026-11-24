@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="lp min-h-screen font-sans"
-  >
+  <div class="min-h-screen font-sans lp">
     <NavbarComponent />
 
     <!-- ================================================================= -->
@@ -11,10 +9,10 @@
     <section
       id="beranda"
       ref="heroRef"
-      class="hero relative isolate overflow-hidden text-white pt-28 sm:pt-32 lg:pt-36"
+      class="relative overflow-hidden text-white hero isolate pt-28 sm:pt-32 lg:pt-36"
     >
-      <div class="hero-ground absolute inset-0 -z-10" aria-hidden="true"></div>
-      <div class="hero-khatam absolute inset-0 -z-10" aria-hidden="true"></div>
+      <div class="absolute inset-0 hero-ground -z-10" aria-hidden="true"></div>
+      <div class="absolute inset-0 hero-khatam -z-10" aria-hidden="true"></div>
 
       <!-- Headline block -->
       <div
@@ -31,26 +29,46 @@
 
         <!-- Ornamental rule: line, eight-point star, line -->
         <svg
-          class="hero-rise w-56 h-4 mt-3 text-amber-300"
+          class="w-56 h-4 mt-3 hero-rise text-amber-300"
           style="--d: 80ms"
           viewBox="0 0 224 16"
           fill="none"
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="hero-rule-l" x1="0" y1="0" x2="92" y2="0" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="hero-rule-l"
+              x1="0"
+              y1="0"
+              x2="92"
+              y2="0"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0" stop-color="#fcd34d" stop-opacity="0" />
               <stop offset="1" stop-color="#fcd34d" stop-opacity="0.9" />
             </linearGradient>
-            <linearGradient id="hero-rule-r" x1="132" y1="0" x2="224" y2="0" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="hero-rule-r"
+              x1="132"
+              y1="0"
+              x2="224"
+              y2="0"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0" stop-color="#fcd34d" stop-opacity="0.9" />
               <stop offset="1" stop-color="#fcd34d" stop-opacity="0" />
             </linearGradient>
           </defs>
           <path d="M0 8H92" stroke="url(#hero-rule-l)" stroke-width="1" />
           <path d="M132 8H224" stroke="url(#hero-rule-r)" stroke-width="1" />
-          <path d="M119.00 8.00 L112.00 15.00 L105.00 8.00 L112.00 1.00 Z" fill="currentColor" />
-          <path d="M116.95 12.95 L107.05 12.95 L107.05 3.05 L116.95 3.05 Z" fill="currentColor" />
+          <path
+            d="M119.00 8.00 L112.00 15.00 L105.00 8.00 L112.00 1.00 Z"
+            fill="currentColor"
+          />
+          <path
+            d="M116.95 12.95 L107.05 12.95 L107.05 3.05 L116.95 3.05 Z"
+            fill="currentColor"
+          />
         </svg>
 
         <h1
@@ -66,14 +84,16 @@
           style="--d: 220ms"
         >
           Anak usia 4 tahun sampai SMP belajar membaca Al-Qur'an dengan
-          <strong class="font-semibold text-white whitespace-nowrap">Metode At-Tartil 6 Jilid</strong>.
-          Bacaan setiap anak disimak satu per satu oleh ustadz dan ustadzah yang
-          sabar. Kelas Senin sampai Jumat, pilih sesi sore atau ba'da Maghrib.
+          <strong class="font-semibold text-white whitespace-nowrap"
+            >Metode At-Tartil 6 Jilid</strong
+          >. Bacaan setiap anak disimak satu per satu oleh ustadz dan ustadzah
+          yang sabar. Kelas Senin sampai Jumat, pilih sesi sore atau ba'da
+          Maghrib.
         </p>
 
         <!-- Actions -->
         <div
-          class="hero-rise mt-8 flex w-full max-w-sm flex-col items-stretch gap-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center"
+          class="flex flex-col items-stretch w-full max-w-sm gap-3 mt-8 hero-rise sm:w-auto sm:max-w-none sm:flex-row sm:items-center"
           style="--d: 300ms"
         >
           <router-link
@@ -88,7 +108,12 @@
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
             </svg>
           </router-link>
 
@@ -98,8 +123,15 @@
             rel="noopener noreferrer"
             class="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-base font-semibold text-white rounded-xl border border-amber-200/40 bg-white/5 hover:bg-white/10 hover:border-amber-200/70 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-200"
           >
-            <svg class="w-5 h-5 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+            <svg
+              class="w-5 h-5 text-emerald-300 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+              />
             </svg>
             <span>Tanya via WhatsApp</span>
           </a>
@@ -109,25 +141,54 @@
           class="hero-rise mt-5 flex flex-col items-center gap-0.5 text-sm text-emerald-200/90"
           style="--d: 360ms"
         >
-          <span class="inline-flex items-center gap-2 font-medium text-white/95">
-            <span class="w-2 h-2 rounded-full bg-amber-400 motion-safe:animate-pulse" aria-hidden="true"></span>
+          <span
+            class="inline-flex items-center gap-2 font-medium text-white/95"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-amber-400 motion-safe:animate-pulse"
+              aria-hidden="true"
+            ></span>
             Penerimaan Santri Baru &middot; Sawotratap, Sidoarjo
           </span>
-          <span>Daftar online sekitar 5 menit dari HP. Tanpa biaya formulir.</span>
+          <span
+            >Daftar online sekitar 5 menit dari HP. Tanpa biaya formulir.</span
+          >
         </p>
       </div>
 
       <!-- Mihrab: the artwork in its niche -->
       <figure class="hero-mihrab relative mx-auto mt-10 w-[min(86vw,27rem)]">
         <!-- star halo -->
-        <div
-          class="hero-halo-wrap pointer-events-none"
-          aria-hidden="true"
-        >
-          <svg class="hero-halo block w-full h-auto" viewBox="-100 -100 200 200" fill="none" stroke="#fcd34d" stroke-width="0.5" stroke-opacity="0.38">
+        <div class="pointer-events-none hero-halo-wrap" aria-hidden="true">
+          <svg
+            class="block w-full h-auto hero-halo"
+            viewBox="-100 -100 200 200"
+            fill="none"
+            stroke="#fcd34d"
+            stroke-width="0.5"
+            stroke-opacity="0.38"
+          >
             <circle r="97" />
-            <circle r="93" stroke-dasharray="0.6 4" stroke-linecap="round" stroke-opacity="0.55" />
-            <path d="M86.00 0.00 L0.00 86.00 L-86.00 0.00 L-0.00 -86.00 Z"/><path d="M60.81 60.81 L-60.81 60.81 L-60.81 -60.81 L60.81 -60.81 Z"/><path d="M59.13 24.49 L-24.49 59.13 L-59.13 -24.49 L24.49 -59.13 Z"/><path d="M24.49 59.13 L-59.13 24.49 L-24.49 -59.13 L59.13 -24.49 Z"/><path d="M44.00 0.00 L0.00 44.00 L-44.00 0.00 L-0.00 -44.00 Z"/><path d="M31.11 31.11 L-31.11 31.11 L-31.11 -31.11 L31.11 -31.11 Z"/>
+            <circle
+              r="93"
+              stroke-dasharray="0.6 4"
+              stroke-linecap="round"
+              stroke-opacity="0.55"
+            />
+            <path d="M86.00 0.00 L0.00 86.00 L-86.00 0.00 L-0.00 -86.00 Z" />
+            <path
+              d="M60.81 60.81 L-60.81 60.81 L-60.81 -60.81 L60.81 -60.81 Z"
+            />
+            <path
+              d="M59.13 24.49 L-24.49 59.13 L-59.13 -24.49 L24.49 -59.13 Z"
+            />
+            <path
+              d="M24.49 59.13 L-59.13 24.49 L-24.49 -59.13 L59.13 -24.49 Z"
+            />
+            <path d="M44.00 0.00 L0.00 44.00 L-44.00 0.00 L-0.00 -44.00 Z" />
+            <path
+              d="M31.11 31.11 L-31.11 31.11 L-31.11 -31.11 L31.11 -31.11 Z"
+            />
           </svg>
         </div>
 
@@ -139,21 +200,54 @@
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="hero-arch-stroke" x1="0" y1="0" x2="0" y2="576" gradientUnits="userSpaceOnUse">
+            <linearGradient
+              id="hero-arch-stroke"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="576"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0" stop-color="#fde68a" stop-opacity="0.95" />
               <stop offset="0.7" stop-color="#fcd34d" stop-opacity="0.55" />
               <stop offset="1" stop-color="#fcd34d" stop-opacity="0" />
             </linearGradient>
-            <radialGradient id="hero-niche-fill" cx="240" cy="330" r="300" gradientUnits="userSpaceOnUse">
+            <radialGradient
+              id="hero-niche-fill"
+              cx="240"
+              cy="330"
+              r="300"
+              gradientUnits="userSpaceOnUse"
+            >
               <stop offset="0" stop-color="#fbbf24" stop-opacity="0.26" />
               <stop offset="0.55" stop-color="#10b981" stop-opacity="0.12" />
               <stop offset="1" stop-color="#022c1e" stop-opacity="0.35" />
             </radialGradient>
           </defs>
-          <path class="hero-niche-in" d="M36 576 V266 C36 144 128 70 240 28 C352 70 444 144 444 266 V576 Z" fill="url(#hero-niche-fill)" />
-          <path class="hero-draw" pathLength="1" d="M18 576 V262 C18 132 118 52 240 8 C362 52 462 132 462 262 V576" stroke="url(#hero-arch-stroke)" stroke-width="2" />
-          <path class="hero-draw hero-draw-2" pathLength="1" d="M36 576 V266 C36 144 128 70 240 28 C352 70 444 144 444 266 V576" stroke="url(#hero-arch-stroke)" stroke-width="1" />
-          <path class="hero-niche-in" d="M240 -12 L247 -4 L240 4 L233 -4 Z" fill="#fde68a" />
+          <path
+            class="hero-niche-in"
+            d="M36 576 V266 C36 144 128 70 240 28 C352 70 444 144 444 266 V576 Z"
+            fill="url(#hero-niche-fill)"
+          />
+          <path
+            class="hero-draw"
+            pathLength="1"
+            d="M18 576 V262 C18 132 118 52 240 8 C362 52 462 132 462 262 V576"
+            stroke="url(#hero-arch-stroke)"
+            stroke-width="2"
+          />
+          <path
+            class="hero-draw hero-draw-2"
+            pathLength="1"
+            d="M36 576 V266 C36 144 128 70 240 28 C352 70 444 144 444 266 V576"
+            stroke="url(#hero-arch-stroke)"
+            stroke-width="1"
+          />
+          <path
+            class="hero-niche-in"
+            d="M240 -12 L247 -4 L240 4 L233 -4 Z"
+            fill="#fde68a"
+          />
         </svg>
 
         <img
@@ -186,23 +280,42 @@
         >
           <li>6 Jilid Metode At-Tartil</li>
           <li class="hidden text-amber-300 sm:block" aria-hidden="true">
-            <svg class="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0 L16 8 L8 16 L0 8 Z" /></svg>
+            <svg class="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0 L16 8 L8 16 L0 8 Z" />
+            </svg>
           </li>
           <li>2 Sesi: Sore &amp; Ba'da Maghrib</li>
           <li class="hidden text-amber-300 sm:block" aria-hidden="true">
-            <svg class="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0 L16 8 L8 16 L0 8 Z" /></svg>
+            <svg class="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0 L16 8 L8 16 L0 8 Z" />
+            </svg>
           </li>
           <li>10+ Tahun Amanah Membina</li>
         </ul>
 
         <!-- Official registration: the number comes from the Tanda Daftar LPQ issued by Kemenag Sidoarjo -->
-        <p class="flex items-center justify-center max-w-2xl gap-2 mt-5 text-sm text-emerald-100/90">
-          <svg class="w-5 h-5 text-amber-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        <p
+          class="flex items-center justify-center max-w-2xl gap-2 mt-5 text-sm text-emerald-100/90"
+        >
+          <svg
+            class="w-5 h-5 text-amber-300 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
           </svg>
           <span
             >Terdaftar resmi di Kementerian Agama Kabupaten Sidoarjo &middot;
-            <span class="font-semibold text-white whitespace-nowrap">NSPQ 411235151939</span></span
+            <span class="font-semibold text-white whitespace-nowrap"
+              >NSPQ 411235151939</span
+            ></span
           >
         </p>
       </div>
@@ -225,19 +338,21 @@
           class="grid max-w-6xl mx-auto gap-y-9 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-amber-700/15"
         >
           <li class="flex flex-col items-center px-6 text-center">
-            <StarBadge><svg
+            <StarBadge
+              ><svg
                 class="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-               aria-hidden="true">
+                aria-hidden="true"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg></StarBadge>
+                /></svg
+            ></StarBadge>
             <h3 class="mt-4 text-base font-bold leading-snug lp-ink">
               Belajar Bertahap, 6 Jilid
             </h3>
@@ -247,19 +362,21 @@
             </p>
           </li>
           <li class="flex flex-col items-center px-6 text-center">
-            <StarBadge><svg
+            <StarBadge
+              ><svg
                 class="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-               aria-hidden="true">
+                aria-hidden="true"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                />
-              </svg></StarBadge>
+                /></svg
+            ></StarBadge>
             <h3 class="mt-4 text-base font-bold leading-snug lp-ink">
               Guru yang Sabar
             </h3>
@@ -268,19 +385,21 @@
             </p>
           </li>
           <li class="flex flex-col items-center px-6 text-center">
-            <StarBadge><svg
+            <StarBadge
+              ><svg
                 class="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-               aria-hidden="true">
+                aria-hidden="true"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg></StarBadge>
+                /></svg
+            ></StarBadge>
             <h3 class="mt-4 text-base font-bold leading-snug lp-ink">
               Perkembangan Bisa Dipantau
             </h3>
@@ -290,12 +409,14 @@
             </p>
           </li>
           <li class="flex flex-col items-center px-6 text-center">
-            <StarBadge><svg
+            <StarBadge
+              ><svg
                 class="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-               aria-hidden="true">
+                aria-hidden="true"
+              >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -307,8 +428,8 @@
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg></StarBadge>
+                /></svg
+            ></StarBadge>
             <h3 class="mt-4 text-base font-bold leading-snug lp-ink">
               Mudah Dikunjungi
             </h3>
@@ -331,52 +452,95 @@
       <div class="lp-wrap">
         <SectionHeading title="Daftar Santri Baru, Langsung dari HP">
           Tanpa antre dan tanpa membuat akun: cukup
-          <strong class="font-semibold lp-ink">nomor WhatsApp</strong> Bapak/Ibu.
-          Tidak ada tes yang menggugurkan, ananda ditempatkan di jilid yang sesuai
-          dengan kesiapannya.
+          <strong class="font-semibold lp-ink">nomor WhatsApp</strong>
+          Bapak/Ibu. Tidak ada tes yang menggugurkan, ananda ditempatkan di
+          jilid yang sesuai dengan kesiapannya.
         </SectionHeading>
 
         <div class="grid items-stretch gap-8 lg:grid-cols-12 lg:gap-10">
           <!-- Steps -->
           <div class="flex flex-col p-6 lp-card sm:p-10 lg:col-span-7">
-            <div class="flex flex-col gap-3 pb-6 mb-8 border-b sm:flex-row sm:items-center sm:justify-between border-amber-700/15">
+            <div
+              class="flex flex-col gap-3 pb-6 mb-8 border-b sm:flex-row sm:items-center sm:justify-between border-amber-700/15"
+            >
               <div>
-                <h3 class="text-xl font-bold sm:text-2xl lp-ink">Alur pendaftaran</h3>
-                <p class="text-sm lp-body mt-0.5">Dari mengisi formulir sampai mulai mengaji</p>
+                <h3 class="text-xl font-bold sm:text-2xl lp-ink">
+                  Alur pendaftaran
+                </h3>
+                <p class="text-sm lp-body mt-0.5">
+                  Dari mengisi formulir sampai mulai mengaji
+                </p>
               </div>
-              <span class="self-start px-3.5 py-1.5 text-xs font-bold whitespace-nowrap border rounded-full sm:self-auto border-amber-700/35 text-amber-800 bg-amber-50">
+              <span
+                class="self-start px-3.5 py-1.5 text-xs font-bold whitespace-nowrap border rounded-full sm:self-auto border-amber-700/35 text-amber-800 bg-amber-50"
+              >
                 Formulir &plusmn; 5 menit
               </span>
             </div>
 
             <ol class="space-y-8">
-              <li v-for="(s, i) in registrationSteps" :key="s.title" class="relative pl-[4.5rem]">
-                <StarBadge class="!absolute left-0 top-0">{{ i + 1 }}</StarBadge>
+              <li
+                v-for="(s, i) in registrationSteps"
+                :key="s.title"
+                class="relative pl-[4.5rem]"
+              >
+                <StarBadge class="!absolute left-0 top-0">{{
+                  i + 1
+                }}</StarBadge>
                 <span
                   v-if="i < registrationSteps.length - 1"
                   class="absolute left-[1.625rem] top-[3.5rem] -bottom-8 w-px bg-gradient-to-b from-amber-700/50 to-amber-700/10"
                   aria-hidden="true"
                 ></span>
-                <p class="mb-0.5 text-xs font-bold tracking-wide uppercase text-amber-700">{{ s.who }}</p>
-                <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">{{ s.title }}</h4>
+                <p
+                  class="mb-0.5 text-xs font-bold tracking-wide uppercase text-amber-700"
+                >
+                  {{ s.who }}
+                </p>
+                <h4 class="mb-1 text-base font-bold sm:text-lg lp-ink">
+                  {{ s.title }}
+                </h4>
                 <p class="text-sm leading-relaxed lp-body">{{ s.text }}</p>
               </li>
             </ol>
 
             <!-- what to have at hand, so nobody stops halfway -->
-            <div class="p-5 mt-9 rounded-2xl bg-emerald-50/70 border border-emerald-900/10">
-              <p class="mb-3 text-sm font-bold lp-ink">Siapkan sebelum mengisi:</p>
+            <div
+              class="p-5 border mt-9 rounded-2xl bg-emerald-50/70 border-emerald-900/10"
+            >
+              <p class="mb-3 text-sm font-bold lp-ink">
+                Siapkan sebelum mengisi:
+              </p>
               <ul class="grid gap-2 text-sm sm:grid-cols-2 lp-body">
-                <li v-for="item in registrationNeeds" :key="item" class="flex items-start gap-2">
-                  <svg class="w-4 h-4 mt-0.5 shrink-0 text-emerald-700" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+                <li
+                  v-for="item in registrationNeeds"
+                  :key="item"
+                  class="flex items-start gap-2"
+                >
+                  <svg
+                    class="w-4 h-4 mt-0.5 shrink-0 text-emerald-700"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   <span>{{ item }}</span>
                 </li>
               </ul>
-              <p class="mt-3 text-xs lp-body">NIK ananda dan nomor KK diminta nanti, setelah ananda diterima.</p>
+              <p class="mt-3 text-xs lp-body">
+                NIK ananda dan nomor KK diminta nanti, setelah ananda diterima.
+              </p>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between pt-6 mt-auto text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body lg:mt-8">
-              <span class="inline-flex items-center gap-2 font-semibold text-emerald-800">
+            <div
+              class="flex flex-wrap items-center justify-between pt-6 mt-auto text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body lg:mt-8"
+            >
+              <span
+                class="inline-flex items-center gap-2 font-semibold text-emerald-800"
+              >
                 <i class="lp-diamond text-amber-600"></i>
                 Terbuka untuk usia 4 tahun sampai SMP
               </span>
@@ -385,40 +549,78 @@
           </div>
 
           <!-- Hub: mihrab-topped panel -->
-          <div class="flex flex-col px-6 pt-24 pb-7 lp-dark-panel rounded-t-[14rem] sm:px-9 sm:pb-9 lg:col-span-5">
+          <div
+            class="flex flex-col px-6 pt-24 pb-7 lp-dark-panel rounded-t-[14rem] sm:px-9 sm:pb-9 lg:col-span-5"
+          >
             <div class="text-center">
-              <span class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold border rounded-full whitespace-nowrap border-amber-200/40 text-amber-100 bg-white/5">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 motion-safe:animate-pulse" aria-hidden="true"></span>
+              <span
+                class="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-bold border rounded-full whitespace-nowrap border-amber-200/40 text-amber-100 bg-white/5"
+              >
+                <span
+                  class="w-2 h-2 rounded-full bg-emerald-400 motion-safe:animate-pulse"
+                  aria-hidden="true"
+                ></span>
                 Pendaftaran Dibuka
               </span>
-              <h3 class="mt-5 mb-2 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[1.7rem] text-balance">
+              <h3
+                class="mt-5 mb-2 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[1.7rem] text-balance"
+              >
                 Formulir Pendaftaran Online
               </h3>
               <p class="mb-6 text-sm leading-relaxed text-emerald-100/85">
-                Bisa diisi kapan saja, disimpan, dan dilanjutkan nanti.
-                Status pendaftaran juga bisa dicek dari HP.
+                Bisa diisi kapan saja, disimpan, dan dilanjutkan nanti. Status
+                pendaftaran juga bisa dicek dari HP.
               </p>
             </div>
 
             <!-- the two sesi -->
-            <p class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300">Pilihan sesi</p>
+            <p
+              class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300"
+            >
+              Pilihan sesi
+            </p>
             <div class="grid grid-cols-2 gap-2 mb-6">
-              <div v-for="s in sessions" :key="s.name" class="p-3 border rounded-xl border-white/15 bg-white/5">
+              <div
+                v-for="s in sessions"
+                :key="s.name"
+                class="p-3 border rounded-xl border-white/15 bg-white/5"
+              >
                 <p class="text-sm font-bold text-white">{{ s.name }}</p>
-                <p class="text-xs font-semibold text-amber-200 tabular-nums">{{ s.time }}</p>
-                <p class="mt-1 text-xs leading-snug text-emerald-100/75">{{ s.note }}</p>
+                <p class="text-xs font-semibold text-amber-200 tabular-nums">
+                  {{ s.time }}
+                </p>
+                <p class="mt-1 text-xs leading-snug text-emerald-100/75">
+                  {{ s.note }}
+                </p>
               </div>
             </div>
 
             <!-- fees, as in the TPQ's terms -->
-            <p class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300">Rincian biaya</p>
+            <p
+              class="mb-2 text-xs font-bold tracking-wider uppercase text-amber-300"
+            >
+              Rincian biaya
+            </p>
             <ul class="mb-2 text-sm">
-              <li v-for="f in fees" :key="f.label" class="flex items-baseline justify-between gap-3 py-2 border-b border-white/10">
-                <span class="text-emerald-50">{{ f.label }} <span class="text-xs text-emerald-200/70">{{ f.note }}</span></span>
-                <strong class="font-bold text-white tabular-nums">{{ f.amount }}</strong>
+              <li
+                v-for="f in fees"
+                :key="f.label"
+                class="flex items-baseline justify-between gap-3 py-2 border-b border-white/10"
+              >
+                <span class="text-emerald-50"
+                  >{{ f.label }}
+                  <span class="text-xs text-emerald-200/70">{{
+                    f.note
+                  }}</span></span
+                >
+                <strong class="font-bold text-white tabular-nums">{{
+                  f.amount
+                }}</strong>
               </li>
             </ul>
-            <p class="mb-7 text-xs text-emerald-200/80">Mengisi formulir gratis. Pembayaran setelah ananda diterima.</p>
+            <p class="text-xs mb-7 text-emerald-200/80">
+              Mengisi formulir gratis. Pembayaran setelah ananda diterima.
+            </p>
 
             <div class="pt-6 mt-auto space-y-4 border-t border-amber-200/20">
               <router-link to="/daftar" class="w-full lp-btn-gold">
@@ -426,19 +628,37 @@
               </router-link>
               <p class="text-xs text-center text-emerald-100/80">
                 Sudah mendaftar?
-                <router-link to="/wali" class="font-bold underline text-amber-200 underline-offset-2 hover:text-amber-100">Cek status pendaftaran</router-link>
+                <router-link
+                  to="/wali"
+                  class="font-bold underline text-amber-200 underline-offset-2 hover:text-amber-100"
+                  >Cek status pendaftaran</router-link
+                >
               </p>
 
               <div>
-                <div class="flex flex-wrap items-center justify-between mb-2.5 text-xs gap-x-3 gap-y-0.5">
+                <div
+                  class="flex flex-wrap items-center justify-between mb-2.5 text-xs gap-x-3 gap-y-0.5"
+                >
                   <span class="text-white/80">Butuh bantuan mengisi?</span>
-                  <span class="font-bold text-amber-300">Koordinator pendaftaran</span>
+                  <span class="font-bold text-amber-300"
+                    >Koordinator pendaftaran</span
+                  >
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                  <a :href="contactElla.waLink" target="_blank" rel="noopener noreferrer" class="lp-btn-ghost">
+                  <a
+                    :href="contactElla.waLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="lp-btn-ghost"
+                  >
                     WA Ustadzah Ella
                   </a>
-                  <a :href="contactRiski.waLink" target="_blank" rel="noopener noreferrer" class="lp-btn-ghost">
+                  <a
+                    :href="contactRiski.waLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="lp-btn-ghost"
+                  >
                     WA Ustadz Riski
                   </a>
                 </div>
@@ -458,107 +678,134 @@
     >
       <span class="lp-fringe-top" aria-hidden="true"></span>
       <div class="lp-wrap">
-        <SectionHeading dark title="Mengapa Mempercayakan Buah Hati di TPQ AMANAH?">
-          Orang tua biasanya ingin tahu tiga hal: bagaimana anak belajar,
-          siapa yang membimbing, dan bagaimana perkembangannya bisa dipantau.
-          Inilah yang kami kerjakan di setiap pertemuan.
+        <SectionHeading
+          dark
+          title="Mengapa Mempercayakan Buah Hati di TPQ AMANAH?"
+        >
+          Orang tua biasanya ingin tahu tiga hal: bagaimana anak belajar, siapa
+          yang membimbing, dan bagaimana perkembangannya bisa dipantau. Inilah
+          yang kami kerjakan di setiap pertemuan.
         </SectionHeading>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5 pb-6">
+        <div class="grid gap-6 pb-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           <article class="lp-niche">
-            <StarBadge gold class="mb-5"><svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                 aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg></StarBadge>
-            <h3 class="mb-2 text-lg font-bold text-white">Metode At-Tartil 6 Jilid</h3>
+            <StarBadge gold class="mb-5"
+              ><svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                /></svg
+            ></StarBadge>
+            <h3 class="mb-2 text-lg font-bold text-white">
+              Metode At-Tartil 6 Jilid
+            </h3>
             <p class="text-sm leading-relaxed text-emerald-100/80">
               Anak belajar bertahap: mulai dari huruf hijaiyah dan makhraj,
               kaidah tajwid, sampai membaca Al-Qur'an dengan tartil. Santri
               ditempatkan sesuai kesiapan membaca, bukan hanya usia.
             </p>
-            <span class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300">
+            <span
+              class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300"
+            >
               <i class="lp-diamond"></i>Kurikulum At-Tartil
             </span>
           </article>
 
           <article class="lp-niche">
-            <StarBadge gold class="mb-5"><svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                 aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg></StarBadge>
-            <h3 class="mb-2 text-lg font-bold text-white">Pendidik Sabar &amp; Penuh Kasih</h3>
+            <StarBadge gold class="mb-5"
+              ><svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                /></svg
+            ></StarBadge>
+            <h3 class="mb-2 text-lg font-bold text-white">
+              Pendidik Sabar &amp; Penuh Kasih
+            </h3>
             <p class="text-sm leading-relaxed text-emerald-100/80">
               Ustadz dan ustadzah mendampingi tiap santri sesuai karakternya
               dengan pendekatan positif, tanpa bentakan.
             </p>
-            <span class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300">
+            <span
+              class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300"
+            >
               <i class="lp-diamond"></i>Bimbingan Hati ke Hati
             </span>
           </article>
 
           <article class="lp-niche">
-            <StarBadge gold class="mb-5"><svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                 aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg></StarBadge>
-            <h3 class="mb-2 text-lg font-bold text-white">Adab &amp; Praktik Ibadah</h3>
+            <StarBadge gold class="mb-5"
+              ><svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                /></svg
+            ></StarBadge>
+            <h3 class="mb-2 text-lg font-bold text-white">
+              Adab &amp; Praktik Ibadah
+            </h3>
             <p class="text-sm leading-relaxed text-emerald-100/80">
-              Santri dibiasakan berwudhu dan shalat dengan tertib, menghafal
-              doa harian, serta bersikap santun kepada orang tua dan guru.
+              Santri dibiasakan berwudhu dan shalat dengan tertib, menghafal doa
+              harian, serta bersikap santun kepada orang tua dan guru.
             </p>
-            <span class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300">
+            <span
+              class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300"
+            >
               <i class="lp-diamond"></i>Akhlakul Karimah
             </span>
           </article>
 
           <article class="lp-niche">
-            <StarBadge gold class="mb-5"><svg
-                  class="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                 aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg></StarBadge>
-            <h3 class="mb-2 text-lg font-bold text-white">Portal Wali &amp; Digital Terpadu</h3>
+            <StarBadge gold class="mb-5"
+              ><svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                /></svg
+            ></StarBadge>
+            <h3 class="mb-2 text-lg font-bold text-white">
+              Portal Wali &amp; Digital Terpadu
+            </h3>
             <p class="text-sm leading-relaxed text-emerald-100/80">
               Kehadiran harian, halaman bacaan terakhir, rapor, dan izin/sakit
               bisa dipantau langsung dari HP orang tua, lengkap dengan E-Kitab
               &amp; kabar WhatsApp otomatis.
             </p>
-            <span class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300">
+            <span
+              class="inline-flex items-center gap-2 pt-5 mt-auto text-xs font-bold text-amber-300"
+            >
               <i class="lp-diamond"></i>Amanah &amp; Terukur
             </span>
           </article>
@@ -591,15 +838,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 1</span>
-                <span class="text-xs font-semibold text-amber-800">Dasar Hijaiyah</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Dasar Hijaiyah</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Huruf Tunggal Hijaiyah &amp; Fathah</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Huruf Tunggal Hijaiyah &amp; Fathah
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Mengenal dan melafalkan huruf hijaiyah alif sampai ya' dengan
                 tepat sesuai makharijul huruf serta pelafalan harakat fathah
                 secara tegas dan tidak tergesa-gesa.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Fasih membedakan bentuk &amp; bunyi huruf tunggal
               </p>
@@ -612,15 +865,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 2</span>
-                <span class="text-xs font-semibold text-amber-800">Rangkaian Huruf</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Rangkaian Huruf</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Huruf Sambung &amp; Kasrah/Dhammah</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Huruf Sambung &amp; Kasrah/Dhammah
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Memahami perubahan bentuk huruf saat berada di awal, tengah, dan
                 akhir kata serta melafalkan harakat kasrah (-i) dan dhammah (-u)
                 secara presisi.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Lancar membaca 3-4 huruf yang bersambung
               </p>
@@ -633,15 +892,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 3</span>
-                <span class="text-xs font-semibold text-amber-800">Mad Thabi'i</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Mad Thabi'i</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Kaidah Mad &amp; Bacaan Panjang</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Kaidah Mad &amp; Bacaan Panjang
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Menanamkan kepekaan ritme panjang-pendek bacaan (2 harakat)
                 dengan bantuan alif, ya' sukun, dan wawu sukun, menghindari
                 kesalahan memanjangkan bacaan pendek.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Konsistensi ayunan ketukan 2 harakat
               </p>
@@ -654,15 +919,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 4</span>
-                <span class="text-xs font-semibold text-amber-800">Tanwin &amp; Sukun</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Tanwin &amp; Sukun</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Tanwin, Sukun, &amp; Kaidah Qolqolah</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Tanwin, Sukun, &amp; Kaidah Qolqolah
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Membaca tanda tanwin (an, in, un), mematikan huruf (sukun),
                 serta memantulkan 5 huruf qolqolah (ba, jim, dal, tha, qaf)
                 dengan pantulan jernih.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Penguasaan huruf mati &amp; qolqolah sempurna
               </p>
@@ -675,15 +946,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 5</span>
-                <span class="text-xs font-semibold text-amber-800">Tajwid Aplikatif</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Tajwid Aplikatif</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Tasydid, Idgham, &amp; Dengung (Ghunnah)</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Tasydid, Idgham, &amp; Dengung (Ghunnah)
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Menerapkan hukum bacaan tasydid, idgham bighunnah/bilaghunnah,
                 ikhfa', dan iqlab secara alami melalui ketukan lagu tartil tanpa
                 beban hafalan rumus rumit.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Kesempurnaan dengung (ghunnah) 2 harakat
               </p>
@@ -696,15 +973,21 @@
             <article class="p-6 lp-card lp-lift sm:p-7 lp-journey-card">
               <div class="flex items-baseline justify-between gap-3 mb-3">
                 <span class="text-sm font-extrabold lp-ink">Jilid 6</span>
-                <span class="text-xs font-semibold text-amber-800">Menuju Mushaf</span>
+                <span class="text-xs font-semibold text-amber-800"
+                  >Menuju Mushaf</span
+                >
               </div>
-              <h3 class="mb-2 text-lg font-bold lp-ink">Tanda Waqaf &amp; Ayat Gharibah</h3>
+              <h3 class="mb-2 text-lg font-bold lp-ink">
+                Tanda Waqaf &amp; Ayat Gharibah
+              </h3>
               <p class="text-sm leading-relaxed lp-body">
                 Mengenal cara berhenti (waqaf), hukum mad wajib/jaiz, bacaan
                 khusus (gharib), dan transisi membaca Al-Qur'an mushaf standar
                 dengan tartil.
               </p>
-              <p class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800">
+              <p
+                class="flex items-start gap-2 pt-3.5 mt-5 text-sm font-semibold border-t border-amber-700/15 text-emerald-800"
+              >
                 <i class="lp-diamond mt-1.5 text-amber-600"></i>
                 Target: Siap masuk Al-Qur'an besar &amp; tahfidz
               </p>
@@ -715,10 +998,14 @@
 
         <!-- Complementary programs -->
         <div class="p-8 lp-dark-panel sm:p-10 lg:p-12">
-          <div class="grid gap-9 md:grid-cols-3 md:gap-0 md:divide-x md:divide-amber-200/15">
+          <div
+            class="grid gap-9 md:grid-cols-3 md:gap-0 md:divide-x md:divide-amber-200/15"
+          >
             <div class="md:px-8 md:first:pl-0 md:last:pr-0">
               <StarBadge gold class="mb-4">1</StarBadge>
-              <h3 class="mb-1.5 text-lg font-bold text-white">Al-Qur'an &amp; Tahsin Lanjutan</h3>
+              <h3 class="mb-1.5 text-lg font-bold text-white">
+                Al-Qur'an &amp; Tahsin Lanjutan
+              </h3>
               <p class="text-sm leading-relaxed text-emerald-100/80">
                 Bimbingan membaca mushaf Al-Qur'an besar secara individual
                 (sorogan) dengan pendalaman makhraj dan tartil bersanad.
@@ -726,7 +1013,9 @@
             </div>
             <div class="md:px-8">
               <StarBadge gold class="mb-4">2</StarBadge>
-              <h3 class="mb-1.5 text-lg font-bold text-white">Tahfidzul Qur'an (Juz 'Amma)</h3>
+              <h3 class="mb-1.5 text-lg font-bold text-white">
+                Tahfidzul Qur'an (Juz 'Amma)
+              </h3>
               <p class="text-sm leading-relaxed text-emerald-100/80">
                 Hafalan surat-surat pendek Juz 30 dan ayat pilihan melalui
                 metode sima'i dan muraja'ah rutin berjenjang.
@@ -734,7 +1023,9 @@
             </div>
             <div class="md:px-8 md:last:pr-0">
               <StarBadge gold class="mb-4">3</StarBadge>
-              <h3 class="mb-1.5 text-lg font-bold text-white">Praktik Shalat &amp; Doa Harian</h3>
+              <h3 class="mb-1.5 text-lg font-bold text-white">
+                Praktik Shalat &amp; Doa Harian
+              </h3>
               <p class="text-sm leading-relaxed text-emerald-100/80">
                 Praktik langsung wudhu sempurna, shalat berjamaah, hafalan doa
                 keseharian anak muslim, dan sirah keteladanan Nabi.
@@ -752,19 +1043,24 @@
       <div class="lp-wrap">
         <SectionHeading title="E-Kitab Digital At-Tartil 6 Jilid">
           Buku At-Tartil Jilid 1 sampai 6 bisa dibuka lewat HP atau komputer.
-          Orang tua dapat membuka halaman yang sama dengan yang dipelajari
-          anak di TPQ, lalu mengulang bacaan bersama di rumah. Halamannya
-          dibalik seperti buku sungguhan dan bisa diperbesar.
+          Orang tua dapat membuka halaman yang sama dengan yang dipelajari anak
+          di TPQ, lalu mengulang bacaan bersama di rumah. Halamannya dibalik
+          seperti buku sungguhan dan bisa diperbesar.
         </SectionHeading>
 
-        <div class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-6">
+        <div
+          class="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-3 lg:grid-cols-6"
+        >
           <div
             v-for="book in tartilBooks"
             :key="book.jilid"
             class="flex flex-col items-center text-center group"
           >
             <div class="at-tartil-book mx-auto max-w-[130px] w-full">
-              <div class="at-tartil-spine" :style="{ background: book.spineBg }"></div>
+              <div
+                class="at-tartil-spine"
+                :style="{ background: book.spineBg }"
+              ></div>
               <div class="at-tartil-cover bg-slate-100">
                 <img
                   :src="book.coverImage"
@@ -776,9 +1072,14 @@
                 />
               </div>
             </div>
-            <div class="w-full max-w-[170px] mt-3 lp-board" aria-hidden="true"></div>
+            <div
+              class="w-full max-w-[170px] mt-3 lp-board"
+              aria-hidden="true"
+            ></div>
 
-            <h3 class="text-base font-bold lp-ink mb-0.5">Jilid {{ book.jilid }}</h3>
+            <h3 class="text-base font-bold lp-ink mb-0.5">
+              Jilid {{ book.jilid }}
+            </h3>
             <p class="flex-1 text-sm leading-snug lp-body">{{ book.desc }}</p>
 
             <a
@@ -793,7 +1094,7 @@
           </div>
         </div>
 
-        <div class="mt-14 text-center">
+        <div class="text-center mt-14">
           <a
             href="https://at-tartil.tpqamanahsawotratap.com/"
             target="_blank"
@@ -805,7 +1106,8 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-             aria-hidden="true">
+              aria-hidden="true"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -828,7 +1130,11 @@
     >
       <span class="lp-fringe-top" aria-hidden="true"></span>
       <div class="lp-wrap">
-        <SectionHeading dark heading-id="rutinitas-title" title="Rutinitas 90 Menit Sesi Belajar yang Terarah">
+        <SectionHeading
+          dark
+          heading-id="rutinitas-title"
+          title="Rutinitas 90 Menit Sesi Belajar yang Terarah"
+        >
           Setiap pertemuan berdurasi 90 menit disusun secara terstruktur
           sehingga anak tidak hanya belajar membaca, tetapi juga melatih
           hafalan, konsentrasi, dan adab.
@@ -850,7 +1156,7 @@
               @click="activeRoutine = idx"
             >
               <span>{{ seg.minutes }}</span>
-              <span class="hidden sm:inline font-semibold opacity-80">mnt</span>
+              <span class="hidden font-semibold sm:inline opacity-80">mnt</span>
             </button>
           </div>
           <p class="mt-2.5 text-xs text-center text-emerald-200/80">
@@ -859,19 +1165,35 @@
 
           <!-- Mobile focused detail card (< 640px) to keep mobile scroll crisp -->
           <div class="mt-6 sm:hidden lp-routine-card is-active">
-            <p class="inline-flex items-center gap-2 mb-2 text-sm font-bold text-amber-300">
-              <i class="lp-diamond" :style="{ color: routineSegments[activeRoutine].color }"></i>
-              {{ routineSegments[activeRoutine].range }} ({{ routineSegments[activeRoutine].minutes }} menit)
+            <p
+              class="inline-flex items-center gap-2 mb-2 text-sm font-bold text-amber-300"
+            >
+              <i
+                class="lp-diamond"
+                :style="{ color: routineSegments[activeRoutine].color }"
+              ></i>
+              {{ routineSegments[activeRoutine].range }} ({{
+                routineSegments[activeRoutine].minutes
+              }}
+              menit)
             </p>
-            <h3 class="mb-2 text-lg font-bold text-white">{{ routineSegments[activeRoutine].title }}</h3>
-            <p class="text-sm leading-relaxed text-emerald-100/85">{{ routineSegments[activeRoutine].desc }}</p>
+            <h3 class="mb-2 text-lg font-bold text-white">
+              {{ routineSegments[activeRoutine].title }}
+            </h3>
+            <p class="text-sm leading-relaxed text-emerald-100/85">
+              {{ routineSegments[activeRoutine].desc }}
+            </p>
             <div class="flex flex-wrap gap-1.5 mt-4">
               <button
                 v-for="(seg, idx) in routineSegments"
                 :key="`m-${seg.range}`"
                 type="button"
                 class="px-2.5 py-1.5 rounded-full text-xs font-bold border transition-colors"
-                :class="activeRoutine === idx ? 'bg-amber-300/20 border-amber-300 text-amber-100' : 'bg-white/5 border-white/15 text-emerald-100/75'"
+                :class="
+                  activeRoutine === idx
+                    ? 'bg-amber-300/20 border-amber-300 text-amber-100'
+                    : 'bg-white/5 border-white/15 text-emerald-100/75'
+                "
                 @click="activeRoutine = idx"
               >
                 {{ seg.minutes }} mnt · {{ seg.short }}
@@ -880,7 +1202,7 @@
           </div>
 
           <!-- Tablet & Desktop 4-column interactive grid (>= 640px) -->
-          <div class="hidden sm:grid gap-4 mt-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="hidden gap-4 mt-8 sm:grid sm:grid-cols-2 lg:grid-cols-4">
             <button
               v-for="(seg, idx) in routineSegments"
               :key="`d-${seg.range}`"
@@ -890,11 +1212,16 @@
               :aria-pressed="activeRoutine === idx"
               @click="activeRoutine = idx"
             >
-              <p class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300">
-                <i class="lp-diamond" :style="{ color: seg.color }"></i>{{ seg.range }}
+              <p
+                class="inline-flex items-center gap-2 mb-3 text-sm font-bold text-amber-300"
+              >
+                <i class="lp-diamond" :style="{ color: seg.color }"></i
+                >{{ seg.range }}
               </p>
               <h3 class="mb-2 text-lg font-bold text-white">{{ seg.title }}</h3>
-              <p class="text-sm leading-relaxed text-emerald-100/80">{{ seg.desc }}</p>
+              <p class="text-sm leading-relaxed text-emerald-100/80">
+                {{ seg.desc }}
+              </p>
             </button>
           </div>
         </div>
@@ -915,31 +1242,39 @@
 
         <div class="grid items-stretch gap-8 mb-14 lg:grid-cols-12 lg:gap-10">
           <!-- History -->
-          <div class="flex flex-col justify-between p-8 lp-card sm:p-10 lg:col-span-7">
+          <div
+            class="flex flex-col justify-between p-8 lp-card sm:p-10 lg:col-span-7"
+          >
             <div>
               <div class="flex items-center gap-4 mb-7">
-                <StarBadge><svg
+                <StarBadge
+                  ><svg
                     class="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg></StarBadge>
+                    /></svg
+                ></StarBadge>
                 <div>
-                  <h3 class="text-xl font-bold lp-ink">Sejarah &amp; Komitmen Pengabdian</h3>
+                  <h3 class="text-xl font-bold lp-ink">
+                    Sejarah &amp; Komitmen Pengabdian
+                  </h3>
                   <p class="text-xs sm:text-sm lp-body">
                     Perjalanan khidmat dakwah Al-Qur'an di Sawotratap
                   </p>
                 </div>
               </div>
 
-              <div class="space-y-6 text-sm leading-relaxed lp-body sm:text-base">
+              <div
+                class="space-y-6 text-sm leading-relaxed lp-body sm:text-base"
+              >
                 <p>
                   {{ aboutContent.history || defaultAbout }}
                 </p>
@@ -952,8 +1287,12 @@
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between pt-5 mt-8 text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body">
-              <span class="inline-flex items-center gap-2 font-semibold text-emerald-800">
+            <div
+              class="flex flex-wrap items-center justify-between pt-5 mt-8 text-sm border-t gap-x-4 gap-y-2 border-amber-700/15 lp-body"
+            >
+              <span
+                class="inline-flex items-center gap-2 font-semibold text-emerald-800"
+              >
                 <i class="lp-diamond text-amber-600"></i>
                 10+ Tahun Mengabdi di Sawotratap
               </span>
@@ -965,12 +1304,14 @@
           <div class="flex flex-col gap-6 lg:col-span-5">
             <div class="p-7 lp-dark-panel sm:p-8">
               <div class="flex items-center gap-4 mb-4">
-                <StarBadge gold><svg
+                <StarBadge gold
+                  ><svg
                     class="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -982,33 +1323,37 @@
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg></StarBadge>
+                    /></svg
+                ></StarBadge>
                 <div>
                   <h3 class="text-lg font-bold text-white">Visi Lembaga</h3>
                   <p class="text-xs text-amber-300">Cita-Cita Utama</p>
                 </div>
               </div>
-              <p class="text-sm italic leading-relaxed sm:text-base text-emerald-50">
+              <p
+                class="text-sm italic leading-relaxed sm:text-base text-emerald-50"
+              >
                 &ldquo;{{ aboutContent.vision }}&rdquo;
               </p>
             </div>
 
             <div class="flex-1 p-7 lp-card sm:p-8">
               <div class="flex items-center gap-4 mb-5">
-                <StarBadge><svg
+                <StarBadge
+                  ><svg
                     class="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg></StarBadge>
+                    /></svg
+                ></StarBadge>
                 <div>
                   <h3 class="text-lg font-bold lp-ink">Misi TPQ Amanah</h3>
                   <p class="text-xs lp-body">Misi Pendidikan</p>
@@ -1027,18 +1372,31 @@
 
         <!-- Counters -->
         <div ref="statsRef" class="p-8 lp-card sm:p-10">
-          <div class="grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:divide-x lg:divide-amber-700/15">
-            <div v-for="stat in stats" :key="stat.label" class="px-3 text-center">
+          <div
+            class="grid grid-cols-2 gap-y-8 lg:grid-cols-4 lg:divide-x lg:divide-amber-700/15"
+          >
+            <div
+              v-for="stat in stats"
+              :key="stat.label"
+              class="px-3 text-center"
+            >
               <div
                 class="mb-1 text-3xl font-extrabold tracking-tight tabular-nums sm:text-4xl lg:text-5xl lp-ink"
                 :data-target="stat.rawValue"
               >
                 {{ stat.displayValue }}
               </div>
-              <div class="flex items-center justify-center gap-2 mb-2 text-amber-600" aria-hidden="true">
-                <i class="w-6 h-px bg-current"></i><i class="lp-diamond !w-1.5 !h-1.5"></i><i class="w-6 h-px bg-current"></i>
+              <div
+                class="flex items-center justify-center gap-2 mb-2 text-amber-600"
+                aria-hidden="true"
+              >
+                <i class="w-6 h-px bg-current"></i
+                ><i class="lp-diamond !w-1.5 !h-1.5"></i
+                ><i class="w-6 h-px bg-current"></i>
               </div>
-              <div class="text-xs font-semibold lp-body sm:text-sm">{{ stat.label }}</div>
+              <div class="text-xs font-semibold lp-body sm:text-sm">
+                {{ stat.label }}
+              </div>
             </div>
           </div>
         </div>
@@ -1060,29 +1418,43 @@
           dapat disesuaikan dengan ritme sekolah formal putra-putri Anda.
         </SectionHeading>
 
-        <div class="relative grid max-w-5xl gap-6 mx-auto md:grid-cols-2 md:gap-14">
+        <div
+          class="relative grid max-w-5xl gap-6 mx-auto md:grid-cols-2 md:gap-14"
+        >
           <!-- centre axis between the two sessions -->
-          <div class="absolute inset-y-8 left-1/2 hidden w-px -ml-px md:block bg-gradient-to-b from-transparent via-amber-700/40 to-transparent" aria-hidden="true"></div>
-          <div class="absolute left-1/2 top-1/2 hidden w-3 h-3 -ml-1.5 -mt-1.5 rotate-45 md:block bg-amber-600 ring-4 ring-white" aria-hidden="true"></div>
+          <div
+            class="absolute hidden w-px -ml-px inset-y-8 left-1/2 md:block bg-gradient-to-b from-transparent via-amber-700/40 to-transparent"
+            aria-hidden="true"
+          ></div>
+          <div
+            class="absolute left-1/2 top-1/2 hidden w-3 h-3 -ml-1.5 -mt-1.5 rotate-45 md:block bg-amber-600 ring-4 ring-white"
+            aria-hidden="true"
+          ></div>
 
           <!-- Sore -->
-          <div class="flex flex-col justify-between p-8 lp-card lp-lift bg-gradient-to-b from-[#fff7e3] to-white">
+          <div
+            class="flex flex-col justify-between p-8 lp-card lp-lift bg-gradient-to-b from-[#fff7e3] to-white"
+          >
             <div>
               <div class="flex items-center justify-between gap-4 mb-6">
-                <StarBadge><svg
+                <StarBadge
+                  ><svg
                     class="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg></StarBadge>
-                <span class="px-3.5 py-1.5 text-xs font-bold border rounded-full border-amber-700/35 text-amber-900 bg-amber-100/70">
+                    /></svg
+                ></StarBadge>
+                <span
+                  class="px-3.5 py-1.5 text-xs font-bold border rounded-full border-amber-700/35 text-amber-900 bg-amber-100/70"
+                >
                   Sesi 1 • Ba'da Ashar
                 </span>
               </div>
@@ -1094,13 +1466,16 @@
               </p>
 
               <div class="mb-6 space-y-3.5">
-                <div class="flex items-center gap-3 py-3.5 border-y border-amber-700/20 text-amber-800">
+                <div
+                  class="flex items-center gap-3 py-3.5 border-y border-amber-700/20 text-amber-800"
+                >
                   <svg
                     class="w-6 h-6 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -1108,7 +1483,9 @@
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span class="text-xl font-extrabold lp-ink">15:30 - 17:00 WIB</span>
+                  <span class="text-xl font-extrabold lp-ink"
+                    >15:30 - 17:00 WIB</span
+                  >
                 </div>
                 <div class="flex items-center gap-3 px-1 text-sm lp-body">
                   <svg
@@ -1116,7 +1493,8 @@
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -1129,7 +1507,9 @@
               </div>
             </div>
 
-            <p class="pt-4 text-sm font-medium border-t border-amber-700/15 text-amber-900">
+            <p
+              class="pt-4 text-sm font-medium border-t border-amber-700/15 text-amber-900"
+            >
               Suasana ceria, segar, dan bersahabat sebelum waktu maghrib tiba.
             </p>
           </div>
@@ -1138,20 +1518,24 @@
           <div class="flex flex-col justify-between p-8 lp-dark-panel">
             <div>
               <div class="flex items-center justify-between gap-4 mb-6">
-                <StarBadge gold><svg
+                <StarBadge gold
+                  ><svg
                     class="w-6 h-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
                       stroke-width="2"
                       d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                    />
-                  </svg></StarBadge>
-                <span class="px-3.5 py-1.5 text-xs font-bold border rounded-full border-amber-200/40 text-amber-100 bg-white/5">
+                    /></svg
+                ></StarBadge>
+                <span
+                  class="px-3.5 py-1.5 text-xs font-bold border rounded-full border-amber-200/40 text-amber-100 bg-white/5"
+                >
                   Sesi 2 • Ba'da Maghrib
                 </span>
               </div>
@@ -1163,13 +1547,16 @@
               </p>
 
               <div class="mb-6 space-y-3.5">
-                <div class="flex items-center gap-3 py-3.5 border-y border-amber-200/20 text-amber-300">
+                <div
+                  class="flex items-center gap-3 py-3.5 border-y border-amber-200/20 text-amber-300"
+                >
                   <svg
                     class="w-6 h-6 shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -1177,15 +1564,20 @@
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span class="text-xl font-extrabold text-white">18:00 - 19:30 WIB</span>
+                  <span class="text-xl font-extrabold text-white"
+                    >18:00 - 19:30 WIB</span
+                  >
                 </div>
-                <div class="flex items-center gap-3 px-1 text-sm text-emerald-100/80">
+                <div
+                  class="flex items-center gap-3 px-1 text-sm text-emerald-100/80"
+                >
                   <svg
                     class="w-5 h-5 shrink-0 text-amber-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                   aria-hidden="true">
+                    aria-hidden="true"
+                  >
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -1198,7 +1590,9 @@
               </div>
             </div>
 
-            <p class="pt-4 text-sm font-medium border-t border-amber-200/20 text-emerald-100">
+            <p
+              class="pt-4 text-sm font-medium border-t border-amber-200/20 text-emerald-100"
+            >
               Suasana lebih hening, khusyuk, dan fokus untuk pendalaman ayat
               Al-Qur'an.
             </p>
@@ -1240,7 +1634,7 @@
           <div
             v-for="teacher in teachers"
             :key="teacher.id"
-            class="p-7 pt-9 text-center lp-card lp-lift"
+            class="text-center p-7 pt-9 lp-card lp-lift"
           >
             <div class="lp-portrait">
               <img
@@ -1268,7 +1662,9 @@
             </span>
 
             <h3 class="text-lg font-bold lp-ink mb-0.5">{{ teacher.name }}</h3>
-            <p class="mb-3 text-xs font-semibold text-amber-800">{{ teacher.position }}</p>
+            <p class="mb-3 text-xs font-semibold text-amber-800">
+              {{ teacher.position }}
+            </p>
             <p class="text-sm leading-relaxed lp-body">{{ teacher.bio }}</p>
           </div>
         </div>
@@ -1278,33 +1674,64 @@
     <!-- ================================================================= -->
     <!-- 11. TESTIMONI WALI SANTRI                                          -->
     <!-- ================================================================= -->
-    <section aria-labelledby="testimoni-title" class="lp-section lp-paper scroll-mt-28">
+    <section
+      aria-labelledby="testimoni-title"
+      class="lp-section lp-paper scroll-mt-28"
+    >
       <div class="lp-wrap">
-        <SectionHeading heading-id="testimoni-title" title="Pengalaman Wali Santri TPQ Amanah">
+        <SectionHeading
+          heading-id="testimoni-title"
+          title="Pengalaman Wali Santri TPQ Amanah"
+        >
           Kesan dan ungkapan tulus orang tua santri yang mempercayakan
           pendidikan Al-Qur'an putra-putrinya di TPQ Amanah.
         </SectionHeading>
 
-        <div ref="testiTrackRef" class="lp-testi-track md:grid md:gap-8 md:grid-cols-3" @scroll.passive="onTestiScroll">
+        <div
+          ref="testiTrackRef"
+          class="lp-testi-track md:grid md:gap-8 md:grid-cols-3"
+          @scroll.passive="onTestiScroll"
+        >
           <figure
             v-for="(testi, idx) in testimonials"
             :key="idx"
-            class="lp-testi-slide flex flex-col justify-between p-7 lp-card sm:p-8"
+            class="flex flex-col justify-between lp-testi-slide p-7 lp-card sm:p-8"
           >
             <div>
               <div class="lp-quote-mark" aria-hidden="true">&ldquo;</div>
-              <div class="flex items-center gap-1 mb-4 text-amber-500" role="img" aria-label="Bintang lima">
-                <svg v-for="s in 5" :key="s" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L10 15l-5.4 3 1.2-6L1.3 7.8l6.1-.7L10 1.5z" />
+              <div
+                class="flex items-center gap-1 mb-4 text-amber-500"
+                role="img"
+                aria-label="Bintang lima"
+              >
+                <svg
+                  v-for="s in 5"
+                  :key="s"
+                  class="w-4 h-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L10 15l-5.4 3 1.2-6L1.3 7.8l6.1-.7L10 1.5z"
+                  />
                 </svg>
               </div>
-              <blockquote class="mb-6 text-sm italic leading-relaxed sm:text-base lp-body">
+              <blockquote
+                class="mb-6 text-sm italic leading-relaxed sm:text-base lp-body"
+              >
                 {{ testi.comment }}
               </blockquote>
             </div>
 
-            <figcaption class="flex items-center gap-3 pt-4 border-t border-amber-700/15">
-              <StarBadge class="!w-10 !h-10 text-xs"><span class="text-[11px]">{{ getInitials(testi.name) }}</span></StarBadge>
+            <figcaption
+              class="flex items-center gap-3 pt-4 border-t border-amber-700/15"
+            >
+              <StarBadge class="!w-10 !h-10 text-xs"
+                ><span class="text-[11px]">{{
+                  getInitials(testi.name)
+                }}</span></StarBadge
+              >
               <div>
                 <p class="text-sm font-bold lp-ink">{{ testi.name }}</p>
                 <p class="text-xs lp-body">{{ testi.role }}</p>
@@ -1314,7 +1741,11 @@
         </div>
 
         <!-- Mobile swipe indicator dots -->
-        <div class="flex items-center justify-center gap-2 mt-5 md:hidden" role="tablist" aria-label="Geser testimoni wali">
+        <div
+          class="flex items-center justify-center gap-2 mt-5 md:hidden"
+          role="tablist"
+          aria-label="Geser testimoni wali"
+        >
           <button
             v-for="(testi, idx) in testimonials"
             :key="`dot-${idx}`"
@@ -1322,8 +1753,10 @@
             role="tab"
             :aria-selected="activeTesti === idx"
             :aria-label="`Testimoni ${idx + 1}: ${testi.name}`"
-            class="h-2 rounded-full transition-all"
-            :class="activeTesti === idx ? 'w-6 bg-emerald-800' : 'w-2 bg-amber-700/30'"
+            class="h-2 transition-all rounded-full"
+            :class="
+              activeTesti === idx ? 'w-6 bg-emerald-800' : 'w-2 bg-amber-700/30'
+            "
             @click="scrollToTesti(idx)"
           ></button>
         </div>
@@ -1351,7 +1784,15 @@
             >
               <span class="text-base font-bold sm:text-lg">{{ faq.q }}</span>
               <StarBadge class="!w-9 !h-9">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <svg
+                  class="w-3.5 h-3.5"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  aria-hidden="true"
+                >
                   <path d="M1.5 7h11" />
                   <path v-show="activeFaq !== index" d="M7 1.5v11" />
                 </svg>
@@ -1389,11 +1830,17 @@
           <div class="space-y-5 lg:col-span-6">
             <div class="grid gap-4 sm:grid-cols-2">
               <div class="p-5 text-center lp-card sm:p-6">
-                <StarBadge class="mb-3"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <StarBadge class="mb-3"
+                  ><svg
+                    class="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-                    />
-                  </svg></StarBadge>
+                    /></svg
+                ></StarBadge>
                 <h3 class="mb-0.5 text-base font-bold lp-ink">Ustadzah Ella</h3>
                 <p class="mb-2 text-xs lp-body">Koordinator Pendaftaran</p>
                 <p class="mb-1">
@@ -1414,11 +1861,17 @@
               </div>
 
               <div class="p-5 text-center lp-card sm:p-6">
-                <StarBadge class="mb-3"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <StarBadge class="mb-3"
+                  ><svg
+                    class="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
                     <path
                       d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-                    />
-                  </svg></StarBadge>
+                    /></svg
+                ></StarBadge>
                 <h3 class="mb-0.5 text-base font-bold lp-ink">Ustadz Riski</h3>
                 <p class="mb-2 text-xs lp-body">Kepala Lembaga TPQ</p>
                 <p class="mb-1">
@@ -1440,12 +1893,14 @@
             </div>
 
             <div class="flex items-start gap-4 p-5 lp-card sm:p-6">
-              <StarBadge><svg
+              <StarBadge
+                ><svg
                   class="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                 aria-hidden="true">
+                  aria-hidden="true"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1457,8 +1912,8 @@
                     stroke-linejoin="round"
                     stroke-width="2"
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg></StarBadge>
+                  /></svg
+              ></StarBadge>
               <div>
                 <h3 class="mb-1 text-base font-bold lp-ink">Alamat Lembaga</h3>
                 <p class="text-sm leading-relaxed lp-body">
@@ -1480,14 +1935,22 @@
               </div>
             </div>
 
-            <div class="flex flex-col gap-4 p-6 lp-dark-panel sm:flex-row sm:items-center sm:justify-between">
+            <div
+              class="flex flex-col gap-4 p-6 lp-dark-panel sm:flex-row sm:items-center sm:justify-between"
+            >
               <div>
-                <h3 class="text-base font-bold text-white">Formulir Pendaftaran Online</h3>
+                <h3 class="text-base font-bold text-white">
+                  Formulir Pendaftaran Online
+                </h3>
                 <p class="text-xs text-emerald-100/80 mt-0.5">
-                  Daftarkan santri baru kapan saja dari HP, cukup dengan nomor WhatsApp
+                  Daftarkan santri baru kapan saja dari HP, cukup dengan nomor
+                  WhatsApp
                 </p>
               </div>
-              <router-link to="/daftar" class="px-6 lp-btn-gold">
+              <router-link
+                to="/daftar"
+                class="px-6 text-sm text-nowrap lp-btn-gold"
+              >
                 Daftar Sekarang
               </router-link>
             </div>
@@ -1510,11 +1973,12 @@
             >
               <div class="p-6 text-center">
                 <svg
-                  class="w-9 h-9 mx-auto mb-3 text-amber-600"
+                  class="mx-auto mb-3 w-9 h-9 text-amber-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                 aria-hidden="true">
+                  aria-hidden="true"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -1528,7 +1992,9 @@
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                <p class="text-sm font-medium">Memuat peta lokasi TPQ Amanah...</p>
+                <p class="text-sm font-medium">
+                  Memuat peta lokasi TPQ Amanah...
+                </p>
               </div>
             </div>
           </div>
@@ -1614,10 +2080,26 @@ import api from "@/services/api";
 
 // Pendaftaran santri baru: the form on this site (/daftar -> wali portal), replacing the Google Form
 const registrationSteps = [
-  { who: "Bapak/Ibu", title: "Masuk dengan nomor WhatsApp", text: "Kode masuk dikirim lewat WhatsApp TPQ. Tidak perlu membuat akun atau mengingat kata sandi." },
-  { who: "Bapak/Ibu", title: "Isi formulir pendaftaran", text: "Data ananda, orang tua, dan pilihan sesi. Sekitar 5 menit, bisa disimpan lalu dilanjutkan nanti." },
-  { who: "Ustadz/ustadzah", title: "Dihubungi & penempatan jilid", text: "Kami menghubungi lewat WhatsApp untuk jadwal bincang santai di TPQ, tanpa tes yang menegangkan." },
-  { who: "Ananda", title: "Diterima & mulai mengaji", text: "Kehadiran dan materi ananda bisa dipantau dari HP lewat portal wali santri." },
+  {
+    who: "Bapak/Ibu",
+    title: "Masuk dengan nomor WhatsApp",
+    text: "Kode masuk dikirim lewat WhatsApp TPQ. Tidak perlu membuat akun atau mengingat kata sandi.",
+  },
+  {
+    who: "Bapak/Ibu",
+    title: "Isi formulir pendaftaran",
+    text: "Data ananda, orang tua, dan pilihan sesi. Sekitar 5 menit, bisa disimpan lalu dilanjutkan nanti.",
+  },
+  {
+    who: "Ustadz/ustadzah",
+    title: "Dihubungi & penempatan jilid",
+    text: "Kami menghubungi lewat WhatsApp untuk jadwal bincang santai di TPQ, tanpa tes yang menegangkan.",
+  },
+  {
+    who: "Ananda",
+    title: "Diterima & mulai mengaji",
+    text: "Kehadiran dan materi ananda bisa dipantau dari HP lewat portal wali santri.",
+  },
 ];
 const registrationNeeds = [
   "Nomor WhatsApp yang aktif",
@@ -1626,8 +2108,16 @@ const registrationNeeds = [
   "Alamat rumah",
 ];
 const sessions = [
-  { name: "Sesi Sore", time: "15:30 - 17:00", note: "Usia dini, TK, SD kelas 1-4" },
-  { name: "Sesi Malam", time: "18:00 - 19:30", note: "Sekolah seharian & kelas lanjutan" },
+  {
+    name: "Sesi Sore",
+    time: "15:30 - 17:00",
+    note: "Usia dini, TK, SD kelas 1-4",
+  },
+  {
+    name: "Sesi Malam",
+    time: "18:00 - 19:30",
+    note: "Sekolah seharian & kelas lanjutan",
+  },
 ];
 const fees = [
   { label: "Daftar ulang", note: "sekali", amount: "Rp35.000" },
@@ -1780,14 +2270,22 @@ const onTestiScroll = () => {
   if (!card) return;
   const step = card.offsetWidth + 16;
   if (step > 0) {
-    activeTesti.value = Math.min(testimonials.length - 1, Math.max(0, Math.round(el.scrollLeft / step)));
+    activeTesti.value = Math.min(
+      testimonials.length - 1,
+      Math.max(0, Math.round(el.scrollLeft / step)),
+    );
   }
 };
 const scrollToTesti = (idx) => {
   activeTesti.value = idx;
   const el = testiTrackRef.value;
   const card = el?.children?.[idx];
-  if (card) card.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+  if (card)
+    card.scrollIntoView({
+      behavior: "smooth",
+      inline: "start",
+      block: "nearest",
+    });
 };
 
 // Stats Section with Counter Animation
@@ -1799,7 +2297,12 @@ const stats = ref([
   { rawValue: 80, suffix: "+", displayValue: "80+", label: "Santri Aktif" },
   { rawValue: 6, suffix: "", displayValue: "6", label: "Asatidz Pembimbing" },
   { rawValue: 10, suffix: "+", displayValue: "10+", label: "Tahun Pengabdian" },
-  { rawValue: 100, suffix: "+", displayValue: "100+", label: "Alumni Khatam Al-Qur'an" },
+  {
+    rawValue: 100,
+    suffix: "+",
+    displayValue: "100+",
+    label: "Alumni Khatam Al-Qur'an",
+  },
 ]);
 
 // Testimoni Data
@@ -1874,7 +2377,9 @@ const getInitials = (name) => {
 
 const formatJilidBadge = (classIds = []) => {
   if (!Array.isArray(classIds) || !classIds.length) return "";
-  const sorted = [...new Set(classIds.map(String))].sort((a, b) => Number(a) - Number(b));
+  const sorted = [...new Set(classIds.map(String))].sort(
+    (a, b) => Number(a) - Number(b),
+  );
   const labels = sorted.map((id) => (id === "7" ? "Marhalah" : `Jilid ${id}`));
   if (labels.length === 1) return `Pengampu ${labels[0]}`;
   if (labels.length === 2 && sorted.every((id) => id !== "7")) {
@@ -1962,8 +2467,13 @@ const fetchTeachers = async () => {
     const { data } = await api.get("/content/guru/list");
     if (!Array.isArray(data) || !data.length) return;
     teachers.value = defaults.map((t) => {
-      const live = data.find((g) => String(g.name || "").toLowerCase().includes(t.matchKey));
-      if (!live || !Array.isArray(live.classIds) || !live.classIds.length) return t;
+      const live = data.find((g) =>
+        String(g.name || "")
+          .toLowerCase()
+          .includes(t.matchKey),
+      );
+      if (!live || !Array.isArray(live.classIds) || !live.classIds.length)
+        return t;
       const badge = formatJilidBadge(live.classIds);
       const sesi = inferSesiFromClasses(live.classIds);
       return {
@@ -2208,8 +2718,16 @@ html.lenis body {
 /* Hero: ground light, khatam pattern, mihrab and the one authored entrance */
 .hero-ground {
   background:
-    radial-gradient(60rem 38rem at 50% 6%, rgba(251, 191, 36, 0.2), transparent 62%),
-    radial-gradient(48rem 34rem at 50% 64%, rgba(16, 185, 129, 0.16), transparent 66%),
+    radial-gradient(
+      60rem 38rem at 50% 6%,
+      rgba(251, 191, 36, 0.2),
+      transparent 62%
+    ),
+    radial-gradient(
+      48rem 34rem at 50% 64%,
+      rgba(16, 185, 129, 0.16),
+      transparent 66%
+    ),
     linear-gradient(180deg, #03291d 0%, #053d2c 46%, #03261a 100%);
 }
 
@@ -2218,8 +2736,16 @@ html.lenis body {
   background-size: 64px 64px;
   background-position: center top;
   opacity: 0.14;
-  -webkit-mask-image: radial-gradient(ellipse 60% 52% at 50% 24%, #000 0%, transparent 76%);
-  mask-image: radial-gradient(ellipse 60% 52% at 50% 24%, #000 0%, transparent 76%);
+  -webkit-mask-image: radial-gradient(
+    ellipse 60% 52% at 50% 24%,
+    #000 0%,
+    transparent 76%
+  );
+  mask-image: radial-gradient(
+    ellipse 60% 52% at 50% 24%,
+    #000 0%,
+    transparent 76%
+  );
 }
 
 .hero-halo-wrap {
@@ -2236,7 +2762,13 @@ html.lenis body {
   right: -6%;
   bottom: -1px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(252, 211, 77, 0.75) 22%, rgba(252, 211, 77, 0.75) 78%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(252, 211, 77, 0.75) 22%,
+    rgba(252, 211, 77, 0.75) 78%,
+    transparent
+  );
   box-shadow: 0 8px 26px 2px rgba(251, 191, 36, 0.28);
 }
 
@@ -2274,26 +2806,50 @@ html.lenis body {
 }
 
 @keyframes hero-rise {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes hero-draw {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes hero-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes hero-img {
-  from { opacity: 0; transform: translateY(26px); filter: blur(6px); }
-  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes hero-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
