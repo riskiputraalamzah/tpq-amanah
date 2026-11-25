@@ -557,6 +557,7 @@ const loadCalendar = async () => {
   try {
     const { data } = await api.get("/teaching_sessions/calendar", {
       params: { period: viewedMonth.value },
+      cache: false,
     });
     kbmCalendar.value = data;
   } catch {
@@ -571,13 +572,14 @@ const loadMonthData = async () => {
   monthLoading.value = true;
   try {
     const [historyRes, lpjRes, calendarRes] = await Promise.all([
-      api.get("/teaching_sessions", { params: viewedPeriod() }),
+      api.get("/teaching_sessions", { params: viewedPeriod(), cache: false }),
       api
-        .get("/ljp/reports", { params: { period: viewedMonth.value } })
+        .get("/ljp/reports", { params: { period: viewedMonth.value }, cache: false })
         .catch(() => null),
       api
         .get("/teaching_sessions/calendar", {
           params: { period: viewedMonth.value },
+          cache: false,
         })
         .catch(() => null),
     ]);
@@ -742,14 +744,15 @@ const fetchInitialData = async () => {
       await Promise.all([
         api.get("/classes"),
         api.get("/teaching_sessions/slots"),
-        api.get("/teaching_sessions", { params: periodObj }),
+        api.get("/teaching_sessions", { params: periodObj, cache: false }),
         // Optional data: a failure here must not block the rest of the page
         api
-          .get("/ljp/reports", { params: { period: viewedMonth.value } })
+          .get("/ljp/reports", { params: { period: viewedMonth.value }, cache: false })
           .catch(() => null),
         api
           .get("/teaching_sessions/calendar", {
             params: { period: viewedMonth.value },
+            cache: false,
           })
           .catch(() => null),
       ]);
