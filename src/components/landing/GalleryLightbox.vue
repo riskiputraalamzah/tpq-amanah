@@ -115,10 +115,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
+      </div>
 
-        <!-- Floating Zoom Controls (accessible on both mobile thumbs & desktop) -->
+      <!-- Dedicated Non-Overlapping Zoom Controls Bar (never covers photo on mobile or desktop) -->
+      <div class="flex items-center justify-center px-4 py-2 shrink-0 bg-slate-950/90 border-t border-white/10">
         <div
-          class="absolute z-20 flex items-center gap-1 p-1 border rounded-full shadow-lg bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/85 border-white/15 backdrop-blur-md"
+          class="inline-flex items-center gap-1 p-1 border rounded-full bg-white/5 border-white/15"
           role="group"
           aria-label="Kontrol zoom foto"
           @click.stop
@@ -164,7 +166,7 @@
 
       <!-- Bottom Caption & Thumbnail Strip (clears mobile home indicator) -->
       <div
-        class="px-4 pt-2.5 border-t border-white/10 bg-slate-950/90 shrink-0"
+        class="px-4 pt-2 bg-slate-950/95 shrink-0"
         style="padding-bottom: max(14px, env(safe-area-inset-bottom))"
       >
         <p

@@ -143,40 +143,44 @@
           <p v-if="m.caption" class="gm-card-caption">{{ m.caption }}</p>
 
           <div class="gm-actions">
-            <button type="button" class="gm-act is-edit" @click="openEdit(m)">Ubah</button>
-            <button
-              v-if="m.published"
-              type="button"
-              class="gm-act"
-              @click="copyMomentLink(m)"
-            >
-              Salin Link
-            </button>
-            <button
-              type="button"
-              class="gm-act"
-              :class="{ 'is-pinned': m.pinned }"
-              :disabled="busyId === m.id"
-              @click="togglePin(m)"
-            >
-              {{ m.pinned ? 'Lepas Pin' : 'Pin' }}
-            </button>
-            <button
-              type="button"
-              class="gm-act"
-              :disabled="busyId === m.id"
-              @click="togglePublish(m)"
-            >
-              {{ m.published ? 'Sembunyikan' : 'Tayangkan' }}
-            </button>
-            <button
-              type="button"
-              class="gm-act is-danger"
-              :disabled="busyId === m.id"
-              @click="confirmDelete(m)"
-            >
-              Hapus
-            </button>
+            <div class="gm-actions-primary">
+              <button type="button" class="gm-act is-edit" @click="openEdit(m)">Ubah</button>
+              <button
+                v-if="m.published"
+                type="button"
+                class="gm-act is-share"
+                @click="copyMomentLink(m)"
+              >
+                Salin Link
+              </button>
+            </div>
+            <div class="gm-actions-secondary">
+              <button
+                type="button"
+                class="gm-act"
+                :class="{ 'is-pinned': m.pinned }"
+                :disabled="busyId === m.id"
+                @click="togglePin(m)"
+              >
+                {{ m.pinned ? 'Lepas Pin' : 'Pin' }}
+              </button>
+              <button
+                type="button"
+                class="gm-act"
+                :disabled="busyId === m.id"
+                @click="togglePublish(m)"
+              >
+                {{ m.published ? 'Sembunyikan' : 'Tayangkan' }}
+              </button>
+              <button
+                type="button"
+                class="gm-act is-danger"
+                :disabled="busyId === m.id"
+                @click="confirmDelete(m)"
+              >
+                Hapus
+              </button>
+            </div>
           </div>
         </div>
       </article>
@@ -188,82 +192,85 @@
         <div class="gm-sheet">
           <div class="gm-sheet-head">
             <div>
-              <h2>{{ editingId ? 'Ubah Momen' : 'Tambah Momen Dokumentasi' }}</h2>
-              <p>Upload hingga {{ MAX_UPLOADED_PHOTOS }} foto dari HP/komputer (dikompres otomatis), atau tempel link foto &amp; video online sepuasnya.</p>
+              <h2>{{ editingId ? 'Ubah Momen' : 'Tambah Momen' }}</h2>
+              <p>Isi info singkat, lalu tambahkan foto atau video.</p>
             </div>
             <button type="button" class="gm-close" aria-label="Tutup" @click="closeForm">×</button>
           </div>
 
-          <form class="gm-sheet-body" @submit.prevent="saveMoment">
-            <div class="gm-field">
-              <label for="gm-title">Judul Momen <span class="gm-req">*</span></label>
-              <input
-                id="gm-title"
-                v-model="form.title"
-                type="text"
-                class="gm-input"
-                maxlength="100"
-                required
-                placeholder="Contoh: Munaqosyah Santri 2026 atau Pertemuan Wali Santri"
-              />
-            </div>
-
-            <div class="gm-row-2">
+          <form id="gm-moment-form" class="gm-sheet-body" @submit.prevent="saveMoment">
+            <!-- Section 1: Info Momen -->
+            <div class="gm-section-card">
               <div class="gm-field">
-                <label for="gm-cat">Kategori <span class="gm-req">*</span></label>
-                <div class="gm-cat-inline">
-                  <select id="gm-cat" v-model="form.categoryId" class="gm-input">
-                    <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.label }}</option>
-                  </select>
-                  <button type="button" class="gm-btn-mini" @click="quickCatOpen = !quickCatOpen">
-                    {{ quickCatOpen ? 'Batal' : '+ Baru' }}
-                  </button>
+                <label for="gm-title">Judul Momen <span class="gm-req">*</span></label>
+                <input
+                  id="gm-title"
+                  v-model="form.title"
+                  type="text"
+                  class="gm-input"
+                  maxlength="100"
+                  required
+                  placeholder="Contoh: Munaqosyah Santri 2026"
+                />
+              </div>
+
+              <div class="gm-row-2">
+                <div class="gm-field">
+                  <label for="gm-cat">Kategori <span class="gm-req">*</span></label>
+                  <div class="gm-cat-inline">
+                    <select id="gm-cat" v-model="form.categoryId" class="gm-input">
+                      <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.label }}</option>
+                    </select>
+                    <button type="button" class="gm-btn-mini" @click="quickCatOpen = !quickCatOpen">
+                      {{ quickCatOpen ? 'Batal' : '+ Baru' }}
+                    </button>
+                  </div>
+                  <div v-if="quickCatOpen" class="gm-quick-cat">
+                    <input
+                      v-model="quickCatName"
+                      type="text"
+                      class="gm-input"
+                      maxlength="40"
+                      placeholder="Nama kategori baru…"
+                      @keydown.enter.prevent="addQuickCategory"
+                    />
+                    <button type="button" class="gm-btn is-primary gm-btn-sm" :disabled="quickCatBusy || !quickCatName.trim()" @click="addQuickCategory">
+                      {{ quickCatBusy ? '…' : 'Simpan' }}
+                    </button>
+                  </div>
                 </div>
-                <div v-if="quickCatOpen" class="gm-quick-cat">
-                  <input
-                    v-model="quickCatName"
-                    type="text"
-                    class="gm-input"
-                    maxlength="40"
-                    placeholder="Nama kategori baru…"
-                    @keydown.enter.prevent="addQuickCategory"
-                  />
-                  <button type="button" class="gm-btn is-primary gm-btn-sm" :disabled="quickCatBusy || !quickCatName.trim()" @click="addQuickCategory">
-                    {{ quickCatBusy ? '…' : 'Simpan' }}
-                  </button>
+
+                <div class="gm-field">
+                  <label for="gm-date">Tanggal Momen</label>
+                  <input id="gm-date" v-model="form.momentDate" type="date" class="gm-input" />
                 </div>
               </div>
 
               <div class="gm-field">
-                <label for="gm-date">Tanggal Momen</label>
-                <input id="gm-date" v-model="form.momentDate" type="date" class="gm-input" />
+                <div class="gm-label-row">
+                  <label for="gm-caption">Keterangan Singkat</label>
+                  <span class="gm-counter">{{ form.caption.length }}/400</span>
+                </div>
+                <textarea
+                  id="gm-caption"
+                  v-model="form.caption"
+                  class="gm-input gm-textarea"
+                  rows="2"
+                  maxlength="400"
+                  placeholder="Ceritakan singkat kegiatan ini (opsional)…"
+                ></textarea>
               </div>
             </div>
 
-            <div class="gm-field">
+            <!-- Section 2: Foto Dokumentasi (clean grid, zero overlap, simple 2-mode switcher) -->
+            <div class="gm-section-card">
               <div class="gm-label-row">
-                <label for="gm-caption">Keterangan Singkat</label>
-                <span class="gm-counter">{{ form.caption.length }}/400</span>
-              </div>
-              <textarea
-                id="gm-caption"
-                v-model="form.caption"
-                class="gm-input gm-textarea"
-                rows="3"
-                maxlength="400"
-                placeholder="Ceritakan singkat suasana atau makna kegiatan ini untuk calon wali santri…"
-              ></textarea>
-            </div>
-
-            <!-- Photos upload (max 6 compressed) + unlimited online link drop section -->
-            <div class="gm-field">
-              <div class="gm-label-row">
-                <label>Foto Dokumentasi ({{ totalPhotos }} foto)</label>
-                <span class="gm-hint-inline">Upload {{ uploadedPhotoCount }}/{{ MAX_UPLOADED_PHOTOS }} · Link online bebas</span>
+                <label class="gm-section-title">Foto Dokumentasi ({{ totalPhotos }})</label>
+                <span class="gm-hint-inline">Upload {{ uploadedPhotoCount }}/{{ MAX_UPLOADED_PHOTOS }} · Link bebas</span>
               </div>
 
-              <div v-if="formPhotos.length" class="gm-photo-grid" :class="{ 'is-scrollable': formPhotos.length > 6 }">
-                <div v-for="(p, idx) in formPhotos" :key="p.key" class="gm-photo-tile" :class="{ 'is-broken': p.broken }">
+              <div v-if="formPhotos.length" class="gm-photo-grid">
+                <div v-for="(p, idx) in visibleFormPhotos" :key="p.key" class="gm-photo-tile" :class="{ 'is-broken': p.broken }">
                   <img
                     :src="p.thumbUrl || p.previewUrl"
                     :alt="`Foto ${idx + 1}`"
@@ -300,35 +307,50 @@
                 </div>
               </div>
 
-              <label v-if="uploadedPhotoCount < MAX_UPLOADED_PHOTOS" class="gm-upload-drop" :class="{ 'is-busy': compressing }">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  class="sr-only"
-                  :disabled="compressing || saving"
-                  @change="onPickFiles"
-                />
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span>
-                  {{ compressing ? 'Mengompres foto…' : `Upload foto dari HP / komputer (sisa ${MAX_UPLOADED_PHOTOS - uploadedPhotoCount}, otomatis dikompres)` }}
-                </span>
-              </label>
-              <p v-else class="gm-upload-cap-note">
-                Batas {{ MAX_UPLOADED_PHOTOS }} foto upload tercapai — masih bisa menambah foto tanpa batas lewat link online di bawah.
-              </p>
+              <button
+                v-if="formPhotos.length > FORM_PREVIEW_LIMIT"
+                type="button"
+                class="gm-expand-btn"
+                @click="showAllFormPhotos = !showAllFormPhotos"
+              >
+                {{
+                  showAllFormPhotos
+                    ? 'Ringkas tampilan foto'
+                    : `Lihat semua foto (${formPhotos.length - FORM_PREVIEW_LIMIT} lagi)`
+                }}
+              </button>
 
-              <div class="gm-link-box">
+              <!-- Simple 2-Tab Source Switcher (no stacked double drop zones on mobile) -->
+              <div class="gm-mode-tabs" role="tablist" aria-label="Cara tambah foto">
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="photoAddMode === 'link'"
+                  class="gm-mode-tab"
+                  :class="{ 'is-active': photoAddMode === 'link' }"
+                  @click="photoAddMode = 'link'"
+                >
+                  Tempel Link Online
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="photoAddMode === 'upload'"
+                  class="gm-mode-tab"
+                  :class="{ 'is-active': photoAddMode === 'upload' }"
+                  @click="photoAddMode = 'upload'"
+                >
+                  Upload HP / PC ({{ uploadedPhotoCount }}/{{ MAX_UPLOADED_PHOTOS }})
+                </button>
+              </div>
+
+              <div v-if="photoAddMode === 'link'" class="gm-link-box">
                 <div class="gm-link-row">
                   <textarea
                     v-model="photoLinkInput"
                     class="gm-input gm-link-input"
                     rows="2"
-                    placeholder="Tempel link foto Google Drive / URL gambar online (tanpa batas jumlah, bisa banyak sekaligus 1 per baris)…"
+                    placeholder="Tempel link Google Drive / URL foto (bisa banyak sekaligus, 1 per baris)…"
                     :disabled="saving"
                     @keydown.ctrl.enter.prevent="addPhotosFromLinks"
                   ></textarea>
@@ -343,24 +365,44 @@
                 </div>
                 <p v-if="photoLinkError" class="gm-error-text" role="alert">{{ photoLinkError }}</p>
                 <p v-else class="gm-link-hint">
-                  Link online (Google Drive termasuk iPhone <strong>.HEIC</strong>, Dropbox, atau URL gambar) tidak dibatasi &amp; otomatis disesuaikan ukurannya agar web tetap ngebut. Pastikan file Drive disetel <strong>Siapa saja yang memiliki link</strong>.
+                  Bebas jumlah · mendukung Google Drive (termasuk .HEIC), Dropbox, atau URL gambar publik.
                 </p>
               </div>
 
-              <p class="gm-privacy-note">
-                Pastikan foto layak tayang publik dan tidak menampilkan data pribadi santri (seperti NIK/alamat rumah).
-              </p>
+              <template v-else>
+                <label v-if="uploadedPhotoCount < MAX_UPLOADED_PHOTOS" class="gm-upload-drop" :class="{ 'is-busy': compressing }">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="sr-only"
+                    :disabled="compressing || saving"
+                    @change="onPickFiles"
+                  />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span>
+                    {{ compressing ? 'Mengompres foto…' : `Pilih foto (sisa ${MAX_UPLOADED_PHOTOS - uploadedPhotoCount}, otomatis dikompres)` }}
+                  </span>
+                </label>
+                <p v-else class="gm-upload-cap-note">
+                  Batas {{ MAX_UPLOADED_PHOTOS }} foto upload tercapai — gunakan tab <strong>Tempel Link Online</strong> untuk menambah foto lagi tanpa batas.
+                </p>
+              </template>
             </div>
 
-            <!-- Video embed URLs drop section (unlimited external video links) -->
-            <div class="gm-field">
+            <!-- Section 3: Video Dokumentasi -->
+            <div class="gm-section-card">
               <div class="gm-label-row">
-                <label>Video Dokumentasi ({{ formVideos.length }} video)</label>
-                <span class="gm-hint-inline">Opsional · Link online bebas (YT / IG / Drive)</span>
+                <label class="gm-section-title">Video Dokumentasi ({{ formVideos.length }})</label>
+                <span class="gm-hint-inline">Opsional · YT / IG / Drive</span>
               </div>
 
-              <div v-if="formVideos.length" class="gm-photo-grid" :class="{ 'is-scrollable': formVideos.length > 6 }">
-                <div v-for="(v, idx) in formVideos" :key="v.key" class="gm-photo-tile gm-video-tile">
+              <div v-if="formVideos.length" class="gm-photo-grid">
+                <div v-for="(v, idx) in visibleFormVideos" :key="v.key" class="gm-photo-tile gm-video-tile">
                   <img
                     v-if="v.thumbnailUrl && !v.thumbBroken"
                     :src="galleryPhotoThumbSrc({ url: v.thumbnailUrl }, 360)"
@@ -390,13 +432,26 @@
                 </div>
               </div>
 
+              <button
+                v-if="formVideos.length > FORM_PREVIEW_LIMIT"
+                type="button"
+                class="gm-expand-btn"
+                @click="showAllFormVideos = !showAllFormVideos"
+              >
+                {{
+                  showAllFormVideos
+                    ? 'Ringkas tampilan video'
+                    : `Lihat semua video (${formVideos.length - FORM_PREVIEW_LIMIT} lagi)`
+                }}
+              </button>
+
               <div class="gm-link-box">
                 <div class="gm-link-row">
                   <textarea
                     v-model="videoLinkInput"
                     class="gm-input gm-link-input"
                     rows="2"
-                    placeholder="Tempel 1 atau beberapa link video YouTube, Instagram, atau Google Drive (tanpa batas jumlah, 1 per baris)…"
+                    placeholder="Tempel link video YouTube, Instagram, atau Google Drive (1 per baris)…"
                     :disabled="saving"
                     @keydown.ctrl.enter.prevent="addVideosFromLinks"
                   ></textarea>
@@ -411,7 +466,7 @@
                 </div>
                 <p v-if="videoLinkError" class="gm-error-text" role="alert">{{ videoLinkError }}</p>
                 <p v-else class="gm-link-hint">
-                  Video diputar langsung di website (dimuat saat diklik saja sehingga landing page tetap ringan). Untuk Google Drive, pastikan izin file <strong>Siapa saja yang memiliki link (Pelihat)</strong>.
+                  Diputar langsung di web. Untuk Google Drive pastikan izin file <strong>Siapa saja yang memiliki link</strong>.
                 </p>
               </div>
             </div>
@@ -421,28 +476,29 @@
               <label class="gm-check">
                 <input v-model="form.published" type="checkbox" />
                 <span>
-                  <strong>Langsung tampilkan di Landing Page</strong>
-                  <small>Matikan bila ingin menyimpan sebagai draf tersembunyi dulu.</small>
+                  <strong>Langsung tayang di web</strong>
+                  <small>Matikan bila ingin simpan sebagai draf dulu.</small>
                 </span>
               </label>
               <label class="gm-check">
                 <input v-model="form.pinned" type="checkbox" />
                 <span>
                   <strong>Pin sebagai unggulan</strong>
-                  <small>Selalu tampil di posisi paling depan pada bagian Dokumentasi.</small>
+                  <small>Tampil di posisi paling depan di beranda &amp; galeri.</small>
                 </span>
               </label>
             </div>
 
             <p v-if="formError" class="gm-form-alert" role="alert">{{ formError }}</p>
-
-            <div class="gm-sheet-foot">
-              <button type="button" class="gm-btn is-ghost" :disabled="saving" @click="closeForm">Batal</button>
-              <button type="submit" class="gm-btn is-primary" :disabled="saving || compressing">
-                {{ saving ? 'Menyimpan…' : (editingId ? 'Simpan Perubahan' : 'Tayangkan Momen') }}
-              </button>
-            </div>
           </form>
+
+          <!-- Sticky Footer Action Bar (always thumb-reachable on mobile) -->
+          <div class="gm-sheet-foot">
+            <button type="button" class="gm-btn is-ghost" :disabled="saving" @click="closeForm">Batal</button>
+            <button type="submit" form="gm-moment-form" class="gm-btn is-primary gm-submit-btn" :disabled="saving || compressing">
+              {{ saving ? 'Menyimpan…' : (editingId ? 'Simpan Perubahan' : 'Tayangkan Momen') }}
+            </button>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -603,10 +659,14 @@ const formError = ref('')
 const quickCatOpen = ref(false)
 const quickCatName = ref('')
 const quickCatBusy = ref(false)
+const FORM_PREVIEW_LIMIT = 6
 const photoLinkInput = ref('')
 const photoLinkError = ref('')
 const videoLinkInput = ref('')
 const videoLinkError = ref('')
+const photoAddMode = ref('link')
+const showAllFormPhotos = ref(false)
+const showAllFormVideos = ref(false)
 
 const form = ref({
   title: '',
@@ -621,6 +681,12 @@ const form = ref({
 const formPhotos = ref([])
 const formVideos = ref([])
 const totalPhotos = computed(() => formPhotos.value.length)
+const visibleFormPhotos = computed(() =>
+  showAllFormPhotos.value ? formPhotos.value : formPhotos.value.slice(0, FORM_PREVIEW_LIMIT),
+)
+const visibleFormVideos = computed(() =>
+  showAllFormVideos.value ? formVideos.value : formVideos.value.slice(0, FORM_PREVIEW_LIMIT),
+)
 // Only uploaded files (stored in Firestore) count toward the 6-photo upload limit; external links are unlimited.
 const uploadedPhotoCount = computed(
   () => formPhotos.value.filter((p) => p.kind === 'new' || (p.kind === 'existing' && !p.source)).length,
@@ -635,6 +701,9 @@ function openCreate() {
   photoLinkError.value = ''
   videoLinkInput.value = ''
   videoLinkError.value = ''
+  photoAddMode.value = 'link'
+  showAllFormPhotos.value = false
+  showAllFormVideos.value = false
   formPhotos.value = []
   formVideos.value = []
   form.value = {
@@ -657,6 +726,8 @@ function openEdit(m) {
   photoLinkError.value = ''
   videoLinkInput.value = ''
   videoLinkError.value = ''
+  showAllFormPhotos.value = false
+  showAllFormVideos.value = false
   formPhotos.value = (m.photos || []).map((p) => ({
     key: `ex_${p.id}`,
     kind: 'existing',
@@ -666,6 +737,7 @@ function openEdit(m) {
     previewUrl: galleryPhotoSrc(p),
     thumbUrl: galleryPhotoThumbSrc(p, 360),
   }))
+  photoAddMode.value = formPhotos.value.some((p) => p.source) || !formPhotos.value.length ? 'link' : 'upload'
   formVideos.value = momentVideosOf(m).map((v, i) => ({
     key: `vid_${v.platform}_${v.id}_${i}`,
     ...v,
@@ -716,6 +788,7 @@ async function onPickFiles(event) {
         thumbUrl: compressed.dataBase64,
       })
     }
+    showAllFormPhotos.value = true
   } catch (err) {
     formError.value = err?.message || 'Gagal memproses foto yang dipilih.'
   } finally {
@@ -768,6 +841,7 @@ function addPhotosFromLinks() {
       })
     }
     photoLinkInput.value = ''
+    showAllFormPhotos.value = true
   }
 
   if (errors.length) {
@@ -812,6 +886,7 @@ function addVideosFromLinks() {
       })
     }
     videoLinkInput.value = ''
+    showAllFormVideos.value = true
   }
 
   if (errors.length) {
@@ -1516,15 +1591,26 @@ async function removeCategory(c) {
   padding-top: 10px;
   border-top: 1px solid var(--line);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gm-actions-primary {
+  display: flex;
+  gap: 6px;
+}
+
+.gm-actions-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
 .gm-act {
-  flex: 1 1 auto;
-  min-height: 34px;
-  padding: 0 10px;
-  border-radius: 8px;
+  flex: 1 1 0;
+  min-height: 38px;
+  padding: 0 8px;
+  border-radius: 9px;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
@@ -1532,10 +1618,12 @@ async function removeCategory(c) {
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .gm-act:hover:not(:disabled) { background: #f3f7f4; }
 .gm-act.is-edit { background: #edf7f2; border-color: rgba(10, 92, 64, 0.25); color: var(--emerald); }
+.gm-act.is-share { background: #fffbeb; border-color: rgba(180, 83, 9, 0.28); color: #92400e; }
 .gm-act.is-pinned { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
 .gm-act.is-danger { color: #b42318; border-color: rgba(180, 35, 24, 0.24); }
 .gm-act.is-danger:hover:not(:disabled) { background: #fef2f2; }
@@ -1635,11 +1723,79 @@ async function removeCategory(c) {
 }
 
 .gm-sheet-body {
-  padding: 16px 18px 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 16px 18px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+}
+
+.gm-section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.gm-section-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.gm-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 11px;
+  background: #f1f6f3;
+  border: 1px solid var(--line);
+}
+
+.gm-mode-tab {
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--body);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gm-mode-tab.is-active {
+  background: #fff;
+  color: var(--emerald);
+  box-shadow: 0 1px 4px rgba(3, 41, 29, 0.12);
+}
+
+.gm-expand-btn {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(10, 92, 64, 0.25);
+  background: #f3f9f6;
+  color: var(--emerald);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gm-expand-btn:hover {
+  background: #e6f4ed;
 }
 
 .gm-field {
@@ -1714,25 +1870,25 @@ async function removeCategory(c) {
 .gm-photo-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  align-content: start;
+  gap: 10px;
 }
 
-.gm-photo-grid.is-scrollable {
-  max-height: 290px;
-  overflow-y: auto;
-  padding-right: 4px;
-  overscroll-behavior: contain;
+@media (max-width: 520px) {
+  .gm-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
 }
 
 .gm-photo-tile {
   position: relative;
+  width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 10px;
+  border-radius: 11px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: #e9f0ec;
-  content-visibility: auto;
-  contain-intrinsic-size: 140px 105px;
 }
 
 .gm-upload-cap-note {
@@ -1782,15 +1938,17 @@ async function removeCategory(c) {
 
 .gm-photo-rm {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 24px;
-  height: 24px;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
   border-radius: 999px;
-  border: 0;
-  background: rgba(180, 35, 24, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: rgba(180, 35, 24, 0.92);
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
 }
@@ -2036,24 +2194,39 @@ async function removeCategory(c) {
 }
 
 .gm-sheet-foot {
+  flex: none;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 10px;
+  padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  background: #fff;
   border-top: 1px solid var(--line);
+}
+
+@media (max-width: 600px) {
+  .gm-sheet-foot .gm-submit-btn {
+    flex: 1 1 auto;
+  }
 }
 
 .gm-overlay .gm-input {
   width: 100%;
-  min-height: 42px;
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 9px 12px;
   border-radius: 10px;
   border: 1px solid rgba(11, 59, 42, 0.24);
   background: #fff;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 16px;
   color: var(--ink);
   box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .gm-overlay .gm-input {
+    min-height: 42px;
+    font-size: 0.9rem;
+  }
 }
 
 .gm-overlay .gm-btn {

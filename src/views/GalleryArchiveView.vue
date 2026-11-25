@@ -43,7 +43,7 @@
               type="search"
               aria-label="Cari dokumentasi kegiatan"
               placeholder="Cari kegiatan, misalnya Munaqosyah, Maulid…"
-              class="w-full min-h-[46px] pl-11 pr-4 text-sm text-white placeholder-emerald-100/60 border rounded-xl bg-white/10 border-amber-200/25 focus:outline-none focus:border-amber-300 focus:bg-white/15 transition-colors"
+              class="w-full min-h-[46px] pl-11 pr-4 text-base sm:text-sm text-white placeholder-emerald-100/60 border rounded-xl bg-white/10 border-amber-200/25 focus:outline-none focus:border-amber-300 focus:bg-white/15 transition-colors"
             />
           </div>
 

@@ -153,4 +153,7 @@ test("GalleryManagementView supports moment upload, live publish default, custom
   assert.ok(has(mgmt, "addVideosFromLinks"));
   assert.ok(has(mgmt, "copyMomentLink"), "dashboard cards provide 1-tap Salin Link for sharing");
   assert.ok(has(mgmt, 'href="/dokumentasi"'), "dashboard View on Web opens /dokumentasi archive");
+  assert.ok(!has(mgmt, "content-visibility: auto"), "photo grid tiles avoid content-visibility row overlap bug");
+  assert.ok(!has(mgmt, "is-scrollable"), "photo grid avoids nested mobile scroll traps");
+  assert.ok(has(mgmt, "photoAddMode"), "photo form simplifies upload vs link into a 2-tab switcher");
 });
