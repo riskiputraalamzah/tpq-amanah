@@ -365,9 +365,15 @@ const router = createRouter({
     // while it slides in
     if (savedPosition) {
       return { ...savedPosition, behavior: "instant" };
-    } else {
-      return { top: 0, behavior: "instant" };
     }
+    if (to.hash) {
+      if (typeof document !== "undefined" && document.querySelector(to.hash)) {
+        return { el: to.hash, top: 110, behavior: "smooth" };
+      }
+      // Async sections (e.g. #dokumentasi, #legalitas) mount after data loads and scroll themselves into view
+      return false;
+    }
+    return { top: 0, behavior: "instant" };
   },
 });
 

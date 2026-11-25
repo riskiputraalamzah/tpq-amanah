@@ -1688,7 +1688,7 @@
     <!-- ================================================================= -->
     <!-- 10b. DOKUMENTASI & GALERI KEGIATAN (HIDDEN WHEN EMPTY)            -->
     <!-- ================================================================= -->
-    <GallerySection />
+    <GallerySection @ready="onGalleryReady" />
 
     <!-- ================================================================= -->
     <!-- 11. TESTIMONI WALI SANTRI                                          -->
@@ -2557,6 +2557,25 @@ const fetchPublicStats = async () => {
 let lenis = null;
 let lenisRafId = null;
 
+const scrollToHash = (hash) => {
+  if (!hash || typeof document === "undefined") return;
+  const el = document.querySelector(hash);
+  if (!el) return;
+  if (lenis) {
+    lenis.resize?.();
+    lenis.scrollTo(el, { offset: -110 });
+  } else {
+    const top = el.getBoundingClientRect().top + window.scrollY - 110;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+};
+
+const onGalleryReady = () => {
+  if (typeof window !== "undefined" && window.location.hash === "#dokumentasi") {
+    requestAnimationFrame(() => scrollToHash("#dokumentasi"));
+  }
+};
+
 onMounted(() => {
   const prefersReducedMotion =
     typeof window !== "undefined" &&
@@ -2588,6 +2607,10 @@ onMounted(() => {
   fetchTeachers();
   fetchContent();
   fetchPublicStats();
+
+  if (typeof window !== "undefined" && window.location.hash) {
+    requestAnimationFrame(() => scrollToHash(window.location.hash));
+  }
 
   ctaObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {

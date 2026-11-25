@@ -404,6 +404,7 @@ import SectionHeading from '@/components/landing/SectionHeading.vue'
 import { galleryPhotoSrc, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
 
 const INITIAL_LIMIT = 6
+const emit = defineEmits(['ready'])
 
 const moments = ref([])
 const categories = ref([])
@@ -451,6 +452,10 @@ onMounted(async () => {
     const { data } = await api.get('/gallery/public')
     moments.value = Array.isArray(data?.moments) ? data.moments : []
     categories.value = Array.isArray(data?.categories) ? data.categories : []
+    if (moments.value.length) {
+      await nextTick()
+      emit('ready')
+    }
   } catch {
     moments.value = []
     categories.value = []

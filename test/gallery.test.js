@@ -55,10 +55,15 @@ test("Dokumentasi access is wired to admin, guru Akses Khusus (gallery-manage), 
 
 test("Landing page mounts GallerySection with inline video iframe player and self-hiding behavior", () => {
   const home = read("src/views/HomeView.vue");
-  assert.ok(has(home, "<GallerySection />"));
+  assert.ok(has(home, '<GallerySection @ready="onGalleryReady" />'));
+  assert.ok(has(home, 'window.location.hash === "#dokumentasi"'));
+
+  const router = read("src/router/index.js");
+  assert.ok(has(router, "if (to.hash)"), "router preserves hash navigation instead of forcing top: 0");
 
   const section = read("src/components/landing/GallerySection.vue");
   assert.ok(has(section, 'v-if="moments.length" id="dokumentasi"'));
+  assert.ok(has(section, "emit('ready')"));
   assert.ok(has(section, ':src="activeMoment.video.embedUrl"'), "embeds YouTube/Instagram video directly in web");
   assert.ok(has(section, "api.get('/gallery/public')"));
 });
