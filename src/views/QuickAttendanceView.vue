@@ -247,7 +247,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import api from "../services/api";
+import api, { markDataMutated } from "../services/api";
 import { useAuthStore } from "@/stores/auth";
 import logoUrl from "../assets/logo-sm.png";
 import "@/styles/landing.css";
@@ -507,10 +507,11 @@ onMounted(async () => {
   }
 
   try {
-    const { data } = await api.get(`/attendance/quick/${route.params.code}`);
+    const { data } = await api.get(`/attendance/quick/${route.params.code}`, { cache: false });
     details.value = data;
 
     if (data.action === "already_recorded") {
+      markDataMutated();
       state.value = "already";
       triggerAutoRedirectIfEligible(data);
       return;

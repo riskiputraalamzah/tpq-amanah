@@ -316,25 +316,33 @@ const exportExcel = async () => {
   }
 }
 
-const load = async (fresh = false) => {
-  loading.value = true
-  error.value = ''
+let lastLoadedAt = 0
+const load = async (fresh = false, { silent = false } = {}) => {
+  if (!silent || !data.value) loading.value = true
+  if (!silent) error.value = ''
   try {
     clearApiCache('/kbm-monitor')
     const params = {}
     if (period.value) params.period = period.value
     if (fresh) params.fresh = '1'
-    const res = await api.get('/kbm-monitor', { params })
+    const res = await api.get('/kbm-monitor', { params, cache: false })
     data.value = res.data
     period.value = res.data.period
+    lastLoadedAt = Date.now()
     if (detail.value) {
       const guru = res.data.gurus.find((g) => g.id === detail.value.guru.id)
       if (guru) detail.value = { ...detail.value, guru, issues: issuesOf(guru) }
     }
   } catch (err) {
-    error.value = err.response?.data?.error || 'Gagal memuat monitor KBM.'
+    if (!silent || !data.value) error.value = err.response?.data?.error || 'Gagal memuat monitor KBM.'
   } finally {
     loading.value = false
+  }
+}
+
+const onVisible = () => {
+  if (document.visibilityState === 'visible' && Date.now() - lastLoadedAt > 5000) {
+    load(true, { silent: true })
   }
 }
 
@@ -394,8 +402,14 @@ const sendNudge = async () => {
   }
 }
 
-onMounted(() => load())
-onBeforeUnmount(stopPolling)
+onMounted(() => {
+  load()
+  document.addEventListener('visibilitychange', onVisible)
+})
+onBeforeUnmount(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', onVisible)
+})
 </script>
 
 <style scoped>

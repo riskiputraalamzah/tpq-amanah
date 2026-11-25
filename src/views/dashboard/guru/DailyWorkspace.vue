@@ -1289,7 +1289,8 @@ async function loadDailyContext(isAddingNewSession = false) {
 
   try {
     const { data } = await api.get('/teaching_sessions/daily-context', {
-      params: { date: targetDate.value }
+      params: { date: targetDate.value },
+      cache: false,
     });
     dailyContext.value = data;
 
@@ -1395,7 +1396,8 @@ async function loadLevelContext(levelId) {
   loadingLevelContext.value = true;
   try {
     const { data } = await api.get('/teaching_sessions/level-context', {
-      params: { date: targetDate.value, levelId, slotId: selectedSlotId.value }
+      params: { date: targetDate.value, levelId, slotId: selectedSlotId.value },
+      cache: false,
     });
 
     roster.value = (data.roster || []).map(s => ({
@@ -1493,7 +1495,8 @@ async function submitKbm() {
     // Silently refresh daily-context so existingSessions and backfillNavigation update immediately
     try {
       const { data } = await api.get('/teaching_sessions/daily-context', {
-        params: { date: targetDate.value }
+        params: { date: targetDate.value },
+        cache: false,
       });
       dailyContext.value = data;
     } catch (silentErr) {

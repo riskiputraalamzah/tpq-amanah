@@ -416,7 +416,7 @@ const fetchData = async () => {
   loadError.value = "";
   try {
     const [sessionRes, slotsRes, classesRes] = await Promise.all([
-      api.get(`/teaching_sessions/${sessionId}`),
+      api.get(`/teaching_sessions/${sessionId}`, { cache: false }),
       api.get("/teaching_sessions/slots"),
       api.get("/classes"),
     ]);
@@ -463,7 +463,7 @@ const save = async () => {
     justSavedTimer = setTimeout(() => {
       justSaved.value = false;
     }, 2500);
-    const sessionRes = await api.get(`/teaching_sessions/${sessionId}`);
+    const sessionRes = await api.get(`/teaching_sessions/${sessionId}`, { cache: false });
     session.value = sessionRes.data;
     nextStep.value = nextStepAfterSave({ saved: "jurnal", session: session.value, sessionId });
   } catch (error) {

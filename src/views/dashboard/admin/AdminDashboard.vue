@@ -256,18 +256,26 @@ function ago(v) {
   return days < 8 ? `${days} hari` : shortDate(new Date(t + 7 * 3600 * 1000).toISOString().slice(0, 10))
 }
 
-async function load(fresh = false) {
-  loading.value = true
-  error.value = ''
+async function load(fresh = false, { silent = false } = {}) {
+  if (!silent || !d.value) loading.value = true
+  if (!silent) error.value = ''
   try {
     const { data } = await api.get('/admin-dashboard', { params: fresh ? { fresh: '1' } : {}, cache: false })
     d.value = data
     loadedAt.value = Date.now()
     tick.value = Date.now()
   } catch (err) {
-    error.value = err.response?.data?.error || 'Ringkasan belum bisa dimuat. Periksa koneksi lalu muat ulang.'
+    if (!silent || !d.value) {
+      error.value = err.response?.data?.error || 'Ringkasan belum bisa dimuat. Periksa koneksi lalu muat ulang.'
+    }
   } finally {
     loading.value = false
+  }
+}
+
+function onVisible() {
+  if (document.visibilityState === 'visible' && Date.now() - (loadedAt.value || 0) > 5000) {
+    load(true, { silent: true })
   }
 }
 
@@ -275,12 +283,16 @@ async function load(fresh = false) {
 let timer = null
 onMounted(() => {
   load()
+  document.addEventListener('visibilitychange', onVisible)
   timer = setInterval(() => {
     tick.value = Date.now()
-    if (!document.hidden && Date.now() - (loadedAt.value || 0) > 2 * 60 * 1000) load()
+    if (!document.hidden && Date.now() - (loadedAt.value || 0) > 2 * 60 * 1000) load(false, { silent: true })
   }, 30 * 1000)
 })
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => {
+  clearInterval(timer)
+  document.removeEventListener('visibilitychange', onVisible)
+})
 </script>
 
 <style scoped>
