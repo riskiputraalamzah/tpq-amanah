@@ -479,7 +479,11 @@ async function loadData() {
     moments.value = Array.isArray(data?.moments) ? data.moments : []
     categories.value = Array.isArray(data?.categories) ? data.categories : []
   } catch (err) {
-    loadError.value = err.response?.data?.error || 'Gagal memuat data dokumentasi.'
+    if (err.response?.status === 403) {
+      loadError.value = 'Akses Kelola Dokumentasi belum aktif pada akun ini. Minta admin mencentang "Kelola dokumentasi" di menu Akun Pengguna, lalu ketuk Coba lagi.'
+    } else {
+      loadError.value = err.response?.data?.error || 'Gagal memuat data dokumentasi.'
+    }
   } finally {
     loading.value = false
   }
