@@ -6,7 +6,7 @@
         <p>Unggah momen foto dan video (YouTube, Instagram, atau Google Drive) agar tampil langsung di landing page TPQ Amanah.</p>
       </div>
       <div class="gm-head-actions">
-        <a href="/#dokumentasi" target="_blank" rel="noopener noreferrer" class="gm-btn is-ghost">
+        <a href="/dokumentasi" target="_blank" rel="noopener noreferrer" class="gm-btn is-ghost">
           Lihat di Web ↗
         </a>
         <button type="button" class="gm-btn is-secondary" @click="openCatModal">
@@ -144,6 +144,14 @@
 
           <div class="gm-actions">
             <button type="button" class="gm-act is-edit" @click="openEdit(m)">Ubah</button>
+            <button
+              v-if="m.published"
+              type="button"
+              class="gm-act"
+              @click="copyMomentLink(m)"
+            >
+              Salin Link
+            </button>
             <button
               type="button"
               class="gm-act"
@@ -928,6 +936,33 @@ async function saveMoment() {
 }
 
 /* ===== Quick Card Actions ===== */
+async function copyMomentLink(m) {
+  const slug = m.slug || m.id
+  const origin =
+    typeof window !== 'undefined' && /^https?:/.test(window.location.origin)
+      ? window.location.origin
+      : 'https://tpqamanahsawotratap.com'
+  const url = `${origin}/dokumentasi/${encodeURIComponent(slug)}`
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url)
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    success('Link halaman momen berhasil disalin — siap dibagikan!')
+  } catch {
+    showError('Gagal menyalin link otomatis.')
+  }
+}
+
 async function togglePublish(m) {
   busyId.value = m.id
   try {

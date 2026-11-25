@@ -86,11 +86,11 @@
         <div class="py-8 md:py-0 md:px-10">
           <h4 class="mb-4 text-base font-bold text-white">Navigasi Utama</h4>
           <ul class="grid grid-cols-2 text-sm gap-x-4 gap-y-0.5 md:block">
-            <li v-for="link in links" :key="link.href">
-              <a
-                :href="link.href"
+            <li v-for="link in links" :key="link.label">
+              <router-link
+                :to="link.to"
                 class="inline-flex items-center min-h-11 lg:min-h-0 lg:py-1.5 text-emerald-100/80 hover:text-amber-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
-                >{{ link.label }}</a
+                >{{ link.label }}</router-link
               >
             </li>
           </ul>
@@ -199,13 +199,14 @@ const isAuthenticated = computed(() => authStore.isAuthenticated);
 const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
 const links = [
-  { href: "#beranda", label: "Beranda" },
-  { href: "#pendaftaran", label: "Pendaftaran Santri Baru" },
-  { href: "#keunggulan", label: "Keunggulan Lembaga" },
-  { href: "#program", label: "Kurikulum 6 Jilid" },
-  { href: "#at-tartil", label: "E-Kitab Digital At-Tartil" },
-  { href: "#jadwal", label: "Jadwal Sesi Mengaji" },
-  { href: "#pengajar", label: "Dewan Asatidz" },
-  { href: "#kontak", label: "Kontak & Lokasi" },
+  { to: "/", label: "Beranda" },
+  { to: { path: "/", hash: "#pendaftaran" }, label: "Pendaftaran Santri Baru" },
+  { to: { path: "/", hash: "#keunggulan" }, label: "Keunggulan Lembaga" },
+  { to: { path: "/", hash: "#program" }, label: "Kurikulum 6 Jilid" },
+  { to: { path: "/", hash: "#at-tartil" }, label: "E-Kitab Digital At-Tartil" },
+  { to: { path: "/", hash: "#jadwal" }, label: "Jadwal Sesi Mengaji" },
+  { to: "/dokumentasi", label: "Dokumentasi & Galeri" },
+  { to: { path: "/", hash: "#pengajar" }, label: "Dewan Asatidz" },
+  { to: { path: "/", hash: "#kontak" }, label: "Kontak & Lokasi" },
 ];
 </script>

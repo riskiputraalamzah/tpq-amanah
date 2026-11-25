@@ -12,6 +12,16 @@ const routes = [
     component: HomeView,
   },
   {
+    path: "/dokumentasi",
+    name: "GalleryArchive",
+    component: () => import("../views/GalleryArchiveView.vue"),
+  },
+  {
+    path: "/dokumentasi/:slug",
+    name: "GalleryMomentDetail",
+    component: () => import("../views/GalleryMomentDetailView.vue"),
+  },
+  {
     path: "/login",
     name: "Login",
     component: () => import("../views/LoginView.vue"),

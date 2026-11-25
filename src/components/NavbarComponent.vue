@@ -220,8 +220,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
+const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 
@@ -229,7 +232,7 @@ const logoUrl = new URL("@/assets/logo-sm.png", import.meta.url).href;
 
 const isScrolled = ref(false);
 const isMobileMenuOpen = ref(false);
-const activeSection = ref("beranda");
+const activeSection = ref(route.path === "/" ? "beranda" : "");
 
 const navLinks = [
   { href: "#beranda", label: "Beranda", section: "beranda" },
@@ -250,6 +253,11 @@ const handleScroll = () => {
 const scrollToSection = (event, href) => {
   event.preventDefault();
   isMobileMenuOpen.value = false;
+
+  if (route.path !== "/") {
+    router.push(href === "#beranda" ? "/" : { path: "/", hash: href });
+    return;
+  }
 
   if (href === "#beranda") {
     window.scrollTo({ top: 0, behavior: "smooth" });
