@@ -77,7 +77,7 @@
                 loading="lazy"
                 decoding="async"
                 referrerpolicy="no-referrer"
-                class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
+                class="object-cover object-[50%_25%] w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
                 @error="brokenCovers[m.id] = true"
               />
               <div
@@ -196,8 +196,11 @@
       class="fixed inset-0 z-[70] flex flex-col bg-slate-950/95 backdrop-blur-sm text-white"
       @click.self="closeModal"
     >
-      <!-- Top Bar -->
-      <div class="flex items-start justify-between gap-3 px-4 pt-3 pb-2 border-b border-white/10">
+      <!-- Top Bar (respects mobile safe-area notch / Dynamic Island) -->
+      <div
+        class="flex items-start justify-between gap-3 px-4 pb-2.5 border-b border-white/10"
+        style="padding-top: max(14px, env(safe-area-inset-top))"
+      >
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-amber-300">
             <span>{{ activeMoment.categoryLabel }}</span>
@@ -288,12 +291,27 @@
           </button>
         </template>
 
-        <!-- Inline Video Embed Player (YouTube / Google Drive / Instagram) -->
+        <!-- Inline Video Embed Player (Google Drive / YouTube / Instagram) -->
         <template v-else-if="activeMoment.video">
+          <!-- Google Drive: adaptive theater height so vertical (9:16) and horizontal (16:9) Drive videos never crop on mobile/Safari -->
           <div
-            v-if="activeMoment.video.platform === 'youtube' || activeMoment.video.platform === 'gdrive'"
+            v-if="activeMoment.video.platform === 'gdrive'"
+            class="w-full h-[min(66dvh,640px)] sm:h-[min(74dvh,680px)] max-w-4xl overflow-hidden bg-black rounded-2xl shadow-2xl border border-white/10"
+          >
+            <iframe
+              :src="activeMoment.video.embedUrl"
+              :title="activeMoment.title"
+              class="w-full h-full border-0"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+              referrerpolicy="strict-origin-when-cross-origin"
+            ></iframe>
+          </div>
+
+          <div
+            v-else-if="activeMoment.video.platform === 'youtube'"
             class="w-full overflow-hidden bg-black rounded-2xl shadow-2xl border border-white/10"
-            :class="activeMoment.video.aspect === 'portrait' ? 'max-w-[360px] aspect-[9/16]' : 'max-w-4xl aspect-video'"
+            :class="activeMoment.video.aspect === 'portrait' ? 'max-w-[380px] h-full max-h-[min(74dvh,680px)] aspect-[9/16]' : 'max-w-4xl aspect-video max-h-full'"
           >
             <iframe
               :src="activeMoment.video.embedUrl"
@@ -335,8 +353,11 @@
         </template>
       </div>
 
-      <!-- Bottom Caption, Photo Strip & Controls -->
-      <div class="px-4 pt-2 pb-4 border-t border-white/10 bg-slate-950/80">
+      <!-- Bottom Caption, Photo Strip & Controls (respects mobile home-indicator safe area) -->
+      <div
+        class="px-4 pt-3 border-t border-white/10 bg-slate-950/85"
+        style="padding-bottom: max(16px, env(safe-area-inset-bottom))"
+      >
         <p
           v-if="activeMoment.caption"
           class="max-w-3xl mx-auto mb-3 text-sm leading-relaxed text-center text-emerald-50/90"
@@ -344,7 +365,10 @@
           {{ activeMoment.caption }}
         </p>
 
-        <div class="flex flex-wrap items-center justify-between max-w-4xl gap-3 mx-auto">
+        <div
+          class="flex flex-wrap items-center max-w-4xl gap-3 mx-auto"
+          :class="modalMode === 'photos' && activeMoment.photos?.length > 1 ? 'justify-between' : 'justify-center'"
+        >
           <!-- Photo pager & thumbs -->
           <div
             v-if="modalMode === 'photos' && activeMoment.photos?.length > 1"
@@ -381,7 +405,6 @@
               {{ activePhotoIdx + 1 }} / {{ activeMoment.photos.length }}
             </span>
           </div>
-          <span v-else></span>
 
           <!-- External link fallback for video -->
           <a

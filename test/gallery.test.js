@@ -74,7 +74,9 @@ test("Landing page mounts GallerySection with inline video iframe player and sel
   const section = read("src/components/landing/GallerySection.vue");
   assert.ok(has(section, 'v-if="moments.length" id="dokumentasi"'));
   assert.ok(has(section, "emit('ready')"));
-  assert.ok(has(section, ':src="activeMoment.video.embedUrl"'), "embeds YouTube/Instagram video directly in web");
+  assert.ok(has(section, ':src="activeMoment.video.embedUrl"'), "embeds YouTube/Instagram/Google Drive video directly in web");
+  assert.ok(has(section, "env(safe-area-inset-top)"), "lightbox clears mobile notch / Dynamic Island");
+  assert.ok(has(section, "activeMoment.video.platform === 'gdrive'"), "Google Drive uses adaptive full-stage height for vertical & horizontal videos");
   assert.ok(has(section, "api.get('/gallery/public')"));
 });
 
