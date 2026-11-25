@@ -60,19 +60,62 @@
             {{ moment.caption }}
           </p>
 
-          <!-- Share Bar (clean stacked mobile ergonomics: WA full-width + secondary row) -->
+          <!-- Action Bar: Like toggle + Share (clean mobile ergonomics) -->
           <div class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center">
-            <a
-              :href="whatsappShareHref"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center justify-center gap-2 min-h-[46px] px-5 rounded-xl text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 shadow-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
-            >
-              <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              <span>Bagikan via WhatsApp</span>
-            </a>
+            <div class="flex items-center gap-2 sm:contents">
+              <button
+                type="button"
+                :aria-pressed="isLiked(moment)"
+                :aria-label="isLiked(moment) ? 'Batal sukai momen ini' : 'Sukai momen ini'"
+                :disabled="isPending(moment)"
+                class="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 sm:px-5 rounded-xl text-sm font-bold border transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:opacity-75"
+                :class="
+                  isLiked(moment)
+                    ? 'bg-rose-500/20 border-rose-300/70 text-rose-100 hover:bg-rose-500/30 shadow-sm'
+                    : 'bg-white/10 border-amber-200/35 text-white hover:bg-white/20'
+                "
+                @click="onToggleLike(moment)"
+              >
+                <svg
+                  class="w-[18px] h-[18px] shrink-0 transition-transform"
+                  :class="[
+                    isLiked(moment) ? 'text-rose-400' : 'text-amber-200',
+                    isPopped(moment) ? 'lp-heart-pop' : '',
+                  ]"
+                  :fill="isLiked(moment) ? 'currentColor' : 'none'"
+                  stroke="currentColor"
+                  stroke-width="2.1"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                  />
+                </svg>
+                <span>{{ isLiked(moment) ? 'Disukai' : 'Suka' }}</span>
+                <span
+                  v-if="likeCountOf(moment) > 0"
+                  class="px-2 py-0.5 text-xs font-extrabold rounded-full tabular-nums"
+                  :class="isLiked(moment) ? 'bg-rose-400/25 text-rose-100' : 'bg-white/15 text-amber-200'"
+                >
+                  {{ likeCountOf(moment) }}
+                </span>
+              </button>
+
+              <a
+                :href="whatsappShareHref"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 min-h-[46px] px-4 sm:px-5 rounded-xl text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 shadow-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                <span>Bagikan via WA</span>
+              </a>
+            </div>
 
             <div class="flex items-center gap-2">
               <button
@@ -106,6 +149,9 @@
               </button>
             </div>
           </div>
+          <p v-if="likeFeedback" class="mt-2.5 text-xs font-semibold text-amber-200" role="status">
+            {{ likeFeedback }}
+          </p>
         </div>
 
         <!-- Not Found Header -->
@@ -472,6 +518,7 @@ import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import GalleryLightbox from '@/components/landing/GalleryLightbox.vue'
 import { useLenisScroll } from '@/composables/useLenisScroll'
+import { useGalleryLikes } from '@/composables/useGalleryLikes'
 import { applyPageSeo, buildCanonicalUrl, SITE_URL } from '@/utils/seoMeta'
 import {
   galleryPhotoCardSrc,
@@ -482,6 +529,21 @@ import {
 
 const route = useRoute()
 const { scrollTo: lenisScrollTo, stop: stopLenis, start: startLenis } = useLenisScroll()
+const { isLiked, likeCountOf, isPending, isPopped, toggleLike } = useGalleryLikes()
+const likeFeedback = ref('')
+let likeFeedbackTimer = null
+
+async function onToggleLike(m) {
+  likeFeedback.value = ''
+  const res = await toggleLike(m)
+  if (!res.ok && res.error) {
+    likeFeedback.value = res.error
+    clearTimeout(likeFeedbackTimer)
+    likeFeedbackTimer = setTimeout(() => {
+      likeFeedback.value = ''
+    }, 3500)
+  }
+}
 
 const loading = ref(true)
 const loadError = ref('')
@@ -684,6 +746,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearTimeout(copyTimer)
+  clearTimeout(likeFeedbackTimer)
   restoreSeo?.()
 })
 </script>

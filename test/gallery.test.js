@@ -138,6 +138,7 @@ test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp shari
   assert.ok(has(detail, "applyPageSeo(") && has(detail, "'ImageGallery'"), "detail injects dynamic SEO meta and ImageGallery JSON-LD");
   assert.ok(has(detail, "https://wa.me/?text="), "detail offers 1-tap WhatsApp share");
   assert.ok(has(detail, "copyShareLink"), "detail offers copy link action");
+  assert.ok(has(detail, "useGalleryLikes()"), "detail offers public heart like toggle with live count");
   assert.ok(has(detail, '<GalleryLightbox'), "detail mounts zoomable GalleryLightbox for photos");
   assert.ok(has(detail, ':src="activeVideo.embedUrl"'), "embeds YouTube/Instagram/Google Drive video directly in web");
   assert.ok(has(detail, "activeVideo.platform === 'gdrive'"), "Google Drive uses adaptive height for vertical & horizontal videos");
@@ -167,4 +168,9 @@ test("GalleryManagementView supports moment upload, live publish default, custom
   assert.ok(!has(mgmt, "content-visibility: auto"), "photo grid tiles avoid content-visibility row overlap bug");
   assert.ok(!has(mgmt, "is-scrollable"), "photo grid avoids nested mobile scroll traps");
   assert.ok(has(mgmt, "photoAddMode"), "photo form simplifies upload vs link into a 2-tab switcher");
+
+  const likesComposable = read("src/composables/useGalleryLikes.js");
+  assert.ok(has(likesComposable, "/gallery/public/${encodeURIComponent(slugOrId)}/like"), "likes call public toggle endpoint");
+  assert.ok(has(likesComposable, "tpq_gallery_vid_v1"), "likes persist anonymous visitor id in localStorage");
+  assert.ok(has(likesComposable, "tpq_gallery_liked_v1"), "likes remember toggled state in localStorage");
 });

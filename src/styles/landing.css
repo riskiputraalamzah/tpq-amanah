@@ -696,3 +696,15 @@ html.lenis body {
     transform: translateY(0);
   }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-heart-pop {
+    animation: lp-heart-pop 0.34s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+  }
+}
+
+@keyframes lp-heart-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.32); }
+  100% { transform: scale(1); }
+}

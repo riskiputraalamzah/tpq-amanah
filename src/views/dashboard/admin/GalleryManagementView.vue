@@ -138,6 +138,7 @@
           <div class="gm-meta-line">
             <span>{{ formatMomentDate(m.momentDate) }}</span>
             <span v-if="m.createdByName">· {{ m.createdByName }}</span>
+            <span v-if="m.likesCount > 0" class="gm-likes-meta">· ♥ {{ m.likesCount }}</span>
           </div>
           <h2 class="gm-card-title">{{ m.title }}</h2>
           <p v-if="m.caption" class="gm-card-caption">{{ m.caption }}</p>
@@ -1565,6 +1566,11 @@ async function removeCategory(c) {
   font-weight: 600;
   color: var(--muted);
   margin-bottom: 4px;
+}
+
+.gm-likes-meta {
+  color: #e11d48;
+  font-weight: 700;
 }
 
 .gm-card-title {
