@@ -4,8 +4,8 @@ const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{11}$/
 const INSTAGRAM_CODE_RE = /^[A-Za-z0-9_-]{5,40}$/
 const GDRIVE_ID_RE = /^[A-Za-z0-9_-]{10,80}$/
 
-export const MAX_GALLERY_PHOTOS = 6
-export const MAX_GALLERY_VIDEOS = 6
+export const MAX_UPLOADED_PHOTOS = 6
+export const MAX_GALLERY_PHOTOS = MAX_UPLOADED_PHOTOS // alias for backward compatibility
 export const PHOTO_TARGET_BYTES = 520 * 1024
 
 export function momentVideosOf(moment) {
@@ -21,13 +21,32 @@ const API_BASE = String(
     'http://localhost:5000/api',
 ).replace(/\/+$/, '')
 
-export function galleryPhotoSrc(photoOrId) {
+// Resize Google Drive thumbnail URLs to match their rendered slot (w320 thumbs, w800 cards, w1600 lightbox)
+// so large external albums stay fast on mobile networks & Lighthouse performance audits.
+function sizedExternalUrl(url, width) {
+  const s = String(url || '')
+  if (!width || !s) return s
+  if (/^https:\/\/drive\.google\.com\/thumbnail\?/i.test(s)) {
+    return s.includes('sz=') ? s.replace(/sz=w\d+/i, `sz=w${width}`) : `${s}&sz=w${width}`
+  }
+  return s
+}
+
+export function galleryPhotoSrc(photoOrId, { width = null } = {}) {
   if (!photoOrId) return ''
   if (typeof photoOrId === 'object') {
-    if (photoOrId.url) return photoOrId.url
+    if (photoOrId.url) return sizedExternalUrl(photoOrId.url, width)
     return photoOrId.id ? `${API_BASE}/gallery/photos/${encodeURIComponent(photoOrId.id)}` : ''
   }
   return `${API_BASE}/gallery/photos/${encodeURIComponent(photoOrId)}`
+}
+
+export function galleryPhotoThumbSrc(photoOrId, width = 320) {
+  return galleryPhotoSrc(photoOrId, { width })
+}
+
+export function galleryPhotoCardSrc(photoOrId) {
+  return galleryPhotoSrc(photoOrId, { width: 800 })
 }
 
 function isUnsafeHost(hostname) {

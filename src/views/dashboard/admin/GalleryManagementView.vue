@@ -181,7 +181,7 @@
           <div class="gm-sheet-head">
             <div>
               <h2>{{ editingId ? 'Ubah Momen' : 'Tambah Momen Dokumentasi' }}</h2>
-              <p>Bisa isi hingga {{ MAX_GALLERY_PHOTOS }} foto, link video YouTube / Instagram / Google Drive, atau keduanya.</p>
+              <p>Upload hingga {{ MAX_UPLOADED_PHOTOS }} foto dari HP/komputer (dikompres otomatis), atau tempel link foto &amp; video online sepuasnya.</p>
             </div>
             <button type="button" class="gm-close" aria-label="Tutup" @click="closeForm">×</button>
           </div>
@@ -247,18 +247,20 @@
               ></textarea>
             </div>
 
-            <!-- Photos upload + online link drop section -->
+            <!-- Photos upload (max 6 compressed) + unlimited online link drop section -->
             <div class="gm-field">
               <div class="gm-label-row">
-                <label>Foto Dokumentasi ({{ totalPhotos }}/{{ MAX_GALLERY_PHOTOS }})</label>
-                <span class="gm-hint-inline">Upload file atau tempel link online</span>
+                <label>Foto Dokumentasi ({{ totalPhotos }} foto)</label>
+                <span class="gm-hint-inline">Upload {{ uploadedPhotoCount }}/{{ MAX_UPLOADED_PHOTOS }} · Link online bebas</span>
               </div>
 
-              <div v-if="formPhotos.length" class="gm-photo-grid">
+              <div v-if="formPhotos.length" class="gm-photo-grid" :class="{ 'is-scrollable': formPhotos.length > 6 }">
                 <div v-for="(p, idx) in formPhotos" :key="p.key" class="gm-photo-tile" :class="{ 'is-broken': p.broken }">
                   <img
-                    :src="p.previewUrl"
+                    :src="p.thumbUrl || p.previewUrl"
                     :alt="`Foto ${idx + 1}`"
+                    loading="lazy"
+                    decoding="async"
                     referrerpolicy="no-referrer"
                     class="gm-photo-thumb"
                     @load="p.broken = false"
@@ -290,68 +292,73 @@
                 </div>
               </div>
 
-              <template v-if="totalPhotos < MAX_GALLERY_PHOTOS">
-                <label class="gm-upload-drop" :class="{ 'is-busy': compressing }">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    class="sr-only"
-                    :disabled="compressing || saving"
-                    @change="onPickFiles"
-                  />
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <span>{{ compressing ? 'Mengompres foto…' : (totalPhotos ? 'Tambah foto dari HP / komputer' : 'Pilih foto dari HP / komputer') }}</span>
-                </label>
+              <label v-if="uploadedPhotoCount < MAX_UPLOADED_PHOTOS" class="gm-upload-drop" :class="{ 'is-busy': compressing }">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  class="sr-only"
+                  :disabled="compressing || saving"
+                  @change="onPickFiles"
+                />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>
+                  {{ compressing ? 'Mengompres foto…' : `Upload foto dari HP / komputer (sisa ${MAX_UPLOADED_PHOTOS - uploadedPhotoCount}, otomatis dikompres)` }}
+                </span>
+              </label>
+              <p v-else class="gm-upload-cap-note">
+                Batas {{ MAX_UPLOADED_PHOTOS }} foto upload tercapai — masih bisa menambah foto tanpa batas lewat link online di bawah.
+              </p>
 
-                <div class="gm-link-box">
-                  <div class="gm-link-row">
-                    <textarea
-                      v-model="photoLinkInput"
-                      class="gm-input gm-link-input"
-                      rows="2"
-                      placeholder="Atau tempel link foto Google Drive / URL gambar online (bisa beberapa link sekaligus, 1 per baris)…"
-                      :disabled="saving"
-                      @keydown.ctrl.enter.prevent="addPhotosFromLinks"
-                    ></textarea>
-                    <button
-                      type="button"
-                      class="gm-btn is-secondary gm-link-btn"
-                      :disabled="saving || !photoLinkInput.trim()"
-                      @click="addPhotosFromLinks"
-                    >
-                      Ambil Foto
-                    </button>
-                  </div>
-                  <p v-if="photoLinkError" class="gm-error-text" role="alert">{{ photoLinkError }}</p>
-                  <p v-else class="gm-link-hint">
-                    Mendukung link file Google Drive (termasuk foto iPhone <strong>.HEIC</strong> — otomatis tampil tajam!), Dropbox, atau URL gambar langsung. Pastikan file Drive disetel <strong>Siapa saja yang memiliki link</strong>.
-                  </p>
+              <div class="gm-link-box">
+                <div class="gm-link-row">
+                  <textarea
+                    v-model="photoLinkInput"
+                    class="gm-input gm-link-input"
+                    rows="2"
+                    placeholder="Tempel link foto Google Drive / URL gambar online (tanpa batas jumlah, bisa banyak sekaligus 1 per baris)…"
+                    :disabled="saving"
+                    @keydown.ctrl.enter.prevent="addPhotosFromLinks"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="gm-btn is-secondary gm-link-btn"
+                    :disabled="saving || !photoLinkInput.trim()"
+                    @click="addPhotosFromLinks"
+                  >
+                    Ambil Foto
+                  </button>
                 </div>
-              </template>
+                <p v-if="photoLinkError" class="gm-error-text" role="alert">{{ photoLinkError }}</p>
+                <p v-else class="gm-link-hint">
+                  Link online (Google Drive termasuk iPhone <strong>.HEIC</strong>, Dropbox, atau URL gambar) tidak dibatasi &amp; otomatis disesuaikan ukurannya agar web tetap ngebut. Pastikan file Drive disetel <strong>Siapa saja yang memiliki link</strong>.
+                </p>
+              </div>
 
               <p class="gm-privacy-note">
                 Pastikan foto layak tayang publik dan tidak menampilkan data pribadi santri (seperti NIK/alamat rumah).
               </p>
             </div>
 
-            <!-- Video embed URLs drop section (up to 6 videos) -->
+            <!-- Video embed URLs drop section (unlimited external video links) -->
             <div class="gm-field">
               <div class="gm-label-row">
-                <label>Video Dokumentasi ({{ formVideos.length }}/{{ MAX_GALLERY_VIDEOS }})</label>
-                <span class="gm-hint-inline">Opsional · YouTube / Instagram / Google Drive</span>
+                <label>Video Dokumentasi ({{ formVideos.length }} video)</label>
+                <span class="gm-hint-inline">Opsional · Link online bebas (YT / IG / Drive)</span>
               </div>
 
-              <div v-if="formVideos.length" class="gm-photo-grid">
+              <div v-if="formVideos.length" class="gm-photo-grid" :class="{ 'is-scrollable': formVideos.length > 6 }">
                 <div v-for="(v, idx) in formVideos" :key="v.key" class="gm-photo-tile gm-video-tile">
                   <img
                     v-if="v.thumbnailUrl && !v.thumbBroken"
-                    :src="v.thumbnailUrl"
+                    :src="galleryPhotoThumbSrc({ url: v.thumbnailUrl }, 360)"
                     :alt="`Video ${idx + 1}`"
+                    loading="lazy"
+                    decoding="async"
                     referrerpolicy="no-referrer"
                     class="gm-photo-thumb"
                     @error="v.thumbBroken = true"
@@ -375,13 +382,13 @@
                 </div>
               </div>
 
-              <div v-if="formVideos.length < MAX_GALLERY_VIDEOS" class="gm-link-box">
+              <div class="gm-link-box">
                 <div class="gm-link-row">
                   <textarea
                     v-model="videoLinkInput"
                     class="gm-input gm-link-input"
                     rows="2"
-                    placeholder="Tempel 1 atau beberapa link video YouTube, Instagram, atau Google Drive (1 per baris)…"
+                    placeholder="Tempel 1 atau beberapa link video YouTube, Instagram, atau Google Drive (tanpa batas jumlah, 1 per baris)…"
                     :disabled="saving"
                     @keydown.ctrl.enter.prevent="addVideosFromLinks"
                   ></textarea>
@@ -396,7 +403,7 @@
                 </div>
                 <p v-if="videoLinkError" class="gm-error-text" role="alert">{{ videoLinkError }}</p>
                 <p v-else class="gm-link-hint">
-                  Video diputar langsung di website tanpa keluar halaman. Untuk link Google Drive, pastikan izin file disetel ke <strong>Siapa saja yang memiliki link (Pelihat)</strong>.
+                  Video diputar langsung di website (dimuat saat diklik saja sehingga landing page tetap ringan). Untuk Google Drive, pastikan izin file <strong>Siapa saja yang memiliki link (Pelihat)</strong>.
                 </p>
               </div>
             </div>
@@ -509,9 +516,10 @@ import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
 import {
-  MAX_GALLERY_PHOTOS,
-  MAX_GALLERY_VIDEOS,
+  MAX_UPLOADED_PHOTOS,
   galleryPhotoSrc,
+  galleryPhotoCardSrc,
+  galleryPhotoThumbSrc,
   momentVideosOf,
   parseVideoUrl,
   parseImageUrl,
@@ -550,9 +558,9 @@ const filteredMoments = computed(() => {
 })
 
 function coverOf(m) {
-  if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
+  if (m.photos?.length) return galleryPhotoCardSrc(m.photos[0])
   const firstVideo = momentVideosOf(m)[0]
-  if (firstVideo?.thumbnailUrl) return firstVideo.thumbnailUrl
+  if (firstVideo?.thumbnailUrl) return galleryPhotoCardSrc({ url: firstVideo.thumbnailUrl })
   return ''
 }
 
@@ -605,6 +613,10 @@ const form = ref({
 const formPhotos = ref([])
 const formVideos = ref([])
 const totalPhotos = computed(() => formPhotos.value.length)
+// Only uploaded files (stored in Firestore) count toward the 6-photo upload limit; external links are unlimited.
+const uploadedPhotoCount = computed(
+  () => formPhotos.value.filter((p) => p.kind === 'new' || (p.kind === 'existing' && !p.source)).length,
+)
 
 function openCreate() {
   editingId.value = ''
@@ -644,6 +656,7 @@ function openEdit(m) {
     source: p.source || '',
     broken: false,
     previewUrl: galleryPhotoSrc(p),
+    thumbUrl: galleryPhotoThumbSrc(p, 360),
   }))
   formVideos.value = momentVideosOf(m).map((v, i) => ({
     key: `vid_${v.platform}_${v.id}_${i}`,
@@ -673,10 +686,14 @@ async function onPickFiles(event) {
   if (!files.length) return
   formError.value = ''
 
-  const remaining = MAX_GALLERY_PHOTOS - formPhotos.value.length
+  const remaining = MAX_UPLOADED_PHOTOS - uploadedPhotoCount.value
+  if (remaining <= 0) {
+    showError(`Batas ${MAX_UPLOADED_PHOTOS} foto upload tercapai. Gunakan link online untuk menambah foto lagi.`)
+    return
+  }
   const picked = files.slice(0, remaining)
   if (files.length > remaining) {
-    showError(`Maksimal ${MAX_GALLERY_PHOTOS} foto per momen. Hanya ${remaining} foto pertama yang diproses.`)
+    showError(`Maksimal ${MAX_UPLOADED_PHOTOS} foto upload per momen. Hanya ${remaining} foto pertama yang diproses.`)
   }
 
   compressing.value = true
@@ -688,6 +705,7 @@ async function onPickFiles(event) {
         kind: 'new',
         ...compressed,
         previewUrl: compressed.dataBase64,
+        thumbUrl: compressed.dataBase64,
       })
     }
   } catch (err) {
@@ -718,15 +736,9 @@ function addPhotosFromLinks() {
     .filter(Boolean)
   if (!rawLines.length) return
 
-  const remaining = MAX_GALLERY_PHOTOS - formPhotos.value.length
-  if (remaining <= 0) {
-    photoLinkError.value = `Maksimal ${MAX_GALLERY_PHOTOS} foto dalam satu momen.`
-    return
-  }
-
   const parsedBatch = []
   const errors = []
-  for (const line of rawLines.slice(0, remaining)) {
+  for (const line of rawLines) {
     const res = parseImageUrl(line)
     if (!res.ok) {
       errors.push(res.error)
@@ -744,6 +756,7 @@ function addPhotosFromLinks() {
         source: item.source,
         broken: false,
         previewUrl: item.url,
+        thumbUrl: galleryPhotoThumbSrc({ url: item.url }, 360),
       })
     }
     photoLinkInput.value = ''
@@ -751,8 +764,6 @@ function addPhotosFromLinks() {
 
   if (errors.length) {
     photoLinkError.value = errors[0]
-  } else if (rawLines.length > remaining) {
-    showError(`Maksimal ${MAX_GALLERY_PHOTOS} foto per momen. Hanya ${remaining} link pertama yang diambil.`)
   }
 }
 
@@ -769,15 +780,9 @@ function addVideosFromLinks() {
     .filter(Boolean)
   if (!rawLines.length) return
 
-  const remaining = MAX_GALLERY_VIDEOS - formVideos.value.length
-  if (remaining <= 0) {
-    videoLinkError.value = `Maksimal ${MAX_GALLERY_VIDEOS} video dalam satu momen.`
-    return
-  }
-
   const parsedBatch = []
   const errors = []
-  for (const line of rawLines.slice(0, remaining)) {
+  for (const line of rawLines) {
     const res = parseVideoUrl(line)
     if (!res.ok) {
       errors.push(res.error)
@@ -803,8 +808,6 @@ function addVideosFromLinks() {
 
   if (errors.length) {
     videoLinkError.value = errors[0]
-  } else if (rawLines.length > remaining) {
-    showError(`Maksimal ${MAX_GALLERY_VIDEOS} video per momen. Hanya ${remaining} link pertama yang diambil.`)
   }
 }
 
@@ -836,14 +839,14 @@ async function saveMoment() {
     return
   }
   // If user pasted photo or video link(s) and tapped Save directly, resolve them automatically
-  if (photoLinkInput.value.trim() && formPhotos.value.length < MAX_GALLERY_PHOTOS) {
+  if (photoLinkInput.value.trim()) {
     addPhotosFromLinks()
     if (photoLinkError.value) {
       formError.value = photoLinkError.value
       return
     }
   }
-  if (videoLinkInput.value.trim() && formVideos.value.length < MAX_GALLERY_VIDEOS) {
+  if (videoLinkInput.value.trim()) {
     addVideosFromLinks()
     if (videoLinkError.value) {
       formError.value = videoLinkError.value
@@ -1679,6 +1682,13 @@ async function removeCategory(c) {
   gap: 8px;
 }
 
+.gm-photo-grid.is-scrollable {
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 4px;
+  overscroll-behavior: contain;
+}
+
 .gm-photo-tile {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -1686,6 +1696,19 @@ async function removeCategory(c) {
   overflow: hidden;
   border: 1px solid var(--line);
   background: #e9f0ec;
+  content-visibility: auto;
+  contain-intrinsic-size: 140px 105px;
+}
+
+.gm-upload-cap-note {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f3f7f4;
+  border: 1px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--body);
 }
 
 .gm-photo-thumb {

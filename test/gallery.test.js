@@ -3,7 +3,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseVideoUrl, parseImageUrl, galleryPhotoSrc, formatMomentDate, videoPlatformLabel } from "../src/utils/galleryMedia.js";
+import {
+  parseVideoUrl,
+  parseImageUrl,
+  galleryPhotoSrc,
+  galleryPhotoCardSrc,
+  galleryPhotoThumbSrc,
+  formatMomentDate,
+  videoPlatformLabel,
+} from "../src/utils/galleryMedia.js";
 import { ACCESS_CARDS } from "../src/utils/guruRights.js";
 import { squash, has } from "./helpers/sourceText.js";
 
@@ -42,6 +50,16 @@ test("galleryMedia parses YouTube & Instagram links safely for inline web embed"
   assert.equal(gdImg.value.source, "gdrive");
   assert.equal(gdImg.value.url, "https://drive.google.com/thumbnail?id=1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI&sz=w1600");
   assert.equal(galleryPhotoSrc({ id: "ext_1", url: gdImg.value.url }), gdImg.value.url);
+  assert.equal(
+    galleryPhotoCardSrc({ id: "ext_1", url: gdImg.value.url }),
+    "https://drive.google.com/thumbnail?id=1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI&sz=w800",
+    "cards load 800px Drive images for faster mobile bandwidth",
+  );
+  assert.equal(
+    galleryPhotoThumbSrc({ id: "ext_1", url: gdImg.value.url }, 240),
+    "https://drive.google.com/thumbnail?id=1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI&sz=w240",
+    "thumbnail strips load compact 240px images",
+  );
   assert.match(galleryPhotoSrc({ id: "gp_abc" }), /\/gallery\/photos\/gp_abc$/);
   assert.equal(parseImageUrl("https://drive.google.com/drive/folders/12ehFJPw2V").ok, false);
   assert.equal(parseImageUrl("http://localhost/test.png").ok, false);
@@ -89,6 +107,7 @@ test("GalleryManagementView supports moment upload, live publish default, custom
   assert.ok(has(mgmt, "api.put(`/gallery/categories/${encodeURIComponent(c.id)}`"));
   assert.ok(has(mgmt, "api.delete(`/gallery/categories/${encodeURIComponent(c.id)}`"));
   assert.ok(has(mgmt, "Jadikan sampul"));
+  assert.ok(has(mgmt, "uploadedPhotoCount < MAX_UPLOADED_PHOTOS"), "only uploaded photos are capped at 6; external links stay open");
   assert.ok(has(mgmt, "addPhotosFromLinks"));
   assert.ok(has(mgmt, "addVideosFromLinks"));
 });

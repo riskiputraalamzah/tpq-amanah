@@ -74,8 +74,11 @@
                 v-if="coverOf(m) && !brokenCovers[m.id]"
                 :src="coverOf(m)"
                 :alt="m.title"
+                width="800"
+                height="600"
                 loading="lazy"
                 decoding="async"
+                fetchpriority="low"
                 referrerpolicy="no-referrer"
                 class="object-cover object-[50%_25%] w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
                 @error="brokenCovers[m.id] = true"
@@ -273,12 +276,26 @@
             </svg>
           </button>
 
-          <img
-            :src="galleryPhotoSrc(activeMoment.photos[activePhotoIdx])"
-            :alt="`${activeMoment.title} - foto ${activePhotoIdx + 1}`"
-            referrerpolicy="no-referrer"
-            class="max-w-full max-h-full rounded-xl shadow-2xl object-contain select-none"
-          />
+          <div class="relative flex items-center justify-center max-w-full max-h-full">
+            <span
+              v-if="photoLoading"
+              class="absolute px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900/80 text-amber-200 backdrop-blur-sm"
+              aria-live="polite"
+            >
+              Memuat foto…
+            </span>
+            <img
+              :key="activeMoment.photos[activePhotoIdx]?.id || activePhotoIdx"
+              :src="galleryPhotoSrc(activeMoment.photos[activePhotoIdx])"
+              :alt="`${activeMoment.title} - foto ${activePhotoIdx + 1}`"
+              decoding="async"
+              referrerpolicy="no-referrer"
+              class="max-w-full max-h-[min(66dvh,640px)] sm:max-h-[min(74dvh,720px)] rounded-xl shadow-2xl object-contain select-none transition-opacity duration-200"
+              :class="photoLoading ? 'opacity-40' : 'opacity-100'"
+              @load="onActivePhotoLoaded"
+              @error="photoLoading = false"
+            />
+          </div>
 
           <button
             v-if="activeMoment.photos.length > 1"
@@ -395,10 +412,10 @@
           {{ activeMoment.caption }}
         </p>
 
-        <!-- Photo pager & thumbs -->
+        <!-- Photo pager & thumbs (lazy low-res w240 thumbs + auto-scroll active item into view for large albums) -->
         <div
           v-if="modalMode === 'photos' && activeMoment.photos?.length > 1"
-          class="flex items-center justify-center max-w-4xl gap-2 mx-auto overflow-x-auto"
+          class="flex items-center justify-center max-w-4xl gap-2 mx-auto"
         >
           <button
             type="button"
@@ -408,17 +425,33 @@
           >
             &lsaquo;
           </button>
-          <button
-            v-for="(p, idx) in activeMoment.photos"
-            :key="p.id"
-            type="button"
-            :aria-label="`Pilih foto ${idx + 1}`"
-            class="w-12 h-9 overflow-hidden rounded-lg border-2 shrink-0 transition-opacity"
-            :class="idx === activePhotoIdx ? 'border-amber-300 opacity-100' : 'border-transparent opacity-55 hover:opacity-90'"
-            @click="activePhotoIdx = idx"
+          <div
+            ref="thumbStripRef"
+            class="flex items-center gap-2 overflow-x-auto py-0.5 max-w-full scroll-smooth"
+            style="scrollbar-width: none"
           >
-            <img :src="galleryPhotoSrc(p)" alt="" referrerpolicy="no-referrer" class="object-cover w-full h-full" />
-          </button>
+            <button
+              v-for="(p, idx) in activeMoment.photos"
+              :key="p.id"
+              type="button"
+              :data-thumb-idx="idx"
+              :aria-label="`Pilih foto ${idx + 1}`"
+              class="w-12 h-9 overflow-hidden rounded-lg border-2 shrink-0 transition-opacity bg-slate-900"
+              :class="idx === activePhotoIdx ? 'border-amber-300 opacity-100' : 'border-transparent opacity-55 hover:opacity-90'"
+              @click="selectPhoto(idx)"
+            >
+              <img
+                :src="galleryPhotoThumbSrc(p, 240)"
+                alt=""
+                width="48"
+                height="36"
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+                class="object-cover w-full h-full"
+              />
+            </button>
+          </div>
           <button
             type="button"
             aria-label="Foto berikutnya"
@@ -435,7 +468,7 @@
         <!-- Video pager & selector when moment has multiple videos -->
         <div
           v-else-if="modalMode === 'video' && activeVideos.length > 1"
-          class="flex items-center justify-center max-w-4xl gap-2 mx-auto overflow-x-auto"
+          class="flex items-center justify-center max-w-4xl gap-2 mx-auto"
         >
           <button
             type="button"
@@ -445,19 +478,26 @@
           >
             &lsaquo;
           </button>
-          <button
-            v-for="(v, idx) in activeVideos"
-            :key="`${v.platform}-${v.id}-${idx}`"
-            type="button"
-            class="inline-flex items-center gap-1.5 min-h-[34px] px-3 rounded-full text-xs font-bold shrink-0 transition-colors"
-            :class="idx === activeVideoIdx ? 'bg-amber-300 text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'"
-            @click="activeVideoIdx = idx"
+          <div
+            ref="videoStripRef"
+            class="flex items-center gap-2 overflow-x-auto py-0.5 max-w-full scroll-smooth"
+            style="scrollbar-width: none"
           >
-            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <polygon points="6 4 20 12 6 20 6 4" />
-            </svg>
-            Video {{ idx + 1 }}
-          </button>
+            <button
+              v-for="(v, idx) in activeVideos"
+              :key="`${v.platform}-${v.id}-${idx}`"
+              type="button"
+              :data-video-idx="idx"
+              class="inline-flex items-center gap-1.5 min-h-[34px] px-3 rounded-full text-xs font-bold shrink-0 transition-colors"
+              :class="idx === activeVideoIdx ? 'bg-amber-300 text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'"
+              @click="activeVideoIdx = idx"
+            >
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="6 4 20 12 6 20 6 4" />
+              </svg>
+              Video {{ idx + 1 }}
+            </button>
+          </div>
           <button
             type="button"
             aria-label="Video berikutnya"
@@ -476,10 +516,16 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import SectionHeading from '@/components/landing/SectionHeading.vue'
-import { galleryPhotoSrc, momentVideosOf, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
+import {
+  galleryPhotoSrc,
+  galleryPhotoCardSrc,
+  galleryPhotoThumbSrc,
+  momentVideosOf,
+  formatMomentDate,
+} from '@/utils/galleryMedia'
 
 const INITIAL_LIMIT = 6
 const emit = defineEmits(['ready'])
@@ -513,9 +559,9 @@ function selectCategory(id) {
 }
 
 function coverOf(m) {
-  if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
+  if (m.photos?.length) return galleryPhotoCardSrc(m.photos[0])
   const firstVideo = momentVideosOf(m)[0]
-  if (firstVideo?.thumbnailUrl) return firstVideo.thumbnailUrl
+  if (firstVideo?.thumbnailUrl) return galleryPhotoCardSrc({ url: firstVideo.thumbnailUrl })
   return ''
 }
 
@@ -547,13 +593,52 @@ const activeMoment = ref(null)
 const activePhotoIdx = ref(0)
 const activeVideoIdx = ref(0)
 const modalMode = ref('photos')
+const photoLoading = ref(false)
 const closeBtnRef = ref(null)
+const thumbStripRef = ref(null)
+const videoStripRef = ref(null)
 let openerEl = null
 let savedBody = null
 let touchStartX = 0
+const preloadedUrls = new Set()
 
 const activeVideos = computed(() => momentVideosOf(activeMoment.value))
 const activeVideo = computed(() => activeVideos.value[activeVideoIdx.value] || null)
+
+function preloadNextPhoto() {
+  const photos = activeMoment.value?.photos || []
+  if (photos.length <= 1 || typeof Image === 'undefined') return
+  const nextIdx = (activePhotoIdx.value + 1) % photos.length
+  const url = galleryPhotoSrc(photos[nextIdx])
+  if (!url || preloadedUrls.has(url)) return
+  preloadedUrls.add(url)
+  const img = new Image()
+  img.referrerPolicy = 'no-referrer'
+  img.src = url
+}
+
+function onActivePhotoLoaded() {
+  photoLoading.value = false
+  preloadNextPhoto()
+}
+
+function selectPhoto(idx) {
+  if (idx === activePhotoIdx.value) return
+  photoLoading.value = true
+  activePhotoIdx.value = idx
+}
+
+watch(activePhotoIdx, async (idx) => {
+  await nextTick()
+  const btn = thumbStripRef.value?.querySelector(`[data-thumb-idx="${idx}"]`)
+  btn?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+})
+
+watch(activeVideoIdx, async (idx) => {
+  await nextTick()
+  const btn = videoStripRef.value?.querySelector(`[data-video-idx="${idx}"]`)
+  btn?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+})
 
 function lockScroll() {
   const scrollbar = window.innerWidth - document.documentElement.clientWidth
@@ -575,6 +660,7 @@ async function openMoment(m, event) {
   activePhotoIdx.value = 0
   activeVideoIdx.value = 0
   modalMode.value = m.photos?.length ? 'photos' : 'video'
+  photoLoading.value = !!(m.photos?.length)
   lockScroll()
   document.addEventListener('keydown', onKeydown)
   await nextTick()
@@ -583,6 +669,7 @@ async function openMoment(m, event) {
 
 function closeModal() {
   activeMoment.value = null
+  photoLoading.value = false
   document.removeEventListener('keydown', onKeydown)
   unlockScroll()
   openerEl?.focus?.()
@@ -592,6 +679,7 @@ function closeModal() {
 function stepPhoto(delta) {
   const total = activeMoment.value?.photos?.length || 0
   if (total <= 1) return
+  photoLoading.value = true
   activePhotoIdx.value = (activePhotoIdx.value + delta + total) % total
 }
 
