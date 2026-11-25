@@ -56,3 +56,15 @@ test("Absen Santri: verified santri nickname is displayed below full name and se
   assert.ok(has(view, "const matchesSantri = (s, q) => (s.name || '').toLowerCase().includes(q) || (s.nickname || '').toLowerCase().includes(q)"));
   assert.ok(has(view, "matchesSantri(s, q)"));
 });
+
+test("Absen Santri: parent-submitted izin/sakit uses a compact collapsible disclosure with scannable rows and tap-to-jump", () => {
+  assert.ok(has(view, `const waliListOpen = ref(false)`), "starts collapsed so mobile keeps student list above the fold");
+  assert.ok(has(view, `class="as-wali-card"`));
+  assert.ok(has(view, `:aria-expanded="waliListOpen"`));
+  assert.ok(has(view, `aria-controls="as-wali-panel"`));
+  assert.ok(has(view, `@click="jumpToSantri(w)"`), "tapping a name jumps to that santri row");
+  assert.ok(has(view, `:data-santri="s.id"`));
+  assert.ok(has(view, `'is-highlighted': highlightedId === s.id`));
+  assert.ok(has(view, `waliListOpen.value = false`), "resets when switching day or sesi");
+  assert.ok(!has(view, `shownFromWali.map((x) =>`), "no more comma-joined wall-of-text paragraph");
+});

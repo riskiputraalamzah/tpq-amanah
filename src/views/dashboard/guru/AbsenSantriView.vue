@@ -177,9 +177,20 @@
         Absen dibuka pukul <strong>{{ String(sheet.opensAt || '').replace(':', '.') }}</strong>, saat ngaji dimulai. Halaman ini terbuka
         sendiri pada jamnya.
       </p>
-      <p v-if="fromWali.length" class="as-closed-wali">
-        Sudah ada {{ fromWali.length }} izin/sakit dari wali: {{ fromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}.
-      </p>
+      <div v-if="fromWali.length" class="as-closed-wali-box">
+        <p class="as-closed-wali-title">
+          {{ closedWaliTitle }}
+        </p>
+        <ul class="as-closed-wali-list">
+          <li v-for="w in fromWali" :key="w.id" class="as-closed-wali-row">
+            <span class="as-closed-wali-name">
+              <strong>{{ w.name }}</strong>
+              <span v-if="w.jilidLabel" class="as-closed-wali-jilid">{{ w.jilidLabel }}</span>
+            </span>
+            <span class="as-wali-pill" :class="`is-${w.status}`">{{ w.status === 'sakit' ? 'Sakit' : 'Izin' }}</span>
+          </li>
+        </ul>
+      </div>
       <button v-if="otherSlot && sheetOf(otherSlot.id)?.canEdit" type="button" class="as-jump" @click="setSlot(otherSlot.id)">
         <span>Buka absen sesi {{ otherSlot.label }}</span>
         <span aria-hidden="true">›</span>
@@ -202,12 +213,68 @@
         <router-link v-if="/absen kehadiran/.test(sheet.reason)" to="/dashboard/attendance" class="as-inline-link">Buka Absensi</router-link>
       </p>
 
-      <!-- the parents told the TPQ ahead through the portal -->
-      <p v-if="shownFromWali.length" class="as-note as-wali-note" role="status">
-        <strong>{{ shownFromWali.length }} izin/sakit dari wali</strong> di {{ myJilidFilterActive && myJilidLabel ? myJilidLabel : 'sesi ini' }}:
-        {{ shownFromWali.map((x) => `${x.name} (${x.status})`).join(', ') }}. Sudah tercatat dan barisnya dikunci supaya tidak
-        terubah tanpa sengaja<template v-if="sheet.canEdit">; ketuk "Ubah status" bila memang perlu menggantinya</template>.
-      </p>
+      <!-- the parents told the TPQ ahead through the portal: compact disclosure so mobile stays scannable -->
+      <section v-if="shownFromWali.length" class="as-wali-card" aria-label="Izin dan sakit dari wali">
+        <button
+          type="button"
+          class="as-wali-head"
+          :aria-expanded="waliListOpen"
+          aria-controls="as-wali-panel"
+          @click="waliListOpen = !waliListOpen"
+        >
+          <span class="as-wali-ico" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+          </span>
+          <span class="as-wali-summary">
+            <strong class="as-wali-title">{{ waliSummary.title }}</strong>
+            <span class="as-wali-meta">{{ waliSummary.meta }}</span>
+          </span>
+          <span class="as-wali-toggle">
+            <span>{{ waliListOpen ? 'Tutup' : 'Lihat' }}</span>
+            <svg class="as-wali-chev" :class="{ 'is-open': waliListOpen }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </span>
+        </button>
+
+        <div v-if="waliListOpen" id="as-wali-panel" class="as-wali-panel">
+          <ul class="as-wali-list">
+            <li v-for="w in shownFromWali" :key="w.id" class="as-wali-li">
+              <button
+                type="button"
+                class="as-wali-item"
+                :aria-label="`Lihat baris ${w.name}`"
+                @click="jumpToSantri(w)"
+              >
+                <span class="as-wali-person">
+                  <span class="as-wali-name-line">
+                    <strong class="as-wali-name">{{ w.name }}</strong>
+                    <span v-if="w.jilidLabel && !myJilidFilterActive" class="as-wali-jilid">{{ w.jilidLabel }}</span>
+                  </span>
+                  <span v-if="w.reason" class="as-wali-reason">"{{ w.reason }}"</span>
+                </span>
+                <span class="as-wali-right">
+                  <span class="as-wali-pill" :class="`is-${w.status}`">{{ w.status === 'sakit' ? 'Sakit' : 'Izin' }}</span>
+                  <svg class="as-wali-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              </button>
+            </li>
+          </ul>
+          <p class="as-wali-foot">
+            <template v-if="sheet.canEdit">
+              Baris terkunci otomatis. Ketuk nama untuk lompat ke barisnya, lalu pilih "Ubah status" bila perlu mengganti.
+            </template>
+            <template v-else>
+              Baris tercatat dan terkunci otomatis dari laporan wali.
+            </template>
+          </p>
+        </div>
+      </section>
 
       <!-- why something was not saved (the server refused it, or the session ended) -->
       <p v-if="saveNote" class="as-note is-warn as-save-note" role="alert">{{ saveNote }}</p>
@@ -251,7 +318,7 @@
           Dititipkan ke sesi lain: {{ awayOf(g.classId).map((x) => `${x.name} (${slotName(x.titip.slot)}, ${x.titip.hostGuruName})`).join(', ') }}
         </p>
         <ul v-if="isOpen(g)" class="as-list">
-          <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id) }">
+          <li v-for="s in g.items" :key="s.id" class="as-row" :class="{ 'is-locked': isLocked(s.id), 'is-highlighted': highlightedId === s.id }" :data-santri="s.id">
             <div class="as-name">
               <strong>{{ s.name }}</strong>
               <span v-if="s.nickname" class="as-nickname">Panggilan: <em>{{ s.nickname }}</em></span>
@@ -375,6 +442,9 @@ const bar = ref(null)
 const listTop = ref(null)
 const hintWrap = ref(null)
 const hintOpen = ref(false)
+const waliListOpen = ref(false)
+const highlightedId = ref('')
+let highlightTimer = null
 let jumpClass = '' // after switching sesi from "Lihat di sesi …": the jilid to open and show
 
 const recordOf = (id) => records.value[id] || null
@@ -384,11 +454,41 @@ const fromWali = computed(() =>
     .filter(([, r]) => r?.source === 'wali')
     .map(([id, r]) => {
       const s = sheet.value?.santri.find((x) => x.id === id)
-      return { id, status: r.status, name: s?.name || '', classId: s?.classId || '' }
+      const isTitip = !!s && titipHere(s)
+      return {
+        id,
+        status: r.status,
+        name: s?.name || '',
+        nickname: s?.nickname || '',
+        classId: s?.classId || '',
+        groupKey: isTitip ? 'titip' : (s?.classId || ''),
+        jilidLabel: s ? (isTitip ? `Titipan · ${levelName(s.classId)}` : levelName(s.classId)) : '',
+        reason: (r.reason || '').trim(),
+      }
     })
-    .filter((x) => x.name),
+    .filter((x) => x.name)
+    .sort((a, b) => String(a.classId).localeCompare(String(b.classId), undefined, { numeric: true }) || a.name.localeCompare(b.name, 'id')),
 )
 const shownFromWali = computed(() => (myJilidFilterActive.value ? fromWali.value.filter((x) => isMySlotClass(x.classId) || isMyTitipId(x.id)) : fromWali.value))
+const waliKindLabel = (items) => {
+  const izin = items.filter((x) => x.status === 'izin').length
+  const sakit = items.filter((x) => x.status === 'sakit').length
+  return { izin, sakit, kind: izin && sakit ? 'izin & sakit' : sakit ? 'sakit' : 'izin' }
+}
+const closedWaliTitle = computed(() => {
+  const { kind } = waliKindLabel(fromWali.value)
+  return `${fromWali.value.length} ${kind} dari wali sudah masuk`
+})
+const waliSummary = computed(() => {
+  const items = shownFromWali.value
+  const { izin, sakit, kind } = waliKindLabel(items)
+  const scope = myJilidFilterActive.value && myJilidLabel.value ? ` · ${myJilidLabel.value}` : ''
+  const title = `${items.length} ${kind} dari wali${scope}`
+  const parts = []
+  if (izin && sakit) parts.push(`${izin} izin`, `${sakit} sakit`)
+  parts.push('tercatat & terkunci')
+  return { title, meta: parts.join(' · ') }
+})
 const statusOf = (id) => records.value[id]?.status || null
 
 // Titip santri (services/santri_titip_service.js): a child who goes to THIS sesi that day is in the "Titipan" group
@@ -585,6 +685,29 @@ function jumpTo(classId) {
   if (!other) return
   jumpClass = classId
   setSlot(other)
+}
+function jumpToSantri(item) {
+  if (!item?.id) return
+  waliListOpen.value = false
+  const g = groups.value.find((x) => x.classId === item.groupKey)
+  if (g && !g.own) showOthers.value = true
+  if (item.groupKey) opened.value = { ...opened.value, [item.groupKey]: true }
+  if (search.value.trim() && !matchesSantri(item, search.value.trim().toLowerCase())) {
+    search.value = ''
+  }
+  nextTick(() => {
+    const safeId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(item.id) : item.id
+    const el = document.querySelector(`.as-row[data-santri="${safeId}"]`)
+    if (!el) return
+    el.style.scrollMarginTop = `${stickyBottom()}px`
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
+    highlightedId.value = item.id
+    clearTimeout(highlightTimer)
+    highlightTimer = setTimeout(() => {
+      if (highlightedId.value === item.id) highlightedId.value = ''
+    }, 2000)
+  })
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -854,6 +977,8 @@ function resetView() {
   otherSheet.value = null
   showOthers.value = false
   onlyMyJilid.value = false
+  waliListOpen.value = false
+  highlightedId.value = ''
   saveNote.value = ''
   scrollAfterLoad = true
   load()
@@ -939,6 +1064,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', onBeforeUnload)
   clearInterval(poll)
   clearTimeout(retryTimer)
+  clearTimeout(highlightTimer)
   flush()
 })
 </script>
@@ -1243,6 +1369,62 @@ onBeforeUnmount(() => {
 
 .as-closed-wali {
   font-size: 0.86rem;
+}
+
+.as-closed-wali-box {
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 8px;
+  border-radius: 12px;
+  border: 1px solid #c2d9f2;
+  background: #eef5fc;
+  text-align: left;
+  overflow: hidden;
+}
+
+.as-closed-wali-title {
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #13345b;
+  border-bottom: 1px solid #cde0f5;
+}
+
+.as-closed-wali-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #f8fbff;
+}
+
+.as-closed-wali-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(29, 79, 138, 0.12);
+}
+
+.as-closed-wali-row:first-child {
+  border-top: 0;
+}
+
+.as-closed-wali-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: #0f2c4f;
+}
+
+.as-closed-wali-jilid {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #2f547e;
 }
 
 .as-closed .as-jump {
@@ -1679,10 +1861,240 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-.as-wali-note {
-  background: #e6f0fb;
-  color: #173f6e;
-  border: 1px solid #b9d3f0;
+/* Collapsible, mobile-first disclosure for parent-submitted izin/sakit */
+.as-wali-card {
+  margin: 10px 0 2px;
+  border-radius: 14px;
+  border: 1px solid #c2d9f2;
+  background: #eef5fc;
+  overflow: hidden;
+}
+
+.as-wali-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: #13345b;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.as-wali-head:hover {
+  background: #e3effb;
+}
+
+.as-wali-head:active,
+.as-wali-item:active {
+  background: #d8e9fb;
+}
+
+.as-wali-head:focus-visible,
+.as-wali-item:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: -3px;
+}
+
+.as-wali-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #d8e8fa;
+  color: #1d4f8a;
+}
+
+.as-wali-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.as-wali-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #13345b;
+}
+
+.as-wali-meta {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #2f547e;
+  font-variant-numeric: tabular-nums;
+}
+
+.as-wali-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(29, 79, 138, 0.11);
+  color: #163e72;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.as-wali-chev {
+  transition: transform 0.18s ease;
+}
+
+.as-wali-chev.is-open {
+  transform: rotate(180deg);
+}
+
+.as-wali-panel {
+  border-top: 1px solid #cde0f5;
+  background: #f8fbff;
+}
+
+.as-wali-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.as-wali-li {
+  border-top: 1px solid rgba(29, 79, 138, 0.12);
+}
+
+.as-wali-li:first-child {
+  border-top: 0;
+}
+
+.as-wali-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.as-wali-item:hover {
+  background: #edf5fe;
+}
+
+.as-wali-person {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.as-wali-name-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+}
+
+.as-wali-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0f2c4f;
+  overflow-wrap: anywhere;
+}
+
+.as-wali-jilid {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #2f547e;
+  white-space: nowrap;
+}
+
+.as-wali-reason {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #2f547e;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.as-wali-right {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.as-wali-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.as-wali-pill.is-izin {
+  background: #dbeafe;
+  color: #163e72;
+  border: 1px solid rgba(29, 79, 138, 0.2);
+}
+
+.as-wali-pill.is-sakit {
+  background: #fef3c7;
+  color: #7c3409;
+  border: 1px solid rgba(180, 83, 9, 0.24);
+}
+
+.as-wali-go {
+  color: #2f547e;
+}
+
+.as-wali-foot {
+  margin: 0;
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgba(29, 79, 138, 0.12);
+  background: #eef5fc;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #2f547e;
+}
+
+.as-row.is-highlighted {
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2px #1d4f8a;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-wali-chev,
+  .as-wali-head,
+  .as-wali-item,
+  .as-row.is-highlighted {
+    transition: none;
+  }
 }
 
 .as-choices {

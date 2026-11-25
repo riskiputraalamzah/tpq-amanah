@@ -557,7 +557,6 @@ const loadCalendar = async () => {
   try {
     const { data } = await api.get("/teaching_sessions/calendar", {
       params: { period: viewedMonth.value },
-      cache: false,
     });
     kbmCalendar.value = data;
   } catch {
