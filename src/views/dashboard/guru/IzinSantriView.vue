@@ -55,7 +55,7 @@
           <div class="iz-today-strip-text">
             <strong>Hari ini · {{ longDayLabel(today) }}</strong>
             <span v-if="todayIsWeekend">Akhir pekan · ketuk tanggal aktif di kalender</span>
-            <span v-else-if="todayItems.length">{{ todayItems.length }} santri {{ activeScopeText }} · ketuk untuk rincian</span>
+            <span v-else-if="todayItems.length">{{ todayUniqueSantriCount }} santri {{ activeScopeText }} · ketuk untuk rincian</span>
             <span v-else>Tidak ada yang izin/sakit · semua terjadwal masuk</span>
           </div>
           <div class="iz-today-strip-right">
@@ -166,7 +166,7 @@
                 TPQ aktif Senin–Jumat. Ketuk tanggal hari aktif di kalender untuk melihat atau mencatat izin.
               </p>
               <p v-else-if="selectedDayItems.length" class="iz-day-sub">
-                <strong>{{ selectedDayItems.length }} santri</strong>
+                <strong>{{ selectedUniqueSantriCount }} santri</strong>
                 {{ activeScopeText }} tercatat izin/sakit pada tanggal ini.
               </p>
               <p v-else class="iz-day-sub">
@@ -396,7 +396,7 @@
                 TPQ aktif Senin–Jumat. Pilih tanggal hari aktif di kalender untuk melihat atau mencatat izin.
               </p>
               <p v-else-if="selectedDayItems.length" class="iz-day-sub">
-                <strong>{{ selectedDayItems.length }} santri</strong>
+                <strong>{{ selectedUniqueSantriCount }} santri</strong>
                 {{ activeScopeText }} tercatat izin/sakit pada tanggal ini.
               </p>
               <p v-else class="iz-day-sub">
@@ -696,6 +696,20 @@
               />
             </div>
 
+            <!-- Existing active izin warning (prevents accidental duplicates) -->
+            <div v-if="composerOverlaps.length && selectedSantri" class="iz-note is-warn iz-dup-warn" role="status">
+              <strong>
+                {{ selectedSantri.name }} sudah punya catatan {{ composerOverlaps[0].type === 'sakit' ? 'Sakit' : 'Izin' }} pada {{ composerOverlapDaysText }} ({{ slotLabel(form.slot) }})
+              </strong>
+              <span>
+                "{{ composerOverlaps[0].reason }}"<template v-if="composerOverlaps[0].byName"> · dicatat {{ composerOverlaps[0].byName }}</template>.
+                Menyimpan akan <strong>memperbarui</strong> catatan izin tersebut agar tidak ganda.
+              </span>
+              <button type="button" class="iz-btn iz-btn-ghost iz-btn-sm" @click="prefillFromOverlap(composerOverlaps[0])">
+                Muat alasan lama untuk diubah
+              </button>
+            </div>
+
             <p v-if="formError" class="iz-note is-danger" role="alert">{{ formError }}</p>
 
             <div class="iz-sheet-foot">
@@ -705,7 +719,9 @@
                 class="iz-btn iz-btn-primary"
                 :disabled="saving || !form.santriId || !effectiveDates.length || form.reason.trim().length < 3"
               >
-                {{ saving ? 'Menyimpan…' : `Simpan ${form.type === 'sakit' ? 'Sakit' : 'Izin'} (${effectiveDates.length || 0} hari)` }}
+                <template v-if="saving">Menyimpan…</template>
+                <template v-else-if="composerOverlaps.length">Perbarui {{ form.type === 'sakit' ? 'Sakit' : 'Izin' }} ({{ effectiveDates.length || 0 }} hari)</template>
+                <template v-else>Simpan {{ form.type === 'sakit' ? 'Sakit' : 'Izin' }} ({{ effectiveDates.length || 0 }} hari)</template>
               </button>
             </div>
           </form>
@@ -928,10 +944,12 @@ const activeByDate = computed(() => {
 })
 
 const todayItems = computed(() => activeByDate.value.get(today.value) || [])
+const todayUniqueSantriCount = computed(() => new Set(todayItems.value.map((x) => x.santriId)).size)
 const todayIsWeekend = computed(() => isWeekendIso(today.value))
 const todayIzinCount = computed(() => todayItems.value.filter((x) => x.type !== 'sakit').length)
 const todaySakitCount = computed(() => todayItems.value.filter((x) => x.type === 'sakit').length)
 const selectedDayItems = computed(() => activeByDate.value.get(selectedDate.value) || [])
+const selectedUniqueSantriCount = computed(() => new Set(selectedDayItems.value.map((x) => x.santriId)).size)
 const selectedIsWeekend = computed(() => isWeekendIso(selectedDate.value))
 const selectedIzinCount = computed(() => selectedDayItems.value.filter((x) => x.type !== 'sakit').length)
 const selectedSakitCount = computed(() => selectedDayItems.value.filter((x) => x.type === 'sakit').length)
@@ -1129,6 +1147,29 @@ const effectiveDates = computed(() => {
   return [...form.value.dates].sort()
 })
 
+const composerOverlaps = computed(() => {
+  if (!form.value.santriId || !effectiveDates.value.length) return []
+  const wantedSet = new Set(effectiveDates.value)
+  return izinList.value.filter((x) =>
+    x.status === 'active'
+    && x.santriId === form.value.santriId
+    && x.slot === form.value.slot
+    && (x.dates || []).some((d) => wantedSet.has(d) && x.applied?.[d] !== 'teacher'),
+  )
+})
+
+const composerOverlapDaysText = computed(() => {
+  const wantedSet = new Set(effectiveDates.value)
+  const hitDates = [...new Set(composerOverlaps.value.flatMap((x) => (x.dates || []).filter((d) => wantedSet.has(d))))].sort()
+  return hitDates.map(shortDayFull).join(', ')
+})
+
+function prefillFromOverlap(existing) {
+  if (!existing) return
+  form.value.type = existing.type === 'sakit' ? 'sakit' : 'izin'
+  form.value.reason = existing.reason || ''
+}
+
 function applyPreset(key) {
   presetMode.value = key
   const days = availableDays.value
@@ -1205,7 +1246,7 @@ async function load({ quiet = false } = {}) {
   }
 }
 
-async function submitIzin() {
+async function submitIzin(forceReplace = false) {
   formError.value = ''
   if (!form.value.santriId) {
     formError.value = 'Pilih santri terlebih dahulu.'
@@ -1215,6 +1256,19 @@ async function submitIzin() {
     formError.value = 'Pilih minimal 1 hari sekolah (Senin–Jumat).'
     return
   }
+  let replace = forceReplace === true
+  if (!replace && composerOverlaps.value.length) {
+    const existing = composerOverlaps.value[0]
+    const ok = await ask({
+      title: 'Perbarui izin yang sudah ada?',
+      message: `${selectedSantri.value?.name || 'Santri ini'} sudah memiliki catatan ${existing.type === 'sakit' ? 'sakit' : 'izin'} pada ${composerOverlapDaysText.value} ("${existing.reason}"). Catatan lama akan diganti dengan data baru ini agar tidak ganda.`,
+      confirmText: 'Ya, perbarui',
+      cancelText: 'Batal',
+    })
+    if (!ok) return
+    replace = true
+  }
+
   saving.value = true
   try {
     const payload = {
@@ -1223,10 +1277,11 @@ async function submitIzin() {
       slot: form.value.slot,
       dates: effectiveDates.value,
       reason: form.value.reason.trim(),
+      replace,
     }
     const { data } = await api.post('/santri-presence/izin', payload)
     if (data?.izin) {
-      izinList.value = [data.izin, ...izinList.value.filter((x) => x.id !== data.izin.id)]
+      await load({ quiet: true })
       const firstDate = [...(data.izin.dates || effectiveDates.value)].sort()[0]
       if (firstDate) {
         selectedDate.value = firstDate
@@ -1238,11 +1293,28 @@ async function submitIzin() {
       await load({ quiet: true })
     }
     showSuccess(
-      `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} disimpan untuk ${(data?.recorded || effectiveDates.value).length} hari & tercatat di Absen Santri`,
+      data?.replaced
+        ? `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} diperbarui untuk ${(data?.recorded || effectiveDates.value).length} hari`
+        : `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} disimpan untuk ${(data?.recorded || effectiveDates.value).length} hari & tercatat di Absen Santri`,
     )
     composerOpen.value = false
   } catch (err) {
-    formError.value = err.response?.data?.error || 'Gagal menyimpan izin santri.'
+    const resp = err.response?.data || {}
+    if (err.response?.status === 409 && resp.code === 'DUPLICATE_IZIN' && !replace) {
+      await load({ quiet: true })
+      const ok = await ask({
+        title: 'Sudah ada izin pada tanggal ini',
+        message: `${resp.error || 'Sudah ada catatan izin aktif.'} Ingin memperbarui catatan yang ada dengan data baru ini?`,
+        confirmText: 'Perbarui izin',
+        cancelText: 'Batal',
+      })
+      if (ok) {
+        saving.value = false
+        return submitIzin(true)
+      }
+      return
+    }
+    formError.value = resp.error || 'Gagal menyimpan izin santri.'
   } finally {
     saving.value = false
   }
@@ -2519,6 +2591,12 @@ onBeforeUnmount(() => {
   background: #0a5c40;
   border-color: #0a5c40;
   color: #fff;
+}
+
+.iz-dup-warn {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
 }
 
 .iz-sheet-foot {

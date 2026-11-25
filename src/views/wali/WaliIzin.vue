@@ -16,7 +16,7 @@
         <div class="done-row">
           <span class="done-icon" aria-hidden="true"><LineIcon name="check" :size="20" :stroke="3" /></span>
           <div>
-            <p class="done-title">{{ done.type === 'sakit' ? 'Sakit' : 'Izin' }} tercatat</p>
+            <p class="done-title">{{ done.replaced ? `${done.type === 'sakit' ? 'Sakit' : 'Izin'} diperbarui` : `${done.type === 'sakit' ? 'Sakit' : 'Izin'} tercatat` }}</p>
             <p class="done-text">{{ done.recorded.map((d) => dayLabel(d)).join(', ') }} · {{ SLOT_NAME[done.slot] }}</p>
             <p v-if="done.teachersNotified" class="done-text">Ustadz/ustadzah jilid ini sudah diberi tahu lewat WhatsApp.</p>
           </div>
@@ -25,10 +25,10 @@
           <span>{{ done.teacher.map((t) => t.label).join(', ') }} sudah dicatat ustadz/ustadzah, jadi tidak diubah.</span>
         </p>
         <p class="w-help">Semoga ananda lekas sehat dan dimudahkan urusannya.</p>
-        <button type="button" class="w-btn w-btn-ghost" @click="done = null">Ajukan izin lain</button>
+        <button type="button" class="w-btn w-btn-ghost" @click="done = null">Ajukan izin tanggal lain</button>
       </div>
 
-      <form v-else class="w-card izin-form" novalidate @submit.prevent="send">
+      <form v-else class="w-card izin-form" novalidate @submit.prevent="send()">
         <div class="w-field">
           <span id="iz-type" class="w-label">Jenis<span class="w-req" aria-hidden="true">*</span></span>
           <div class="w-chips" role="radiogroup" aria-labelledby="iz-type">
@@ -49,9 +49,20 @@
         <div class="w-field">
           <span id="iz-days" class="w-label">Tanggal<span class="w-req" aria-hidden="true">*</span></span>
           <div class="day-grid" role="group" aria-labelledby="iz-days">
-            <button v-for="d in days" :key="d" type="button" class="day-chip" :aria-pressed="dates.includes(d)" @click="toggleDay(d)">
+            <button
+              v-for="d in days"
+              :key="d"
+              type="button"
+              class="day-chip"
+              :class="{ 'has-existing': !!activeByDay.get(d) }"
+              :aria-pressed="dates.includes(d)"
+              @click="toggleDay(d)"
+            >
               <span class="day-top">{{ d === today ? 'Hari ini' : dayShort(d) }}</span>
               <strong>{{ dayNum(d) }}</strong>
+              <span v-if="activeByDay.get(d)" class="day-tag">
+                {{ activeByDay.get(d).type === 'sakit' ? 'Sudah sakit' : 'Sudah izin' }}
+              </span>
             </button>
           </div>
           <span v-if="!days.includes(today) && isSchoolDay(today)" class="w-help">
@@ -59,6 +70,23 @@
           </span>
           <span v-else class="w-help">Bisa memilih beberapa hari, sampai 7 hari ke depan (Senin-Jumat).</span>
           <span v-if="errors.dates" class="w-error" role="alert">{{ errors.dates }}</span>
+        </div>
+
+        <!-- Duplicate / existing active izin warning -->
+        <div v-if="overlappingExisting.length" class="w-note is-warn dup-warn" role="status">
+          <p class="dup-title">
+            Sudah ada catatan {{ firstOverlap.type === 'sakit' ? 'Sakit' : 'Izin' }} untuk {{ overlapDaysText }} ({{ SLOT_NAME[slot] }})
+          </p>
+          <p class="dup-detail">
+            "{{ firstOverlap.reason }}"<template v-if="firstOverlap.byName"> · dicatat {{ firstOverlap.byName }}</template>
+          </p>
+          <p class="dup-hint">
+            Bila sudah sesuai, <strong>tidak perlu mengirim ulang</strong>. Bila ingin mengubah jenis atau alasannya, ubah isian di bawah lalu tekan <strong>Perbarui izin</strong>.
+          </p>
+          <div class="dup-actions">
+            <button type="button" class="dup-btn" @click="prefillEdit(firstOverlap)">Isi form untuk ubah</button>
+            <button v-if="firstOverlap.cancellable" type="button" class="dup-btn is-danger" @click="cancel(firstOverlap)">Batalkan izin ini</button>
+          </div>
         </div>
 
         <div class="w-field">
@@ -72,7 +100,11 @@
         </div>
 
         <p v-if="sendError" class="w-note is-danger" role="alert">{{ sendError }}</p>
-        <button type="submit" class="w-btn w-btn-primary" :disabled="sending">{{ sending ? 'Mengirim…' : `Kirim ${type === 'sakit' ? 'kabar sakit' : 'izin'}` }}</button>
+        <button type="submit" class="w-btn w-btn-primary" :disabled="sending">
+          <template v-if="sending">Mengirim…</template>
+          <template v-else-if="overlappingExisting.length">Perbarui {{ type === 'sakit' ? 'kabar sakit' : 'izin' }} yang ada</template>
+          <template v-else>Kirim {{ type === 'sakit' ? 'kabar sakit' : 'izin' }}</template>
+        </button>
       </form>
 
       <!-- earlier requests -->
@@ -85,7 +117,10 @@
           </div>
           <p class="past-days">{{ x.dates.map((d) => dayLabel(d)).join(', ') }}</p>
           <p class="w-help">"{{ x.reason }}"<template v-if="x.byName"> · dari {{ x.byName }}</template></p>
-          <button v-if="x.cancellable" type="button" class="w-link past-cancel" @click="cancel(x)">Batalkan izin ini</button>
+          <div v-if="x.cancellable" class="past-actions">
+            <button type="button" class="w-link past-edit" @click="prefillEdit(x)">Ubah izin</button>
+            <button type="button" class="w-link past-cancel" @click="cancel(x)">Batalkan izin ini</button>
+          </div>
         </article>
       </template>
     </template>
@@ -139,18 +174,73 @@ const sendError = ref('')
 const done = ref(null)
 
 const days = computed(() => page.value?.days?.[slot.value] || [])
+
+// Map date -> active izin for the chosen sesi (ignoring days already overridden by teacher)
+const activeByDay = computed(() => {
+  const map = new Map()
+  for (const item of page.value?.list || []) {
+    if (item.status !== 'active' || item.slot !== slot.value) continue
+    for (const d of item.dates || []) {
+      if (item.applied?.[d] === 'teacher') continue
+      if (!map.has(d)) map.set(d, item)
+    }
+  }
+  return map
+})
+
+const overlappingExisting = computed(() => {
+  const seen = new Set()
+  const out = []
+  for (const d of dates.value) {
+    const hit = activeByDay.value.get(d)
+    if (hit && !seen.has(hit.id)) {
+      seen.add(hit.id)
+      out.push(hit)
+    }
+  }
+  return out
+})
+const firstOverlap = computed(() => overlappingExisting.value[0] || null)
+const overlapDaysText = computed(() =>
+  dates.value
+    .filter((d) => activeByDay.value.has(d))
+    .map((d) => dayLabel(d))
+    .join(', '),
+)
+
 // a mistake already pointed out goes away as soon as it is fixed
 watch(reason, (v) => {
   if (errors.value.reason && v.trim().length >= 3) errors.value = { ...errors.value, reason: '' }
+  if (sendError.value) sendError.value = ''
 })
 
 function setSlot(s) {
   slot.value = s
   dates.value = dates.value.filter((d) => days.value.includes(d))
+  sendError.value = ''
 }
 function toggleDay(d) {
   dates.value = dates.value.includes(d) ? dates.value.filter((x) => x !== d) : [...dates.value, d].sort()
   if (errors.value.dates) errors.value = { ...errors.value, dates: '' }
+  sendError.value = ''
+}
+
+function prefillEdit(x) {
+  done.value = null
+  slot.value = x.slot || slot.value
+  type.value = x.type === 'sakit' ? 'sakit' : 'izin'
+  const openSet = new Set(page.value?.days?.[slot.value] || [])
+  dates.value = (x.dates || []).filter((d) => openSet.has(d))
+  reason.value = x.reason || ''
+  sendError.value = ''
+  errors.value = {}
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function isIdenticalToOverlap(existing) {
+  if (!existing) return false
+  const sameDates = [...(existing.dates || [])].sort().join(',') === [...dates.value].sort().join(',')
+  return sameDates && existing.type === type.value && String(existing.reason || '').trim().toLowerCase() === reason.value.trim().toLowerCase()
 }
 
 async function load() {
@@ -165,23 +255,74 @@ async function load() {
   }
 }
 
-async function send() {
+async function send(forceReplace = false) {
   const errs = {}
   if (!dates.value.length) errs.dates = 'Pilih tanggalnya'
   if (reason.value.trim().length < 3) errs.reason = 'Tulis alasannya singkat'
   errors.value = errs
   if (Object.keys(errs).length) return
+
+  let replace = forceReplace === true
+  if (!replace && overlappingExisting.value.length) {
+    const existing = firstOverlap.value
+    if (overlappingExisting.value.length === 1 && isIdenticalToOverlap(existing)) {
+      sendError.value = `Catatan ${existing.type === 'sakit' ? 'sakit' : 'izin'} dengan tanggal dan alasan yang sama sudah tercatat sebelumnya ("${existing.reason}"). Tidak perlu mengirim ulang.`
+      return
+    }
+    const ok = await ask({
+      title: 'Perbarui izin yang sudah ada?',
+      message: `Sudah ada catatan ${existing.type === 'sakit' ? 'sakit' : 'izin'} untuk ${overlapDaysText.value} ("${existing.reason}"). Catatan lama akan diganti dengan data baru ini sehingga tidak ganda.`,
+      confirmText: 'Ya, perbarui',
+      cancelText: 'Batal',
+    })
+    if (!ok) return
+    replace = true
+  }
+
   sending.value = true
   sendError.value = ''
   try {
-    const { data } = await api.post(`/wali/santri/${santriId}/izin`, { type: type.value, dates: dates.value, slot: slot.value, reason: reason.value })
-    done.value = { type: type.value, slot: slot.value, recorded: data.recorded, teacher: data.teacher, teachersNotified: data.teachersNotified || 0 }
+    const { data } = await api.post(`/wali/santri/${santriId}/izin`, {
+      type: type.value,
+      dates: dates.value,
+      slot: slot.value,
+      reason: reason.value,
+      replace,
+    })
+    done.value = {
+      type: type.value,
+      slot: slot.value,
+      recorded: data.recorded,
+      replaced: !!data.replaced,
+      teacher: data.teacher,
+      teachersNotified: data.teachersNotified || 0,
+    }
     dates.value = []
     reason.value = ''
     await load()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (err) {
-    sendError.value = err.response?.data?.error || 'Belum terkirim. Periksa koneksi lalu coba lagi.'
+    const resp = err.response?.data || {}
+    if (err.response?.status === 409 && resp.code === 'DUPLICATE_IZIN' && !replace) {
+      await load()
+      const first = resp.conflicts?.[0]
+      if (first?.samePayload) {
+        sendError.value = resp.error || 'Izin dengan data yang sama sudah tercatat sebelumnya. Tidak perlu mengirim ulang.'
+        return
+      }
+      const ok = await ask({
+        title: 'Sudah ada izin pada tanggal ini',
+        message: `${resp.error || 'Sudah ada catatan izin aktif.'} Ingin memperbarui izin yang ada dengan data baru ini?`,
+        confirmText: 'Perbarui izin',
+        cancelText: 'Batal',
+      })
+      if (ok) {
+        sending.value = false
+        return send(true)
+      }
+      return
+    }
+    sendError.value = resp.error || 'Belum terkirim. Periksa koneksi lalu coba lagi.'
   } finally {
     sending.value = false
   }
@@ -229,8 +370,9 @@ onMounted(load)
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  min-height: 58px;
+  min-height: 62px;
   padding: 8px 4px;
   border-radius: 12px;
   border: 1.5px solid rgba(11, 59, 42, 0.2);
@@ -238,6 +380,11 @@ onMounted(load)
   font: inherit;
   color: #0b3b2a;
   cursor: pointer;
+}
+
+.day-chip.has-existing {
+  border-color: #d97706;
+  background: #fffbeb;
 }
 
 .day-chip strong {
@@ -250,6 +397,17 @@ onMounted(load)
   color: #5b6b62;
 }
 
+.day-tag {
+  margin-top: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
 .day-chip[aria-pressed="true"] {
   border-color: #0a5c40;
   background: #0a5c40;
@@ -260,10 +418,60 @@ onMounted(load)
   color: #fcd34d;
 }
 
+.day-chip[aria-pressed="true"] .day-tag {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
 .day-chip:focus-visible,
 .quick-chip:focus-visible {
   outline: 3px solid #b45309;
   outline-offset: 2px;
+}
+
+.dup-warn {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.dup-title {
+  margin: 0;
+  font-weight: 800;
+  color: #78350f;
+}
+
+.dup-detail,
+.dup-hint {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #5b3a06;
+}
+
+.dup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.dup-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(120, 53, 15, 0.3);
+  background: #fff;
+  color: #78350f;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dup-btn.is-danger {
+  color: #9f1239;
+  border-color: rgba(159, 18, 57, 0.3);
 }
 
 .quick {
@@ -347,8 +555,18 @@ onMounted(load)
   margin: 0;
 }
 
+.past-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.past-edit {
+  color: #0a5c40;
+}
+
 .past-cancel {
-  align-self: flex-start;
   color: #8e1b12;
 }
 </style>
