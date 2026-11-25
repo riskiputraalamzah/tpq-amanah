@@ -76,6 +76,7 @@
                 :alt="m.title"
                 loading="lazy"
                 decoding="async"
+                referrerpolicy="no-referrer"
                 class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
                 @error="brokenCovers[m.id] = true"
               />
@@ -268,8 +269,9 @@
           </button>
 
           <img
-            :src="galleryPhotoSrc(activeMoment.photos[activePhotoIdx]?.id)"
+            :src="galleryPhotoSrc(activeMoment.photos[activePhotoIdx])"
             :alt="`${activeMoment.title} - foto ${activePhotoIdx + 1}`"
+            referrerpolicy="no-referrer"
             class="max-w-full max-h-full rounded-xl shadow-2xl object-contain select-none"
           />
 
@@ -365,7 +367,7 @@
               :class="idx === activePhotoIdx ? 'border-amber-300 opacity-100' : 'border-transparent opacity-55 hover:opacity-90'"
               @click="activePhotoIdx = idx"
             >
-              <img :src="galleryPhotoSrc(p.id)" alt="" class="object-cover w-full h-full" />
+              <img :src="galleryPhotoSrc(p)" alt="" referrerpolicy="no-referrer" class="object-cover w-full h-full" />
             </button>
             <button
               type="button"
@@ -435,7 +437,7 @@ function selectCategory(id) {
 }
 
 function coverOf(m) {
-  if (m.photos?.length) return galleryPhotoSrc(m.photos[0].id)
+  if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
   if (m.video?.thumbnailUrl) return m.video.thumbnailUrl
   return ''
 }

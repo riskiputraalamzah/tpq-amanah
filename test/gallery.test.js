@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseVideoUrl, formatMomentDate, videoPlatformLabel } from "../src/utils/galleryMedia.js";
+import { parseVideoUrl, parseImageUrl, galleryPhotoSrc, formatMomentDate, videoPlatformLabel } from "../src/utils/galleryMedia.js";
 import { ACCESS_CARDS } from "../src/utils/guruRights.js";
 import { squash, has } from "./helpers/sourceText.js";
 
@@ -35,6 +35,16 @@ test("galleryMedia parses YouTube & Instagram links safely for inline web embed"
   assert.equal(parseVideoUrl("https://drive.google.com/drive/folders/1P_vE3pOJY3LbeF8sAQg").ok, false);
   assert.equal(parseVideoUrl("https://tiktok.com/@tpq/video/123").ok, false);
   assert.equal(formatMomentDate("2026-11-25"), "25 Nov 2026");
+
+  // Online photo URL parser (Google Drive incl. HEIC, Dropbox, direct HTTPS URL)
+  const gdImg = parseImageUrl("https://drive.google.com/file/d/1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI/view?usp=sharing");
+  assert.equal(gdImg.ok, true);
+  assert.equal(gdImg.value.source, "gdrive");
+  assert.equal(gdImg.value.url, "https://drive.google.com/thumbnail?id=1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI&sz=w1600");
+  assert.equal(galleryPhotoSrc({ id: "ext_1", url: gdImg.value.url }), gdImg.value.url);
+  assert.match(galleryPhotoSrc({ id: "gp_abc" }), /\/gallery\/photos\/gp_abc$/);
+  assert.equal(parseImageUrl("https://drive.google.com/drive/folders/12ehFJPw2V").ok, false);
+  assert.equal(parseImageUrl("http://localhost/test.png").ok, false);
 });
 
 test("Dokumentasi access is wired to admin, guru Akses Khusus (gallery-manage), router, and sidebar", () => {
@@ -76,4 +86,5 @@ test("GalleryManagementView supports moment upload, live publish default, custom
   assert.ok(has(mgmt, "api.put(`/gallery/categories/${encodeURIComponent(c.id)}`"));
   assert.ok(has(mgmt, "api.delete(`/gallery/categories/${encodeURIComponent(c.id)}`"));
   assert.ok(has(mgmt, "Jadikan sampul"));
+  assert.ok(has(mgmt, "addPhotosFromLinks"));
 });

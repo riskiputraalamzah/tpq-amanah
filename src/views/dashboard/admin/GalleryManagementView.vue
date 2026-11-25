@@ -105,6 +105,7 @@
             :src="coverOf(m)"
             :alt="m.title"
             loading="lazy"
+            referrerpolicy="no-referrer"
             class="gm-cover-img"
             @error="brokenCovers[m.id] = true"
           />
@@ -246,16 +247,29 @@
               ></textarea>
             </div>
 
-            <!-- Photos upload section -->
+            <!-- Photos upload + online link drop section -->
             <div class="gm-field">
               <div class="gm-label-row">
                 <label>Foto Dokumentasi ({{ totalPhotos }}/{{ MAX_GALLERY_PHOTOS }})</label>
-                <span class="gm-hint-inline">Otomatis dikompres agar ringan</span>
+                <span class="gm-hint-inline">Upload file atau tempel link online</span>
               </div>
 
               <div v-if="formPhotos.length" class="gm-photo-grid">
-                <div v-for="(p, idx) in formPhotos" :key="p.key" class="gm-photo-tile">
-                  <img :src="p.previewUrl" :alt="`Foto ${idx + 1}`" class="gm-photo-thumb" />
+                <div v-for="(p, idx) in formPhotos" :key="p.key" class="gm-photo-tile" :class="{ 'is-broken': p.broken }">
+                  <img
+                    :src="p.previewUrl"
+                    :alt="`Foto ${idx + 1}`"
+                    referrerpolicy="no-referrer"
+                    class="gm-photo-thumb"
+                    @load="p.broken = false"
+                    @error="p.broken = true"
+                  />
+                  <span v-if="p.broken" class="gm-photo-broken-msg">
+                    Gagal dimuat · pastikan link publik
+                  </span>
+                  <span v-if="p.source" class="gm-source-pill">
+                    {{ p.source === 'gdrive' ? 'Drive' : p.source === 'dropbox' ? 'Dropbox' : 'Link' }}
+                  </span>
                   <span v-if="idx === 0" class="gm-cover-pill">Sampul</span>
                   <button
                     v-else
@@ -276,22 +290,50 @@
                 </div>
               </div>
 
-              <label v-if="totalPhotos < MAX_GALLERY_PHOTOS" class="gm-upload-drop" :class="{ 'is-busy': compressing }">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  class="sr-only"
-                  :disabled="compressing || saving"
-                  @change="onPickFiles"
-                />
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span>{{ compressing ? 'Mengompres foto…' : (totalPhotos ? 'Tambah foto lagi' : 'Pilih foto dari HP / komputer') }}</span>
-              </label>
+              <template v-if="totalPhotos < MAX_GALLERY_PHOTOS">
+                <label class="gm-upload-drop" :class="{ 'is-busy': compressing }">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    class="sr-only"
+                    :disabled="compressing || saving"
+                    @change="onPickFiles"
+                  />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span>{{ compressing ? 'Mengompres foto…' : (totalPhotos ? 'Tambah foto dari HP / komputer' : 'Pilih foto dari HP / komputer') }}</span>
+                </label>
+
+                <div class="gm-link-box">
+                  <div class="gm-link-row">
+                    <textarea
+                      v-model="photoLinkInput"
+                      class="gm-input gm-link-input"
+                      rows="2"
+                      placeholder="Atau tempel link foto Google Drive / URL gambar online (bisa beberapa link sekaligus, 1 per baris)…"
+                      :disabled="saving"
+                      @keydown.ctrl.enter.prevent="addPhotosFromLinks"
+                    ></textarea>
+                    <button
+                      type="button"
+                      class="gm-btn is-secondary gm-link-btn"
+                      :disabled="saving || !photoLinkInput.trim()"
+                      @click="addPhotosFromLinks"
+                    >
+                      Ambil Foto
+                    </button>
+                  </div>
+                  <p v-if="photoLinkError" class="gm-error-text" role="alert">{{ photoLinkError }}</p>
+                  <p v-else class="gm-link-hint">
+                    Mendukung link file Google Drive (termasuk foto iPhone <strong>.HEIC</strong> — otomatis tampil tajam!), Dropbox, atau URL gambar langsung. Pastikan file Drive disetel <strong>Siapa saja yang memiliki link</strong>.
+                  </p>
+                </div>
+              </template>
+
               <p class="gm-privacy-note">
                 Pastikan foto layak tayang publik dan tidak menampilkan data pribadi santri (seperti NIK/alamat rumah).
               </p>
@@ -440,6 +482,7 @@ import {
   MAX_GALLERY_PHOTOS,
   galleryPhotoSrc,
   parseVideoUrl,
+  parseImageUrl,
   compressGalleryPhoto,
   formatMomentDate,
   videoPlatformLabel,
@@ -475,7 +518,7 @@ const filteredMoments = computed(() => {
 })
 
 function coverOf(m) {
-  if (m.photos?.length) return galleryPhotoSrc(m.photos[0].id)
+  if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
   if (m.video?.thumbnailUrl) return m.video.thumbnailUrl
   return ''
 }
@@ -511,6 +554,8 @@ const formError = ref('')
 const quickCatOpen = ref(false)
 const quickCatName = ref('')
 const quickCatBusy = ref(false)
+const photoLinkInput = ref('')
+const photoLinkError = ref('')
 
 const form = ref({
   title: '',
@@ -535,6 +580,8 @@ function openCreate() {
   formError.value = ''
   quickCatOpen.value = false
   quickCatName.value = ''
+  photoLinkInput.value = ''
+  photoLinkError.value = ''
   formPhotos.value = []
   form.value = {
     title: '',
@@ -553,11 +600,15 @@ function openEdit(m) {
   formError.value = ''
   quickCatOpen.value = false
   quickCatName.value = ''
+  photoLinkInput.value = ''
+  photoLinkError.value = ''
   formPhotos.value = (m.photos || []).map((p) => ({
     key: `ex_${p.id}`,
     kind: 'existing',
     id: p.id,
-    previewUrl: galleryPhotoSrc(p.id),
+    source: p.source || '',
+    broken: false,
+    previewUrl: galleryPhotoSrc(p),
   }))
   form.value = {
     title: m.title || '',
@@ -618,6 +669,53 @@ function removeFormPhoto(idx) {
   formPhotos.value = formPhotos.value.filter((_, i) => i !== idx)
 }
 
+function addPhotosFromLinks() {
+  photoLinkError.value = ''
+  formError.value = ''
+  const rawLines = photoLinkInput.value
+    .split(/[\n\r\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (!rawLines.length) return
+
+  const remaining = MAX_GALLERY_PHOTOS - formPhotos.value.length
+  if (remaining <= 0) {
+    photoLinkError.value = `Maksimal ${MAX_GALLERY_PHOTOS} foto dalam satu momen.`
+    return
+  }
+
+  const parsedBatch = []
+  const errors = []
+  for (const line of rawLines.slice(0, remaining)) {
+    const res = parseImageUrl(line)
+    if (!res.ok) {
+      errors.push(res.error)
+    } else if (!formPhotos.value.some((p) => p.previewUrl === res.value.url) && !parsedBatch.some((p) => p.url === res.value.url)) {
+      parsedBatch.push(res.value)
+    }
+  }
+
+  if (parsedBatch.length) {
+    for (const item of parsedBatch) {
+      formPhotos.value.push({
+        key: `ext_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        kind: 'new-link',
+        externalUrl: item.rawUrl,
+        source: item.source,
+        broken: false,
+        previewUrl: item.url,
+      })
+    }
+    photoLinkInput.value = ''
+  }
+
+  if (errors.length) {
+    photoLinkError.value = errors[0]
+  } else if (rawLines.length > remaining) {
+    showError(`Maksimal ${MAX_GALLERY_PHOTOS} foto per momen. Hanya ${remaining} link pertama yang diambil.`)
+  }
+}
+
 async function addQuickCategory() {
   const label = quickCatName.value.trim()
   if (!label || quickCatBusy.value) return
@@ -649,6 +747,14 @@ async function saveMoment() {
     formError.value = videoPreview.value.error
     return
   }
+  // If user pasted link(s) in the box and tapped Save directly, resolve them automatically
+  if (photoLinkInput.value.trim() && formPhotos.value.length < MAX_GALLERY_PHOTOS) {
+    addPhotosFromLinks()
+    if (photoLinkError.value) {
+      formError.value = photoLinkError.value
+      return
+    }
+  }
   if (!formPhotos.value.length && !videoPreview.value.value) {
     formError.value = 'Tambahkan minimal 1 foto atau 1 link video YouTube / Instagram / Google Drive.'
     return
@@ -656,6 +762,16 @@ async function saveMoment() {
 
   saving.value = true
   try {
+    const toPayloadPhoto = (p) =>
+      p.kind === 'new-link'
+        ? { externalUrl: p.externalUrl }
+        : {
+            dataBase64: p.dataBase64,
+            contentType: p.contentType,
+            width: p.width,
+            height: p.height,
+          }
+
     if (!editingId.value) {
       await api.post(
         '/gallery/moments',
@@ -667,12 +783,7 @@ async function saveMoment() {
           videoUrl: form.value.videoUrl.trim(),
           published: form.value.published,
           pinned: form.value.pinned,
-          photos: formPhotos.value.map(({ dataBase64, contentType, width, height }) => ({
-            dataBase64,
-            contentType,
-            width,
-            height,
-          })),
+          photos: formPhotos.value.map(toPayloadPhoto),
         },
         { timeout: 45000 },
       )
@@ -686,12 +797,7 @@ async function saveMoment() {
           photoOrder.push(`existing:${p.id}`)
         } else {
           const idx = newPhotos.length
-          newPhotos.push({
-            dataBase64: p.dataBase64,
-            contentType: p.contentType,
-            width: p.width,
-            height: p.height,
-          })
+          newPhotos.push(toPayloadPhoto(p))
           photoOrder.push(`new:${idx}`)
         }
       }
@@ -1554,6 +1660,81 @@ async function removeCategory(c) {
 .gm-upload-drop.is-busy {
   opacity: 0.7;
   cursor: wait;
+}
+
+.gm-photo-tile.is-broken {
+  border: 1.5px solid #dc2626;
+  background: #fef2f2;
+}
+
+.gm-photo-broken-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  text-align: center;
+  background: rgba(254, 242, 242, 0.94);
+  color: #991b1b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.gm-source-pill {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #fff;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.gm-link-box {
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gm-link-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  .gm-link-row {
+    flex-direction: column;
+  }
+}
+
+.gm-link-input {
+  flex: 1;
+  min-height: 56px;
+  resize: vertical;
+  font-size: 0.84rem !important;
+}
+
+.gm-link-btn {
+  flex: none;
+  background: #edf7f2 !important;
+  color: var(--emerald) !important;
+  border-color: rgba(10, 92, 64, 0.32) !important;
+}
+
+.gm-link-hint {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 .gm-privacy-note {

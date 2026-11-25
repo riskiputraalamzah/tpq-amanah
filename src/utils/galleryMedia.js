@@ -12,9 +12,103 @@ const API_BASE = String(
     'http://localhost:5000/api',
 ).replace(/\/+$/, '')
 
-export function galleryPhotoSrc(photoId) {
-  if (!photoId) return ''
-  return `${API_BASE}/gallery/photos/${encodeURIComponent(photoId)}`
+export function galleryPhotoSrc(photoOrId) {
+  if (!photoOrId) return ''
+  if (typeof photoOrId === 'object') {
+    if (photoOrId.url) return photoOrId.url
+    return photoOrId.id ? `${API_BASE}/gallery/photos/${encodeURIComponent(photoOrId.id)}` : ''
+  }
+  return `${API_BASE}/gallery/photos/${encodeURIComponent(photoOrId)}`
+}
+
+function isUnsafeHost(hostname) {
+  const h = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
+  if (!h || h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal')) return true
+  if (h === '::1' || h.startsWith('fe80:') || h.startsWith('fc') || h.startsWith('fd')) return true
+  const ipv4 = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])]
+    if (a === 10 || a === 127 || a === 0) return true
+    if (a === 169 && b === 254) return true
+    if (a === 172 && b >= 16 && b <= 31) return true
+    if (a === 192 && b === 168) return true
+  }
+  return false
+}
+
+export function parseImageUrl(rawUrl) {
+  const trimmed = String(rawUrl || '').trim()
+  if (!trimmed) return { ok: false, error: 'Tempel link foto terlebih dahulu.' }
+  if (trimmed.length > 2000) return { ok: false, error: 'Link foto terlalu panjang.' }
+
+  let url
+  try {
+    url = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
+  } catch {
+    return { ok: false, error: 'Format link foto tidak valid.' }
+  }
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    return { ok: false, error: 'Link foto harus menggunakan https://.' }
+  }
+  const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '')
+  if (isUnsafeHost(host) || !host.includes('.')) {
+    return { ok: false, error: 'Gunakan link foto online publik yang valid.' }
+  }
+  const segments = url.pathname.split('/').filter(Boolean)
+
+  if (host === 'drive.google.com') {
+    if (segments.includes('folders')) {
+      return {
+        ok: false,
+        error: 'Ini link folder Google Drive. Klik titik tiga pada foto → Bagikan → Salin link file fotonya.',
+      }
+    }
+    let fileId = ''
+    const dIdx = segments.indexOf('d')
+    if (dIdx >= 1 && segments[0] === 'file' && dIdx + 1 < segments.length) {
+      fileId = segments[dIdx + 1]
+    } else if (['open', 'uc', 'thumbnail'].includes(segments[0])) {
+      fileId = url.searchParams.get('id') || ''
+    }
+    if (!GDRIVE_ID_RE.test(fileId)) {
+      return {
+        ok: false,
+        error: 'Link foto Google Drive tidak dikenali. Contoh: https://drive.google.com/file/d/.../view',
+      }
+    }
+    return {
+      ok: true,
+      value: {
+        source: 'gdrive',
+        url: `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`,
+        rawUrl: trimmed,
+      },
+    }
+  }
+
+  if (host === 'dropbox.com' || host === 'dl.dropboxusercontent.com') {
+    const clean = new URL(url.toString())
+    clean.protocol = 'https:'
+    clean.searchParams.delete('dl')
+    clean.searchParams.set('raw', '1')
+    return {
+      ok: true,
+      value: {
+        source: 'dropbox',
+        url: clean.toString(),
+        rawUrl: trimmed,
+      },
+    }
+  }
+
+  return {
+    ok: true,
+    value: {
+      source: 'url',
+      url: url.toString(),
+      rawUrl: trimmed,
+    },
+  }
 }
 
 export function parseVideoUrl(rawUrl) {
