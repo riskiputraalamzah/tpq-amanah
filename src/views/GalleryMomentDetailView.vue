@@ -105,7 +105,10 @@
           </p>
 
           <!-- Centered Action Bar: Like toggle + Share (clean mobile ergonomics) -->
-          <div class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+          <div
+            ref="heroActionsRef"
+            class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center"
+          >
             <div class="flex items-center gap-2 sm:contents">
               <button
                 type="button"
@@ -542,6 +545,70 @@
 
     <FooterComponent />
 
+    <!-- Floating Mobile Like Button (springs in at bottom-right once hero scrolls out of view) -->
+    <Transition name="lp-fab-pop">
+      <div
+        v-if="moment && showFloatingLike && !lightboxOpen"
+        class="fixed right-4 z-40 flex flex-col items-end gap-2 sm:hidden"
+        style="bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px))"
+      >
+        <p
+          v-if="likeFeedback"
+          role="status"
+          class="max-w-[230px] px-3 py-1.5 text-[11px] font-semibold text-amber-100 rounded-xl bg-slate-950/90 border border-amber-300/30 shadow-lg backdrop-blur-md text-right"
+        >
+          {{ likeFeedback }}
+        </p>
+        <button
+          type="button"
+          :aria-pressed="isLiked(moment)"
+          :aria-label="isLiked(moment) ? 'Batal sukai momen ini' : 'Sukai momen ini'"
+          :disabled="isPending(moment)"
+          class="inline-flex items-center gap-2 min-h-[48px] px-4 rounded-full text-sm font-bold border backdrop-blur-md transition-all active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-80"
+          :class="
+            isLiked(moment)
+              ? 'bg-rose-600/95 border-rose-300/65 text-white shadow-[0_14px_30px_-8px_rgba(225,29,72,0.6)]'
+              : 'bg-[#03291d]/95 border-amber-300/60 text-white shadow-[0_14px_30px_-8px_rgba(3,41,29,0.7)]'
+          "
+          @click="onToggleLike(moment)"
+        >
+          <span class="relative grid place-items-center">
+            <span
+              v-if="isPopped(moment)"
+              class="absolute inset-0 rounded-full lp-heart-ring"
+              aria-hidden="true"
+            ></span>
+            <svg
+              class="w-5 h-5 shrink-0"
+              :class="[
+                isLiked(moment) ? 'text-white' : 'text-rose-400 lp-fab-heartbeat',
+                isPopped(moment) ? 'lp-heart-pop' : '',
+              ]"
+              :fill="isLiked(moment) ? 'currentColor' : 'none'"
+              stroke="currentColor"
+              stroke-width="2.2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+              />
+            </svg>
+          </span>
+          <span>{{ isLiked(moment) ? 'Disukai' : 'Suka' }}</span>
+          <span
+            v-if="likeCountOf(moment) > 0"
+            class="px-2 py-0.5 text-xs font-extrabold rounded-full tabular-nums"
+            :class="isLiked(moment) ? 'bg-white/20 text-white' : 'bg-amber-300/20 text-amber-200'"
+          >
+            {{ likeCountOf(moment) }}
+          </span>
+        </button>
+      </div>
+    </Transition>
+
     <!-- Zoomable Fullscreen Photo Lightbox -->
     <GalleryLightbox
       v-if="moment?.photos?.length"
@@ -602,8 +669,28 @@ const videoStripRef = ref(null)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 const copied = ref(false)
+const heroActionsRef = ref(null)
+const showFloatingLike = ref(false)
+let heroActionsObserver = null
 let copyTimer = null
 let restoreSeo = null
+
+function setupHeroLikeObserver() {
+  heroActionsObserver?.disconnect()
+  heroActionsObserver = null
+  showFloatingLike.value = false
+  if (typeof IntersectionObserver === 'undefined' || !heroActionsRef.value) return
+  heroActionsObserver = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      // Show floating mobile pill once hero actions scroll above viewport
+      showFloatingLike.value = !entry.isIntersecting && entry.boundingClientRect.bottom < 80
+    },
+    { threshold: 0 },
+  )
+  heroActionsObserver.observe(heroActionsRef.value)
+}
 
 const canNativeShare = computed(
   () => typeof navigator !== 'undefined' && typeof navigator.share === 'function',
@@ -770,6 +857,10 @@ async function fetchDetail(slugOrId) {
         : 'Gagal memuat detail dokumentasi. Periksa koneksi internet Anda.'
   } finally {
     loading.value = false
+    if (moment.value) {
+      await nextTick()
+      setupHeroLikeObserver()
+    }
   }
 }
 
@@ -793,6 +884,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  heroActionsObserver?.disconnect()
   clearTimeout(copyTimer)
   clearTimeout(likeFeedbackTimer)
   restoreSeo?.()
@@ -853,6 +945,51 @@ onBeforeUnmount(() => {
 @media (min-width: 640px) {
   .lp-masonry-item {
     margin-bottom: 1.25rem;
+  }
+}
+
+/* Floating mobile Like button spring entrance & gentle attention heartbeat */
+.lp-fab-pop-enter-active {
+  transition: transform 0.36s cubic-bezier(0.22, 1.35, 0.36, 1), opacity 0.24s ease;
+}
+
+.lp-fab-pop-leave-active {
+  transition: transform 0.18s ease-in, opacity 0.16s ease-in;
+}
+
+.lp-fab-pop-enter-from,
+.lp-fab-pop-leave-to {
+  opacity: 0;
+  transform: translateY(18px) scale(0.84);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-fab-heartbeat {
+    animation: lp-fab-heartbeat 1.8s ease-in-out 0.35s 2;
+  }
+
+  .lp-heart-ring {
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    animation: lp-heart-ring 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes lp-fab-heartbeat {
+  0%, 100% { transform: scale(1); }
+  18% { transform: scale(1.26); }
+  34% { transform: scale(0.96); }
+  50% { transform: scale(1.18); }
+  68% { transform: scale(1); }
+}
+
+@keyframes lp-heart-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.1);
   }
 }
 </style>
