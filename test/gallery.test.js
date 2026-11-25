@@ -139,6 +139,8 @@ test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp shari
   assert.ok(has(detail, "https://wa.me/?text="), "detail offers 1-tap WhatsApp share");
   assert.ok(has(detail, "copyShareLink"), "detail offers copy link action");
   assert.ok(has(detail, "useGalleryLikes()"), "detail offers public heart like toggle with live count");
+  assert.ok(has(detail, "lp-masonry") && has(detail, "break-inside: avoid"), "detail photo gallery renders natural aspect-ratio Masonry layout");
+  assert.ok(has(detail, "detail-hero-mihrab") && has(detail, "OrnamentRule"), "detail hero is symmetrically centered with Islamic geometric motifs");
   assert.ok(has(detail, '<GalleryLightbox'), "detail mounts zoomable GalleryLightbox for photos");
   assert.ok(has(detail, ':src="activeVideo.embedUrl"'), "embeds YouTube/Instagram/Google Drive video directly in web");
   assert.ok(has(detail, "activeVideo.platform === 'gdrive'"), "Google Drive uses adaptive height for vertical & horizontal videos");

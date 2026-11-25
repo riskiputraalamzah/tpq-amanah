@@ -2,11 +2,53 @@
   <div class="min-h-screen font-sans lp flex flex-col !bg-[#03291d]">
     <NavbarComponent />
 
-    <!-- Emerald Hero Band -->
-    <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20">
-      <div class="lp-wrap lp-page-rise">
-        <!-- Breadcrumb -->
-        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-1.5 mb-5 text-xs sm:text-sm font-medium text-emerald-100/80">
+    <!-- Symmetrical Emerald Hero Band with Islamic Geometric & Mihrab Motifs -->
+    <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20 isolate">
+      <!-- Subtle Khatam 8-point Islamic Geometric Lattice -->
+      <div class="detail-hero-khatam" aria-hidden="true"></div>
+
+      <!-- Delicate Centered Mihrab Arch & Star Halo Silhouette -->
+      <svg
+        class="detail-hero-mihrab"
+        viewBox="0 0 640 360"
+        fill="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="detail-mihrab-stroke" x1="0" y1="0" x2="0" y2="360" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fde68a" stop-opacity="0.42" />
+            <stop offset="0.65" stop-color="#fcd34d" stop-opacity="0.16" />
+            <stop offset="1" stop-color="#fcd34d" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <!-- Outer pointed mihrab arch -->
+        <path
+          d="M52 360 V192 C52 104 166 44 320 14 C474 44 588 104 588 192 V360"
+          stroke="url(#detail-mihrab-stroke)"
+          stroke-width="1.4"
+        />
+        <!-- Inner delicate arch -->
+        <path
+          d="M78 360 V198 C78 118 182 64 320 36 C458 64 562 118 562 198 V360"
+          stroke="url(#detail-mihrab-stroke)"
+          stroke-width="0.9"
+          stroke-dasharray="3 5"
+        />
+        <!-- Apex 8-point star (Rub el Hizb) -->
+        <g transform="translate(320 14)" stroke="#fde68a" stroke-opacity="0.48" stroke-width="1" fill="#fcd34d" fill-opacity="0.14">
+          <path d="M0 -11 L11 0 L0 11 L-11 0 Z" />
+          <path d="M-7.8 -7.8 H7.8 V7.8 H-7.8 Z" />
+        </g>
+        <!-- Symmetrical side diamond flourishes -->
+        <g fill="#fcd34d" fill-opacity="0.28">
+          <path d="M22 180 L28 186 L22 192 L16 186 Z" />
+          <path d="M618 180 L624 186 L618 192 L612 186 Z" />
+        </g>
+      </svg>
+
+      <div class="relative z-10 lp-wrap lp-page-rise">
+        <!-- Centered Breadcrumb -->
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center justify-center gap-1.5 mb-5 text-xs sm:text-sm font-medium text-emerald-100/80 text-center">
           <router-link to="/" class="transition-colors hover:text-amber-300">
             Beranda
           </router-link>
@@ -25,16 +67,18 @@
           </template>
         </nav>
 
-        <!-- Loading Header Skeleton -->
-        <div v-if="loading" class="max-w-3xl space-y-4 animate-pulse" aria-busy="true">
+        <!-- Loading Header Skeleton (centered) -->
+        <div v-if="loading" class="flex flex-col items-center max-w-3xl mx-auto space-y-4 animate-pulse" aria-busy="true">
           <div class="w-40 h-6 rounded-full bg-white/15"></div>
           <div class="w-4/5 h-10 rounded-xl bg-white/15"></div>
           <div class="w-2/3 h-5 rounded-lg bg-white/10"></div>
         </div>
 
-        <!-- Loaded Moment Header -->
-        <div v-else-if="moment" class="max-w-4xl">
-          <div class="flex flex-wrap items-center gap-2 mb-4">
+        <!-- Loaded Moment Header (symmetrically centered) -->
+        <div v-else-if="moment" class="max-w-3xl mx-auto text-center">
+          <OrnamentRule class="mb-4" />
+
+          <div class="flex flex-wrap items-center justify-center gap-2 mb-4">
             <span class="px-3 py-1 text-xs font-bold rounded-full bg-amber-300 text-slate-950">
               {{ moment.categoryLabel }}
             </span>
@@ -55,13 +99,13 @@
 
           <p
             v-if="moment.caption"
-            class="max-w-3xl mt-4 text-sm leading-relaxed whitespace-pre-line sm:text-base text-emerald-100/90"
+            class="max-w-2xl mx-auto mt-4 text-sm leading-relaxed whitespace-pre-line sm:text-base text-emerald-100/90 text-pretty"
           >
             {{ moment.caption }}
           </p>
 
-          <!-- Action Bar: Like toggle + Share (clean mobile ergonomics) -->
-          <div class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center">
+          <!-- Centered Action Bar: Like toggle + Share (clean mobile ergonomics) -->
+          <div class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
             <div class="flex items-center gap-2 sm:contents">
               <button
                 type="button"
@@ -154,8 +198,9 @@
           </p>
         </div>
 
-        <!-- Not Found Header -->
-        <div v-else class="max-w-2xl">
+        <!-- Not Found Header (centered) -->
+        <div v-else class="max-w-2xl mx-auto text-center">
+          <OrnamentRule class="mb-4" />
           <h1 class="text-2xl font-extrabold text-white sm:text-3xl">
             Dokumentasi Tidak Ditemukan
           </h1>
@@ -219,7 +264,7 @@
               </button>
             </div>
 
-            <!-- Single Photo Spacious Layout -->
+            <!-- Single Photo Spacious Layout (preserves natural aspect ratio without cropping) -->
             <div v-if="moment.photos.length === 1" class="max-w-3xl mx-auto">
               <button
                 type="button"
@@ -232,7 +277,7 @@
                   loading="eager"
                   decoding="async"
                   referrerpolicy="no-referrer"
-                  class="object-cover w-full max-h-[560px] transition-transform duration-500 group-hover:scale-[1.02]"
+                  class="block w-full h-auto max-h-[76dvh] object-contain mx-auto transition-transform duration-500 group-hover:scale-[1.015]"
                 />
                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-full absolute bottom-3 right-3 bg-slate-950/75 backdrop-blur-sm">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
@@ -244,25 +289,27 @@
               </button>
             </div>
 
-            <!-- Multi-Photo Responsive Grid -->
-            <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
+            <!-- Multi-Photo True Natural-Ratio Masonry Layout (zero forced cropping!) -->
+            <div
+              v-else
+              class="lp-masonry"
+              :class="moment.photos.length === 2 ? 'is-two-col max-w-4xl mx-auto' : ''"
+            >
               <button
                 v-for="(photo, idx) in moment.photos"
                 :key="photo.id || idx"
                 type="button"
                 :aria-label="`Perbesar foto ${idx + 1} dari ${moment.photos.length}`"
-                class="relative overflow-hidden border rounded-2xl aspect-[4/3] bg-emerald-950/5 border-amber-700/15 shadow-sm group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+                class="relative block w-full overflow-hidden border shadow-sm lp-masonry-item rounded-2xl bg-emerald-950/[0.04] border-amber-700/15 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
                 @click="openLightboxAt(idx)"
               >
                 <img
                   :src="galleryPhotoCardSrc(photo)"
                   :alt="`${moment.title} - foto ${idx + 1}`"
-                  width="800"
-                  height="600"
-                  :loading="idx < 3 ? 'eager' : 'lazy'"
+                  :loading="idx < 4 ? 'eager' : 'lazy'"
                   decoding="async"
                   referrerpolicy="no-referrer"
-                  class="object-cover object-[50%_25%] w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
+                  class="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.025]"
                 />
                 <span
                   class="absolute inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1 text-[11px] font-bold text-white transition-opacity rounded-full bottom-2 right-2 bg-slate-950/65 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100"
@@ -516,6 +563,7 @@ import '@/styles/landing.css'
 import api from '@/services/api'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
+import OrnamentRule from '@/components/landing/OrnamentRule.vue'
 import GalleryLightbox from '@/components/landing/GalleryLightbox.vue'
 import { useLenisScroll } from '@/composables/useLenisScroll'
 import { useGalleryLikes } from '@/composables/useGalleryLikes'
@@ -750,3 +798,61 @@ onBeforeUnmount(() => {
   restoreSeo?.()
 })
 </script>
+
+<style scoped>
+/* Islamic Khatam 8-point star geometric pattern + subtle Mihrab arch silhouette */
+.detail-hero-khatam {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.14;
+  -webkit-mask-image: radial-gradient(ellipse 72% 80% at 50% 35%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 80% at 50% 35%, #000 0%, transparent 78%);
+  pointer-events: none;
+}
+
+.detail-hero-mihrab {
+  position: absolute;
+  left: 50%;
+  top: 4.5rem;
+  transform: translateX(-50%);
+  width: min(94vw, 44rem);
+  height: auto;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* True natural-aspect-ratio Masonry (keeps portrait & landscape photos completely uncropped) */
+.lp-masonry {
+  column-count: 2;
+  column-gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .lp-masonry {
+    column-count: 3;
+    column-gap: 1.25rem;
+  }
+
+  .lp-masonry.is-two-col {
+    column-count: 2;
+  }
+}
+
+.lp-masonry-item {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 0.75rem;
+  transform: translateZ(0);
+}
+
+@media (min-width: 640px) {
+  .lp-masonry-item {
+    margin-bottom: 1.25rem;
+  }
+}
+</style>

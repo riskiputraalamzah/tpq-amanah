@@ -2,9 +2,40 @@
   <div class="min-h-screen font-sans lp flex flex-col !bg-[#03291d]">
     <NavbarComponent />
 
-    <!-- Emerald Header Band (high contrast under floating transparent Navbar) -->
-    <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20">
-      <div class="lp-wrap lp-page-rise">
+    <!-- Symmetrical Emerald Header Band with Islamic Geometric & Mihrab Motifs -->
+    <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20 isolate">
+      <div class="archive-hero-khatam" aria-hidden="true"></div>
+      <svg
+        class="archive-hero-mihrab"
+        viewBox="0 0 640 360"
+        fill="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="archive-mihrab-stroke" x1="0" y1="0" x2="0" y2="360" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#fde68a" stop-opacity="0.38" />
+            <stop offset="0.65" stop-color="#fcd34d" stop-opacity="0.14" />
+            <stop offset="1" stop-color="#fcd34d" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M52 360 V192 C52 104 166 44 320 14 C474 44 588 104 588 192 V360"
+          stroke="url(#archive-mihrab-stroke)"
+          stroke-width="1.4"
+        />
+        <path
+          d="M78 360 V198 C78 118 182 64 320 36 C458 64 562 118 562 198 V360"
+          stroke="url(#archive-mihrab-stroke)"
+          stroke-width="0.9"
+          stroke-dasharray="3 5"
+        />
+        <g transform="translate(320 14)" stroke="#fde68a" stroke-opacity="0.45" stroke-width="1" fill="#fcd34d" fill-opacity="0.14">
+          <path d="M0 -11 L11 0 L0 11 L-11 0 Z" />
+          <path d="M-7.8 -7.8 H7.8 V7.8 H-7.8 Z" />
+        </g>
+      </svg>
+
+      <div class="relative z-10 lp-wrap lp-page-rise">
         <nav aria-label="Breadcrumb" class="flex items-center justify-center gap-2 mb-5 text-xs sm:text-sm font-medium text-emerald-100/80">
           <router-link to="/" class="transition-colors hover:text-amber-300">
             Beranda
@@ -509,3 +540,29 @@ onBeforeUnmount(() => {
   restoreSeo?.()
 })
 </script>
+
+<style scoped>
+.archive-hero-khatam {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--lp-khatam-gold);
+  background-size: 64px 64px;
+  background-position: center top;
+  opacity: 0.14;
+  -webkit-mask-image: radial-gradient(ellipse 72% 80% at 50% 35%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 80% at 50% 35%, #000 0%, transparent 78%);
+  pointer-events: none;
+}
+
+.archive-hero-mihrab {
+  position: absolute;
+  left: 50%;
+  top: 4.5rem;
+  transform: translateX(-50%);
+  width: min(94vw, 44rem);
+  height: auto;
+  z-index: 0;
+  pointer-events: none;
+}
+</style>
