@@ -1,7 +1,8 @@
-// Shared helpers for Dokumentasi & Galeri (YouTube/Instagram embed parsing, photo URL, client-side compression).
+// Shared helpers for Dokumentasi & Galeri (YouTube/Instagram/Google Drive embed parsing, photo URL, client-side compression).
 
 const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{11}$/
 const INSTAGRAM_CODE_RE = /^[A-Za-z0-9_-]{5,40}$/
+const GDRIVE_ID_RE = /^[A-Za-z0-9_-]{10,80}$/
 
 export const MAX_GALLERY_PHOTOS = 6
 export const PHOTO_TARGET_BYTES = 520 * 1024
@@ -24,7 +25,7 @@ export function parseVideoUrl(rawUrl) {
   try {
     url = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
   } catch {
-    return { ok: false, error: 'Link video tidak valid. Gunakan link YouTube atau Instagram.' }
+    return { ok: false, error: 'Link video tidak valid. Gunakan link YouTube, Instagram, atau Google Drive.' }
   }
 
   if (!['http:', 'https:'].includes(url.protocol)) {
@@ -91,7 +92,36 @@ export function parseVideoUrl(rawUrl) {
     }
   }
 
-  return { ok: false, error: 'Hanya mendukung link video dari YouTube atau Instagram (post / Reel).' }
+  if (host === 'drive.google.com') {
+    let fileId = ''
+    const dIdx = segments.indexOf('d')
+    if (dIdx >= 1 && segments[0] === 'file' && dIdx + 1 < segments.length) {
+      fileId = segments[dIdx + 1]
+    } else if (segments[0] === 'open' || segments[0] === 'uc') {
+      fileId = url.searchParams.get('id') || ''
+    }
+    if (!GDRIVE_ID_RE.test(fileId)) {
+      return {
+        ok: false,
+        error: 'Link Google Drive harus berupa link file video (bukan folder). Contoh: https://drive.google.com/file/d/.../view',
+      }
+    }
+    return {
+      ok: true,
+      value: {
+        platform: 'gdrive',
+        mediaKind: 'video',
+        id: fileId,
+        aspect: 'landscape',
+        embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+        canonicalUrl: `https://drive.google.com/file/d/${fileId}/view`,
+        thumbnailUrl: `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`,
+        rawUrl: trimmed,
+      },
+    }
+  }
+
+  return { ok: false, error: 'Hanya mendukung link video dari YouTube, Instagram (post / Reel), atau Google Drive.' }
 }
 
 const MONTHS_SHORT_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
@@ -113,6 +143,9 @@ export function videoPlatformLabel(video) {
   }
   if (video.platform === 'instagram') {
     return video.mediaKind === 'reel' ? 'Reel Instagram' : 'Post Instagram'
+  }
+  if (video.platform === 'gdrive') {
+    return 'Video Google Drive'
   }
   return 'Video'
 }

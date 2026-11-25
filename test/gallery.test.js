@@ -26,6 +26,13 @@ test("galleryMedia parses YouTube & Instagram links safely for inline web embed"
   assert.equal(ig.value.embedUrl, "https://www.instagram.com/reel/C8AbCdEf123/embed/");
   assert.equal(videoPlatformLabel(ig.value), "Reel Instagram");
 
+  const gd = parseVideoUrl("https://drive.google.com/file/d/1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI/view");
+  assert.equal(gd.ok, true);
+  assert.equal(gd.value.platform, "gdrive");
+  assert.equal(gd.value.embedUrl, "https://drive.google.com/file/d/1P_vE3pOJY3LbeF8sAQg-JD6CnvXMMNZI/preview");
+  assert.equal(videoPlatformLabel(gd.value), "Video Google Drive");
+
+  assert.equal(parseVideoUrl("https://drive.google.com/drive/folders/1P_vE3pOJY3LbeF8sAQg").ok, false);
   assert.equal(parseVideoUrl("https://tiktok.com/@tpq/video/123").ok, false);
   assert.equal(formatMomentDate("2026-11-25"), "25 Nov 2026");
 });

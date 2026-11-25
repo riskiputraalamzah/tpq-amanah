@@ -71,12 +71,13 @@
             <!-- 4:3 Media Cover -->
             <div class="relative w-full overflow-hidden aspect-[4/3] bg-emerald-950">
               <img
-                v-if="coverOf(m)"
+                v-if="coverOf(m) && !brokenCovers[m.id]"
                 :src="coverOf(m)"
                 :alt="m.title"
                 loading="lazy"
                 decoding="async"
                 class="object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.04]"
+                @error="brokenCovers[m.id] = true"
               />
               <div
                 v-else
@@ -90,9 +91,9 @@
                 <span class="text-sm font-bold tracking-wide">{{ videoPlatformLabel(m.video) }}</span>
               </div>
 
-              <!-- Play indicator when video-only with YT thumbnail -->
+              <!-- Play indicator when video-only with YT/Drive thumbnail -->
               <span
-                v-if="m.video && !m.photos?.length && coverOf(m)"
+                v-if="m.video && !m.photos?.length && coverOf(m) && !brokenCovers[m.id]"
                 class="absolute inset-0 grid place-items-center bg-slate-950/25 group-hover:bg-slate-950/35 transition-colors"
                 aria-hidden="true"
               >
@@ -136,7 +137,7 @@
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polygon points="6 4 20 12 6 20 6 4" />
                   </svg>
-                  {{ m.video.platform === 'youtube' ? 'YouTube' : 'Instagram' }}
+                  {{ platformShortName(m.video) }}
                 </span>
               </div>
             </div>
@@ -285,10 +286,10 @@
           </button>
         </template>
 
-        <!-- Inline Video Embed Player (YouTube / Instagram) -->
+        <!-- Inline Video Embed Player (YouTube / Google Drive / Instagram) -->
         <template v-else-if="activeMoment.video">
           <div
-            v-if="activeMoment.video.platform === 'youtube'"
+            v-if="activeMoment.video.platform === 'youtube' || activeMoment.video.platform === 'gdrive'"
             class="w-full overflow-hidden bg-black rounded-2xl shadow-2xl border border-white/10"
             :class="activeMoment.video.aspect === 'portrait' ? 'max-w-[360px] aspect-[9/16]' : 'max-w-4xl aspect-video'"
           >
@@ -296,7 +297,7 @@
               :src="activeMoment.video.embedUrl"
               :title="activeMoment.title"
               class="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
               allowfullscreen
               referrerpolicy="strict-origin-when-cross-origin"
             ></iframe>
@@ -388,7 +389,7 @@
             rel="noopener noreferrer"
             class="inline-flex items-center min-h-[38px] px-4 rounded-full bg-white/10 hover:bg-white/20 text-xs sm:text-sm font-semibold text-amber-200 transition-colors"
           >
-            Buka di {{ activeMoment.video.platform === 'youtube' ? 'YouTube' : 'Instagram' }} &#8599;
+            Buka di {{ platformShortName(activeMoment.video) }} &#8599;
           </a>
         </div>
       </div>
@@ -408,6 +409,15 @@ const moments = ref([])
 const categories = ref([])
 const selectedCategory = ref('all')
 const showAll = ref(false)
+const brokenCovers = ref({})
+
+function platformShortName(video) {
+  if (!video) return 'Video'
+  if (video.platform === 'youtube') return 'YouTube'
+  if (video.platform === 'gdrive') return 'Google Drive'
+  if (video.platform === 'instagram') return 'Instagram'
+  return 'Video'
+}
 
 const filteredMoments = computed(() => {
   if (selectedCategory.value === 'all') return moments.value

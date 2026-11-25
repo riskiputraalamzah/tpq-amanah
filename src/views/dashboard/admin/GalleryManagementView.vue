@@ -3,7 +3,7 @@
     <header class="gm-head">
       <div class="gm-head-text">
         <h1>Dokumentasi &amp; Galeri</h1>
-        <p>Unggah momen foto dan video (YouTube / Instagram) agar tampil langsung di landing page TPQ Amanah.</p>
+        <p>Unggah momen foto dan video (YouTube, Instagram, atau Google Drive) agar tampil langsung di landing page TPQ Amanah.</p>
       </div>
       <div class="gm-head-actions">
         <a href="/#dokumentasi" target="_blank" rel="noopener noreferrer" class="gm-btn is-ghost">
@@ -101,11 +101,12 @@
       <article v-for="m in filteredMoments" :key="m.id" class="gm-card" :class="{ 'is-hidden': !m.published }">
         <div class="gm-cover" @click="openEdit(m)">
           <img
-            v-if="coverOf(m)"
+            v-if="coverOf(m) && !brokenCovers[m.id]"
             :src="coverOf(m)"
             :alt="m.title"
             loading="lazy"
             class="gm-cover-img"
+            @error="brokenCovers[m.id] = true"
           />
           <div v-else class="gm-cover-video-fallback">
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -179,7 +180,7 @@
           <div class="gm-sheet-head">
             <div>
               <h2>{{ editingId ? 'Ubah Momen' : 'Tambah Momen Dokumentasi' }}</h2>
-              <p>Bisa isi hingga {{ MAX_GALLERY_PHOTOS }} foto, link video YouTube/Instagram, atau keduanya.</p>
+              <p>Bisa isi hingga {{ MAX_GALLERY_PHOTOS }} foto, link video YouTube / Instagram / Google Drive, atau keduanya.</p>
             </div>
             <button type="button" class="gm-close" aria-label="Tutup" @click="closeForm">×</button>
           </div>
@@ -298,26 +299,32 @@
 
             <!-- Video embed URL section -->
             <div class="gm-field">
-              <label for="gm-video">Link Video YouTube / Instagram (Opsional)</label>
+              <label for="gm-video">Link Video YouTube / Instagram / Google Drive (Opsional)</label>
               <input
                 id="gm-video"
                 v-model="form.videoUrl"
                 type="url"
                 class="gm-input"
-                placeholder="https://youtu.be/... atau https://instagram.com/reel/..."
+                placeholder="https://youtu.be/... , instagram.com/reel/... , atau drive.google.com/file/d/..."
               />
               <p v-if="videoPreview.error" class="gm-error-text" role="alert">{{ videoPreview.error }}</p>
               <div v-else-if="videoPreview.value" class="gm-video-preview">
                 <img
-                  v-if="videoPreview.value.thumbnailUrl"
+                  v-if="videoPreview.value.thumbnailUrl && !previewThumbBroken"
                   :src="videoPreview.value.thumbnailUrl"
                   alt="Pratinjau video"
                   class="gm-video-thumb"
+                  @error="previewThumbBroken = true"
                 />
-                <div v-else class="gm-video-thumb is-ig">IG</div>
+                <div v-else class="gm-video-thumb" :class="videoPreview.value.platform === 'gdrive' ? 'is-gd' : 'is-ig'">
+                  {{ videoPreview.value.platform === 'gdrive' ? 'Drive' : 'IG' }}
+                </div>
                 <div class="gm-video-info">
                   <strong>{{ videoPlatformLabel(videoPreview.value) }} siap diputar di web</strong>
-                  <span>Pengunjung dapat memutar video ini langsung dari landing page.</span>
+                  <span v-if="videoPreview.value.platform === 'gdrive'">
+                    Pastikan izin file di Google Drive disetel ke <strong>Siapa saja yang memiliki link (Pelihat)</strong> agar pengunjung bisa memutarnya.
+                  </span>
+                  <span v-else>Pengunjung dapat memutar video ini langsung dari landing page.</span>
                 </div>
               </div>
             </div>
@@ -424,7 +431,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
@@ -448,6 +455,8 @@ const categories = ref([])
 const selectedCategory = ref('all')
 const search = ref('')
 const busyId = ref('')
+const brokenCovers = ref({})
+const previewThumbBroken = ref(false)
 
 const publishedCount = computed(() => moments.value.filter((m) => m.published).length)
 const videoCount = computed(() => moments.value.filter((m) => !!m.video).length)
@@ -478,6 +487,7 @@ async function loadData() {
     const { data } = await api.get('/gallery/manage', { cache: false })
     moments.value = Array.isArray(data?.moments) ? data.moments : []
     categories.value = Array.isArray(data?.categories) ? data.categories : []
+    brokenCovers.value = {}
   } catch (err) {
     if (err.response?.status === 403) {
       loadError.value = 'Akses Kelola Dokumentasi belum aktif pada akun ini. Minta admin mencentang "Kelola dokumentasi" di menu Akun Pengguna, lalu ketuk Coba lagi.'
@@ -518,6 +528,7 @@ const form = ref({
 const formPhotos = ref([])
 const totalPhotos = computed(() => formPhotos.value.length)
 const videoPreview = computed(() => parseVideoUrl(form.value.videoUrl))
+watch(() => form.value.videoUrl, () => { previewThumbBroken.value = false })
 
 function openCreate() {
   editingId.value = ''
@@ -639,7 +650,7 @@ async function saveMoment() {
     return
   }
   if (!formPhotos.value.length && !videoPreview.value.value) {
-    formError.value = 'Tambahkan minimal 1 foto atau 1 link video YouTube / Instagram.'
+    formError.value = 'Tambahkan minimal 1 foto atau 1 link video YouTube / Instagram / Google Drive.'
     return
   }
 
@@ -1584,6 +1595,15 @@ async function removeCategory(c) {
   color: #fff;
   font-weight: 800;
   font-size: 0.85rem;
+}
+
+.gm-video-thumb.is-gd {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #1a73e8, #0f9d58);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.78rem;
 }
 
 .gm-video-info {
