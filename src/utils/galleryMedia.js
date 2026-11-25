@@ -5,7 +5,16 @@ const INSTAGRAM_CODE_RE = /^[A-Za-z0-9_-]{5,40}$/
 const GDRIVE_ID_RE = /^[A-Za-z0-9_-]{10,80}$/
 
 export const MAX_GALLERY_PHOTOS = 6
+export const MAX_GALLERY_VIDEOS = 6
 export const PHOTO_TARGET_BYTES = 520 * 1024
+
+export function momentVideosOf(moment) {
+  if (!moment) return []
+  if (Array.isArray(moment.videos) && moment.videos.length) {
+    return moment.videos.filter((v) => v && v.embedUrl)
+  }
+  return moment.video && moment.video.embedUrl ? [moment.video] : []
+}
 
 const API_BASE = String(
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||

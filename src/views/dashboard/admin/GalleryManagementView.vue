@@ -125,8 +125,8 @@
             <span v-if="m.photos?.length" class="gm-media-tag">
               {{ m.photos.length }} foto
             </span>
-            <span v-if="m.video" class="gm-media-tag is-video">
-              ▶ {{ videoPlatformLabel(m.video) }}
+            <span v-if="momentVideosOf(m).length" class="gm-media-tag is-video">
+              ▶ {{ momentVideosOf(m).length > 1 ? `${momentVideosOf(m).length} video` : videoPlatformLabel(momentVideosOf(m)[0]) }}
             </span>
             <span class="gm-status-tag" :class="m.published ? 'is-live' : 'is-draft'">
               {{ m.published ? 'Tayang' : 'Tersembunyi' }}
@@ -339,35 +339,65 @@
               </p>
             </div>
 
-            <!-- Video embed URL section -->
+            <!-- Video embed URLs drop section (up to 6 videos) -->
             <div class="gm-field">
-              <label for="gm-video">Link Video YouTube / Instagram / Google Drive (Opsional)</label>
-              <input
-                id="gm-video"
-                v-model="form.videoUrl"
-                type="url"
-                class="gm-input"
-                placeholder="https://youtu.be/... , instagram.com/reel/... , atau drive.google.com/file/d/..."
-              />
-              <p v-if="videoPreview.error" class="gm-error-text" role="alert">{{ videoPreview.error }}</p>
-              <div v-else-if="videoPreview.value" class="gm-video-preview">
-                <img
-                  v-if="videoPreview.value.thumbnailUrl && !previewThumbBroken"
-                  :src="videoPreview.value.thumbnailUrl"
-                  alt="Pratinjau video"
-                  class="gm-video-thumb"
-                  @error="previewThumbBroken = true"
-                />
-                <div v-else class="gm-video-thumb" :class="videoPreview.value.platform === 'gdrive' ? 'is-gd' : 'is-ig'">
-                  {{ videoPreview.value.platform === 'gdrive' ? 'Drive' : 'IG' }}
-                </div>
-                <div class="gm-video-info">
-                  <strong>{{ videoPlatformLabel(videoPreview.value) }} siap diputar di web</strong>
-                  <span v-if="videoPreview.value.platform === 'gdrive'">
-                    Pastikan izin file di Google Drive disetel ke <strong>Siapa saja yang memiliki link (Pelihat)</strong> agar pengunjung bisa memutarnya.
+              <div class="gm-label-row">
+                <label>Video Dokumentasi ({{ formVideos.length }}/{{ MAX_GALLERY_VIDEOS }})</label>
+                <span class="gm-hint-inline">Opsional · YouTube / Instagram / Google Drive</span>
+              </div>
+
+              <div v-if="formVideos.length" class="gm-photo-grid">
+                <div v-for="(v, idx) in formVideos" :key="v.key" class="gm-photo-tile gm-video-tile">
+                  <img
+                    v-if="v.thumbnailUrl && !v.thumbBroken"
+                    :src="v.thumbnailUrl"
+                    :alt="`Video ${idx + 1}`"
+                    referrerpolicy="no-referrer"
+                    class="gm-photo-thumb"
+                    @error="v.thumbBroken = true"
+                  />
+                  <div v-else class="gm-video-tile-fallback" :class="`is-${v.platform}`">
+                    <span>▶</span>
+                    <small>{{ v.platform === 'gdrive' ? 'Drive' : v.platform === 'instagram' ? 'IG' : 'YouTube' }}</small>
+                  </div>
+                  <span class="gm-source-pill">
+                    ▶ {{ v.platform === 'gdrive' ? 'Drive' : v.platform === 'instagram' ? 'IG' : 'YouTube' }}
                   </span>
-                  <span v-else>Pengunjung dapat memutar video ini langsung dari landing page.</span>
+                  <span class="gm-cover-pill is-video-num">Video {{ idx + 1 }}</span>
+                  <button
+                    type="button"
+                    class="gm-photo-rm"
+                    :aria-label="`Hapus video ${idx + 1}`"
+                    @click="removeFormVideo(idx)"
+                  >
+                    ×
+                  </button>
                 </div>
+              </div>
+
+              <div v-if="formVideos.length < MAX_GALLERY_VIDEOS" class="gm-link-box">
+                <div class="gm-link-row">
+                  <textarea
+                    v-model="videoLinkInput"
+                    class="gm-input gm-link-input"
+                    rows="2"
+                    placeholder="Tempel 1 atau beberapa link video YouTube, Instagram, atau Google Drive (1 per baris)…"
+                    :disabled="saving"
+                    @keydown.ctrl.enter.prevent="addVideosFromLinks"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="gm-btn is-secondary gm-link-btn"
+                    :disabled="saving || !videoLinkInput.trim()"
+                    @click="addVideosFromLinks"
+                  >
+                    Ambil Video
+                  </button>
+                </div>
+                <p v-if="videoLinkError" class="gm-error-text" role="alert">{{ videoLinkError }}</p>
+                <p v-else class="gm-link-hint">
+                  Video diputar langsung di website tanpa keluar halaman. Untuk link Google Drive, pastikan izin file disetel ke <strong>Siapa saja yang memiliki link (Pelihat)</strong>.
+                </p>
               </div>
             </div>
 
@@ -480,7 +510,9 @@ import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
 import {
   MAX_GALLERY_PHOTOS,
+  MAX_GALLERY_VIDEOS,
   galleryPhotoSrc,
+  momentVideosOf,
   parseVideoUrl,
   parseImageUrl,
   compressGalleryPhoto,
@@ -502,7 +534,7 @@ const brokenCovers = ref({})
 const previewThumbBroken = ref(false)
 
 const publishedCount = computed(() => moments.value.filter((m) => m.published).length)
-const videoCount = computed(() => moments.value.filter((m) => !!m.video).length)
+const videoCount = computed(() => moments.value.filter((m) => momentVideosOf(m).length > 0).length)
 
 const filteredMoments = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -519,7 +551,8 @@ const filteredMoments = computed(() => {
 
 function coverOf(m) {
   if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
-  if (m.video?.thumbnailUrl) return m.video.thumbnailUrl
+  const firstVideo = momentVideosOf(m)[0]
+  if (firstVideo?.thumbnailUrl) return firstVideo.thumbnailUrl
   return ''
 }
 
@@ -556,24 +589,22 @@ const quickCatName = ref('')
 const quickCatBusy = ref(false)
 const photoLinkInput = ref('')
 const photoLinkError = ref('')
+const videoLinkInput = ref('')
+const videoLinkError = ref('')
 
 const form = ref({
   title: '',
   categoryId: 'suasana-ngaji',
   momentDate: todayWib(),
   caption: '',
-  videoUrl: '',
   published: true,
   pinned: false,
 })
 
 // Unified list of existing + newly selected photos:
-// existing: { key, kind: 'existing', id, previewUrl }
-// new:      { key, kind: 'new', dataBase64, contentType, width, height, previewUrl }
 const formPhotos = ref([])
+const formVideos = ref([])
 const totalPhotos = computed(() => formPhotos.value.length)
-const videoPreview = computed(() => parseVideoUrl(form.value.videoUrl))
-watch(() => form.value.videoUrl, () => { previewThumbBroken.value = false })
 
 function openCreate() {
   editingId.value = ''
@@ -582,13 +613,15 @@ function openCreate() {
   quickCatName.value = ''
   photoLinkInput.value = ''
   photoLinkError.value = ''
+  videoLinkInput.value = ''
+  videoLinkError.value = ''
   formPhotos.value = []
+  formVideos.value = []
   form.value = {
     title: '',
     categoryId: categories.value[0]?.id || 'suasana-ngaji',
     momentDate: todayWib(),
     caption: '',
-    videoUrl: '',
     published: true,
     pinned: false,
   }
@@ -602,6 +635,8 @@ function openEdit(m) {
   quickCatName.value = ''
   photoLinkInput.value = ''
   photoLinkError.value = ''
+  videoLinkInput.value = ''
+  videoLinkError.value = ''
   formPhotos.value = (m.photos || []).map((p) => ({
     key: `ex_${p.id}`,
     kind: 'existing',
@@ -610,12 +645,17 @@ function openEdit(m) {
     broken: false,
     previewUrl: galleryPhotoSrc(p),
   }))
+  formVideos.value = momentVideosOf(m).map((v, i) => ({
+    key: `vid_${v.platform}_${v.id}_${i}`,
+    ...v,
+    rawUrl: v.rawUrl || v.canonicalUrl || '',
+    thumbBroken: false,
+  }))
   form.value = {
     title: m.title || '',
     categoryId: m.categoryId || categories.value[0]?.id || 'lainnya',
     momentDate: m.momentDate || todayWib(),
     caption: m.caption || '',
-    videoUrl: m.video?.rawUrl || m.video?.canonicalUrl || '',
     published: m.published !== false,
     pinned: m.pinned === true,
   }
@@ -716,6 +756,58 @@ function addPhotosFromLinks() {
   }
 }
 
+function removeFormVideo(idx) {
+  formVideos.value = formVideos.value.filter((_, i) => i !== idx)
+}
+
+function addVideosFromLinks() {
+  videoLinkError.value = ''
+  formError.value = ''
+  const rawLines = videoLinkInput.value
+    .split(/[\n\r\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (!rawLines.length) return
+
+  const remaining = MAX_GALLERY_VIDEOS - formVideos.value.length
+  if (remaining <= 0) {
+    videoLinkError.value = `Maksimal ${MAX_GALLERY_VIDEOS} video dalam satu momen.`
+    return
+  }
+
+  const parsedBatch = []
+  const errors = []
+  for (const line of rawLines.slice(0, remaining)) {
+    const res = parseVideoUrl(line)
+    if (!res.ok) {
+      errors.push(res.error)
+    } else if (res.value) {
+      const key = `${res.value.platform}:${res.value.id}`
+      const dup =
+        formVideos.value.some((v) => `${v.platform}:${v.id}` === key) ||
+        parsedBatch.some((v) => `${v.platform}:${v.id}` === key)
+      if (!dup) parsedBatch.push(res.value)
+    }
+  }
+
+  if (parsedBatch.length) {
+    for (const v of parsedBatch) {
+      formVideos.value.push({
+        key: `vid_${v.platform}_${v.id}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        ...v,
+        thumbBroken: false,
+      })
+    }
+    videoLinkInput.value = ''
+  }
+
+  if (errors.length) {
+    videoLinkError.value = errors[0]
+  } else if (rawLines.length > remaining) {
+    showError(`Maksimal ${MAX_GALLERY_VIDEOS} video per momen. Hanya ${remaining} link pertama yang diambil.`)
+  }
+}
+
 async function addQuickCategory() {
   const label = quickCatName.value.trim()
   if (!label || quickCatBusy.value) return
@@ -743,11 +835,7 @@ async function saveMoment() {
     formError.value = 'Judul momen wajib diisi.'
     return
   }
-  if (!videoPreview.value.ok) {
-    formError.value = videoPreview.value.error
-    return
-  }
-  // If user pasted link(s) in the box and tapped Save directly, resolve them automatically
+  // If user pasted photo or video link(s) and tapped Save directly, resolve them automatically
   if (photoLinkInput.value.trim() && formPhotos.value.length < MAX_GALLERY_PHOTOS) {
     addPhotosFromLinks()
     if (photoLinkError.value) {
@@ -755,13 +843,21 @@ async function saveMoment() {
       return
     }
   }
-  if (!formPhotos.value.length && !videoPreview.value.value) {
+  if (videoLinkInput.value.trim() && formVideos.value.length < MAX_GALLERY_VIDEOS) {
+    addVideosFromLinks()
+    if (videoLinkError.value) {
+      formError.value = videoLinkError.value
+      return
+    }
+  }
+  if (!formPhotos.value.length && !formVideos.value.length) {
     formError.value = 'Tambahkan minimal 1 foto atau 1 link video YouTube / Instagram / Google Drive.'
     return
   }
 
   saving.value = true
   try {
+    const videoUrls = formVideos.value.map((v) => v.rawUrl || v.canonicalUrl).filter(Boolean)
     const toPayloadPhoto = (p) =>
       p.kind === 'new-link'
         ? { externalUrl: p.externalUrl }
@@ -780,7 +876,7 @@ async function saveMoment() {
           caption: form.value.caption.trim(),
           categoryId: form.value.categoryId,
           momentDate: form.value.momentDate,
-          videoUrl: form.value.videoUrl.trim(),
+          videoUrls,
           published: form.value.published,
           pinned: form.value.pinned,
           photos: formPhotos.value.map(toPayloadPhoto),
@@ -808,7 +904,7 @@ async function saveMoment() {
           caption: form.value.caption.trim(),
           categoryId: form.value.categoryId,
           momentDate: form.value.momentDate,
-          videoUrl: form.value.videoUrl.trim(),
+          videoUrls,
           published: form.value.published,
           pinned: form.value.pinned,
           keepPhotoIds,
@@ -1691,6 +1787,36 @@ async function removeCategory(c) {
   color: #fff;
   font-size: 0.64rem;
   font-weight: 700;
+}
+
+.gm-video-tile-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #fff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0b3b2a, #0a5c40);
+}
+
+.gm-video-tile-fallback.is-gdrive {
+  background: linear-gradient(135deg, #0a5c40, #1a73e8);
+}
+
+.gm-video-tile-fallback.is-instagram {
+  background: linear-gradient(135deg, #c13584, #f56040);
+}
+
+.gm-video-tile-fallback small {
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.gm-cover-pill.is-video-num {
+  background: rgba(180, 83, 9, 0.92);
 }
 
 .gm-link-box {

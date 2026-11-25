@@ -89,12 +89,14 @@
                     <polygon points="6 4 20 12 6 20 6 4" />
                   </svg>
                 </span>
-                <span class="text-sm font-bold tracking-wide">{{ videoPlatformLabel(m.video) }}</span>
+                <span class="text-sm font-bold tracking-wide">
+                  {{ momentVideosOf(m).length > 1 ? `${momentVideosOf(m).length} Video` : 'Putar Video' }}
+                </span>
               </div>
 
-              <!-- Play indicator when video-only with YT/Drive thumbnail -->
+              <!-- Play indicator when video-only with thumbnail -->
               <span
-                v-if="m.video && !m.photos?.length && coverOf(m) && !brokenCovers[m.id]"
+                v-if="momentVideosOf(m).length && !m.photos?.length && coverOf(m) && !brokenCovers[m.id]"
                 class="absolute inset-0 grid place-items-center bg-slate-950/25 group-hover:bg-slate-950/35 transition-colors"
                 aria-hidden="true"
               >
@@ -132,13 +134,13 @@
                   {{ m.photos.length }} foto
                 </span>
                 <span
-                  v-if="m.video"
+                  v-if="momentVideosOf(m).length"
                   class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-400 text-slate-950 shadow-sm"
                 >
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <polygon points="6 4 20 12 6 20 6 4" />
                   </svg>
-                  {{ platformShortName(m.video) }}
+                  {{ momentVideosOf(m).length > 1 ? `${momentVideosOf(m).length} video` : 'Video' }}
                 </span>
               </div>
             </div>
@@ -224,14 +226,14 @@
         </button>
       </div>
 
-      <!-- Mode Switcher when moment has BOTH photos and video -->
+      <!-- Mode Switcher when moment has BOTH photos and video(s) -->
       <div
-        v-if="activeMoment.photos?.length && activeMoment.video"
+        v-if="activeMoment.photos?.length && activeVideos.length"
         class="flex items-center justify-center gap-2 px-4 pt-3"
       >
         <button
           type="button"
-          class="min-h-[38px] px-4 rounded-full text-sm font-bold transition-colors"
+          class="min-h-[38px] px-4 rounded-full text-sm font-bold transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
           :class="modalMode === 'photos' ? 'bg-amber-300 text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'"
           @click="modalMode = 'photos'"
         >
@@ -239,14 +241,14 @@
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-full text-sm font-bold transition-colors"
+          class="inline-flex items-center gap-1.5 min-h-[38px] px-4 rounded-full text-sm font-bold transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
           :class="modalMode === 'video' ? 'bg-amber-300 text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'"
           @click="modalMode = 'video'"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <polygon points="6 4 20 12 6 20 6 4" />
           </svg>
-          Putar {{ videoPlatformLabel(activeMoment.video) }}
+          Video ({{ activeVideos.length }})
         </button>
       </div>
 
@@ -291,15 +293,28 @@
           </button>
         </template>
 
-        <!-- Inline Video Embed Player (Google Drive / YouTube / Instagram) -->
-        <template v-else-if="activeMoment.video">
+        <!-- Inline Video Embed Player (Google Drive / YouTube / Instagram, supports multiple videos) -->
+        <template v-else-if="activeVideo">
+          <button
+            v-if="activeVideos.length > 1"
+            type="button"
+            aria-label="Video sebelumnya"
+            class="absolute z-10 hidden sm:grid place-items-center left-4 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+            @click="stepVideo(-1)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
           <!-- Google Drive: adaptive theater height so vertical (9:16) and horizontal (16:9) Drive videos never crop on mobile/Safari -->
           <div
-            v-if="activeMoment.video.platform === 'gdrive'"
+            v-if="activeVideo.platform === 'gdrive'"
+            :key="activeVideo.embedUrl"
             class="w-full h-[min(66dvh,640px)] sm:h-[min(74dvh,680px)] max-w-4xl overflow-hidden bg-black rounded-2xl shadow-2xl border border-white/10"
           >
             <iframe
-              :src="activeMoment.video.embedUrl"
+              :src="activeVideo.embedUrl"
               :title="activeMoment.title"
               class="w-full h-full border-0"
               allow="autoplay; fullscreen"
@@ -309,12 +324,13 @@
           </div>
 
           <div
-            v-else-if="activeMoment.video.platform === 'youtube'"
+            v-else-if="activeVideo.platform === 'youtube'"
+            :key="activeVideo.embedUrl"
             class="w-full overflow-hidden bg-black rounded-2xl shadow-2xl border border-white/10"
-            :class="activeMoment.video.aspect === 'portrait' ? 'max-w-[380px] h-full max-h-[min(74dvh,680px)] aspect-[9/16]' : 'max-w-4xl aspect-video max-h-full'"
+            :class="activeVideo.aspect === 'portrait' ? 'max-w-[380px] h-full max-h-[min(74dvh,680px)] aspect-[9/16]' : 'max-w-4xl aspect-video max-h-full'"
           >
             <iframe
-              :src="activeMoment.video.embedUrl"
+              :src="activeVideo.embedUrl"
               :title="activeMoment.title"
               class="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
@@ -325,11 +341,12 @@
 
           <div
             v-else
+            :key="activeVideo.embedUrl"
             class="flex flex-col items-center w-full max-w-[420px] gap-3"
           >
             <div class="w-full h-[min(68dvh,560px)] overflow-hidden bg-white rounded-2xl shadow-2xl border border-white/15">
               <iframe
-                :src="activeMoment.video.embedUrl"
+                :src="activeVideo.embedUrl"
                 :title="activeMoment.title"
                 class="w-full h-full border-0"
                 scrolling="no"
@@ -341,7 +358,7 @@
             <p class="text-xs text-center text-emerald-100/80">
               Jika pratinjau Instagram terbatas oleh browser,
               <a
-                :href="activeMoment.video.canonicalUrl"
+                :href="activeVideo.canonicalUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="font-bold text-amber-300 underline underline-offset-4"
@@ -350,72 +367,108 @@
               </a>
             </p>
           </div>
+
+          <button
+            v-if="activeVideos.length > 1"
+            type="button"
+            aria-label="Video berikutnya"
+            class="absolute z-10 hidden sm:grid place-items-center right-4 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+            @click="stepVideo(1)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </template>
       </div>
 
-      <!-- Bottom Caption, Photo Strip & Controls (respects mobile home-indicator safe area) -->
+      <!-- Bottom Caption, Photo/Video Strip & Controls (respects mobile home-indicator safe area) -->
       <div
         class="px-4 pt-3 border-t border-white/10 bg-slate-950/85"
         style="padding-bottom: max(16px, env(safe-area-inset-bottom))"
       >
         <p
           v-if="activeMoment.caption"
-          class="max-w-3xl mx-auto mb-3 text-sm leading-relaxed text-center text-emerald-50/90"
+          class="max-w-3xl mx-auto text-sm leading-relaxed text-center text-emerald-50/90"
+          :class="(modalMode === 'photos' && activeMoment.photos?.length > 1) || (modalMode === 'video' && activeVideos.length > 1) ? 'mb-3' : ''"
         >
           {{ activeMoment.caption }}
         </p>
 
+        <!-- Photo pager & thumbs -->
         <div
-          class="flex flex-wrap items-center max-w-4xl gap-3 mx-auto"
-          :class="modalMode === 'photos' && activeMoment.photos?.length > 1 ? 'justify-between' : 'justify-center'"
+          v-if="modalMode === 'photos' && activeMoment.photos?.length > 1"
+          class="flex items-center justify-center max-w-4xl gap-2 mx-auto overflow-x-auto"
         >
-          <!-- Photo pager & thumbs -->
-          <div
-            v-if="modalMode === 'photos' && activeMoment.photos?.length > 1"
-            class="flex items-center gap-2 overflow-x-auto"
+          <button
+            type="button"
+            aria-label="Foto sebelumnya"
+            class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10 shrink-0"
+            @click="stepPhoto(-1)"
           >
-            <button
-              type="button"
-              aria-label="Foto sebelumnya"
-              class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10"
-              @click="stepPhoto(-1)"
-            >
-              &lsaquo;
-            </button>
-            <button
-              v-for="(p, idx) in activeMoment.photos"
-              :key="p.id"
-              type="button"
-              :aria-label="`Pilih foto ${idx + 1}`"
-              class="w-12 h-9 overflow-hidden rounded-lg border-2 shrink-0 transition-opacity"
-              :class="idx === activePhotoIdx ? 'border-amber-300 opacity-100' : 'border-transparent opacity-55 hover:opacity-90'"
-              @click="activePhotoIdx = idx"
-            >
-              <img :src="galleryPhotoSrc(p)" alt="" referrerpolicy="no-referrer" class="object-cover w-full h-full" />
-            </button>
-            <button
-              type="button"
-              aria-label="Foto berikutnya"
-              class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10"
-              @click="stepPhoto(1)"
-            >
-              &rsaquo;
-            </button>
-            <span class="ml-1 text-xs font-semibold tabular-nums text-emerald-100/80">
-              {{ activePhotoIdx + 1 }} / {{ activeMoment.photos.length }}
-            </span>
-          </div>
+            &lsaquo;
+          </button>
+          <button
+            v-for="(p, idx) in activeMoment.photos"
+            :key="p.id"
+            type="button"
+            :aria-label="`Pilih foto ${idx + 1}`"
+            class="w-12 h-9 overflow-hidden rounded-lg border-2 shrink-0 transition-opacity"
+            :class="idx === activePhotoIdx ? 'border-amber-300 opacity-100' : 'border-transparent opacity-55 hover:opacity-90'"
+            @click="activePhotoIdx = idx"
+          >
+            <img :src="galleryPhotoSrc(p)" alt="" referrerpolicy="no-referrer" class="object-cover w-full h-full" />
+          </button>
+          <button
+            type="button"
+            aria-label="Foto berikutnya"
+            class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10 shrink-0"
+            @click="stepPhoto(1)"
+          >
+            &rsaquo;
+          </button>
+          <span class="ml-1 text-xs font-semibold tabular-nums text-emerald-100/80 shrink-0">
+            {{ activePhotoIdx + 1 }} / {{ activeMoment.photos.length }}
+          </span>
+        </div>
 
-          <!-- External link fallback for video -->
-          <a
-            v-if="activeMoment.video"
-            :href="activeMoment.video.canonicalUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center min-h-[38px] px-4 rounded-full bg-white/10 hover:bg-white/20 text-xs sm:text-sm font-semibold text-amber-200 transition-colors"
+        <!-- Video pager & selector when moment has multiple videos -->
+        <div
+          v-else-if="modalMode === 'video' && activeVideos.length > 1"
+          class="flex items-center justify-center max-w-4xl gap-2 mx-auto overflow-x-auto"
+        >
+          <button
+            type="button"
+            aria-label="Video sebelumnya"
+            class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10 shrink-0"
+            @click="stepVideo(-1)"
           >
-            Buka di {{ platformShortName(activeMoment.video) }} &#8599;
-          </a>
+            &lsaquo;
+          </button>
+          <button
+            v-for="(v, idx) in activeVideos"
+            :key="`${v.platform}-${v.id}-${idx}`"
+            type="button"
+            class="inline-flex items-center gap-1.5 min-h-[34px] px-3 rounded-full text-xs font-bold shrink-0 transition-colors"
+            :class="idx === activeVideoIdx ? 'bg-amber-300 text-slate-950' : 'bg-white/10 text-white hover:bg-white/20'"
+            @click="activeVideoIdx = idx"
+          >
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <polygon points="6 4 20 12 6 20 6 4" />
+            </svg>
+            Video {{ idx + 1 }}
+          </button>
+          <button
+            type="button"
+            aria-label="Video berikutnya"
+            class="grid sm:hidden place-items-center w-9 h-9 rounded-full bg-white/10 shrink-0"
+            @click="stepVideo(1)"
+          >
+            &rsaquo;
+          </button>
+          <span class="ml-1 text-xs font-semibold tabular-nums text-emerald-100/80 shrink-0">
+            {{ activeVideoIdx + 1 }} / {{ activeVideos.length }}
+          </span>
         </div>
       </div>
     </div>
@@ -426,7 +479,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import SectionHeading from '@/components/landing/SectionHeading.vue'
-import { galleryPhotoSrc, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
+import { galleryPhotoSrc, momentVideosOf, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
 
 const INITIAL_LIMIT = 6
 const emit = defineEmits(['ready'])
@@ -461,14 +514,16 @@ function selectCategory(id) {
 
 function coverOf(m) {
   if (m.photos?.length) return galleryPhotoSrc(m.photos[0])
-  if (m.video?.thumbnailUrl) return m.video.thumbnailUrl
+  const firstVideo = momentVideosOf(m)[0]
+  if (firstVideo?.thumbnailUrl) return firstVideo.thumbnailUrl
   return ''
 }
 
 function cardCtaLabel(m) {
   const n = m.photos?.length || 0
-  if (n > 0 && m.video) return `Lihat ${n} foto & putar video`
-  if (m.video) return `Putar ${videoPlatformLabel(m.video)}`
+  const v = momentVideosOf(m).length
+  if (n > 0 && v > 0) return `Lihat ${n} foto & ${v > 1 ? `${v} video` : 'putar video'}`
+  if (v > 0) return v > 1 ? `Putar ${v} video` : 'Putar video'
   return n > 1 ? `Lihat ${n} foto` : 'Lihat foto'
 }
 
@@ -490,11 +545,15 @@ onMounted(async () => {
 /* ===== Lightbox & Inline Player ===== */
 const activeMoment = ref(null)
 const activePhotoIdx = ref(0)
+const activeVideoIdx = ref(0)
 const modalMode = ref('photos')
 const closeBtnRef = ref(null)
 let openerEl = null
 let savedBody = null
 let touchStartX = 0
+
+const activeVideos = computed(() => momentVideosOf(activeMoment.value))
+const activeVideo = computed(() => activeVideos.value[activeVideoIdx.value] || null)
 
 function lockScroll() {
   const scrollbar = window.innerWidth - document.documentElement.clientWidth
@@ -514,6 +573,7 @@ async function openMoment(m, event) {
   openerEl = event?.currentTarget || null
   activeMoment.value = m
   activePhotoIdx.value = 0
+  activeVideoIdx.value = 0
   modalMode.value = m.photos?.length ? 'photos' : 'video'
   lockScroll()
   document.addEventListener('keydown', onKeydown)
@@ -535,10 +595,18 @@ function stepPhoto(delta) {
   activePhotoIdx.value = (activePhotoIdx.value + delta + total) % total
 }
 
+function stepVideo(delta) {
+  const total = activeVideos.value.length
+  if (total <= 1) return
+  activeVideoIdx.value = (activeVideoIdx.value + delta + total) % total
+}
+
 function onKeydown(e) {
   if (e.key === 'Escape') closeModal()
   else if (modalMode.value === 'photos' && e.key === 'ArrowRight') stepPhoto(1)
   else if (modalMode.value === 'photos' && e.key === 'ArrowLeft') stepPhoto(-1)
+  else if (modalMode.value === 'video' && e.key === 'ArrowRight') stepVideo(1)
+  else if (modalMode.value === 'video' && e.key === 'ArrowLeft') stepVideo(-1)
 }
 
 function onTouchStart(e) {
