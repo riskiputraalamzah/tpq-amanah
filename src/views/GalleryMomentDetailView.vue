@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen font-sans lp flex flex-col">
+  <div class="min-h-screen font-sans lp flex flex-col !bg-[#03291d]">
     <NavbarComponent />
 
     <!-- Emerald Hero Band -->
     <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20">
-      <div class="lp-wrap">
+      <div class="lp-wrap lp-page-rise">
         <!-- Breadcrumb -->
         <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-1.5 mb-5 text-xs sm:text-sm font-medium text-emerald-100/80">
           <router-link to="/" class="transition-colors hover:text-amber-300">
@@ -471,6 +471,7 @@ import api from '@/services/api'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import GalleryLightbox from '@/components/landing/GalleryLightbox.vue'
+import { useLenisScroll } from '@/composables/useLenisScroll'
 import { applyPageSeo, buildCanonicalUrl, SITE_URL } from '@/utils/seoMeta'
 import {
   galleryPhotoCardSrc,
@@ -480,6 +481,7 @@ import {
 } from '@/utils/galleryMedia'
 
 const route = useRoute()
+const { scrollTo: lenisScrollTo, stop: stopLenis, start: startLenis } = useLenisScroll()
 
 const loading = ref(true)
 const loadError = ref('')
@@ -661,12 +663,17 @@ async function fetchDetail(slugOrId) {
   }
 }
 
+watch(lightboxOpen, (isOpen) => {
+  if (isOpen) stopLenis()
+  else startLenis()
+})
+
 watch(
   () => route.params.slug,
   (nextSlug) => {
     if (nextSlug) {
       fetchDetail(String(nextSlug))
-      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' })
+      lenisScrollTo(0, { immediate: true })
     }
   },
 )

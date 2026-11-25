@@ -66,6 +66,8 @@
         >
           <router-link
             :to="`/dokumentasi/${encodeURIComponent(m.slug || m.id)}`"
+            @mouseenter="prefetchGalleryPages"
+            @touchstart.passive="prefetchGalleryPages"
             class="flex flex-col flex-1 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-400"
           >
             <!-- 4:3 Media Cover -->
@@ -175,6 +177,8 @@
       <div class="flex justify-center mt-9">
         <router-link
           :to="archiveTarget"
+          @mouseenter="prefetchGalleryPages"
+          @touchstart.passive="prefetchGalleryPages"
           class="inline-flex items-center justify-center gap-2.5 min-h-[48px] px-7 rounded-xl border border-amber-200/50 bg-white/10 hover:bg-amber-300 hover:text-slate-950 hover:border-amber-300 text-white text-sm font-bold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
         >
           <span>
@@ -210,6 +214,14 @@ const moments = ref([])
 const categories = ref([])
 const selectedCategory = ref('all')
 const brokenCovers = ref({})
+let pagesPrefetched = false
+
+function prefetchGalleryPages() {
+  if (pagesPrefetched) return
+  pagesPrefetched = true
+  import('@/views/GalleryArchiveView.vue').catch(() => {})
+  import('@/views/GalleryMomentDetailView.vue').catch(() => {})
+}
 
 const filteredMoments = computed(() => {
   if (selectedCategory.value === 'all') return moments.value

@@ -656,3 +656,43 @@
 .lp-fringe-bottom.is-paper {
   background-image: var(--lp-fringe-up-paper);
 }
+
+/* Shared Lenis smooth-scroll styles so /dokumentasi & /dokumentasi/:slug scroll identically to landing page */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Gentle entrance for public page inner content while dark-emerald backdrop & Navbar stay seamless */
+@media (prefers-reduced-motion: no-preference) {
+  .lp-page-rise {
+    animation: lp-page-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes lp-page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

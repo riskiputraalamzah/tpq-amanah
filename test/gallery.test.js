@@ -97,9 +97,18 @@ test("Dokumentasi access & dedicated public routes (/dokumentasi and /dokumentas
 
   const navbar = read("src/components/NavbarComponent.vue");
   assert.ok(
+    has(navbar, '{ to: "/dokumentasi", label: "Dokumentasi", section: "dokumentasi" }'),
+    "Navbar surfaces Dokumentasi menu item linking directly to /dokumentasi",
+  );
+  assert.ok(
     has(navbar, 'if (route.path !== "/") { router.push(href === "#beranda" ? "/" : { path: "/", hash: href }); return; }'),
     "Navbar navigates cleanly back to landing page sections when clicked from /dokumentasi",
   );
+
+  const appVue = read("src/App.vue");
+  assert.ok(!has(appVue, ".page-fade-enter-from { opacity: 0; }"), "page transition never flashes blank white canvas");
+  const themeUtil = read("src/utils/themeColor.js");
+  assert.ok(has(themeUtil, "surfaceColorFor"), "body/html backdrop aligns with route surface to prevent white flash");
 });
 
 test("Landing page shows 3 curated highlights linking to /dokumentasi/:slug and /dokumentasi", () => {
@@ -118,11 +127,13 @@ test("Landing page shows 3 curated highlights linking to /dokumentasi/:slug and 
 
 test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp sharing, inline player, and zoomable lightbox", () => {
   const archive = read("src/views/GalleryArchiveView.vue");
+  assert.ok(has(archive, "useLenisScroll()"), "archive enables smooth Lenis scrolling like landing page");
   assert.ok(has(archive, "applyPageSeo("), "archive updates dynamic SEO tags & JSON-LD");
   assert.ok(has(archive, "const PAGE_SIZE = 12"), "archive paginates incrementally for performance");
   assert.ok(has(archive, "route.query.kategori"), "archive syncs category filter in query");
 
   const detail = read("src/views/GalleryMomentDetailView.vue");
+  assert.ok(has(detail, "useLenisScroll()"), "detail enables smooth Lenis scrolling like landing page");
   assert.ok(has(detail, "api.get(`/gallery/public/${encodeURIComponent(slugOrId)}`)"), "detail fetches single moment by slug or id");
   assert.ok(has(detail, "applyPageSeo(") && has(detail, "'ImageGallery'"), "detail injects dynamic SEO meta and ImageGallery JSON-LD");
   assert.ok(has(detail, "https://wa.me/?text="), "detail offers 1-tap WhatsApp share");

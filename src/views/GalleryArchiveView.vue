@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen font-sans lp flex flex-col">
+  <div class="min-h-screen font-sans lp flex flex-col !bg-[#03291d]">
     <NavbarComponent />
 
     <!-- Emerald Header Band (high contrast under floating transparent Navbar) -->
     <section class="relative overflow-hidden lp-emerald lp-on-dark pt-28 pb-16 sm:pt-32 sm:pb-20">
-      <div class="lp-wrap">
+      <div class="lp-wrap lp-page-rise">
         <nav aria-label="Breadcrumb" class="flex items-center justify-center gap-2 mb-5 text-xs sm:text-sm font-medium text-emerald-100/80">
           <router-link to="/" class="transition-colors hover:text-amber-300">
             Beranda
@@ -178,6 +178,8 @@
             >
               <router-link
                 :to="`/dokumentasi/${encodeURIComponent(m.slug || m.id)}`"
+                @mouseenter="prefetchDetailView"
+                @touchstart.passive="prefetchDetailView"
                 class="flex flex-col flex-1 w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-amber-500"
               >
                 <!-- 4:3 Cover -->
@@ -329,6 +331,7 @@ import api from '@/services/api'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import OrnamentRule from '@/components/landing/OrnamentRule.vue'
+import { useLenisScroll } from '@/composables/useLenisScroll'
 import { applyPageSeo, SITE_URL } from '@/utils/seoMeta'
 import {
   galleryPhotoCardSrc,
@@ -340,6 +343,14 @@ const PAGE_SIZE = 12
 
 const route = useRoute()
 const router = useRouter()
+useLenisScroll()
+
+let detailPrefetched = false
+function prefetchDetailView() {
+  if (detailPrefetched) return
+  detailPrefetched = true
+  import('@/views/GalleryMomentDetailView.vue').catch(() => {})
+}
 
 const loading = ref(true)
 const loadError = ref('')

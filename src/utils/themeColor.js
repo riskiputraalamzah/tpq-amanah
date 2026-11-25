@@ -17,6 +17,19 @@ export function themeColorFor(path = '') {
   return THEME.site
 }
 
+export function surfaceColorFor(path = '') {
+  const p = String(path).split('?')[0]
+  if (
+    p === '/' ||
+    p === '/dokumentasi' ||
+    p.startsWith('/dokumentasi/') ||
+    p === '/login'
+  ) {
+    return '#03291d'
+  }
+  return '#fbf9f3'
+}
+
 export function applyThemeColor(path) {
   if (typeof document === 'undefined') return
   const color = themeColorFor(path)
@@ -27,4 +40,13 @@ export function applyThemeColor(path) {
     document.head.appendChild(meta)
   }
   if (meta.getAttribute('content') !== color) meta.setAttribute('content', color)
+
+  // Keep html/body backdrop aligned with the active page's hero surface so route swaps never flash stark white.
+  const surface = surfaceColorFor(path)
+  if (document.documentElement.style.backgroundColor !== surface) {
+    document.documentElement.style.backgroundColor = surface
+  }
+  if (document.body && document.body.style.backgroundColor !== surface) {
+    document.body.style.backgroundColor = surface
+  }
 }

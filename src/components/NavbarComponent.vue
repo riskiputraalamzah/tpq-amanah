@@ -26,37 +26,53 @@
           </router-link>
 
           <!-- Desktop Navigation -->
-          <nav class="items-center hidden gap-4 lg:flex xl:gap-5">
-            <a
-              v-for="link in navLinks"
-              :key="link.href"
-              :href="link.href"
-              :target="link.external ? '_blank' : undefined"
-              :rel="link.external ? 'noopener noreferrer' : undefined"
-              @click="link.external ? null : scrollToSection($event, link.href)"
-              class="flex items-center gap-1 text-sm font-medium transition-colors duration-300 nav-link whitespace-nowrap"
-              :class="[
-                activeSection === link.section
-                  ? 'text-accent-300 font-semibold'
-                  : 'text-white/85 hover:text-accent-300',
-              ]"
-            >
-              <svg
-                v-if="link.external"
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <nav class="items-center hidden gap-3 lg:flex xl:gap-4">
+            <template v-for="link in navLinks" :key="link.href || link.to">
+              <router-link
+                v-if="link.to"
+                :to="link.to"
+                @mouseenter="prefetchGalleryArchive"
+                @touchstart.passive="prefetchGalleryArchive"
+                @click="onRouteLinkClick(link.to)"
+                class="flex items-center gap-1 text-[13px] xl:text-sm font-medium transition-colors duration-300 nav-link whitespace-nowrap rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/80"
+                :class="[
+                  isLinkActive(link)
+                    ? 'text-accent-300 font-semibold'
+                    : 'text-white/85 hover:text-accent-300',
+                ]"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              {{ link.label }}
-            </a>
+                {{ link.label }}
+              </router-link>
+              <a
+                v-else
+                :href="link.href"
+                :target="link.external ? '_blank' : undefined"
+                :rel="link.external ? 'noopener noreferrer' : undefined"
+                @click="link.external ? null : scrollToSection($event, link.href)"
+                class="flex items-center gap-1 text-[13px] xl:text-sm font-medium transition-colors duration-300 nav-link whitespace-nowrap rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/80"
+                :class="[
+                  isLinkActive(link)
+                    ? 'text-accent-300 font-semibold'
+                    : 'text-white/85 hover:text-accent-300',
+                ]"
+              >
+                <svg
+                  v-if="link.external"
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                {{ link.label }}
+              </a>
+            </template>
 
             <div
               class="flex items-center gap-2 pl-2 border-l border-amber-200/20"
@@ -150,40 +166,55 @@
           :class="isScrolled ? 'rounded-xl mx-2' : 'rounded-b-2xl'"
         >
           <nav class="px-4 py-6 space-y-2">
-            <a
-              v-for="link in navLinks"
-              :key="link.href"
-              :href="link.href"
-              :target="link.external ? '_blank' : undefined"
-              :rel="link.external ? 'noopener noreferrer' : undefined"
-              @click="
-                link.external
-                  ? (isMobileMenuOpen = false)
-                  : scrollToSection($event, link.href)
-              "
-              class="flex items-center gap-2 px-4 py-3 font-medium transition-colors rounded-xl"
-              :class="
-                activeSection === link.section
-                  ? 'bg-white/10 text-accent-300'
-                  : 'text-white/85 hover:bg-white/10 hover:text-accent-300'
-              "
-            >
-              <svg
-                v-if="link.external"
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <template v-for="link in navLinks" :key="link.href || link.to">
+              <router-link
+                v-if="link.to"
+                :to="link.to"
+                @touchstart.passive="prefetchGalleryArchive"
+                @click="onRouteLinkClick(link.to)"
+                class="flex items-center gap-2 px-4 py-3 font-medium transition-colors rounded-xl"
+                :class="
+                  isLinkActive(link)
+                    ? 'bg-white/10 text-accent-300'
+                    : 'text-white/85 hover:bg-white/10 hover:text-accent-300'
+                "
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              {{ link.label }}
-            </a>
+                {{ link.label }}
+              </router-link>
+              <a
+                v-else
+                :href="link.href"
+                :target="link.external ? '_blank' : undefined"
+                :rel="link.external ? 'noopener noreferrer' : undefined"
+                @click="
+                  link.external
+                    ? (isMobileMenuOpen = false)
+                    : scrollToSection($event, link.href)
+                "
+                class="flex items-center gap-2 px-4 py-3 font-medium transition-colors rounded-xl"
+                :class="
+                  isLinkActive(link)
+                    ? 'bg-white/10 text-accent-300'
+                    : 'text-white/85 hover:bg-white/10 hover:text-accent-300'
+                "
+              >
+                <svg
+                  v-if="link.external"
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+                {{ link.label }}
+              </a>
+            </template>
             <div
               class="pt-4 border-t border-amber-200/15 grid grid-cols-2 gap-2.5"
             >
@@ -241,8 +272,34 @@ const navLinks = [
   { href: "#program", label: "Program", section: "program" },
   { href: "#at-tartil", label: "E-Kitab", section: "at-tartil" },
   { href: "#jadwal", label: "Jadwal", section: "jadwal" },
+  { to: "/dokumentasi", label: "Dokumentasi", section: "dokumentasi" },
   { href: "#kontak", label: "Kontak", section: "kontak" },
 ];
+
+let archivePrefetched = false;
+const prefetchGalleryArchive = () => {
+  if (archivePrefetched) return;
+  archivePrefetched = true;
+  import("@/views/GalleryArchiveView.vue").catch(() => {});
+};
+
+const isLinkActive = (link) => {
+  if (link.to === "/dokumentasi") {
+    return (
+      route.path === "/dokumentasi" ||
+      route.path.startsWith("/dokumentasi/") ||
+      (route.path === "/" && activeSection.value === "dokumentasi")
+    );
+  }
+  return route.path === "/" && activeSection.value === link.section;
+};
+
+const onRouteLinkClick = (to) => {
+  isMobileMenuOpen.value = false;
+  if (route.path === to) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
 let observer = null;
 
@@ -273,8 +330,10 @@ const scrollToSection = (event, href) => {
 };
 
 const setupScrollSpy = () => {
-  const sections = navLinks
-    .map((link) => document.querySelector(link.href))
+  if (route.path !== "/") return;
+  const selectors = [...navLinks.map((l) => l.href).filter(Boolean), "#dokumentasi"];
+  const sections = selectors
+    .map((sel) => document.querySelector(sel))
     .filter(Boolean);
 
   observer = new IntersectionObserver(
