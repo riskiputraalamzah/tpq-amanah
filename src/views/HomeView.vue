@@ -1686,6 +1686,11 @@
     </section>
 
     <!-- ================================================================= -->
+    <!-- 10b. DOKUMENTASI & GALERI KEGIATAN (HIDDEN WHEN EMPTY)            -->
+    <!-- ================================================================= -->
+    <GallerySection />
+
+    <!-- ================================================================= -->
     <!-- 11. TESTIMONI WALI SANTRI                                          -->
     <!-- ================================================================= -->
     <section
@@ -2086,6 +2091,7 @@ import Lenis from "lenis";
 import NavbarComponent from "@/components/NavbarComponent.vue";
 import FooterComponent from "@/components/FooterComponent.vue";
 import LegalDocuments from "@/components/LegalDocuments.vue";
+import GallerySection from "@/components/landing/GallerySection.vue";
 import SectionHeading from "@/components/landing/SectionHeading.vue";
 import StarBadge from "@/components/landing/StarBadge.vue";
 import JilidDemoStage from "@/components/landing/JilidDemoStage.vue";

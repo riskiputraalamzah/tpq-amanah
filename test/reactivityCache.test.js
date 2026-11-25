@@ -10,7 +10,7 @@ const read = (p) => squash(fs.readFileSync(path.join(here, "..", p), "utf8"));
 
 test("api.js: tracks mutationVersion, clears inFlightRequests, and forces fresh=1 on server-cached endpoints after mutations", () => {
   const apiSrc = read("src/services/api.js");
-  assert.ok(has(apiSrc, "SERVER_CACHED_URLS = [ '/guru-dashboard', '/admin-dashboard', '/kbm-monitor' ]"));
+  assert.ok(has(apiSrc, "SERVER_CACHED_URLS = [ '/guru-dashboard', '/admin-dashboard', '/kbm-monitor', '/gallery/public' ]"));
   assert.ok(has(apiSrc, "if (method === 'get' && needsFreshServerRead(config.url)) { config.params = { ...(config.params || {}), fresh: '1' }; config.cache = false; }") || has(apiSrc, "needsFreshServerRead(config.url)"));
   assert.ok(has(apiSrc, "mutationVersion === startVersion"), "in-flight pre-mutation GET must not poison cache after mutation");
   assert.ok(has(apiSrc, "inFlightRequests.delete(key)"), "in-flight GET dedup entries cleared on mutation");

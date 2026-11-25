@@ -241,6 +241,7 @@ const SPECIAL_MENUS = [
   { id: 'kbm-monitor', to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: '<rect x="3" y="4" width="18" height="16" rx="2" /><polyline points="7 13 10 16 17 9" />' },
   { id: 'pendaftaran', to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />' },
   { id: 'kegiatan-manage', to: '/dashboard/kegiatan', label: 'Kegiatan', icon: '<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2" />' },
+  { id: 'gallery-manage', to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: '<rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L7 18" />' },
   { id: 'wa-log', to: '/dashboard/wa-log', label: 'Riwayat WA Bot', icon: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />' },
 ];
 // ---- the side menu, grouped by what the person is doing ----
@@ -264,6 +265,7 @@ const ICON = {
   building: '<path d="M3 21h18" /><path d="M5 21V7l8-4 6 3v15" /><path d="M9 10h2" /><path d="M9 14h2" /><path d="M9 18h2" />',
   person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
   edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />',
+  gallery: '<rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L7 18" />',
 }
 const ADMIN_GROUPS = [
   {
@@ -313,6 +315,7 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/tpq-profile', label: 'Profil TPQ', icon: ICON.building },
       { to: '/dashboard/teachers', label: 'Kelola Pengajar', icon: ICON.person },
       { to: '/dashboard/users', label: 'Akun Pengguna', icon: ICON.santri },
+      { to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: ICON.gallery },
       { to: '/dashboard/content', label: 'Konten Website', icon: ICON.edit },
     ],
   },

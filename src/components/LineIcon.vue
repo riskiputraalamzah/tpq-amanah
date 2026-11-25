@@ -21,6 +21,7 @@
     <template v-else-if="name === 'chevron-down'"><polyline points="6 9 12 15 18 9" /></template>
     <template v-else-if="name === 'bolt'"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></template>
     <template v-else-if="name === 'users'"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.9" /><path d="M16 3.1a4 4 0 0 1 0 7.8" /></template>
+    <template v-else-if="name === 'image'"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L7 18" /></template>
   </svg>
 </template>
 

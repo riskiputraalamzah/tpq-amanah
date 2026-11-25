@@ -19,6 +19,7 @@ const SERVER_CACHED_URLS = [
   '/guru-dashboard',
   '/admin-dashboard',
   '/kbm-monitor',
+  '/gallery/public',
 ]
 const SERVER_FRESH_WINDOW_MS = 90 * 1000
 const MUTATION_STORAGE_KEY = 'tpq_last_mutation_at'
@@ -51,6 +52,7 @@ const NO_CLIENT_CACHE_PREFIXES = [
   '/ljp/',
   '/lpj/',
   '/attendance/quick',
+  '/gallery/manage',
 ]
 
 function isNoClientCacheUrl(url = '') {
@@ -165,8 +167,6 @@ api.interceptors.request.use((config) => {
     config.cache = false
   }
   if (method === 'get' && isNoClientCacheUrl(config.url)) {
-    config.cache = false
-  } else if (method === 'get' && isNoClientCacheUrl(config.url)) {
     config.cache = false
   }
 

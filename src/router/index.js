@@ -301,6 +301,12 @@ const routes = [
         meta: { role: "admin", feature: "kegiatan-manage" },
       },
       {
+        path: "dokumentasi",
+        name: "GalleryManagement",
+        component: () => import("../views/dashboard/admin/GalleryManagementView.vue"),
+        meta: { role: "admin", feature: "gallery-manage" },
+      },
+      {
         path: "tpq-profile",
         name: "TpqProfile",
         component: () => import("../views/dashboard/admin/TpqProfileView.vue"),
