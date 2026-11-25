@@ -138,8 +138,13 @@ test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp shari
   assert.ok(has(detail, "applyPageSeo(") && has(detail, "'ImageGallery'"), "detail injects dynamic SEO meta and ImageGallery JSON-LD");
   assert.ok(has(detail, "https://wa.me/?text="), "detail offers 1-tap WhatsApp share");
   assert.ok(has(detail, "copyShareLink"), "detail offers copy link action");
-  assert.ok(has(detail, "useGalleryLikes()"), "detail offers public heart like toggle with live count");
+  assert.ok(has(detail, "<GalleryLikeButton"), "detail offers animated public heart like toggle with live count");
   assert.ok(has(detail, "showFloatingLike") && has(detail, "lp-fab-pop"), "detail shows animated floating mobile Like pill on scroll");
+  assert.ok(has(detail, "flex-col-reverse gap-3") && has(detail, "w-full sm:w-auto lp-btn-gold"), "bottom navigation buttons stack symmetrically full-width on mobile");
+
+  const likeBtn = read("src/components/landing/GalleryLikeButton.vue");
+  assert.ok(has(likeBtn, "glb-spark-fly") && has(likeBtn, "glb-heart-spring"), "Like animation includes 8-way sparkle burst and spring pop");
+  assert.ok(has(likeBtn, "glb-heart-wobble") && has(likeBtn, "glb-drop-left"), "Unlike toggle includes expressive wobble and split droplets");
   assert.ok(has(detail, "lp-masonry") && has(detail, "break-inside: avoid"), "detail photo gallery renders natural aspect-ratio Masonry layout");
   assert.ok(has(detail, "detail-hero-mihrab") && has(detail, "OrnamentRule"), "detail hero is symmetrically centered with Islamic geometric motifs");
   assert.ok(has(detail, '<GalleryLightbox'), "detail mounts zoomable GalleryLightbox for photos");

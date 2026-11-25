@@ -169,32 +169,7 @@
                   <span>{{ cardCtaLabel(m) }}</span>
                   <span aria-hidden="true">&rarr;</span>
                 </span>
-                <button
-                  type="button"
-                  :aria-pressed="isLiked(m)"
-                  :aria-label="isLiked(m) ? `Batal sukai ${m.title}` : `Sukai ${m.title}`"
-                  :disabled="isPending(m)"
-                  class="inline-flex items-center gap-1 min-h-[34px] px-2.5 rounded-full text-xs font-bold border transition-colors shrink-0"
-                  :class="
-                    isLiked(m)
-                      ? 'bg-rose-50 border-rose-200 text-rose-600'
-                      : 'bg-emerald-950/[0.03] border-amber-700/15 text-slate-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600'
-                  "
-                  @click.prevent.stop="toggleLike(m)"
-                >
-                  <svg
-                    class="w-3.5 h-3.5 shrink-0"
-                    :class="isPopped(m) ? 'lp-heart-pop' : ''"
-                    :fill="isLiked(m) ? 'currentColor' : 'none'"
-                    stroke="currentColor"
-                    stroke-width="2.2"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                  <span class="tabular-nums">{{ likeCountOf(m) }}</span>
-                </button>
+                <GalleryLikeButton :moment="m" variant="card" stop-propagation />
               </div>
             </div>
           </router-link>
@@ -229,7 +204,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import api from '@/services/api'
 import SectionHeading from '@/components/landing/SectionHeading.vue'
-import { useGalleryLikes } from '@/composables/useGalleryLikes'
+import GalleryLikeButton from '@/components/landing/GalleryLikeButton.vue'
 import {
   galleryPhotoCardSrc,
   momentVideosOf,
@@ -238,7 +213,6 @@ import {
 
 const HIGHLIGHT_LIMIT = 3
 const emit = defineEmits(['ready'])
-const { isLiked, likeCountOf, isPending, isPopped, toggleLike } = useGalleryLikes()
 
 const moments = ref([])
 const categories = ref([])

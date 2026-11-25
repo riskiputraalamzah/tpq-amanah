@@ -311,32 +311,7 @@
                       <span>{{ cardCtaLabel(m) }}</span>
                       <span aria-hidden="true">&rarr;</span>
                     </span>
-                    <button
-                      type="button"
-                      :aria-pressed="isLiked(m)"
-                      :aria-label="isLiked(m) ? `Batal sukai ${m.title}` : `Sukai ${m.title}`"
-                      :disabled="isPending(m)"
-                      class="inline-flex items-center gap-1 min-h-[34px] px-2.5 rounded-full text-xs font-bold border transition-colors shrink-0"
-                      :class="
-                        isLiked(m)
-                          ? 'bg-rose-50 border-rose-200 text-rose-600'
-                          : 'bg-emerald-950/[0.03] border-amber-700/15 text-slate-600 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600'
-                      "
-                      @click.prevent.stop="toggleLike(m)"
-                    >
-                      <svg
-                        class="w-3.5 h-3.5 shrink-0"
-                        :class="isPopped(m) ? 'lp-heart-pop' : ''"
-                        :fill="isLiked(m) ? 'currentColor' : 'none'"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                      </svg>
-                      <span class="tabular-nums">{{ likeCountOf(m) }}</span>
-                    </button>
+                    <GalleryLikeButton :moment="m" variant="card" stop-propagation />
                   </div>
                 </div>
               </router-link>
@@ -366,11 +341,11 @@
           <p class="max-w-xl mx-auto mt-2 text-sm leading-relaxed text-emerald-100/85">
             Daftar online dari HP sekitar 5 menit, tanpa biaya formulir dan tanpa tes yang menggugurkan.
           </p>
-          <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
-            <router-link to="/daftar" class="lp-btn-gold">
+          <div class="flex flex-col gap-3 mt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+            <router-link to="/daftar" class="w-full sm:w-auto lp-btn-gold">
               Daftar Santri Baru &rarr;
             </router-link>
-            <router-link to="/" class="lp-btn-ghost">
+            <router-link to="/" class="w-full sm:w-auto lp-btn-ghost">
               Kembali ke Beranda
             </router-link>
           </div>
@@ -390,8 +365,8 @@ import api from '@/services/api'
 import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import OrnamentRule from '@/components/landing/OrnamentRule.vue'
+import GalleryLikeButton from '@/components/landing/GalleryLikeButton.vue'
 import { useLenisScroll } from '@/composables/useLenisScroll'
-import { useGalleryLikes } from '@/composables/useGalleryLikes'
 import { applyPageSeo, SITE_URL } from '@/utils/seoMeta'
 import {
   galleryPhotoCardSrc,
@@ -404,7 +379,6 @@ const PAGE_SIZE = 12
 const route = useRoute()
 const router = useRouter()
 useLenisScroll()
-const { isLiked, likeCountOf, isPending, isPopped, toggleLike } = useGalleryLikes()
 
 let detailPrefetched = false
 function prefetchDetailView() {

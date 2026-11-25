@@ -110,46 +110,7 @@
             class="flex flex-col gap-2.5 mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center"
           >
             <div class="flex items-center gap-2 sm:contents">
-              <button
-                type="button"
-                :aria-pressed="isLiked(moment)"
-                :aria-label="isLiked(moment) ? 'Batal sukai momen ini' : 'Sukai momen ini'"
-                :disabled="isPending(moment)"
-                class="inline-flex items-center justify-center gap-2 min-h-[46px] px-4 sm:px-5 rounded-xl text-sm font-bold border transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 disabled:opacity-75"
-                :class="
-                  isLiked(moment)
-                    ? 'bg-rose-500/20 border-rose-300/70 text-rose-100 hover:bg-rose-500/30 shadow-sm'
-                    : 'bg-white/10 border-amber-200/35 text-white hover:bg-white/20'
-                "
-                @click="onToggleLike(moment)"
-              >
-                <svg
-                  class="w-[18px] h-[18px] shrink-0 transition-transform"
-                  :class="[
-                    isLiked(moment) ? 'text-rose-400' : 'text-amber-200',
-                    isPopped(moment) ? 'lp-heart-pop' : '',
-                  ]"
-                  :fill="isLiked(moment) ? 'currentColor' : 'none'"
-                  stroke="currentColor"
-                  stroke-width="2.1"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                  />
-                </svg>
-                <span>{{ isLiked(moment) ? 'Disukai' : 'Suka' }}</span>
-                <span
-                  v-if="likeCountOf(moment) > 0"
-                  class="px-2 py-0.5 text-xs font-extrabold rounded-full tabular-nums"
-                  :class="isLiked(moment) ? 'bg-rose-400/25 text-rose-100' : 'bg-white/15 text-amber-200'"
-                >
-                  {{ likeCountOf(moment) }}
-                </span>
-              </button>
+              <GalleryLikeButton :moment="moment" variant="hero" @result="onLikeResult" />
 
               <a
                 :href="whatsappShareHref"
@@ -530,12 +491,12 @@
             </div>
           </section>
 
-          <!-- Back Navigation Footer -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pt-4">
-            <router-link to="/dokumentasi" class="lp-btn-line">
+          <!-- Symmetrical Bottom Navigation Bar (equal full-width on mobile, balanced edges on desktop) -->
+          <div class="flex flex-col-reverse gap-3 pt-6 pb-8 border-t border-amber-700/15 sm:flex-row sm:items-center sm:justify-between sm:pb-0">
+            <router-link to="/dokumentasi" class="w-full sm:w-auto lp-btn-line">
               &larr; Kembali ke Semua Dokumentasi
             </router-link>
-            <router-link to="/daftar" class="lp-btn-gold">
+            <router-link to="/daftar" class="w-full sm:w-auto lp-btn-gold">
               Daftar Santri Baru &rarr;
             </router-link>
           </div>
@@ -559,53 +520,7 @@
         >
           {{ likeFeedback }}
         </p>
-        <button
-          type="button"
-          :aria-pressed="isLiked(moment)"
-          :aria-label="isLiked(moment) ? 'Batal sukai momen ini' : 'Sukai momen ini'"
-          :disabled="isPending(moment)"
-          class="inline-flex items-center gap-2 min-h-[48px] px-4 rounded-full text-sm font-bold border backdrop-blur-md transition-all active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:opacity-80"
-          :class="
-            isLiked(moment)
-              ? 'bg-rose-600/95 border-rose-300/65 text-white shadow-[0_14px_30px_-8px_rgba(225,29,72,0.6)]'
-              : 'bg-[#03291d]/95 border-amber-300/60 text-white shadow-[0_14px_30px_-8px_rgba(3,41,29,0.7)]'
-          "
-          @click="onToggleLike(moment)"
-        >
-          <span class="relative grid place-items-center">
-            <span
-              v-if="isPopped(moment)"
-              class="absolute inset-0 rounded-full lp-heart-ring"
-              aria-hidden="true"
-            ></span>
-            <svg
-              class="w-5 h-5 shrink-0"
-              :class="[
-                isLiked(moment) ? 'text-white' : 'text-rose-400 lp-fab-heartbeat',
-                isPopped(moment) ? 'lp-heart-pop' : '',
-              ]"
-              :fill="isLiked(moment) ? 'currentColor' : 'none'"
-              stroke="currentColor"
-              stroke-width="2.2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              />
-            </svg>
-          </span>
-          <span>{{ isLiked(moment) ? 'Disukai' : 'Suka' }}</span>
-          <span
-            v-if="likeCountOf(moment) > 0"
-            class="px-2 py-0.5 text-xs font-extrabold rounded-full tabular-nums"
-            :class="isLiked(moment) ? 'bg-white/20 text-white' : 'bg-amber-300/20 text-amber-200'"
-          >
-            {{ likeCountOf(moment) }}
-          </span>
-        </button>
+        <GalleryLikeButton :moment="moment" variant="fab" @result="onLikeResult" />
       </div>
     </Transition>
 
@@ -632,8 +547,8 @@ import NavbarComponent from '@/components/NavbarComponent.vue'
 import FooterComponent from '@/components/FooterComponent.vue'
 import OrnamentRule from '@/components/landing/OrnamentRule.vue'
 import GalleryLightbox from '@/components/landing/GalleryLightbox.vue'
+import GalleryLikeButton from '@/components/landing/GalleryLikeButton.vue'
 import { useLenisScroll } from '@/composables/useLenisScroll'
-import { useGalleryLikes } from '@/composables/useGalleryLikes'
 import { applyPageSeo, buildCanonicalUrl, SITE_URL } from '@/utils/seoMeta'
 import {
   galleryPhotoCardSrc,
@@ -644,14 +559,12 @@ import {
 
 const route = useRoute()
 const { scrollTo: lenisScrollTo, stop: stopLenis, start: startLenis } = useLenisScroll()
-const { isLiked, likeCountOf, isPending, isPopped, toggleLike } = useGalleryLikes()
 const likeFeedback = ref('')
 let likeFeedbackTimer = null
 
-async function onToggleLike(m) {
+function onLikeResult(res) {
   likeFeedback.value = ''
-  const res = await toggleLike(m)
-  if (!res.ok && res.error) {
+  if (res && !res.ok && res.error) {
     likeFeedback.value = res.error
     clearTimeout(likeFeedbackTimer)
     likeFeedbackTimer = setTimeout(() => {

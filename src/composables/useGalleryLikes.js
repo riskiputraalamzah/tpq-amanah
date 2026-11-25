@@ -44,13 +44,38 @@ function getOrCreateVisitorId() {
   return vid
 }
 
+function triggerHaptic(kind) {
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(kind === 'like' ? [12, 24, 16] : 10)
+    }
+  } catch {
+    /* ignore unsupported devices */
+  }
+}
+
 const likedIds = reactive(new Set(loadLikedIds()))
 const countOverrides = reactive({})
 const pendingIds = reactive({})
-const poppedIds = reactive({})
+const burstSeq = reactive({})
+const lastActions = reactive({})
+const animTimers = new Map()
 
 function persistLikedIds() {
   safeStorageSet(LIKED_IDS_KEY, JSON.stringify([...likedIds]))
+}
+
+function playActionAnimation(id, action) {
+  burstSeq[id] = (burstSeq[id] || 0) + 1
+  lastActions[id] = action
+  clearTimeout(animTimers.get(id))
+  const duration = action === 'like' ? 820 : 560
+  animTimers.set(
+    id,
+    setTimeout(() => {
+      if (lastActions[id] === action) lastActions[id] = ''
+    }, duration),
+  )
 }
 
 export function useGalleryLikes() {
@@ -68,8 +93,16 @@ export function useGalleryLikes() {
     return Boolean(moment?.id && pendingIds[moment.id])
   }
 
+  function lastActionOf(moment) {
+    return moment?.id ? lastActions[moment.id] || '' : ''
+  }
+
+  function animKeyOf(moment) {
+    return moment?.id ? burstSeq[moment.id] || 0 : 0
+  }
+
   function isPopped(moment) {
-    return Boolean(moment?.id && poppedIds[moment.id])
+    return lastActionOf(moment) === 'like'
   }
 
   async function toggleLike(moment) {
@@ -81,16 +114,16 @@ export function useGalleryLikes() {
     const nextLiked = !prevLiked
     const nextCount = Math.max(0, prevCount + (nextLiked ? 1 : -1))
 
-    // Optimistic update for snappy tactile feel
+    // Optimistic update + tactile animation choreography
     pendingIds[id] = true
     if (nextLiked) {
       likedIds.add(id)
-      poppedIds[id] = true
-      setTimeout(() => {
-        poppedIds[id] = false
-      }, 360)
+      playActionAnimation(id, 'like')
+      triggerHaptic('like')
     } else {
       likedIds.delete(id)
+      playActionAnimation(id, 'unlike')
+      triggerHaptic('unlike')
     }
     countOverrides[id] = nextCount
     persistLikedIds()
@@ -114,6 +147,7 @@ export function useGalleryLikes() {
       if (prevLiked) likedIds.add(id)
       else likedIds.delete(id)
       countOverrides[id] = prevCount
+      lastActions[id] = ''
       persistLikedIds()
       return {
         ok: false,
@@ -129,6 +163,8 @@ export function useGalleryLikes() {
     likeCountOf,
     isPending,
     isPopped,
+    lastActionOf,
+    animKeyOf,
     toggleLike,
   }
 }
