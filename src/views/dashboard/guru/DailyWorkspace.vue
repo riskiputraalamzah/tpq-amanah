@@ -1174,7 +1174,8 @@ function getSavedSessionsForSlot(slotId) {
 
 function getSavedSessionsNamesForSlot(slotId) {
   const list = getSavedSessionsForSlot(slotId);
-  return list.map(s => s.className || `Jilid ${s.classId || s.levelId}`).join(', ');
+  // 7 (old 8 / 9) is the Marhalah class, never "Jilid 7"
+  return list.map(s => s.className || (['7', '8', '9'].includes(String(s.classId || s.levelId)) ? 'Marhalah' : `Jilid ${s.classId || s.levelId}`)).join(', ');
 }
 
 // The jilid this teacher usually teaches in the selected sesi and has not saved today (from the server).

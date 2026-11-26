@@ -800,7 +800,8 @@ const getLevelName = (session) => {
   const levelId = session.levelId || session.classId;
   const found = classes.value.find((c) => String(c.id) === String(levelId));
   if (found) return found.name;
-  return session.className || `Jilid ${levelId}`;
+  if (session.className) return session.className;
+  return ['7', '8', '9'].includes(String(levelId)) ? 'Marhalah' : `Jilid ${levelId}`;
 };
 
 const workflowOf = (session) => summarizeSessionWorkflow(session);
