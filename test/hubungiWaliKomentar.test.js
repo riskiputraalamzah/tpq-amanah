@@ -80,3 +80,30 @@ test("comments on the moment page: login to write (wali by WA code or staff), li
   const login = squash(read("src/views/LoginView.vue"));
   assert.ok(has(login, 'if (redirect.startsWith("/dokumentasi/")) {'), "a wali returns to the moment after the WhatsApp code");
 });
+
+test("Dokumentasi (admin): manage comments — button with 'baru', count on each card, rude-looking first, delete asks", () => {
+  const v = squash(read("src/views/dashboard/admin/GalleryManagementView.vue"));
+  assert.ok(has(v, "@click=\"openComments()\""), "a Komentar button in the page header");
+  assert.ok(has(v, "{{ newCommentCount }} baru"), "how many arrived since the last look");
+  assert.ok(has(v, "@click=\"openComments(m.id)\""), "a card's comment count opens that moment's comments");
+  assert.ok(has(v, "api.get('/gallery/manage/comments', { cache: false })"));
+  assert.ok(has(v, ".sort((a, b) => Number(b.flagged) - Number(a.flagged))"), "'Perlu dicek' ones on top");
+  assert.ok(has(v, "api.delete(`/gallery/comments/${encodeURIComponent(c.id)}`)"));
+  assert.ok(has(v, "tone: 'danger',"), "our own dialog before deleting");
+  assert.ok(has(v, "${encodeURIComponent(momentById.value.get(id)?.slug || id)}#komentar"), "jump to the comment on the public page");
+});
+
+test("Perbesar: up to 1000%, the +/- buttons multiply (6 taps to 1000%), zoom follows the finger / cursor, sharp at rest", () => {
+  const lb = squash(read("src/components/landing/GalleryLightbox.vue"));
+  assert.ok(has(lb, "const MAX_ZOOM = 10"));
+  assert.ok(has(lb, "setZoom(zoom.value * ZOOM_FACTOR)"));
+  let z = 1;
+  let taps = 0;
+  while (z < 10) { z = Math.min(10, z * 1.5); taps += 1; }
+  assert.equal(taps, 6);
+  assert.ok(has(lb, "setZoom(next, { x: e.clientX, y: e.clientY })"), "mouse wheel / touchpad toward the cursor");
+  assert.ok(has(lb, "{ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 }"), "pinch toward the spot between the fingers");
+  assert.ok(has(lb, "toggleDoubleTapZoom({ x: changed.clientX, y: changed.clientY })"), "double tap on the spot tapped");
+  assert.ok(has(lb, "isInteracting ? 'transition-none will-change-transform'"), "will-change only while moving, so the photo is redrawn sharp");
+  assert.ok(has(lb, ":src=\"galleryPhotoSrc(activePhoto, hiRes ? { width: HIRES_WIDTH } : {})\""), "deep zoom loads the larger Drive photo");
+});

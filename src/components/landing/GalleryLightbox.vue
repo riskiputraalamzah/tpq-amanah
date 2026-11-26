@@ -87,15 +87,16 @@
           <img
             ref="imgRef"
             :key="activePhoto.id || activeIndex"
-            :src="galleryPhotoSrc(activePhoto)"
+            :src="galleryPhotoSrc(activePhoto, hiRes ? { width: HIRES_WIDTH } : {})"
             :alt="`${title || 'Dokumentasi'} - foto ${activeIndex + 1}`"
             decoding="async"
             referrerpolicy="no-referrer"
             draggable="false"
-            class="max-w-full max-h-[min(68dvh,680px)] sm:max-h-[min(74dvh,760px)] rounded-xl shadow-2xl object-contain will-change-transform"
+            class="max-w-full max-h-[min(68dvh,680px)] sm:max-h-[min(74dvh,760px)] rounded-xl shadow-2xl object-contain"
             :class="[
               photoLoading ? 'opacity-40' : 'opacity-100',
-              isInteracting ? 'transition-none' : 'transition-[transform,opacity] duration-200 ease-out',
+              // will-change only while moving: at rest the browser redraws the photo at its zoomed size (sharp at 1000%)
+              isInteracting ? 'transition-none will-change-transform' : 'transition-[transform,opacity] duration-200 ease-out',
             ]"
             :style="imgTransformStyle"
             @load="onImageLoaded"
@@ -245,9 +246,12 @@ import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { galleryPhotoSrc, galleryPhotoThumbSrc } from '@/utils/galleryMedia'
 
 const MIN_ZOOM = 1
-const MAX_ZOOM = 3.5
-const ZOOM_STEP = 0.5
-const DOUBLE_TAP_ZOOM = 2.2
+const MAX_ZOOM = 10 // 1000%: very close looks at faces and names on banners
+const ZOOM_FACTOR = 1.5 // the +/- buttons: 100 → 150 → 225 → 338 → 506 → 759 → 1000%
+const DOUBLE_TAP_ZOOM = 2.5
+// from this zoom a Google Drive photo is loaded again at a larger size, so deep zoom stays sharp
+const HIRES_FROM = 2.5
+const HIRES_WIDTH = 3200
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -267,6 +271,7 @@ const panX = ref(0)
 const panY = ref(0)
 const isInteracting = ref(false)
 const isDragging = ref(false)
+const hiRes = ref(false) // this photo zoomed deep: the larger Google Drive size is shown
 
 const closeBtnRef = ref(null)
 const stageRef = ref(null)
@@ -301,22 +306,42 @@ function clampPan(nx, ny, scale = zoom.value) {
   }
 }
 
-function setZoom(nextScale) {
-  const s = clamp(Number(nextScale.toFixed(2)), MIN_ZOOM, MAX_ZOOM)
+// where the photo's middle sits on screen when not moved (it is centred in its box)
+function restingCenter() {
+  const box = imgRef.value?.parentElement?.getBoundingClientRect()
+  return box ? { x: box.left + box.width / 2, y: box.top + box.height / 2 } : null
+}
+
+// focal: a screen point ({ x, y }) that stays under the finger / cursor while zooming; none = the middle
+function setZoom(nextScale, focal = null) {
+  const prev = zoom.value
+  const s = clamp(Number(nextScale.toFixed(3)), MIN_ZOOM, MAX_ZOOM)
+  let nx = panX.value
+  let ny = panY.value
+  const c = focal ? restingCenter() : null
+  if (c && prev > 0) {
+    const fx = focal.x - c.x
+    const fy = focal.y - c.y
+    nx = fx - (fx - panX.value) * (s / prev)
+    ny = fy - (fy - panY.value) * (s / prev)
+  }
   zoom.value = s
-  const clamped = clampPan(panX.value, panY.value, s)
+  if (s >= HIRES_FROM) hiRes.value = true
+  const clamped = clampPan(nx, ny, s)
   panX.value = clamped.x
   panY.value = clamped.y
 }
 
 function zoomIn() {
   isInteracting.value = false
-  setZoom(zoom.value + ZOOM_STEP)
+  setZoom(zoom.value * ZOOM_FACTOR)
 }
 
 function zoomOut() {
   isInteracting.value = false
-  setZoom(zoom.value - ZOOM_STEP)
+  const next = zoom.value / ZOOM_FACTOR
+  if (next < 1.05) resetZoom()
+  else setZoom(next)
 }
 
 function resetZoom() {
@@ -326,10 +351,11 @@ function resetZoom() {
   panY.value = 0
 }
 
-function toggleDoubleTapZoom() {
+// double tap / double click: zoom in on that spot, or back to 100% when already zoomed
+function toggleDoubleTapZoom(point = null) {
   isInteracting.value = false
   if (zoom.value > 1.05) resetZoom()
-  else setZoom(DOUBLE_TAP_ZOOM)
+  else setZoom(DOUBLE_TAP_ZOOM, point)
 }
 
 function preloadNextPhoto() {
@@ -416,10 +442,13 @@ let dragOriginX = 0
 let dragOriginY = 0
 let didDrag = false
 
+// a mouse notch is about ×1.2; a laptop touchpad pinch (small deltas) zooms smoothly; always toward the cursor
 function onWheel(e) {
   isInteracting.value = false
-  const delta = e.deltaY < 0 ? 0.3 : -0.3
-  setZoom(zoom.value + delta)
+  const delta = clamp(Number(e.deltaY) || 0, -300, 300)
+  const next = zoom.value * Math.exp(-delta * 0.0018)
+  if (next < 1.02) resetZoom()
+  else setZoom(next, { x: e.clientX, y: e.clientY })
 }
 
 function onMouseDown(e) {
@@ -506,8 +535,10 @@ function onTouchStart(e) {
 function onTouchMove(e) {
   if (touchMode === 'pinch' && e.touches.length === 2) {
     e.preventDefault()
-    const dist = touchDistance(e.touches[0], e.touches[1])
-    setZoom(pinchStartZoom * (dist / pinchStartDist))
+    const [a, b] = [e.touches[0], e.touches[1]]
+    const dist = touchDistance(a, b)
+    // zoom toward the spot between the two fingers
+    setZoom(pinchStartZoom * (dist / pinchStartDist), { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 })
     return
   }
 
@@ -553,13 +584,13 @@ function onTouchEnd(e) {
     }
   }
 
-  // Double-tap on photo toggles zoom 1x <-> 2.2x
+  // Double-tap on photo toggles zoom 1x <-> 2.5x, on the spot tapped
   if (!touchMoved && changed && e.touches.length === 0) {
     const now = Date.now()
     const nearPrev = Math.hypot(changed.clientX - lastTapX, changed.clientY - lastTapY) < 30
     if (now - lastTapAt < 300 && nearPrev) {
       lastTapAt = 0
-      toggleDoubleTapZoom()
+      toggleDoubleTapZoom({ x: changed.clientX, y: changed.clientY })
     } else {
       lastTapAt = now
       lastTapX = changed.clientX
@@ -571,6 +602,11 @@ function onTouchEnd(e) {
   isInteracting.value = false
 }
 
+// another photo: back to the normal size until it is zoomed deep
+watch(activeIndex, () => {
+  hiRes.value = false
+})
+
 watch(
   () => props.open,
   async (isOpen) => {
@@ -579,6 +615,7 @@ watch(
       const safeIdx = clamp(props.initialIndex || 0, 0, Math.max(0, props.photos.length - 1))
       activeIndex.value = safeIdx
       resetZoom()
+      hiRes.value = false
       photoLoading.value = !!props.photos.length
       lockScroll()
       document.addEventListener('keydown', onKeydown)

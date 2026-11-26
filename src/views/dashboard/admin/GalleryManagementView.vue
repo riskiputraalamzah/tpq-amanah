@@ -12,6 +12,12 @@
         <button type="button" class="gm-btn is-secondary" @click="openCatModal">
           Kelola Kategori
         </button>
+        <!-- comments from visitors: review and remove what is not fitting -->
+        <button type="button" class="gm-btn is-secondary gm-btn-comments" @click="openComments()">
+          💬 Komentar
+          <span v-if="newCommentCount" class="gm-new-badge">{{ newCommentCount }} baru</span>
+          <span v-else-if="commentTotal" class="gm-chip-n">{{ commentTotal }}</span>
+        </button>
         <button type="button" class="gm-btn is-primary" @click="openCreate">
           + Tambah Momen
         </button>
@@ -139,6 +145,15 @@
             <span>{{ formatMomentDate(m.momentDate) }}</span>
             <span v-if="m.createdByName">· {{ m.createdByName }}</span>
             <span v-if="m.likesCount > 0" class="gm-likes-meta">· ♥ {{ m.likesCount }}</span>
+            <button
+              v-if="commentCounts[m.id]"
+              type="button"
+              class="gm-comments-meta"
+              :aria-label="`${commentCounts[m.id]} komentar, buka untuk dikelola`"
+              @click="openComments(m.id)"
+            >
+              · 💬 {{ commentCounts[m.id] }}
+            </button>
           </div>
           <h2 class="gm-card-title">{{ m.title }}</h2>
           <p v-if="m.caption" class="gm-card-caption">{{ m.caption }}</p>
@@ -571,6 +586,70 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Comment moderation: every visitor comment, rude-looking ones first -->
+    <Teleport to="body">
+      <div v-if="commentsOpen" class="gm-overlay" role="dialog" aria-modal="true" aria-label="Kelola komentar" @click.self="commentsOpen = false">
+        <div class="gm-sheet">
+          <div class="gm-sheet-head">
+            <div>
+              <h2>Kelola Komentar</h2>
+              <p>Komentar pengunjung di halaman dokumentasi. Hapus yang tidak pantas. Penghapusan tidak bisa dibatalkan.</p>
+            </div>
+            <button type="button" class="gm-close" aria-label="Tutup" @click="commentsOpen = false">×</button>
+          </div>
+
+          <div class="gm-sheet-body">
+            <div class="gm-cm-filters">
+              <select v-model="commentMoment" class="gm-input" aria-label="Pilih momen">
+                <option value="all">Semua momen ({{ commentTotal }})</option>
+                <option v-for="m in momentsWithComments" :key="m.id" :value="m.id">
+                  {{ m.title }} ({{ commentCounts[m.id] }})
+                </option>
+              </select>
+              <input v-model="commentSearch" type="search" class="gm-input" placeholder="Cari isi komentar atau nama…" aria-label="Cari komentar" />
+              <button
+                v-if="flaggedCount"
+                type="button"
+                class="gm-chip gm-cm-flag-toggle"
+                :class="{ 'is-active': onlyFlagged }"
+                :aria-pressed="onlyFlagged"
+                @click="onlyFlagged = !onlyFlagged"
+              >
+                ⚠ Perlu dicek <span class="gm-chip-n">{{ flaggedCount }}</span>
+              </button>
+            </div>
+
+            <p v-if="commentsLoading && !commentList.length" class="gm-cm-empty">Memuat komentar…</p>
+            <div v-else-if="commentsError" class="gm-cm-empty" role="alert">
+              <p>{{ commentsError }}</p>
+              <button type="button" class="gm-btn is-secondary" @click="loadComments">Coba lagi</button>
+            </div>
+            <p v-else-if="!commentList.length" class="gm-cm-empty">Belum ada komentar di dokumentasi mana pun.</p>
+            <p v-else-if="!shownComments.length" class="gm-cm-empty">Tidak ada komentar yang cocok dengan pilihan ini.</p>
+
+            <ul v-else class="gm-cm-list">
+              <li v-for="c in shownComments" :key="c.id" class="gm-cm" :class="{ 'is-flagged': c.flagged }">
+                <div class="gm-cm-top">
+                  <strong>{{ c.authorName }}</strong>
+                  <span class="gm-cm-role" :class="`is-${c.authorRole}`">{{ c.roleLabel }}</span>
+                  <time :datetime="c.createdAt">{{ commentTimeAgo(c.createdAt) }}</time>
+                  <span v-if="isNewComment(c)" class="gm-cm-new">Baru</span>
+                  <span v-if="c.flagged" class="gm-cm-flag">⚠ Perlu dicek</span>
+                </div>
+                <p class="gm-cm-text">{{ c.text }}</p>
+                <div class="gm-cm-foot">
+                  <a :href="momentHref(c.momentId)" target="_blank" rel="noopener" class="gm-cm-moment">{{ momentTitle(c.momentId) }} ↗</a>
+                  <button type="button" class="gm-act is-danger" :disabled="deletingCommentId === c.id" @click="deleteComment(c)">
+                    {{ deletingCommentId === c.id ? 'Menghapus…' : 'Hapus' }}
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -580,6 +659,7 @@ import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
+import { commentTimeAgo } from '@/utils/galleryComments'
 import {
   MAX_UPLOADED_PHOTOS,
   galleryPhotoSrc,
@@ -637,6 +717,7 @@ async function loadData() {
     moments.value = Array.isArray(data?.moments) ? data.moments : []
     categories.value = Array.isArray(data?.categories) ? data.categories : []
     brokenCovers.value = {}
+    loadComments() // the counts on the cards and the "baru" badge; never blocks the page
   } catch (err) {
     if (err.response?.status === 403) {
       loadError.value = 'Akses Kelola Dokumentasi belum aktif pada akun ini. Minta admin mencentang "Kelola dokumentasi" di menu Akun Pengguna, lalu ketuk Coba lagi.'
@@ -649,6 +730,89 @@ async function loadData() {
 }
 
 onMounted(loadData)
+
+/* ---------- Comment moderation ---------- */
+const COMMENTS_SEEN_KEY = 'tpq.gm.commentsSeenAt'
+const commentList = ref([]) // newest first
+const commentCounts = ref({})
+const commentTotal = ref(0)
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const commentsOpen = ref(false)
+const commentMoment = ref('all')
+const commentSearch = ref('')
+const onlyFlagged = ref(false)
+const deletingCommentId = ref('')
+// "baru": written after this person last opened the list (remembered on this device)
+const commentsSeenAt = ref(Number(localStorage.getItem(COMMENTS_SEEN_KEY) || 0))
+const seenBeforeOpen = ref(commentsSeenAt.value)
+
+const newCommentCount = computed(() => commentList.value.filter((c) => Date.parse(c.createdAt) > commentsSeenAt.value).length)
+const isNewComment = (c) => Date.parse(c.createdAt) > seenBeforeOpen.value
+const flaggedCount = computed(() => commentList.value.filter((c) => c.flagged).length)
+const momentById = computed(() => new Map(moments.value.map((m) => [m.id, m])))
+const momentTitle = (id) => momentById.value.get(id)?.title || 'Momen sudah dihapus'
+const momentHref = (id) => `/dokumentasi/${encodeURIComponent(momentById.value.get(id)?.slug || id)}#komentar`
+const momentsWithComments = computed(() => moments.value.filter((m) => commentCounts.value[m.id]))
+
+// rude-looking first, then newest (the sort keeps the server's newest-first order inside each group)
+const shownComments = computed(() => {
+  const q = commentSearch.value.trim().toLowerCase()
+  return commentList.value
+    .filter((c) => commentMoment.value === 'all' || c.momentId === commentMoment.value)
+    .filter((c) => !onlyFlagged.value || c.flagged)
+    .filter((c) => !q || c.text.toLowerCase().includes(q) || String(c.authorName || '').toLowerCase().includes(q))
+    .sort((a, b) => Number(b.flagged) - Number(a.flagged))
+})
+
+async function loadComments() {
+  commentsLoading.value = true
+  commentsError.value = ''
+  try {
+    const { data } = await api.get('/gallery/manage/comments', { cache: false })
+    commentList.value = Array.isArray(data?.comments) ? data.comments : []
+    commentCounts.value = data?.counts || {}
+    commentTotal.value = Number(data?.total || 0)
+  } catch (err) {
+    commentsError.value = err.response?.data?.error || 'Komentar belum bisa dimuat.'
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+function openComments(momentId = 'all') {
+  commentMoment.value = momentId
+  commentSearch.value = ''
+  onlyFlagged.value = false
+  seenBeforeOpen.value = commentsSeenAt.value
+  commentsSeenAt.value = Date.now()
+  localStorage.setItem(COMMENTS_SEEN_KEY, String(commentsSeenAt.value))
+  commentsOpen.value = true
+  loadComments()
+}
+
+async function deleteComment(c) {
+  const preview = c.text.length > 120 ? `${c.text.slice(0, 120)}…` : c.text
+  const ok = await ask({
+    title: 'Hapus komentar ini?',
+    message: `Dari ${c.authorName}: "${preview}"\n\nKomentar hilang dari halaman dokumentasi dan tidak bisa dikembalikan.`,
+    tone: 'danger',
+    confirmText: 'Hapus',
+  })
+  if (!ok) return
+  deletingCommentId.value = c.id
+  try {
+    await api.delete(`/gallery/comments/${encodeURIComponent(c.id)}`)
+    commentList.value = commentList.value.filter((x) => x.id !== c.id)
+    commentCounts.value = { ...commentCounts.value, [c.momentId]: Math.max(0, (commentCounts.value[c.momentId] || 1) - 1) }
+    commentTotal.value = Math.max(0, commentTotal.value - 1)
+    success('Komentar dihapus')
+  } catch (err) {
+    showError(err.response?.data?.error || 'Komentar belum terhapus.')
+  } finally {
+    deletingCommentId.value = ''
+  }
+}
 
 /* ===== Create / Edit Form ===== */
 const todayWib = () => new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
@@ -2347,5 +2511,144 @@ async function removeCategory(c) {
 .gm-overlay .gm-act.is-danger {
   color: #b42318;
   border-color: rgba(180, 35, 24, 0.25);
+}
+
+/* ---------- Comment moderation (header button, card count, sheet) ---------- */
+.gm-btn-comments {
+  gap: 8px;
+}
+.gm-new-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+@media (max-width: 640px) {
+  .gm-head-actions .gm-btn.gm-btn-comments {
+    flex: 1 1 100%;
+  }
+}
+.gm-comments-meta {
+  padding: 0 2px;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: #0a5c40;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.gm-overlay .gm-cm-filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+@media (min-width: 640px) {
+  .gm-overlay .gm-cm-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+.gm-overlay .gm-cm-flag-toggle {
+  justify-self: start;
+  min-height: 42px;
+}
+.gm-overlay .gm-cm-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: #5b6b62;
+}
+.gm-overlay .gm-cm-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gm-overlay .gm-cm {
+  padding: 12px 14px;
+  border: 1px solid rgba(11, 59, 42, 0.1);
+  border-radius: 14px;
+  background: #fff;
+}
+.gm-overlay .gm-cm.is-flagged {
+  border-color: rgba(180, 35, 24, 0.35);
+  background: #fff7f5;
+}
+.gm-overlay .gm-cm-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 0.85rem;
+  color: #5b6b62;
+}
+.gm-overlay .gm-cm-top strong {
+  color: #0b3b2a;
+  font-size: 0.92rem;
+}
+.gm-overlay .gm-cm-role {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fdf2e5;
+  color: #8a4210;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.gm-overlay .gm-cm-role.is-guru,
+.gm-overlay .gm-cm-role.is-admin {
+  background: #e7f1ec;
+  color: #053d2c;
+}
+.gm-overlay .gm-cm-new {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.gm-overlay .gm-cm-flag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fee4e2;
+  color: #b42318;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.gm-overlay .gm-cm-text {
+  margin: 6px 0 10px;
+  color: #1f2a24;
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.gm-overlay .gm-cm-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gm-overlay .gm-cm-moment {
+  min-width: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0a5c40;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.gm-overlay .gm-cm-moment:hover {
+  text-decoration: underline;
+}
+.gm-overlay .gm-cm-foot .gm-act {
+  min-height: 40px;
+  padding: 0 18px;
 }
 </style>
