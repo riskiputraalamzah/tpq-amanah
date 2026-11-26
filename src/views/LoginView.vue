@@ -412,6 +412,11 @@ const verifyWaliCode = async () => {
   if (result.success) {
     stopTimers();
     const redirect = getSafeRedirect();
+    // back to the gallery moment the wali came from to comment on (the comment box is then open)
+    if (redirect.startsWith("/dokumentasi/")) {
+      router.push(redirect);
+      return;
+    }
     // a code that can no longer link: go to the wali home, where an already linked child is shown
     router.push(redirect.startsWith("/wali") && !(linkingMode && codeProblem.value) ? redirect : "/wali");
   } else {

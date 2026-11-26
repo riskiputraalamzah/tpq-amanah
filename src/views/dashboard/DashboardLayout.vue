@@ -260,6 +260,7 @@ const ICON = {
   coin: '<circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /><path d="M8 14h8" />',
   bell: '<path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0" />',
   mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" />',
   chat: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />',
   clock: '<circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />',
   building: '<path d="M3 21h18" /><path d="M5 21V7l8-4 6 3v15" /><path d="M9 10h2" /><path d="M9 14h2" /><path d="M9 18h2" />',
@@ -275,6 +276,7 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/santri', label: 'Kelola Santri', icon: ICON.santri },
       { to: '/dashboard/pendaftaran', label: 'Pendaftaran', icon: ICON.daftar, badge: 'pendaftaran' },
       { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
+      { to: '/dashboard/hubungi-wali', label: 'Hubungi Wali', icon: ICON.phone },
       { to: '/dashboard/masukan-wali', label: 'Saran & Kritik Wali', icon: ICON.chat, badge: 'masukan' },
       { to: '/dashboard/kegiatan', label: 'Kegiatan', icon: ICON.star },
     ],
@@ -341,6 +343,7 @@ const menuGroups = computed(() => {
       items: [
         { to: '/dashboard/santri', label: 'Data Santri', icon: ICON.santri },
         { to: '/dashboard/wali-santri', label: 'Data Wali Santri', icon: ICON.wali, badge: 'wali' },
+        { to: '/dashboard/hubungi-wali', label: 'Hubungi Wali', icon: ICON.phone },
         { to: '/dashboard/savings', label: 'Tabungan', icon: ICON.coin },
       ],
     },

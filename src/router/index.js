@@ -104,6 +104,13 @@ const routes = [
         meta: { role: ["admin", "guru"] },
       },
       {
+        // WhatsApp the parents of a santri from the teacher's own phone (scope: the server's, like Data Wali Santri)
+        path: "hubungi-wali",
+        name: "HubungiWali",
+        component: () => import("../views/dashboard/HubungiWaliView.vue"),
+        meta: { role: ["admin", "guru"] },
+      },
+      {
         path: "santri",
         name: "SantriManagement",
         component: () =>

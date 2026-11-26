@@ -429,6 +429,9 @@
             </div>
           </section>
 
+          <!-- Comments: everyone reads; a logged-in wali / teacher / admin writes -->
+          <GalleryComments :slug="moment.slug || moment.id" />
+
           <!-- Section 3: Related Moments ("Dokumentasi Lainnya") -->
           <section v-if="related.length" aria-labelledby="related-moments-heading" class="pt-4 border-t border-amber-700/15">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -551,6 +554,7 @@ import FooterComponent from '@/components/FooterComponent.vue'
 import OrnamentRule from '@/components/landing/OrnamentRule.vue'
 import GalleryLightbox from '@/components/landing/GalleryLightbox.vue'
 import GalleryLikeButton from '@/components/landing/GalleryLikeButton.vue'
+import GalleryComments from '@/components/landing/GalleryComments.vue'
 import { useLenisScroll } from '@/composables/useLenisScroll'
 import { applyPageSeo, buildCanonicalUrl, SITE_URL } from '@/utils/seoMeta'
 import {
