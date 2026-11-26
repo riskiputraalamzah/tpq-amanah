@@ -7,12 +7,13 @@
 // Cost-aware: each poll asks only for what arrived since the last one (GET /wa-log/live, X-Wa-Since), the queue every
 // third poll (or right after something was sent), every 5 s while something is happening and every 15 s when calm,
 // and nothing while the tab is hidden. The bot reports what it sent every 5 s, so a message shows within ~10 s.
+// A page left open that nobody uses slows down (window not focused 60 s, no tap/key for 10 min 2 min: utils/livePace)
+// and catches up at the next tap or key.
 import { reactive, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
+import { FAST_MS, SLOW_MS, IDLE_AFTER_MS, nextPollDelay } from '@/utils/livePace'
 
-export const FAST_MS = 5000
-export const SLOW_MS = 15000
-const CALM_AFTER_MS = 2 * 60 * 1000
+export { FAST_MS, SLOW_MS }
 const OVERLAP_MS = 10000 // a batch still being written when we looked is caught next time (duplicates are dropped)
 const FEED_MAX = 300
 
@@ -39,6 +40,8 @@ let busy = false
 let polls = 0
 let queueDirty = true
 let lastChange = 0
+let lastActivity = Date.now()
+let lastPollAt = 0
 let botKey = ''
 const seen = new Set()
 
@@ -53,6 +56,7 @@ async function poll() {
   if (busy) return
   busy = true
   clearTimeout(timer)
+  lastPollAt = Date.now()
   let changed = false
   try {
     // a new day: start over from today's list
@@ -110,23 +114,36 @@ async function poll() {
 function schedule() {
   clearTimeout(timer)
   if (!users || document.visibilityState !== 'visible') return
-  timer = setTimeout(poll, Date.now() - lastChange < CALM_AFTER_MS ? FAST_MS : SLOW_MS)
+  const focused = typeof document.hasFocus === 'function' ? document.hasFocus() : true
+  timer = setTimeout(poll, nextPollDelay({ now: Date.now(), lastChange, lastActivity, focused }))
 }
 
 const onVisible = () => {
   if (document.visibilityState === 'visible' && users) poll()
 }
 
+// someone is using the page again: back to the normal pace, and fresh data now if the last look is old
+const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'focus']
+const onActivity = () => {
+  const wasIdle = Date.now() - lastActivity > IDLE_AFTER_MS
+  lastActivity = Date.now()
+  if (!users || busy) return
+  if (wasIdle || Date.now() - lastPollAt > SLOW_MS) poll()
+}
+
 function start() {
   clearTimeout(stopTimer)
   lastChange = Date.now() // just opened: look often
+  lastActivity = Date.now()
   document.addEventListener('visibilitychange', onVisible)
+  ACTIVITY_EVENTS.forEach((name) => window.addEventListener(name, onActivity, { passive: true }))
   poll()
 }
 
 function stop() {
   clearTimeout(timer)
   document.removeEventListener('visibilitychange', onVisible)
+  ACTIVITY_EVENTS.forEach((name) => window.removeEventListener(name, onActivity))
   since = null // next time: start over (we did not watch meanwhile)
   queueDirty = true
 }

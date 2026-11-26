@@ -64,7 +64,9 @@ test("live without reloading: one shared poller, only what is new, paused when h
   assert.ok(has(live, "api.get('/wa-log/live', { headers, cache: false })"));
   assert.ok(has(live, "const headers = { 'X-Wa-Since': since || '', 'X-Wa-Queue': wantQueue ? '1' : '0' }"), "only what arrived since the last look; same URL and headers every time (one CORS preflight)");
   assert.ok(has(live, "if (!users || document.visibilityState !== 'visible') return"), "nothing while the tab is hidden or no page uses it");
-  assert.ok(has(live, "Date.now() - lastChange < CALM_AFTER_MS ? FAST_MS : SLOW_MS"));
+  assert.ok(has(live, "nextPollDelay({ now: Date.now(), lastChange, lastActivity, focused })"), "pace from utils/livePace");
+  assert.ok(has(live, "ACTIVITY_EVENTS.forEach((name) => window.addEventListener(name, onActivity, { passive: true }))"), "a tap or key wakes a slowed page");
+  assert.ok(has(live, "ACTIVITY_EVENTS.forEach((name) => window.removeEventListener(name, onActivity))"), "and the listeners leave with the page");
   assert.ok(has(live, "polls % 3 === 0"), "the queue every third poll");
   assert.ok(has(live, "filter((r) => !seen.has(r.id))"), "the overlap never doubles a message");
   const log = squash(read("src/views/dashboard/admin/WaLogView.vue"));
@@ -78,4 +80,17 @@ test("old names in hints point to the new place", () => {
     assert.ok(!read(f).includes("menu Notifikasi WA"), f);
   }
   assert.ok(read("src/views/dashboard/admin/AdminDashboard.vue").includes('<router-link to="/dashboard/whatsapp" class="ad-mini is-link">'));
+});
+
+test("a live page nobody uses slows down: busy 5 s, calm 15 s, unfocused 60 s, idle 10 min -> 2 min", async () => {
+  const { nextPollDelay, FAST_MS, SLOW_MS, UNFOCUSED_MS, IDLE_MS } = await import("../src/utils/livePace.js");
+  const now = 1_000_000_000;
+  const min = 60 * 1000;
+  assert.equal(nextPollDelay({ now, lastChange: now - 30_000, lastActivity: now, focused: true }), FAST_MS);
+  assert.equal(nextPollDelay({ now, lastChange: now - 5 * min, lastActivity: now, focused: true }), SLOW_MS);
+  assert.equal(nextPollDelay({ now, lastChange: now - 30_000, lastActivity: now, focused: false }), UNFOCUSED_MS, "on another screen");
+  assert.equal(nextPollDelay({ now, lastChange: now - 30_000, lastActivity: now - 11 * min, focused: true }), IDLE_MS, "left open");
+  // a whole day left open and untouched: 720 calls instead of 5,760
+  assert.equal((24 * 60 * min) / IDLE_MS, 720);
+  assert.equal((24 * 60 * min) / SLOW_MS, 5760);
 });
