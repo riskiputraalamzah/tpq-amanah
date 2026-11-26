@@ -59,25 +59,84 @@
     </p>
     <template v-else>
       <ul class="grid gap-3" aria-live="polite">
-        <li v-for="c in shown" :key="c.id" class="flex gap-3 p-4 lp-card">
-          <span class="gc-avatar" :class="`is-${c.authorRole}`" aria-hidden="true">{{ initialOf(c.authorName) }}</span>
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <strong class="text-sm lp-ink">{{ c.authorName }}</strong>
-              <span v-if="c.roleLabel" class="gc-role" :class="`is-${c.authorRole}`">{{ c.roleLabel }}</span>
-              <time class="text-xs text-slate-500" :datetime="c.createdAt" :title="fullTime(c.createdAt)">{{ timeAgo(c.createdAt) }}</time>
+        <li v-for="t in shown" :key="t.id" class="p-4 lp-card">
+          <div class="flex gap-3">
+            <span class="gc-avatar" :class="`is-${t.authorRole}`" aria-hidden="true">{{ initialOf(t.authorName) }}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <strong class="text-sm lp-ink">{{ t.authorName }}</strong>
+                <span v-if="t.roleLabel && t.roleLabel !== t.authorName" class="gc-role" :class="`is-${t.authorRole}`">{{ t.roleLabel }}</span>
+                <time class="text-xs text-slate-500" :datetime="t.createdAt" :title="fullTime(t.createdAt)">{{ timeAgo(t.createdAt) }}</time>
+              </div>
+              <p class="mt-1 text-[0.95rem] leading-relaxed text-slate-800 whitespace-pre-line break-words">{{ t.text }}</p>
+              <div class="flex flex-wrap gap-x-4">
+                <button v-if="canReply" type="button" class="gc-act" @click="startReply(t, t)">Balas</button>
+                <button
+                  v-if="t.canDelete"
+                  type="button"
+                  class="gc-act is-danger"
+                  :disabled="deleting === t.id"
+                  @click="remove(t)"
+                >
+                  {{ deleting === t.id ? 'Menghapus…' : t.mine ? 'Hapus komentar saya' : 'Hapus' }}
+                </button>
+              </div>
             </div>
-            <p class="mt-1 text-[0.95rem] leading-relaxed text-slate-800 whitespace-pre-line break-words">{{ c.text }}</p>
-            <button
-              v-if="c.canDelete"
-              type="button"
-              class="mt-1 text-xs font-bold text-red-700 min-h-[32px] hover:underline underline-offset-4"
-              :disabled="deleting === c.id"
-              @click="remove(c)"
-            >
-              {{ deleting === c.id ? 'Menghapus…' : c.mine ? 'Hapus komentar saya' : 'Hapus' }}
-            </button>
           </div>
+
+          <!-- answers from the TPQ (admin / pengajar), oldest first -->
+          <ul v-if="t.replies.length" class="gc-replies">
+            <li v-for="r in t.replies" :key="r.id" class="flex gap-3">
+              <span class="gc-avatar is-sm" :class="`is-${r.authorRole}`" aria-hidden="true">{{ initialOf(r.authorName) }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <strong class="text-sm lp-ink">{{ r.authorName }}</strong>
+                  <span v-if="r.roleLabel && r.roleLabel !== r.authorName" class="gc-role" :class="`is-${r.authorRole}`">{{ r.roleLabel }}</span>
+                  <time class="text-xs text-slate-500" :datetime="r.createdAt" :title="fullTime(r.createdAt)">{{ timeAgo(r.createdAt) }}</time>
+                </div>
+                <p v-if="r.replyToName && r.replyToName !== t.authorName" class="text-xs text-slate-500">↳ membalas {{ r.replyToName }}</p>
+                <p class="mt-1 text-[0.95rem] leading-relaxed text-slate-800 whitespace-pre-line break-words">{{ r.text }}</p>
+                <div class="flex flex-wrap gap-x-4">
+                  <button v-if="canReply" type="button" class="gc-act" @click="startReply(t, r)">Balas</button>
+                  <button
+                    v-if="r.canDelete"
+                    type="button"
+                    class="gc-act is-danger"
+                    :disabled="deleting === r.id"
+                    @click="remove(r)"
+                  >
+                    {{ deleting === r.id ? 'Menghapus…' : r.mine ? 'Hapus balasan saya' : 'Hapus' }}
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <form v-if="replyFor?.threadId === t.id" class="gc-reply" @submit.prevent="sendReply">
+            <label :for="`gc-r-${t.id}`" class="block mb-2 text-sm text-slate-700">
+              Membalas <strong class="lp-ink">{{ replyFor.name }}</strong>
+            </label>
+            <textarea
+              :id="`gc-r-${t.id}`"
+              ref="replyRef"
+              v-model="replyText"
+              rows="2"
+              :maxlength="MAX"
+              placeholder="Tulis balasan…"
+              class="gc-input"
+              :disabled="replySending"
+              @keydown.ctrl.enter.prevent="sendReply"
+              @keydown.meta.enter.prevent="sendReply"
+              @keydown.esc.prevent="cancelReply"
+            ></textarea>
+            <div class="flex flex-wrap items-center justify-end gap-2 mt-2">
+              <button type="button" class="gc-act" :disabled="replySending" @click="cancelReply">Batal</button>
+              <button type="submit" class="gc-send" :disabled="replySending || !replyText.trim()">
+                {{ replySending ? 'Mengirim…' : 'Kirim balasan' }}
+              </button>
+            </div>
+            <p v-if="replyError" class="mt-2 text-sm font-semibold text-red-700" role="alert">{{ replyError }}</p>
+          </form>
         </li>
       </ul>
       <button
@@ -89,6 +148,12 @@
         Lihat {{ hiddenCount }} komentar sebelumnya
       </button>
     </template>
+
+    <!-- likes record who / rough place / device for the admin (anti-spam); said once, plainly -->
+    <p class="mt-5 text-xs leading-relaxed text-slate-500">
+      Saat menyukai momen, kami mencatat perkiraan lokasi dan jenis perangkat untuk mencegah spam. Data ini hanya
+      dilihat admin TPQ dan alamat IP terhapus otomatis setelah 90 hari.
+    </p>
   </section>
 </template>
 
@@ -113,8 +178,14 @@ const authStore = useAuthStore()
 const { ask } = useDialog()
 const toast = useToast()
 
-const comments = ref([]) // newest first
+const comments = ref([]) // as the server sends them: oldest first, comments and replies together
 const total = ref(0)
+const canReply = ref(false) // the admin, or a guru with the Dokumentasi access
+const replyFor = ref(null) // { threadId, targetId, name }
+const replyText = ref('')
+const replyError = ref('')
+const replySending = ref(false)
+const replyRef = ref(null)
 const loading = ref(true)
 const loadError = ref('')
 const text = ref('')
@@ -139,8 +210,21 @@ const myName = computed(() => {
   return u.displayName || u.name || roleLabel(u.role)
 })
 
-const shown = computed(() => (showAll.value ? comments.value : comments.value.slice(0, FIRST_SHOWN)))
-const hiddenCount = computed(() => comments.value.length - shown.value.length)
+// newest comment first; its replies (answers from the TPQ) under it, oldest first
+const threads = computed(() => {
+  const replies = new Map()
+  for (const c of comments.value) {
+    if (!c.parentId) continue
+    if (!replies.has(c.parentId)) replies.set(c.parentId, [])
+    replies.get(c.parentId).push(c)
+  }
+  return comments.value
+    .filter((c) => !c.parentId)
+    .reverse()
+    .map((c) => ({ ...c, replies: replies.get(c.id) || [] }))
+})
+const shown = computed(() => (showAll.value ? threads.value : threads.value.slice(0, FIRST_SHOWN)))
+const hiddenCount = computed(() => threads.value.length - shown.value.length)
 
 const momentPath = computed(() => `/dokumentasi/${encodeURIComponent(props.slug)}`)
 function loginLink(kind) {
@@ -153,8 +237,9 @@ async function load() {
   loadError.value = ''
   try {
     const { data } = await api.get(`/gallery/public/${encodeURIComponent(props.slug)}/comments`, { cache: false })
-    comments.value = [...(data.comments || [])].reverse()
+    comments.value = Array.isArray(data.comments) ? data.comments : []
     total.value = Number(data.total || comments.value.length)
+    canReply.value = Boolean(data.canReply)
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Komentar belum bisa dimuat.'
   } finally {
@@ -197,7 +282,7 @@ async function send() {
       if (!(await askWaliName())) return
       result = await api.post(`/gallery/public/${encodeURIComponent(props.slug)}/comments`, { text: body })
     }
-    comments.value = [result.data.comment, ...comments.value]
+    comments.value = [...comments.value, result.data.comment]
     total.value += 1
     text.value = ''
     await nextTick()
@@ -215,7 +300,9 @@ async function send() {
 async function remove(c) {
   const ok = await ask({
     title: 'Hapus komentar?',
-    message: c.mine ? 'Komentar Anda akan hilang dari halaman ini.' : `Komentar dari ${c.authorName} akan hilang dari halaman ini.`,
+    message:
+      (c.mine ? 'Komentar Anda akan hilang dari halaman ini.' : `Komentar dari ${c.authorName} akan hilang dari halaman ini.`) +
+      (c.replies?.length ? ` ${c.replies.length} balasan di bawahnya ikut terhapus.` : ''),
     tone: 'danger',
     confirmText: 'Hapus',
   })
@@ -223,13 +310,60 @@ async function remove(c) {
   deleting.value = c.id
   try {
     await api.delete(`/gallery/comments/${encodeURIComponent(c.id)}`)
-    comments.value = comments.value.filter((x) => x.id !== c.id)
-    total.value = Math.max(0, total.value - 1)
-    toast.success('Komentar dihapus')
+    // a comment takes its replies along
+    const before = comments.value.length
+    comments.value = comments.value.filter((x) => x.id !== c.id && x.parentId !== c.id)
+    total.value = Math.max(0, total.value - (before - comments.value.length))
+    if (replyFor.value && !comments.value.some((x) => x.id === replyFor.value.targetId)) cancelReply()
+    toast.success(c.parentId ? 'Balasan dihapus' : 'Komentar dihapus')
   } catch (err) {
     toast.error(err.response?.data?.error || 'Komentar belum terhapus.')
   } finally {
     deleting.value = ''
+  }
+}
+
+// the TPQ answers a comment (admin / guru with the Dokumentasi access; the server checks it again)
+async function startReply(thread, target) {
+  replyFor.value = { threadId: thread.id, targetId: target.id, name: target.authorName }
+  replyError.value = ''
+  await nextTick()
+  const el = Array.isArray(replyRef.value) ? replyRef.value[0] : replyRef.value
+  el?.focus()
+}
+
+function cancelReply() {
+  if (replySending.value) return
+  replyFor.value = null
+  replyText.value = ''
+  replyError.value = ''
+}
+
+async function sendReply() {
+  const body = replyText.value.trim()
+  if (!body || replySending.value || !replyFor.value) return
+  replySending.value = true
+  replyError.value = ''
+  try {
+    const { data } = await api.post(`/gallery/public/${encodeURIComponent(props.slug)}/comments`, {
+      text: body,
+      parentId: replyFor.value.targetId,
+    })
+    comments.value = [...comments.value, data.comment]
+    total.value += 1
+    replyFor.value = null
+    replyText.value = ''
+    toast.success('Balasan terkirim')
+  } catch (err) {
+    const status = err.response?.status
+    replyError.value =
+      status === 401
+        ? 'Sesi masuk sudah habis. Silakan masuk lagi.'
+        : status === 404
+          ? 'Komentar ini sudah dihapus.'
+          : err.response?.data?.error || 'Balasan belum terkirim. Coba lagi.'
+  } finally {
+    replySending.value = false
   }
 }
 
@@ -248,6 +382,8 @@ watch(
     loading.value = true
     showAll.value = false
     comments.value = []
+    replyFor.value = null
+    replyText.value = ''
     load()
   },
 )
@@ -334,6 +470,58 @@ onMounted(async () => {
   background: #0a5c40;
   border-color: #0a5c40;
   color: #fde68a;
+}
+
+.gc-avatar.is-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+}
+
+.gc-act {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0a5c40;
+  cursor: pointer;
+}
+
+.gc-act:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.gc-act.is-danger {
+  color: #b42318;
+}
+
+.gc-act:disabled {
+  opacity: 0.55;
+}
+
+.gc-replies {
+  display: grid;
+  gap: 12px;
+  margin: 10px 0 0 19px;
+  padding: 4px 0 0 14px;
+  list-style: none;
+  border-left: 2px solid rgba(10, 92, 64, 0.18);
+}
+
+.gc-reply {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fbf9f3;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+}
+
+.gc-reply .gc-input {
+  min-height: 64px;
 }
 
 .gc-role {

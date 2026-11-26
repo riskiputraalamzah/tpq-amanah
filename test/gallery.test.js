@@ -187,7 +187,9 @@ test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp shari
 });
 
 test("GalleryManagementView supports moment upload, live publish default, custom categories, cover selection, and share link", () => {
-  const mgmt = read("src/views/dashboard/admin/GalleryManagementView.vue");
+  const list = read("src/views/dashboard/admin/GalleryManagementView.vue");
+  // the add / edit form is its own page now (GalleryMomentFormView), the list keeps the category manager
+  const mgmt = read("src/views/dashboard/admin/GalleryMomentFormView.vue") + list + read("src/composables/useGalleryMomentActions.js");
   assert.ok(has(mgmt, "published: true"), "moments publish immediately by default");
   assert.ok(has(mgmt, "compressGalleryPhoto(file)"));
   assert.ok(has(mgmt, "api.post('/gallery/categories'"));

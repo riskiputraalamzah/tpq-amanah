@@ -1,5 +1,7 @@
 // Shared reactive state & optimistic toggle for public Dokumentasi likes (no login needed).
 // Uses a persistent anonymous visitorId in localStorage + server-side deduplication & IP fairness cap.
+// When someone is logged in (the api client sends their token), the server counts one like per account and the admin
+// sees who it was; the visitorId lets the account take over a like this browser gave before logging in.
 import { reactive } from 'vue'
 import api from '@/services/api'
 
@@ -131,8 +133,11 @@ export function useGalleryLikes() {
     try {
       const visitorId = getOrCreateVisitorId()
       const slugOrId = moment.slug || id
+      // intent: what this tap means here. A logged-in parent who already liked on another phone stays liked (one
+      // like per account) instead of being switched off by a heart that did not know.
       const { data } = await api.post(`/gallery/public/${encodeURIComponent(slugOrId)}/like`, {
         visitorId,
+        intent: nextLiked ? 'like' : 'unlike',
       })
       const serverLiked = Boolean(data?.liked)
       const serverCount = Math.max(0, Number(data?.likesCount ?? nextCount) || 0)

@@ -324,6 +324,24 @@ const routes = [
         meta: { role: "admin", feature: "gallery-manage" },
       },
       {
+        path: "dokumentasi/baru",
+        name: "GalleryMomentCreate",
+        component: () => import("../views/dashboard/admin/GalleryMomentFormView.vue"),
+        meta: { role: "admin", feature: "gallery-manage" },
+      },
+      {
+        path: "dokumentasi/:id/ubah",
+        name: "GalleryMomentEdit",
+        component: () => import("../views/dashboard/admin/GalleryMomentFormView.vue"),
+        meta: { role: "admin", feature: "gallery-manage" },
+      },
+      {
+        path: "dokumentasi/:id",
+        name: "GalleryMomentAdmin",
+        component: () => import("../views/dashboard/admin/GalleryMomentAdminView.vue"),
+        meta: { role: "admin", feature: "gallery-manage" },
+      },
+      {
         path: "tpq-profile",
         name: "TpqProfile",
         component: () => import("../views/dashboard/admin/TpqProfileView.vue"),

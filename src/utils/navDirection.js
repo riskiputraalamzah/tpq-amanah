@@ -10,7 +10,8 @@
 //   3. between two bottom-bar tabs: the tab order (left to right)
 //   4. anything else (a page from the Menu, a link): forward
 
-// Inner pages of the dashboard: [pattern, title for the top bar, the page "Back" goes to when there is no history]
+// Inner pages of the dashboard: [pattern, title for the top bar, the page "Back" goes to when there is no history,
+// optional depth (default 2; a page opened from an inner page is 3, so it slides in further)]
 export const DEEP_PAGES = [
   [/^\/dashboard\/kbm\/daily-workspace$/, 'Isi KBM', () => '/dashboard/kbm'],
   [/^\/dashboard\/kbm\/[^/]+\/jurnal$/, 'Jurnal KBM', () => '/dashboard/kbm'],
@@ -22,11 +23,14 @@ export const DEEP_PAGES = [
   [/^\/dashboard\/savings\/[^/]+$/, 'Buku Tabungan', (p, role) => (role === 'admin' ? '/dashboard/admin-savings' : '/dashboard/savings')],
   [/^\/dashboard\/kegiatan\/[^/]+$/, 'Detail Kegiatan', () => '/dashboard/kegiatan'],
   [/^\/dashboard\/pendaftaran\/langsung$/, 'Daftarkan Langsung', () => '/dashboard/pendaftaran'],
+  [/^\/dashboard\/dokumentasi\/baru$/, 'Tambah Momen', () => '/dashboard/dokumentasi'],
+  [/^\/dashboard\/dokumentasi\/[^/]+\/ubah$/, 'Ubah Momen', (p) => p.replace(/\/ubah$/, ''), 3],
+  [/^\/dashboard\/dokumentasi\/[^/]+$/, 'Detail Momen', () => '/dashboard/dokumentasi'],
 ]
 
 export function deepPageFor(path, role = 'guru') {
   const hit = DEEP_PAGES.find(([re]) => re.test(path))
-  return hit ? { title: hit[1], back: hit[2](path, role) } : null
+  return hit ? { title: hit[1], back: hit[2](path, role), depth: hit[3] || 2 } : null
 }
 
 // The bottom-bar tabs, left to right (the "Menu" tab is not a page)
@@ -45,7 +49,7 @@ export function pageDepth(path, role = 'guru') {
     if (/^\/wali\/(santri\/[^/]+|daftar\/[^/]+|tautkan|masukan)$/.test(p)) return 2
     return 1
   }
-  return deepPageFor(p, role) ? 2 : 1
+  return deepPageFor(p, role)?.depth || 1
 }
 
 // The tab a path belongs to (the tab of its parent page for inner pages), or null

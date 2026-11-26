@@ -50,8 +50,8 @@ test("a page from the Menu (not a tab) comes in from the right; moving to a tab 
 });
 
 test("inner pages know their title, their parent and their depth", () => {
-  assert.deepEqual(deepPageFor("/dashboard/kbm/abc/jurnal", "guru"), { title: "Jurnal KBM", back: "/dashboard/kbm" });
-  assert.deepEqual(deepPageFor("/dashboard/lpj/r1/sptjm", "guru"), { title: "SPTJM", back: "/dashboard/lpj/r1" });
+  assert.deepEqual(deepPageFor("/dashboard/kbm/abc/jurnal", "guru"), { title: "Jurnal KBM", back: "/dashboard/kbm", depth: 2 });
+  assert.deepEqual(deepPageFor("/dashboard/lpj/r1/sptjm", "guru"), { title: "SPTJM", back: "/dashboard/lpj/r1", depth: 2 });
   assert.equal(deepPageFor("/dashboard/lpj/r1", "admin").back, "/dashboard/admin-lpj");
   assert.equal(deepPageFor("/dashboard/lpj/r1", "guru").back, "/dashboard/lpj");
   assert.equal(deepPageFor("/dashboard/savings/b1", "admin").back, "/dashboard/admin-savings");

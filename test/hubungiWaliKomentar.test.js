@@ -81,16 +81,33 @@ test("comments on the moment page: login to write (wali by WA code or staff), li
   assert.ok(has(login, 'if (redirect.startsWith("/dokumentasi/")) {'), "a wali returns to the moment after the WhatsApp code");
 });
 
-test("Dokumentasi (admin): manage comments — button with 'baru', count on each card, rude-looking first, delete asks", () => {
+test("Dokumentasi (admin): comments are a tab and part of each moment's page — no pop-up; 'baru' badge; reply + delete", () => {
   const v = squash(read("src/views/dashboard/admin/GalleryManagementView.vue"));
-  assert.ok(has(v, "@click=\"openComments()\""), "a Komentar button in the page header");
-  assert.ok(has(v, "{{ newCommentCount }} baru"), "how many arrived since the last look");
-  assert.ok(has(v, "@click=\"openComments(m.id)\""), "a card's comment count opens that moment's comments");
-  assert.ok(has(v, "api.get('/gallery/manage/comments', { cache: false })"));
-  assert.ok(has(v, ".sort((a, b) => Number(b.flagged) - Number(a.flagged))"), "'Perlu dicek' ones on top");
-  assert.ok(has(v, "api.delete(`/gallery/comments/${encodeURIComponent(c.id)}`)"));
-  assert.ok(has(v, "tone: 'danger',"), "our own dialog before deleting");
-  assert.ok(has(v, "${encodeURIComponent(momentById.value.get(id)?.slug || id)}#komentar"), "jump to the comment on the public page");
+  assert.ok(!v.includes("Kelola Komentar"), "the old comments pop-up is gone");
+  assert.ok(has(v, "{{ newCommentCount }} baru"), "how many arrived since the last look, on the Komentar tab");
+  assert.ok(has(v, '<GalleryCommentFeed :moments="moments" :seen-at="seenBefore" @loaded="onCommentsLoaded" />'));
+  assert.ok(has(v, '<GalleryLikeFeed :moments="moments" :likes-total="likesTotal" />'));
+  assert.ok(has(v, "if (t === 'suka' && !isAdmin.value) return 'momen'"), "the Suka tab is for the admin only");
+  const d = squash(read("src/views/dashboard/admin/GalleryMomentAdminView.vue"));
+  assert.ok(has(d, ':moment-id="moment.id"'), "the moment page shows its own comments");
+  assert.ok(has(d, "v-else-if=\"tab === 'suka' && isAdmin\""), "and, for the admin, its likes");
+  const f = squash(read("src/components/gallery-admin/GalleryCommentFeed.vue"));
+  assert.ok(has(f, "api.get('/gallery/manage/comments', {"));
+  assert.ok(has(f, "/gallery/manage/comments/${encodeURIComponent(replyFor.value.targetId)}/replies"), "staff answer from the dashboard");
+  assert.ok(has(f, "api.delete(`/gallery/comments/${encodeURIComponent(c.id)}`)"));
+  assert.ok(has(f, "tone: 'danger',"), "our own dialog before deleting");
+  assert.ok(has(f, ".sort((a, b) => b.lastAt - a.lastAt)"), "newest activity first");
+  assert.ok(!f.includes("confirm("), "no native confirm");
+});
+
+test("public comments: replies under their comment, 'Balas' only when the server says canReply", () => {
+  const c = squash(read("src/components/landing/GalleryComments.vue"));
+  assert.ok(has(c, "canReply.value = Boolean(data.canReply)"));
+  assert.ok(has(c, 'v-if="canReply"') && has(c, '@click="startReply(t, t)"'), "Balas only for staff");
+  assert.ok(has(c, "parentId: replyFor.value.targetId"));
+  assert.ok(has(c, "comments.value.filter((x) => x.id !== c.id && x.parentId !== c.id)"), "a deleted comment takes its replies");
+  const likes = squash(read("src/composables/useGalleryLikes.js"));
+  assert.ok(has(likes, "intent: nextLiked ? 'like' : 'unlike'"), "a tap says what it means (one like per account)");
 });
 
 test("Perbesar: up to 1000%, the +/- buttons multiply (6 taps to 1000%), zoom follows the finger / cursor, sharp at rest", () => {
