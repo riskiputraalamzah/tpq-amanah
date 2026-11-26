@@ -253,39 +253,42 @@
               </button>
             </div>
 
-            <!-- Multi-Photo True Natural-Ratio Masonry Layout (zero forced cropping!) -->
-            <div
-              v-else
-              class="lp-masonry"
-              :class="moment.photos.length === 2 ? 'is-two-col max-w-4xl mx-auto' : ''"
-            >
-              <button
-                v-for="(photo, idx) in moment.photos"
-                :key="photo.id || idx"
-                type="button"
-                :aria-label="`Perbesar foto ${idx + 1} dari ${moment.photos.length}`"
-                class="relative block w-full overflow-hidden border shadow-sm lp-masonry-item rounded-2xl bg-emerald-950/[0.04] border-amber-700/15 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
-                @click="openLightboxAt(idx)"
+            <!-- Multi-Photo Left-to-Right Balanced Masonry (preserves natural aspect ratios + always fills left to right!) -->
+            <div v-else class="lp-masonry-flex">
+              <div
+                v-for="(col, colIdx) in masonryColumns"
+                :key="`masonry-col-${colIdx}`"
+                class="lp-masonry-col"
               >
-                <img
-                  :src="galleryPhotoCardSrc(photo)"
-                  :alt="`${moment.title} - foto ${idx + 1}`"
-                  :loading="idx < 4 ? 'eager' : 'lazy'"
-                  decoding="async"
-                  referrerpolicy="no-referrer"
-                  class="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.025]"
-                />
-                <span
-                  class="absolute inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1 text-[11px] font-bold text-white transition-opacity rounded-full bottom-2 right-2 bg-slate-950/65 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100"
-                  aria-hidden="true"
+                <button
+                  v-for="item in col"
+                  :key="item.photo.id || item.idx"
+                  type="button"
+                  :aria-label="`Perbesar foto ${item.idx + 1} dari ${moment.photos.length}`"
+                  class="relative block w-full overflow-hidden border shadow-sm lp-masonry-item rounded-2xl bg-emerald-950/[0.04] border-amber-700/15 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+                  @click="openLightboxAt(item.idx)"
                 >
-                  <svg class="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path stroke-linecap="round" d="m20 20-3.5-3.5M11 8v6M8 11h6" />
-                  </svg>
-                  <span class="hidden sm:inline">Zoom</span>
-                </span>
-              </button>
+                  <img
+                    :src="galleryPhotoCardSrc(item.photo)"
+                    :alt="`${moment.title} - foto ${item.idx + 1}`"
+                    :loading="item.idx < 4 ? 'eager' : 'lazy'"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                    class="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.025]"
+                    @load="onMasonryPhotoLoad(item.photo, item.idx, $event)"
+                  />
+                  <span
+                    class="absolute inline-flex items-center justify-center w-7 h-7 sm:w-auto sm:h-auto sm:gap-1 sm:px-2.5 sm:py-1 text-[11px] font-bold text-white transition-opacity rounded-full bottom-2 right-2 bg-slate-950/65 backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100"
+                    aria-hidden="true"
+                  >
+                    <svg class="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                      <circle cx="11" cy="11" r="7" />
+                      <path stroke-linecap="round" d="m20 20-3.5-3.5M11 8v6M8 11h6" />
+                    </svg>
+                    <span class="hidden sm:inline">Zoom</span>
+                  </span>
+                </button>
+              </div>
             </div>
           </section>
 
@@ -555,6 +558,8 @@ import {
   momentVideosOf,
   formatMomentDate,
   videoPlatformLabel,
+  chooseMasonryColumnCount,
+  distributeMasonryColumns,
 } from '@/utils/galleryMedia'
 
 const route = useRoute()
@@ -584,9 +589,32 @@ const lightboxIndex = ref(0)
 const copied = ref(false)
 const heroActionsRef = ref(null)
 const showFloatingLike = ref(false)
+const isDesktopGrid = ref(typeof window !== 'undefined' ? window.innerWidth >= 640 : true)
+const photoRatios = ref({})
+let desktopMql = null
 let heroActionsObserver = null
 let copyTimer = null
 let restoreSeo = null
+
+const masonryColumns = computed(() => {
+  const list = moment.value?.photos || []
+  const colCount = chooseMasonryColumnCount(list.length, isDesktopGrid.value)
+  return distributeMasonryColumns(list, colCount, photoRatios.value)
+})
+
+function onMasonryPhotoLoad(photo, idx, event) {
+  const img = event?.target
+  if (!img || !img.naturalWidth || !img.naturalHeight) return
+  const key = photo?.id || idx
+  const ratio = Number((img.naturalHeight / img.naturalWidth).toFixed(3))
+  if (Math.abs((photoRatios.value[key] || 0) - ratio) > 0.04) {
+    photoRatios.value = { ...photoRatios.value, [key]: ratio }
+  }
+}
+
+function handleDesktopMediaChange(e) {
+  isDesktopGrid.value = e.matches
+}
 
 function setupHeroLikeObserver() {
   heroActionsObserver?.disconnect()
@@ -756,6 +784,7 @@ async function fetchDetail(slugOrId) {
   loadError.value = ''
   lightboxOpen.value = false
   activeVideoIdx.value = 0
+  photoRatios.value = {}
   try {
     const { data } = await api.get(`/gallery/public/${encodeURIComponent(slugOrId)}`)
     moment.value = data?.moment || null
@@ -793,10 +822,16 @@ watch(
 )
 
 onMounted(() => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    desktopMql = window.matchMedia('(min-width: 640px)')
+    isDesktopGrid.value = desktopMql.matches
+    desktopMql.addEventListener?.('change', handleDesktopMediaChange)
+  }
   fetchDetail(String(route.params.slug || ''))
 })
 
 onBeforeUnmount(() => {
+  desktopMql?.removeEventListener?.('change', handleDesktopMediaChange)
   heroActionsObserver?.disconnect()
   clearTimeout(copyTimer)
   clearTimeout(likeFeedbackTimer)
@@ -830,38 +865,32 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-/* True natural-aspect-ratio Masonry (keeps portrait & landscape photos completely uncropped) */
-.lp-masonry {
-  column-count: 2;
-  column-gap: 0.75rem;
+/* Left-to-right balanced natural-aspect-ratio Masonry (zero cropping & zero empty right columns) */
+.lp-masonry-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.lp-masonry-col {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 @media (min-width: 640px) {
-  .lp-masonry {
-    column-count: 3;
-    column-gap: 1.25rem;
+  .lp-masonry-flex {
+    gap: 1.25rem;
   }
 
-  .lp-masonry.is-two-col {
-    column-count: 2;
-  }
-}
-
-.lp-masonry-item {
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  page-break-inside: avoid;
-  margin-bottom: 0.75rem;
-  transform: translateZ(0);
-}
-
-@media (min-width: 640px) {
-  .lp-masonry-item {
-    margin-bottom: 1.25rem;
+  .lp-masonry-col {
+    gap: 1.25rem;
   }
 }
 
-/* Floating mobile Like button spring entrance & gentle attention heartbeat */
+/* Floating mobile Like button spring entrance */
 .lp-fab-pop-enter-active {
   transition: transform 0.36s cubic-bezier(0.22, 1.35, 0.36, 1), opacity 0.24s ease;
 }
@@ -874,35 +903,5 @@ onBeforeUnmount(() => {
 .lp-fab-pop-leave-to {
   opacity: 0;
   transform: translateY(18px) scale(0.84);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .lp-fab-heartbeat {
-    animation: lp-fab-heartbeat 1.8s ease-in-out 0.35s 2;
-  }
-
-  .lp-heart-ring {
-    border: 2px solid rgba(255, 255, 255, 0.85);
-    animation: lp-heart-ring 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-}
-
-@keyframes lp-fab-heartbeat {
-  0%, 100% { transform: scale(1); }
-  18% { transform: scale(1.26); }
-  34% { transform: scale(0.96); }
-  50% { transform: scale(1.18); }
-  68% { transform: scale(1); }
-}
-
-@keyframes lp-heart-ring {
-  from {
-    opacity: 0.9;
-    transform: scale(0.7);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2.1);
-  }
 }
 </style>

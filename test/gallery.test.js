@@ -11,6 +11,8 @@ import {
   galleryPhotoThumbSrc,
   formatMomentDate,
   videoPlatformLabel,
+  chooseMasonryColumnCount,
+  distributeMasonryColumns,
 } from "../src/utils/galleryMedia.js";
 import { ACCESS_CARDS } from "../src/utils/guruRights.js";
 import { squash, has } from "./helpers/sourceText.js";
@@ -145,7 +147,31 @@ test("GalleryArchiveView and GalleryMomentDetailView deliver SEO, WhatsApp shari
   const likeBtn = read("src/components/landing/GalleryLikeButton.vue");
   assert.ok(has(likeBtn, "glb-spark-fly") && has(likeBtn, "glb-heart-spring"), "Like animation includes 8-way sparkle burst and spring pop");
   assert.ok(has(likeBtn, "glb-heart-wobble") && has(likeBtn, "glb-drop-left"), "Unlike toggle includes expressive wobble and split droplets");
-  assert.ok(has(detail, "lp-masonry") && has(detail, "break-inside: avoid"), "detail photo gallery renders natural aspect-ratio Masonry layout");
+  assert.ok(has(detail, "lp-masonry-flex") && has(detail, "distributeMasonryColumns"), "detail photo gallery renders left-to-right balanced natural-ratio Masonry");
+  // Verify balanced Masonry fills left-to-right without leaving empty right columns
+  assert.equal(chooseMasonryColumnCount(4, true), 2, "4 photos use full-width 2x2 Masonry on desktop (no empty 3rd column)");
+  assert.equal(chooseMasonryColumnCount(3, true), 3, "3 photos fill all 3 columns left-to-right");
+  assert.equal(chooseMasonryColumnCount(8, true), 3, "8 photos balance across 3 columns on desktop");
+  assert.equal(chooseMasonryColumnCount(8, false), 2, "mobile stays 2 balanced columns");
+  const sample4 = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+  const cols4 = distributeMasonryColumns(sample4, chooseMasonryColumnCount(4, true));
+  assert.deepEqual(
+    cols4.map((c) => c.map((x) => x.photo.id)),
+    [["a", "c"], ["b", "d"]],
+    "4 photos fill left-to-right cleanly into 2 balanced columns",
+  );
+  const sampleMixed = [
+    { id: "tall", width: 600, height: 1000 }, // col 0 (1.67)
+    { id: "wide1", width: 1000, height: 600 }, // col 1 (0.60)
+    { id: "wide2", width: 1000, height: 600 }, // col 2 (0.60)
+    { id: "next", width: 800, height: 600 }, // should go to col 1 (shortest!) instead of stacking on tall col 0
+  ];
+  const colsMixed = distributeMasonryColumns(sampleMixed, 3);
+  assert.deepEqual(
+    colsMixed.map((c) => c.map((x) => x.photo.id)),
+    [["tall"], ["wide1", "next"], ["wide2"]],
+    "shortest-column Masonry balances tall portraits against landscapes while filling row 1 left-to-right",
+  );
   assert.ok(has(detail, "detail-hero-mihrab") && has(detail, "OrnamentRule"), "detail hero is symmetrically centered with Islamic geometric motifs");
   assert.ok(has(detail, '<GalleryLightbox'), "detail mounts zoomable GalleryLightbox for photos");
   assert.ok(has(detail, ':src="activeVideo.embedUrl"'), "embeds YouTube/Instagram/Google Drive video directly in web");

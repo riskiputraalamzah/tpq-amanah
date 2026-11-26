@@ -16,6 +16,43 @@ export function momentVideosOf(moment) {
   return moment.video && moment.video.embedUrl ? [moment.video] : []
 }
 
+// Pick balanced Masonry column count so desktop never shows awkward empty columns (e.g. 4 photos -> 2x2 full width)
+export function chooseMasonryColumnCount(photoCount, isDesktop = true) {
+  if (photoCount <= 1) return 1
+  if (!isDesktop) return 2
+  if (photoCount === 2 || photoCount === 4) return 2
+  return 3
+}
+
+// True left-to-right balanced Masonry: fills the top row strictly left -> right first,
+// then places remaining photos into whichever column is currently shortest (preserving natural aspect ratios).
+export function distributeMasonryColumns(photos = [], colCount = 3, ratioMap = {}) {
+  const safeCols = Math.max(1, Math.min(colCount, photos.length || 1))
+  const cols = Array.from({ length: safeCols }, () => [])
+  const heights = Array(safeCols).fill(0)
+
+  photos.forEach((photo, idx) => {
+    const key = photo?.id || idx
+    const measured = ratioMap[key]
+    const stored =
+      photo?.width > 0 && photo?.height > 0 ? photo.height / photo.width : null
+    const rawRatio = Number(measured || stored || 0.75)
+    const ratio = Math.min(2.0, Math.max(0.45, Number.isFinite(rawRatio) ? rawRatio : 0.75))
+
+    let targetCol = idx
+    if (idx >= safeCols) {
+      targetCol = 0
+      for (let c = 1; c < safeCols; c++) {
+        if (heights[c] < heights[targetCol] - 0.001) targetCol = c
+      }
+    }
+    cols[targetCol].push({ photo, idx })
+    heights[targetCol] += ratio + 0.06
+  })
+
+  return cols
+}
+
 const API_BASE = String(
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
     'http://localhost:5000/api',
