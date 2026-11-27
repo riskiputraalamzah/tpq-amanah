@@ -15,7 +15,7 @@ test("the layout centres a page that caps its own width", () => {
 });
 
 test("narrow pages are one centred column (title and content together)", () => {
-  assert.ok(has(read("views/dashboard/HubungiWaliView.vue"), "max-width: 860px; margin-inline: auto;"));
+  assert.ok(has(read("views/dashboard/HubungiWaliView.vue"), "max-width: 1180px; margin-inline: auto;"));
   assert.ok(has(read("views/dashboard/admin/GalleryMomentFormView.vue"), ".gm-form-page { max-width: 760px; margin-inline: auto; }"));
   assert.ok(has(read("views/dashboard/admin/TpqProfileView.vue"), ".tpq-profile-view { max-width: 800px; margin-inline: auto; }"));
   assert.ok(has(read("views/dashboard/guru/ProfileView.vue"), ".profile-view { max-width: 800px; margin-inline: auto; }"));
