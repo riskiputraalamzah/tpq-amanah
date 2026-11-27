@@ -16,12 +16,12 @@
         <!-- 1. what waits -->
         <section class="ad-card" aria-labelledby="ad-act">
           <h2 id="ad-act" class="ad-title">Perlu ditindaklanjuti</h2>
-          <div v-if="!d.actions.length" class="ad-allgood">
+          <div v-if="!actions.length" class="ad-allgood">
             <span class="ad-allgood-icon" aria-hidden="true"><LineIcon name="check" :size="20" :stroke="3" /></span>
             <p><strong>Semua beres.</strong> Tidak ada yang menunggu Antum saat ini.</p>
           </div>
           <ul v-else class="ad-actions">
-            <li v-for="a in d.actions" :key="a.key">
+            <li v-for="a in actions" :key="a.key">
               <router-link :to="a.to" class="ad-action" :class="`is-${a.tone}`">
                 <span class="ad-action-count">{{ a.count }}</span>
                 <span class="ad-action-text">
@@ -186,6 +186,7 @@
 </template>
 
 <script setup>
+import { useGalleryCommentBadge } from '@/composables/useGalleryCommentBadge'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
@@ -207,6 +208,15 @@ const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 
 const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
 
 const d = ref(null)
+// + new comments on Dokumentasi: kept per account (not in the shared, cached dashboard answer), same count as the menu
+const { count: newComments, refresh: refreshComments } = useGalleryCommentBadge()
+const actions = computed(() => [
+  ...(d.value?.actions || []),
+  ...(newComments.value
+    ? [{ key: 'komentar', count: newComments.value, label: 'komentar baru di Dokumentasi', sub: 'Ucapan dan doa dari wali; balas atau hapus bila perlu', to: '/dashboard/dokumentasi?tab=komentar', tone: 'info' }]
+    : []),
+])
+onMounted(() => refreshComments({ force: true }))
 const sideEl = ref(null)
 const sideTop = useStickySide(sideEl)
 const loading = ref(false)

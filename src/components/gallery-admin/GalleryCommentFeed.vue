@@ -211,8 +211,10 @@ watch([momentFilter, search, onlyFlagged], () => {
   limit.value = PAGE
 })
 
+// seenAt: this account's "baru" mark kept on the server (null when never opened)
+const serverSeenAt = ref(null)
 function report() {
-  emit('loaded', { total: list.value.length, counts: counts.value, comments: list.value })
+  emit('loaded', { total: list.value.length, counts: counts.value, comments: list.value, seenAt: serverSeenAt.value })
 }
 
 async function load() {
@@ -224,6 +226,7 @@ async function load() {
       cache: false,
     })
     list.value = Array.isArray(data?.comments) ? data.comments : []
+    serverSeenAt.value = Number(data?.seenAt || 0) || null
     report()
   } catch (err) {
     loadError.value = err.response?.data?.error || 'Komentar belum bisa dimuat.'

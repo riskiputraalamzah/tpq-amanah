@@ -95,7 +95,7 @@ test("Dokumentasi access & dedicated public routes (/dokumentasi and /dokumentas
 
   const layout = read("src/views/dashboard/DashboardLayout.vue");
   assert.ok(has(layout, "{ id: 'gallery-manage', to: '/dashboard/dokumentasi', label: 'Dokumentasi'"));
-  assert.ok(has(layout, "{ to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: ICON.gallery }"));
+  assert.ok(has(layout, "{ to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: ICON.gallery, badge: 'komentar' }"));
 
   const navbar = read("src/components/NavbarComponent.vue");
   assert.ok(

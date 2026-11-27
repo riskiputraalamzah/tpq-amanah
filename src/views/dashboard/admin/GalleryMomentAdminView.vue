@@ -136,7 +136,7 @@ import GalleryLikeFeed from '@/components/gallery-admin/GalleryLikeFeed.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGalleryMomentActions, momentCoverSrc } from '@/composables/useGalleryMomentActions'
 import { galleryPhotoThumbSrc, momentVideosOf, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
-import { readSeenAt } from '@/utils/galleryAdmin'
+import { readSeenAt, laterSeen } from '@/utils/galleryAdmin'
 import '@/styles/gallery-admin.css'
 
 // /dashboard/dokumentasi/:id — one moment for the admin and a guru with the Dokumentasi access: what it shows, the
@@ -193,8 +193,9 @@ async function load({ quiet = false } = {}) {
 }
 
 // the "n baru" mark of the Komentar tab is left alone here: it covers every moment, this page shows one
-function onCommentsLoaded({ total }) {
+function onCommentsLoaded({ total, seenAt: fromServer = null }) {
   commentTotal.value = total
+  seenAt.value = laterSeen(seenAt.value, fromServer)
 }
 
 async function pin() {

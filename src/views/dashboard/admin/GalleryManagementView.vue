@@ -67,6 +67,7 @@
       <p class="gm-tab-intro">
         Komentar terbaru dari semua momen. Balas sebagai pengurus TPQ, atau hapus yang tidak pantas (balasannya ikut terhapus).
       </p>
+      <GalleryCommentNotify />
       <GalleryCommentFeed :moments="moments" :seen-at="seenBefore" @loaded="onCommentsLoaded" />
     </section>
 
@@ -329,12 +330,14 @@ import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import GalleryCommentFeed from '@/components/gallery-admin/GalleryCommentFeed.vue'
+import GalleryCommentNotify from '@/components/gallery-admin/GalleryCommentNotify.vue'
 import GalleryLikeFeed from '@/components/gallery-admin/GalleryLikeFeed.vue'
 import { useToast } from '@/composables/useToast'
 import { useDialog } from '@/composables/useDialog'
 import { useAuthStore } from '@/stores/auth'
 import { useGalleryMomentActions, momentCoverSrc } from '@/composables/useGalleryMomentActions'
-import { readSeenAt, writeSeenAt, countNewComments } from '@/utils/galleryAdmin'
+import { readSeenAt, writeSeenAt, laterSeen, countNewComments } from '@/utils/galleryAdmin'
+import { useGalleryCommentBadge } from '@/composables/useGalleryCommentBadge'
 import { momentVideosOf, formatMomentDate, videoPlatformLabel } from '@/utils/galleryMedia'
 import '@/styles/gallery-admin.css'
 
@@ -417,28 +420,46 @@ const seenAt = ref(readSeenAt()) // the badge: since the Komentar tab was last o
 const seenBefore = ref(seenAt.value) // the "Baru" marks while the tab is open: since the visit before
 const newCommentCount = computed(() => (tab.value === 'komentar' ? 0 : countNewComments(commentList.value, seenAt.value)))
 
+const commentBadge = useGalleryCommentBadge()
+
 async function loadCommentSummary() {
   try {
     const { data } = await api.get('/gallery/manage/comments', { cache: false })
-    onCommentsLoaded({ total: Number(data?.total || 0), counts: data?.counts || {}, comments: data?.comments || [] })
+    onCommentsLoaded({ total: Number(data?.total || 0), counts: data?.counts || {}, comments: data?.comments || [], seenAt: data?.seenAt })
   } catch {
     /* only the badges are missing; the tab shows the error */
   }
 }
 
-function onCommentsLoaded({ total, counts, comments }) {
+function onCommentsLoaded({ total, counts, comments, seenAt: fromServer = null }) {
   commentTotal.value = total
   commentCounts.value = counts || {}
   commentList.value = comments || []
+  // the account's mark (another device may have looked since); while the tab is open its "Baru" marks stay put
+  seenAt.value = laterSeen(seenAt.value, fromServer)
+  if (tab.value !== 'komentar') seenBefore.value = seenAt.value
 }
 
-// opening the Komentar tab = they have been seen (the marks stay until the tab is left)
+// opening the Komentar tab = they have been seen, on every device of this account (the marks stay until the tab is
+// left; they start from the server's mark before this visit)
+async function markSeen() {
+  seenAt.value = writeSeenAt()
+  commentBadge.clear()
+  try {
+    const { data } = await api.post('/gallery/manage/comments/seen')
+    if (tab.value === 'komentar' && data?.previous) seenBefore.value = laterSeen(seenBefore.value, data.previous)
+    if (data?.seenAt) seenAt.value = writeSeenAt(laterSeen(seenAt.value, data.seenAt))
+  } catch {
+    /* this device still remembers it */
+  }
+}
+
 watch(
   tab,
   (t, prev) => {
     if (t === 'komentar') {
       seenBefore.value = seenAt.value
-      seenAt.value = writeSeenAt()
+      markSeen()
     } else if (prev === 'komentar') {
       seenBefore.value = seenAt.value
     }

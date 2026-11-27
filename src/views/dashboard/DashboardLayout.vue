@@ -208,6 +208,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { usePendaftaranCount } from "@/composables/usePendaftaranCount";
 import { useWaliBadge } from "@/composables/useWaliBadge";
 import { useWaliFeedbackBadge } from "@/composables/useWaliFeedbackBadge";
+import { useGalleryCommentBadge } from "@/composables/useGalleryCommentBadge";
 import "@/styles/landing.css";
 import "@/styles/dashboard.css";
 import { useRouter, useRoute } from "vue-router";
@@ -317,7 +318,7 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/tpq-profile', label: 'Profil TPQ', icon: ICON.building },
       { to: '/dashboard/teachers', label: 'Kelola Pengajar', icon: ICON.person },
       { to: '/dashboard/users', label: 'Akun Pengguna', icon: ICON.santri },
-      { to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: ICON.gallery },
+      { to: '/dashboard/dokumentasi', label: 'Dokumentasi', icon: ICON.gallery, badge: 'komentar' },
       { to: '/dashboard/content', label: 'Konten Website', icon: ICON.edit },
     ],
   },
@@ -352,7 +353,7 @@ const menuGroups = computed(() => {
     groups.push({
       key: 'khusus',
       title: 'Akses Khusus', // always this name: the same for every guru, whatever was typed before
-      items: specialMenus.value.map((m) => ({ to: m.to, label: m.label, icon: m.icon, badge: m.id === 'pendaftaran' ? 'pendaftaran' : '' })),
+      items: specialMenus.value.map((m) => ({ to: m.to, label: m.label, icon: m.icon, badge: m.id === 'pendaftaran' ? 'pendaftaran' : m.id === 'gallery-manage' ? 'komentar' : '' })),
     })
   }
   groups.push({ key: 'akun', title: 'Akun', items: [{ to: '/dashboard/profile', label: 'Profil Saya', icon: ICON.person }] })
@@ -485,12 +486,16 @@ const seesRegistrations = computed(() => isAdmin.value || hasPermission("pendaft
 // What waits for a decision in Data Wali Santri (a teacher: their jilid; the admin: what was handed to the admin)
 const { count: waliWaiting, refresh: refreshWali } = useWaliBadge();
 const { count: feedbackWaiting, refresh: refreshFeedback } = useWaliFeedbackBadge();
+// New comments on Dokumentasi since this account last opened the Komentar tab (admin, or a guru with Kelola Dokumentasi)
+const { count: newComments, refresh: refreshComments } = useGalleryCommentBadge();
+const seesComments = computed(() => isAdmin.value || hasPermission("gallery-manage"));
 // every badge of the menus, by the key a menu item names (sidebar, the phone's tabs and its Menu sheet)
-const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses", masukan: "masukan wali belum diproses" };
+const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses", masukan: "masukan wali belum diproses", komentar: "komentar baru" };
 const badges = computed(() => ({
   pendaftaran: seesRegistrations.value ? newRegistrations.value : 0,
   wali: isAdmin.value || isGuru.value ? waliWaiting.value : 0,
   masukan: isAdmin.value ? feedbackWaiting.value : 0,
+  komentar: seesComments.value ? newComments.value : 0,
 }));
 
 watch(
@@ -499,6 +504,7 @@ watch(
     if (seesRegistrations.value) refreshRegistrations();
     if (isAdmin.value || isGuru.value) refreshWali();
     if (isAdmin.value) refreshFeedback();
+    if (seesComments.value) refreshComments();
     // a special access the admin added or removed shows in the menus without signing in again (at most once a minute)
     authStore.refreshUser();
   }
@@ -547,6 +553,7 @@ onMounted(() => {
   if (seesRegistrations.value) refreshRegistrations({ force: true });
   if (isAdmin.value || isGuru.value) refreshWali({ force: true });
   if (isAdmin.value) refreshFeedback({ force: true });
+  if (seesComments.value) refreshComments({ force: true });
   document.addEventListener("visibilitychange", onVisible);
   window.addEventListener("keydown", onSidebarShortcut);
 });
