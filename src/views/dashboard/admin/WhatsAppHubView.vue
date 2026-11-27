@@ -125,7 +125,9 @@ const status = computed(() => botStatusOf(live.state.bot, Math.max(nowMs.value, 
 const clockOf = (d) => new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(11, 19)
 const timeOf = (iso) => (iso ? clockOf(new Date(iso)).slice(0, 5) : '')
 const updatedText = computed(() => (live.state.updatedAt ? `Diperbarui ${clockOf(live.state.updatedAt)} WIB` : 'Memuat…'))
-const whenText = (q) => (q.sendAt === 'now' ? (q.status === 'sending' ? 'Sedang dikirim' : 'Segera') : q.sendAt === 'morning_tomorrow' ? 'Besok 06:30' : 'Hari ini 06:30')
+// 'later': an izin message in its 2-minute undo window (cancelling the izin takes it back unseen)
+const laterText = (q) => `Pukul ${new Date(q.sendAfter).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} (jeda batal)`
+const whenText = (q) => (q.sendAt === 'later' ? laterText(q) : q.sendAt === 'now' ? (q.status === 'sending' ? 'Sedang dikirim' : 'Segera') : q.sendAt === 'morning_tomorrow' ? 'Besok 06:30' : 'Hari ini 06:30')
 
 // a message that just arrived glows for a moment
 const fresh = ref(new Set())

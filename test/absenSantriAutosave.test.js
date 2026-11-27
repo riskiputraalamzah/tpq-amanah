@@ -65,5 +65,5 @@ test("a parent's izin/sakit row is locked: no buttons, an explicit confirmation 
 test("the parent's page says the teachers were told", () => {
   const wali = squash(read("src/views/wali/WaliIzin.vue"));
   assert.ok(has(wali, "teachersNotified: data.teachersNotified || 0"));
-  assert.ok(has(wali, "sudah diberi tahu lewat WhatsApp"));
+  assert.ok(has(wali, "diberi tahu lewat WhatsApp 2 menit lagi"));
 });

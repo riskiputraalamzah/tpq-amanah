@@ -167,7 +167,9 @@ const queue = ref(null)
 const queueLoading = ref(false)
 const queueError = ref('')
 const queueBusy = ref(false)
-const whenText = (q) => (q.sendAt === 'now' ? (q.status === 'sending' ? 'Sedang dikirim' : 'Segera (≤ 1 menit)') : q.sendAt === 'morning_tomorrow' ? 'Besok 06:30' : 'Hari ini 06:30')
+// 'later': an izin message in its 2-minute undo window (cancelling the izin takes it back unseen)
+const laterText = (q) => `Pukul ${new Date(q.sendAfter).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' })} (jeda batal)`
+const whenText = (q) => (q.sendAt === 'later' ? laterText(q) : q.sendAt === 'now' ? (q.status === 'sending' ? 'Sedang dikirim' : 'Segera (≤ 1 menit)') : q.sendAt === 'morning_tomorrow' ? 'Besok 06:30' : 'Hari ini 06:30')
 async function loadQueue() {
   queueLoading.value = true
   queueError.value = ''

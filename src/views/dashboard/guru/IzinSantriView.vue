@@ -213,6 +213,7 @@
                 <span class="iz-sub">
                   Dicatat {{ item.byName || 'Wali' }}<template v-if="item.createdAt"> · <time :title="fullDateTime(item.createdAt)">{{ timeAgo(item.createdAt, now) }}</time></template>
                 </span>
+                <span v-if="item.status === 'active' && noticeLine(item.notice, now)" class="iz-sub iz-wa" :class="{ 'is-waiting': cancelPlan(item.notice, now) === 'retract' }">{{ noticeLine(item.notice, now) }}</span>
               </div>
               <div v-if="item.cancellable" class="iz-item-side" @click.stop>
                 <button
@@ -325,6 +326,7 @@
                   · <time :title="fullDateTime(item.createdAt)">{{ timeAgo(item.createdAt, now) }}</time>
                 </template>
               </span>
+              <span v-if="item.status === 'active' && noticeLine(item.notice, now)" class="iz-sub iz-wa" :class="{ 'is-waiting': cancelPlan(item.notice, now) === 'retract' }">{{ noticeLine(item.notice, now) }}</span>
             </div>
 
             <div class="iz-item-side">
@@ -433,6 +435,7 @@
                     <span class="iz-sub">
                       Dicatat {{ item.byName || 'Wali' }}<template v-if="item.createdAt"> · <time :title="fullDateTime(item.createdAt)">{{ timeAgo(item.createdAt, now) }}</time></template>
                     </span>
+                    <span v-if="item.status === 'active' && noticeLine(item.notice, now)" class="iz-sub iz-wa" :class="{ 'is-waiting': cancelPlan(item.notice, now) === 'retract' }">{{ noticeLine(item.notice, now) }}</span>
                   </div>
 
                   <div v-if="item.cancellable || (item.dates || []).length > 1" class="iz-item-side">
@@ -735,6 +738,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
+import { cancelPlan, noticeLine, cancelResultText, NOTE_INPUT } from '@/utils/izinNotice'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import AbsenReports from '@/components/absen/AbsenReports.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -1292,10 +1296,15 @@ async function submitIzin(forceReplace = false) {
     } else {
       await load({ quiet: true })
     }
+    const savedText = data?.replaced
+      ? `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} diperbarui untuk ${(data?.recorded || effectiveDates.value).length} hari`
+      : `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} disimpan untuk ${(data?.recorded || effectiveDates.value).length} hari & tercatat di Absen Santri`
+    // the teachers' WhatsApp waits 2 minutes: a mistake cancelled before then never reaches them
     showSuccess(
-      data?.replaced
-        ? `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} diperbarui untuk ${(data?.recorded || effectiveDates.value).length} hari`
-        : `${form.value.type === 'sakit' ? 'Sakit' : 'Izin'} disimpan untuk ${(data?.recorded || effectiveDates.value).length} hari & tercatat di Absen Santri`,
+      data?.teachersNotified
+        ? `${savedText}. WA ke ${data.teachersNotified} guru dikirim 2 menit lagi; salah input? Batalkan sebelum itu.`
+        : savedText,
+      { duration: data?.teachersNotified ? 6000 : 3000 },
     )
     composerOpen.value = false
   } catch (err) {
@@ -1320,20 +1329,40 @@ async function submitIzin(forceReplace = false) {
   }
 }
 
+// The teachers' WhatsApp decides the dialog: still waiting (2-minute window) -> taken back unseen; already sent ->
+// the bot sends a correction with an apology, with an optional note from here (utils/izinNotice.js)
 async function cancelIzin(item) {
-  const ok = await ask({
-    title: `Batalkan ${item.type === 'sakit' ? 'sakit' : 'izin'} ${item.santriName}?`,
-    message: `Status ${item.type} untuk tanggal yang belum lewat akan dihapus dari Absen Santri sehingga santri bisa diabsen hadir seperti biasa.`,
-    tone: 'danger',
-    confirmText: 'Ya, batalkan',
-    cancelText: 'Biarkan',
-  })
-  if (!ok) return
+  const kind = item.type === 'sakit' ? 'sakit' : 'izin'
+  const plan = cancelPlan(item.notice, new Date())
+  const base = `Status ${kind} untuk tanggal yang belum lewat akan dihapus dari Absen Santri sehingga santri bisa diabsen hadir seperti biasa.`
+  const title = `Batalkan ${kind} ${item.santriName}?`
+  let note = ''
+  if (plan === 'apologize') {
+    const text = await ask({
+      title,
+      message: `${base} Pesan izin ini sudah terkirim ke guru, jadi bot akan mengirim ralat beserta permintaan maaf ke guru yang menerimanya.`,
+      tone: 'danger',
+      confirmText: 'Batalkan & kirim ralat',
+      cancelText: 'Biarkan',
+      input: NOTE_INPUT,
+    })
+    if (text === null) return
+    note = text
+  } else {
+    const ok = await ask({
+      title,
+      message: plan === 'retract' ? `${base} Pesan WA ke guru belum terkirim, jadi ikut ditarik: guru tidak akan menerima apa pun.` : base,
+      tone: 'danger',
+      confirmText: 'Ya, batalkan',
+      cancelText: 'Biarkan',
+    })
+    if (!ok) return
+  }
   cancellingId.value = item.id
   try {
-    await api.delete(`/santri-presence/izin/${encodeURIComponent(item.id)}`)
+    const { data } = await api.delete(`/santri-presence/izin/${encodeURIComponent(item.id)}`, { data: { note } })
     if (highlightedId.value === item.id) highlightedId.value = ''
-    showSuccess(`Izin ${item.santriName} dibatalkan`)
+    showSuccess(cancelResultText(`${kind === 'sakit' ? 'Sakit' : 'Izin'} ${item.santriName}`, data))
     await load({ quiet: true })
   } catch (err) {
     showError(err.response?.data?.error || 'Gagal membatalkan izin')
@@ -2129,6 +2158,17 @@ onBeforeUnmount(() => {
 .iz-sub {
   font-size: 0.81rem;
   color: #5b6b62;
+}
+
+/* the teachers' WhatsApp of this izin (2-minute undo window) */
+.iz-wa {
+  display: block;
+  margin-top: 2px;
+}
+
+.iz-wa.is-waiting {
+  color: #b45309;
+  font-weight: 600;
 }
 
 /* Buttons */

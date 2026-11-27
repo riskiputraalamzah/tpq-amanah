@@ -18,7 +18,7 @@
           <div>
             <p class="done-title">{{ done.replaced ? `${done.type === 'sakit' ? 'Sakit' : 'Izin'} diperbarui` : `${done.type === 'sakit' ? 'Sakit' : 'Izin'} tercatat` }}</p>
             <p class="done-text">{{ done.recorded.map((d) => dayLabel(d)).join(', ') }} · {{ SLOT_NAME[done.slot] }}</p>
-            <p v-if="done.teachersNotified" class="done-text">Ustadz/ustadzah jilid ini sudah diberi tahu lewat WhatsApp.</p>
+            <p v-if="done.teachersNotified" class="done-text">Ustadz/ustadzah jilid ini diberi tahu lewat WhatsApp 2 menit lagi. Ada yang keliru? Batalkan sebelum itu, pesannya tidak akan terkirim.</p>
           </div>
         </div>
         <p v-if="done.teacher.length" class="w-note is-warn done-teacher">
@@ -117,6 +117,7 @@
           </div>
           <p class="past-days">{{ x.dates.map((d) => dayLabel(d)).join(', ') }}</p>
           <p class="w-help">"{{ x.reason }}"<template v-if="x.byName"> · dari {{ x.byName }}</template></p>
+          <p v-if="x.status === 'active' && noticeLine(x.notice)" class="w-help past-wa" :class="{ 'is-waiting': cancelPlan(x.notice) === 'retract' }">{{ noticeLine(x.notice) }}</p>
           <div v-if="x.cancellable" class="past-actions">
             <button type="button" class="w-link past-edit" @click="prefillEdit(x)">Ubah izin</button>
             <button type="button" class="w-link past-cancel" @click="cancel(x)">Batalkan izin ini</button>
@@ -131,6 +132,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
+import { cancelPlan, noticeLine, cancelResultText, NOTE_INPUT } from '@/utils/izinNotice'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { useDialog } from '@/composables/useDialog'
@@ -328,18 +330,37 @@ async function send(forceReplace = false) {
   }
 }
 
+// Still in the 2-minute window: the teachers' message is taken back unseen. Already sent: the bot sends them a
+// correction with an apology, with the parent's optional note (utils/izinNotice.js)
 async function cancel(x) {
-  const ok = await ask({
-    title: 'Batalkan izin?',
-    message: `${x.type === 'sakit' ? 'Sakit' : 'Izin'} untuk ${x.dates.map((d) => dayLabel(d)).join(', ')} dibatalkan. Hari yang sudah lewat tetap tercatat.`,
-    tone: 'danger',
-    confirmText: 'Batalkan izin',
-    cancelText: 'Kembali',
-  })
-  if (!ok) return
+  const label = x.type === 'sakit' ? 'Sakit' : 'Izin'
+  const base = `${label} untuk ${x.dates.map((d) => dayLabel(d)).join(', ')} dibatalkan. Hari yang sudah lewat tetap tercatat.`
+  const plan = cancelPlan(x.notice)
+  let note = ''
+  if (plan === 'apologize') {
+    const text = await ask({
+      title: 'Batalkan izin?',
+      message: `${base} Ustadz/ustadzah sudah menerima kabar izinnya, jadi akan dikirimi ralat beserta permintaan maaf.`,
+      tone: 'danger',
+      confirmText: 'Batalkan & kirim ralat',
+      cancelText: 'Kembali',
+      input: { ...NOTE_INPUT, label: 'Pesan untuk ustadz/ustadzah (opsional)', placeholder: 'mis. alhamdulillah sudah sehat, ananda masuk' },
+    })
+    if (text === null) return
+    note = text
+  } else {
+    const ok = await ask({
+      title: 'Batalkan izin?',
+      message: plan === 'retract' ? `${base} Kabar ke ustadz/ustadzah belum terkirim, jadi ikut dibatalkan.` : base,
+      tone: 'danger',
+      confirmText: 'Batalkan izin',
+      cancelText: 'Kembali',
+    })
+    if (!ok) return
+  }
   try {
-    await api.delete(`/wali/izin/${x.id}`)
-    toast.success('Izin dibatalkan')
+    const { data } = await api.delete(`/wali/izin/${x.id}`, { data: { note } })
+    toast.success(cancelResultText(label, data))
     await load()
   } catch (err) {
     toast.error(err.response?.data?.error || 'Belum berhasil. Coba lagi.')
@@ -553,6 +574,16 @@ onMounted(load)
 
 .past-card .w-help {
   margin: 0;
+}
+
+/* the teachers' WhatsApp of this izin (2-minute undo window) */
+.past-wa {
+  margin-top: 4px;
+}
+
+.past-wa.is-waiting {
+  color: #b45309;
+  font-weight: 600;
 }
 
 .past-actions {
