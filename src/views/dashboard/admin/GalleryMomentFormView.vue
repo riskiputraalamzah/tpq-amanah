@@ -761,6 +761,7 @@ async function saveMoment() {
 <style scoped>
 .gm-form-page {
   max-width: 760px;
+  margin-inline: auto;
 }
 .gm-form-body {
   display: flex;

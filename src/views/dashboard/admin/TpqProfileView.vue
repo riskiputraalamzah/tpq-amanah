@@ -266,6 +266,11 @@ onMounted(() => {
   color: var(--gray-600);
 }
 
+.tpq-profile-view {
+  max-width: 800px;
+  margin-inline: auto;
+}
+
 .tpq-profile-container {
   max-width: 800px;
 }

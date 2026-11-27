@@ -278,6 +278,11 @@ onMounted(() => {
   color: var(--gray-600);
 }
 
+.profile-view {
+  max-width: 800px;
+  margin-inline: auto;
+}
+
 .profile-container {
   max-width: 800px;
 }

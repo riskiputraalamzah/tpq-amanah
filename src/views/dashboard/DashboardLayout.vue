@@ -1260,6 +1260,12 @@ onMounted(() => {
   margin: 0 auto;
 }
 
+/* A page that caps its own width (a form, a list of contacts) sits in the middle of the work area, never stuck to the
+   left with an empty right side. Full-width pages are not affected. The leaving page of a slide sets margin 0 inline. */
+.dashboard-content > div > * {
+  margin-inline: auto;
+}
+
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;

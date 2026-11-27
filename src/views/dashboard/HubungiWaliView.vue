@@ -211,6 +211,7 @@ onMounted(load)
   --gold: #b45309;
   --ivory: #fbf9f3;
   max-width: 860px;
+  margin-inline: auto;
   color: var(--ink);
 }
 
