@@ -239,6 +239,7 @@
                 :disabled="saving || sessionLocked"
                 @input="onEdit"
               />
+              <span class="field-hint">Bila diisi, tampil di portal wali santri.</span>
             </label>
 
             <label class="field">
@@ -250,10 +251,11 @@
                 v-model="notes"
                 class="form-input editor-textarea notes-textarea"
                 rows="4"
-                placeholder="Catatan perkembangan santri, kendala mengajar, atau evaluasi kelas..."
+                placeholder="Contoh: Alhamdulillah santri lancar; mohon dimurajaah di rumah..."
                 :disabled="saving || sessionLocked"
                 @input="onEdit"
               />
+              <span class="field-hint">Bila diisi, tampil di portal wali santri jilid ini. Hal internal jangan ditulis di sini.</span>
             </label>
           </div>
 
@@ -986,6 +988,12 @@ onMounted(fetchData);
   background: rgba(220, 38, 38, 0.08);
   color: #dc2626;
   border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--gray-500, #6b7280);
+  line-height: 1.4;
 }
 
 .field-badge.optional {

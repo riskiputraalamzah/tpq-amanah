@@ -15,7 +15,11 @@
       <section v-if="data.lastMaterial" class="w-card last-card" aria-labelledby="last-title">
         <p id="last-title" class="card-label">Materi terakhir · {{ longDate(data.lastMaterial.date) }}</p>
         <p class="last-material">{{ data.lastMaterial.material }}</p>
-        <p v-if="data.lastMaterial.supportingMaterial" class="last-support">Materi pendukung: {{ data.lastMaterial.supportingMaterial }}</p>
+        <p v-if="data.lastMaterial.supportingMaterial" class="last-support"><span class="note-label">Materi penunjang:</span> {{ data.lastMaterial.supportingMaterial }}</p>
+        <div v-if="data.lastMaterial.notes" class="teacher-note">
+          <span class="note-label">Catatan ustadz/ustadzah</span>
+          <p class="teacher-note-text">{{ data.lastMaterial.notes }}</p>
+        </div>
       </section>
 
       <!-- month switcher -->
@@ -76,7 +80,11 @@
           <template v-else>
             <p v-if="m.material" class="meeting-material">{{ m.material }}</p>
             <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
-            <p v-if="m.supportingMaterial" class="meeting-support">Pendukung: {{ m.supportingMaterial }}</p>
+            <p v-if="m.supportingMaterial" class="meeting-support"><span class="note-label">Materi penunjang:</span> {{ m.supportingMaterial }}</p>
+            <div v-if="m.notes" class="teacher-note is-compact">
+              <span class="note-label">Catatan ustadz/ustadzah</span>
+              <p class="teacher-note-text">{{ m.notes }}</p>
+            </div>
             <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
             <p v-if="m.holidayReason" class="meeting-holiday-note">Catatan: Sesi ini kemudian diliburkan TPQ ({{ m.holidayReason }}).</p>
           </template>
@@ -474,6 +482,47 @@ onMounted(load)
   margin: 4px 0 0;
   font-size: 0.88rem;
   color: #475a50;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.note-label {
+  font-weight: 700;
+  color: #0b3b2a;
+}
+
+/* the teacher's "Catatan guru" from the KBM journal, only when filled in */
+.teacher-note {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid #b45309;
+  border-radius: 0 10px 10px 0;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.teacher-note .note-label {
+  display: block;
+  font-size: 0.78rem;
+  color: #92400e;
+}
+
+.teacher-note-text {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #1f3a2e;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.teacher-note.is-compact {
+  margin: 6px 0 2px;
+  padding: 6px 10px;
+  background: #fbf9f3;
+}
+
+.teacher-note.is-compact .teacher-note-text {
+  font-size: 0.85rem;
 }
 
 .month-bar {
@@ -592,6 +641,7 @@ onMounted(load)
   margin: 0;
   font-size: 0.85rem;
   color: #5b6b62;
+  overflow-wrap: anywhere;
 }
 
 .meeting.is-holiday {

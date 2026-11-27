@@ -408,6 +408,8 @@
                   <div class="santri-name-line">
                     <span class="santri-name">{{ santri.name }}</span>
                     <span v-if="!santri.status" class="kosong-badge">Dikosongkan</span>
+                    <span v-if="santri.pjCheck === 'alfa'" class="pj-check-badge">Dialfa {{ santri.presenceByName || 'PJ' }} saat absen awal, pastikan</span>
+                    <span v-else-if="santri.pjCheck === 'unseen'" class="pj-check-badge is-unseen">Belum tercatat saat absen awal, pastikan</span>
                     <span v-if="santri.titip" class="titip-badge">Titipan · {{ santri.titip.classId === '7' ? 'Marhalah' : `Jilid ${santri.titip.classId}` }}</span>
                     <button
                       v-if="!santri.titip"
@@ -580,6 +582,7 @@
                 class="form-textarea"
                 placeholder="Penjelasan ringkas materi pendukung atau evaluasi santri..."
               ></textarea>
+              <p class="form-hint-wali">Bila diisi, tampil di portal wali santri.</p>
             </div>
 
             <div class="form-group">
@@ -590,8 +593,9 @@
                 v-model="journalForm.notes"
                 rows="2"
                 class="form-textarea"
-                placeholder="Catatan tambahan santri atau evaluasi sesi..."
+                placeholder="Contoh: Alhamdulillah santri lancar; mohon dimurajaah di rumah..."
               ></textarea>
+              <p class="form-hint-wali">Bila diisi, tampil di portal wali santri jilid ini. Hal internal jangan ditulis di sini.</p>
             </div>
           </div>
         </section>
@@ -1407,8 +1411,19 @@ async function loadLevelContext(levelId) {
       nickname: s.nickname || '',
       status: data.existingSession ? (normalizeStudentStatus(s.status) || '') : (normalizeStudentStatus(s.status) || 'hadir'),
       fromPresence: !!s.fromPresence,
+      presenceByName: s.presenceByName || '',
+      // PJ Absen: what this teacher should check again (an alfa someone else wrote at the opening du'a, or a child the
+      // roll call did not record and this form put on hadir)
+      pjCheck: data.existingSession
+        ? null
+        : s.fromPresence && normalizeStudentStatus(s.status) === 'alfa' && s.presenceSource === 'absen' && s.presenceById && s.presenceById !== authStore.user?.id
+          ? 'alfa'
+          : data.presenceNote && !s.fromPresence && !s.titip
+            ? 'unseen'
+            : null,
       ...(s.titip ? { titip: s.titip } : {})
     }));
+    remindPjCheck();
     rainMode.value = roster.value.some(s => !s.status);
     titipAway.value = data.titipAway || [];
 
@@ -1430,6 +1445,25 @@ async function loadLevelContext(levelId) {
   } finally {
     loadingLevelContext.value = false;
   }
+}
+
+// PJ Absen: once per form, say which children the roll call at the opening du'a marked alfa (someone else) or did not
+// record: this teacher answers for them now, and a kabar alfa names this teacher.
+function remindPjCheck() {
+  const alfa = roster.value.filter((s) => s.pjCheck === 'alfa');
+  const unseen = roster.value.filter((s) => s.pjCheck === 'unseen');
+  if (!alfa.length && !unseen.length) return;
+  const names = (list) => list.map((s) => s.name).join(', ');
+  const parts = [];
+  if (alfa.length) parts.push(`Dialfa saat absen awal: ${names(alfa)}.`);
+  if (unseen.length) parts.push(`Belum tercatat saat absen awal (sementara ditandai Hadir di form ini): ${names(unseen)}.`);
+  parts.push('Pastikan apakah sudah datang, lalu ubah statusnya di daftar bila perlu. Santri yang tetap alfa dikabarkan ke wali dengan nama dan nomor Antum sebagai pengajarnya.');
+  ask({
+    title: `Pastikan ${alfa.length + unseen.length} santri dari absen awal`,
+    message: parts.join(' '),
+    confirmText: 'Saya cek sekarang',
+    cancelText: 'Tutup',
+  });
 }
 
 // A guru's KBM of yesterday saved before 12:00: its statuses may replace what Absen Santri recorded, after a
@@ -2608,6 +2642,21 @@ onMounted(async () => {
   color: #64748b;
 }
 
+.pj-check-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff3d6;
+  color: #7a4b06;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pj-check-badge.is-unseen {
+  background: #e0f2fe;
+  color: #075985;
+}
+
 .kosong-badge {
   flex: none;
   padding: 2px 8px;
@@ -2893,6 +2942,13 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.form-hint-wali {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #6b7280;
 }
 
 .form-label {

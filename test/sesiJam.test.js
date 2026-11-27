@@ -59,7 +59,8 @@ const titipSheet = read("src/components/absen/TitipSheet.vue");
 test("Titip santri: a Titipan group on top of the sesi the child goes to; left out (named) in the other; KBM marks them", () => {
   assert.ok(has(absen, "...(titipan.length ? [groupOf('titip', titipan, { own: true, titip: true })] : [])"));
   assert.ok(has(absen, "if (s.titip) continue"), "not in their jilid group");
-  assert.ok(has(absen, "else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1"));
+  assert.ok(has(absen, "else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) {"));
+  assert.ok(has(absen, "if (keptOf(s.id)) c.kept += 1 else c.none += 1"), "Mode Hujan children are dikosongkan, not belum dicatat");
   assert.ok(has(absen, '<TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />'));
   assert.ok(has(titipSheet, "mode: f.mode === 'tetap' ? 'tetap' : 'hari'"));
   assert.ok(has(titipSheet, "classIds.value === null || classIds.value.includes(String(s.classId))"), "only the jilid the person may decide");

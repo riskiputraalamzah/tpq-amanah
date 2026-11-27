@@ -50,7 +50,9 @@ test("a double tap does not undo the tap; the sheet refreshes when the tab comes
 
 test("a parent's izin/sakit row is locked: no buttons, an explicit confirmation in our own dialog, then the change says override", () => {
   assert.ok(has(view, "const isLocked = (id) => records.value[id]?.locked === true && !unlocked.value[id]"));
-  assert.ok(has(view, ":disabled=\"!sheet.canEdit || isLocked(s.id)\""));
+  assert.ok(has(view, ":disabled=\"!canMark || isLocked(s.id)\""));
+  // PJ Absen: a guru records today's sesi only after somebody opened it (canMark), the admin always
+  assert.ok(has(view, "const canMark = computed(() => !!sheet.value?.canEdit && !(!isAdmin.value && isToday.value && isLive.value && !sheet.value?.pj))"));
   assert.ok(has(view, "'is-locked': isLocked(s.id)"));
   assert.ok(has(view, "const { ask } = useDialog()"));
   assert.ok(has(view, "confirmText: 'Ya, ubah'"));

@@ -16,6 +16,18 @@
       <button v-if="isAdmin" type="button" class="as-titip-btn as-holiday-btn" @click="holidayOpen = true">Liburkan sesi</button>
     </div>
     <TitipSheet :open="titipOpen" :santri="sheet?.santri || []" @close="titipOpen = false" @changed="onTitipChanged" />
+    <PjTakeoverSheet
+      v-if="sheet"
+      :open="takeoverOpen"
+      :date="sheet.date"
+      :slot="sheet.slot"
+      :slot-label="slotLabel"
+      :pj="sheet.pj"
+      :needs-hadir="!!sheet.pjMe?.needsHadir"
+      @close="takeoverOpen = false"
+      @done="onTakeoverDone"
+    />
+    <PjRecheckSheet :open="recheckOpen" :items="recheckItems" :takeover="recheckTakeover" @pick="onRecheckPick" @close="recheckOpen = false" />
     <SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />
     <div v-if="sheet && sheet.daysBack === 0 && !sheet.dayOff" ref="hintWrap" class="as-hint-wrap">
       <!-- Desktop: concise inline hint; Mobile: compact tooltip trigger so it does not eat screen space -->
@@ -87,6 +99,7 @@
           <span v-if="myJilidFilterActive && myJilidLabel" class="as-scope-tag">{{ myJilidLabel }}</span>
           <span v-for="t in TALLY" :key="t.key" :class="`is-${t.key}`"><strong>{{ counts[t.key] }}</strong> {{ t.label }}</span>
           <span class="is-none"><strong>{{ counts.none }}</strong> belum dicatat</span>
+          <span v-if="counts.kept" class="is-kept"><strong>{{ counts.kept }}</strong> dikosongkan</span>
           <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
           <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
         </template>
@@ -208,9 +221,40 @@
       <p v-else-if="sheet.pastDay && sheet.canEdit" class="as-note is-warn" role="status">
         Ini absen hari yang sudah lewat. Setiap perubahan diminta konfirmasi dulu dan dicatat atas nama Antum.
       </p>
-      <p v-if="!sheet.canEdit" class="as-note is-warn" role="status">
+      <p v-if="!sheet.canEdit && !showOpenCard" class="as-note is-warn" role="status">
         {{ sheet.reason }}
         <router-link v-if="/absen kehadiran/.test(sheet.reason)" to="/dashboard/attendance" class="as-inline-link">Buka Absensi</router-link>
+      </p>
+
+      <!-- PJ Absen: the first teacher who opens today's sesi answers for its roll call (backend absen_pj_service.js) -->
+      <PjOpenCard
+        v-if="showOpenCard"
+        :key="`${sheet.date}|${sheet.slot}|${sheet.pj?.guruId || ''}`"
+        :date="sheet.date"
+        :slot="sheet.slot"
+        :slot-label="slotLabel"
+        :pj="sheet.pj"
+        :needs-hadir="!!sheet.pjMe?.needsHadir"
+        :early="!!sheet.pjMe?.early"
+        @opened="onPjOpened"
+      />
+      <section v-if="sheet.pj" class="as-pj" :class="{ 'is-me': isMePj }" role="status">
+        <span class="as-pj-ico" aria-hidden="true">PJ</span>
+        <span class="as-pj-text">
+          <strong>PJ Absen {{ slotLabel }}: {{ sheet.pj.guruName }}<template v-if="isMePj"> (Antum)</template></strong>
+          <span class="as-pj-meta">
+            sejak {{ clockOf(sheet.pj.since) }}<template v-if="sheet.pj.earlyHelp"> · membantu dari sesi lain</template><template v-if="pjTakenFrom"> · mengambil alih dari {{ pjTakenFrom }}</template>
+          </span>
+        </span>
+        <button v-if="canTakeOver" type="button" class="as-pj-take" @click="takeoverOpen = true">Ambil alih PJ</button>
+      </section>
+      <button v-if="myPjAlfa.length && canMark" type="button" class="as-pj-check" @click="openRecheck(myPjAlfa, false)">
+        <span><strong>{{ myPjAlfa.length }} santri</strong> dialfa saat absen awal dan kini tanggung jawab Antum. Pastikan sudah datang atau belum.</span>
+        <span aria-hidden="true">›</span>
+      </button>
+      <p v-if="isAdmin && isToday && !sheet.pj" class="as-note is-warn" role="status">
+        Sesi ini belum dibuka PJ Absen. Admin tetap bisa mengisi dan mengoreksi, tetapi tidak menjadi PJ. Guru yang pertama membuka absen
+        sesi ini menjadi PJ-nya.
       </p>
 
       <!-- the parents told the TPQ ahead through the portal: compact disclosure so mobile stays scannable -->
@@ -307,13 +351,16 @@
               <span class="as-group-count">{{ groupCountText(g) }}</span>
               <span class="as-chevron" aria-hidden="true">{{ isOpen(g) ? '▾' : '▸' }}</span>
             </button>
-            <button v-if="sheet.canEdit && isOpen(g) && g.own && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
+            <button v-if="canMark && isOpen(g) && g.own && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
               Tandai sisanya hadir
             </button>
             <button v-if="!g.own && otherSheetHas(g.classId)" type="button" class="as-jump" @click="jumpTo(g.classId)">
               Lihat di sesi {{ otherSlot.label }} · {{ otherRecordedOf(g.classId) }}/{{ g.items.length }} dicatat ›
             </button>
           </div>
+        <p v-if="!search && groupGap(g)" class="as-gap" :class="{ 'is-mine': groupGap(g).mine }">
+          <strong>{{ groupGap(g).count }} belum dicatat</strong> · tanggung jawab {{ groupGap(g).who }}
+        </p>
         <p v-if="!search && awayOf(g.classId).length" class="as-away">
           Dititipkan ke sesi lain: {{ awayOf(g.classId).map((x) => `${x.name} (${slotName(x.titip.slot)}, ${x.titip.hostGuruName})`).join(', ') }}
         </p>
@@ -330,13 +377,14 @@
                 {{ recordOf(s.id).source === 'kbm' ? 'dari KBM' : 'oleh' }} {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).changedFrom">
                   · menggantikan {{ recordOf(s.id).changedFrom.status }} dari wali</template>
               </span>
-              <button v-if="sheet.canEdit && isLocked(s.id)" type="button" class="as-unlock" :aria-label="`Ubah status ${s.name}`" @click="unlock(s)">
+              <span v-if="!statusOf(s.id) && keptOf(s.id)" class="as-by is-kept">Dikosongkan (Mode Hujan) oleh {{ keptOf(s.id).byName || 'guru KBM' }}</span>
+              <button v-if="canMark && isLocked(s.id)" type="button" class="as-unlock" :aria-label="`Ubah status ${s.name}`" @click="unlock(s)">
                 🔒 Ubah status
               </button>
             </div>
             <div class="as-choices" role="group" :aria-label="`Status ${s.name}`">
               <button v-for="st in STATUSES" :key="st.key" type="button" class="as-choice" :class="`is-${st.key}`"
-                :aria-pressed="statusOf(s.id) === st.key" :disabled="!sheet.canEdit || isLocked(s.id)" @click="choose(s.id, st.key)">
+                :aria-pressed="statusOf(s.id) === st.key" :disabled="!canMark || isLocked(s.id)" @click="choose(s.id, st.key)">
                 {{ st.label }}
               </button>
             </div>
@@ -349,20 +397,26 @@
       <button v-if="!search && !myJilidFilterActive && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
         {{ showOthers ? 'Sembunyikan jilid lain' : `Ada santri jilid lain yang ikut sesi ${slotLabel}? Tampilkan jilid lain (${otherCount} santri)` }}
       </button>
-      <p class="as-foot">Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa. Baris izin/sakit dari wali terkunci.</p>
+      <p class="as-foot">
+        Ketuk status yang sama sekali lagi untuk menghapusnya. Santri yang tidak dicatat tidak dianggap alfa, tetapi semua santri harus
+        tercatat sebelum hari berakhir: saat sesi selesai, guru yang bertanggung jawab diingatkan lewat WhatsApp. Baris izin/sakit dari wali terkunci.
+      </p>
     </template>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
+import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import AbsenReports from '@/components/absen/AbsenReports.vue'
 import EarlyAudit from '@/components/absen/EarlyAudit.vue'
 import TitipSheet from '@/components/absen/TitipSheet.vue'
 import SessionHolidaySheet from '@/components/absen/SessionHolidaySheet.vue'
+import PjOpenCard from '@/components/absen/PjOpenCard.vue'
+import PjTakeoverSheet from '@/components/absen/PjTakeoverSheet.vue'
+import PjRecheckSheet from '@/components/absen/PjRecheckSheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
@@ -491,6 +545,95 @@ const waliSummary = computed(() => {
 })
 const statusOf = (id) => records.value[id]?.status || null
 
+// ---------------------------------------------------------------------------------------------------------------
+// PJ Absen (backend services/absen_pj_service.js). A guru records today's sesi only once somebody opened it (the PJ);
+// the admin records and corrects without being PJ. Mode Hujan: a child a KBM left empty on purpose is "dikosongkan",
+// not "belum dicatat".
+const takeoverOpen = ref(false)
+const recheckOpen = ref(false)
+const recheckItems = ref([])
+const recheckTakeover = ref(false)
+const isToday = computed(() => sheet.value?.date === today)
+const isLive = computed(() => !!sheet.value && !sheet.value.dayOff && !sheet.value.sessionHoliday && !sheet.value.notOpenYet)
+const isMePj = computed(() => !!sheet.value?.pj && sheet.value?.pjMe?.role === 'pj')
+// a teacher recorded izin/sakit today is not asked to open (the reason note says what to do)
+const showOpenCard = computed(() => {
+  const sh = sheet.value
+  if (!sh || isAdmin.value || !isLive.value || !isToday.value || !sh.pjMe) return false
+  if (sh.pjMe.attendance && sh.pjMe.attendance !== 'hadir') return false
+  return !sh.pj || sh.pjMe.needsHadir
+})
+const canMark = computed(() => !!sheet.value?.canEdit && !(!isAdmin.value && isToday.value && isLive.value && !sheet.value?.pj))
+const canTakeOver = computed(() => {
+  const me = sheet.value?.pjMe
+  return !isAdmin.value && isToday.value && isLive.value && !!sheet.value?.pj && !!me && me.role !== 'pj' && (!me.attendance || me.attendance === 'hadir')
+})
+const pjTakenFrom = computed(() => {
+  const h = [...(sheet.value?.pj?.history || [])].reverse().find((x) => x.type === 'takeover')
+  return h?.fromGuruName || ''
+})
+const clockOf = (iso) => {
+  if (!iso) return ''
+  return new Date(new Date(iso).getTime() + 7 * 3600 * 1000).toISOString().slice(11, 16).replace(':', '.')
+}
+const keptOf = (id) => sheet.value?.kept?.[id] || null
+// the alfa someone else wrote at the roll call that this teacher now answers for, still alfa and not yet re-marked
+const myPjAlfa = computed(() =>
+  (sheet.value?.pjAlfa || []).filter((x) => {
+    const r = records.value[x.santriId]
+    return r?.status === 'alfa' && r.byName !== 'Antum' && !(myUid.value && r.byId === myUid.value)
+  }),
+)
+// "2 belum dicatat · tanggung jawab Ustadz X" under a jilid of this sesi
+function groupGap(g) {
+  const sh = sheet.value
+  if (!sh || !g.own || !isLive.value || !sh.responsible) return null
+  // before anyone opened today's sesi there is nobody to name yet (until the sesi ends: then the coordinators)
+  if (!sh.pj && isToday.value) {
+    const end = sh.slot === 'wave_2' ? '19:30' : '16:30'
+    if (wibNow().toISOString().slice(11, 16) < end) return null
+  }
+  const blanks = g.items.filter((s) => !statusOf(s.id) && !keptOf(s.id))
+  if (!blanks.length) return null
+  const resp = g.titip ? blanks.map((s) => sh.titipResponsible?.[s.id]).filter(Boolean) : [sh.responsible[g.classId]].filter(Boolean)
+  const names = [...new Set(resp.flatMap((r) => (r.kind === 'pj' ? r.names.map((n) => `${n} (PJ)`) : r.names)))]
+  const mine = !!myUid.value && resp.some((r) => (r.ids || []).includes(myUid.value))
+  return { count: blanks.length, who: names.length ? names.join(', ') : 'koordinator', mine }
+}
+function openRecheck(items, takeover) {
+  recheckItems.value = items.map((x) => ({ ...x }))
+  recheckTakeover.value = takeover
+  recheckOpen.value = true
+}
+async function onRecheckPick({ santriId, status }) {
+  if (!canMark.value) return
+  if (!(await alfaToldOk(santriId, status))) return
+  queue(santriId, status) // also "Tetap alfa": recorded again in this teacher's name (the kabar alfa names them)
+}
+// once per sesi and set of children: the list opens by itself, then stays behind the button
+function maybeOpenRecheck() {
+  const items = myPjAlfa.value
+  if (!items.length || !canMark.value || recheckOpen.value || takeoverOpen.value) return
+  const key = `tpq.pjAlfa.${sheet.value.date}.${sheet.value.slot}.${items.map((x) => x.santriId).sort().join(',')}`
+  try {
+    if (sessionStorage.getItem(key)) return
+    sessionStorage.setItem(key, '1')
+  } catch {
+    /* private mode: still open it */
+  }
+  openRecheck(items, false)
+}
+async function onPjOpened(data) {
+  await load({ silent: !!data })
+  if (data?.role === 'pj') success(`Antum PJ Absen ${slotLabel.value} hari ini.`)
+}
+async function onTakeoverDone(data) {
+  takeoverOpen.value = false
+  success(`Antum sekarang PJ Absen ${slotLabel.value}.`)
+  await load({ silent: true })
+  if (data?.pjAlfa?.length) openRecheck(data.pjAlfa, true)
+}
+
 // Titip santri (services/santri_titip_service.js): a child who goes to THIS sesi that day is in the "Titipan" group
 // on top; a child who goes to the other sesi is left out of their jilid here (named under it, never "belum dicatat")
 const titipHere = (s) => !!s.titip && s.titip.slot === sheet.value?.slot
@@ -523,7 +666,9 @@ const groups = computed(() => {
 const otherGroups = computed(() => groups.value.filter((g) => !g.own))
 const slotLabel = computed(() => SLOTS.find((x) => x.id === slot.value)?.label || '')
 const otherSlot = computed(() => SLOTS.find((x) => x.id !== slot.value))
-const recordedIn = (sh) => Object.values(sh?.records || {}).filter((r) => r?.status).length
+// only the sheet's (active) santri, like the tally under the tabs and the admin Dashboard: a row left by a santri
+// who is nonaktif now is not counted
+const recordedIn = (sh, recs = sh?.records) => (sh?.santri || []).filter((s) => recs?.[s.id]?.status).length
 // "Jilid 1–4", "Jilid 5, 6, Marhalah"
 function jilidRange(ids) {
   const nums = ids.filter((i) => String(i) !== '7')
@@ -539,7 +684,7 @@ const slotJilid = (id) => jilidRange(sheetOf(id)?.defaultClassIds || [])
 function slotCount(id) {
   const sh = sheetOf(id)
   if (!sh) return null
-  return id === slot.value ? Object.values(records.value).filter((r) => r?.status).length : recordedIn(sh)
+  return id === slot.value ? recordedIn(sh, records.value) : recordedIn(sh)
 }
 const otherSheetHas = (classId) => (otherSheet.value?.defaultClassIds || []).includes(classId)
 function otherRecordedOf(classId) {
@@ -594,13 +739,17 @@ const toggle = (classId) => {
   opened.value = { ...opened.value, [classId]: !isOpen(g) }
 }
 const counts = computed(() => {
-  const c = { hadir: 0, izin: 0, sakit: 0, alfa: 0, none: 0 }
+  const c = { hadir: 0, izin: 0, sakit: 0, alfa: 0, none: 0, kept: 0 }
   const filterMine = myJilidFilterActive.value
   for (const s of sheet.value?.santri || []) {
     if (filterMine && !isMySlotClass(s.classId) && !isMyTitip(s)) continue
     const st = statusOf(s.id)
     if (st) c[st] += 1
-    else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) c.none += 1
+    else if (s.titip ? titipHere(s) : (sheet.value?.defaultClassIds || []).includes(s.classId)) {
+      // Mode Hujan: left empty on purpose by the KBM teacher, decided (not "belum dicatat")
+      if (keptOf(s.id)) c.kept += 1
+      else c.none += 1
+    }
   }
   return c
 })
@@ -627,6 +776,7 @@ async function load({ silent = false } = {}) {
     sheet.value = data
     records.value = withPending(data.records, d, sl)
     loadOther(d, sl, mine)
+    nextTick(maybeOpenRecheck)
     if (!silent) {
       opened.value = {}
       unlocked.value = {}
@@ -972,6 +1122,8 @@ async function sendAll() {
 }
 
 function resetView() {
+  takeoverOpen.value = false
+  recheckOpen.value = false
   sheet.value = null // the old day's rows are never tapped on a new day
   records.value = {}
   otherSheet.value = null
@@ -1042,7 +1194,13 @@ const onDocClick = (e) => {
 const onDocKey = (e) => {
   if (hintOpen.value && e.key === 'Escape') hintOpen.value = false
 }
+const route = useRoute()
 onMounted(() => {
+  // from a WhatsApp reminder: /dashboard/absen-santri?date=YYYY-MM-DD&slot=wave_1
+  const qd = String(route.query.date || '')
+  const qs = String(route.query.slot || '')
+  if (/^\d{4}-\d{2}-\d{2}$/.test(qd) && qd <= today) date.value = qd
+  if (SLOTS.some((x) => x.id === qs)) slot.value = qs
   loadMyClasses()
   load()
   document.addEventListener('visibilitychange', onHide)
@@ -1859,6 +2017,133 @@ onBeforeUnmount(() => {
 .as-by.is-wali {
   color: #1d4f8a;
   font-weight: 600;
+}
+
+.as-by.is-kept {
+  color: #075985;
+  font-weight: 600;
+}
+
+/* PJ Absen: who answers for this sesi's roll call */
+.as-pj {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(10, 92, 64, 0.2);
+  background: #f3faf6;
+  animation: as-pj-in 320ms ease-out;
+}
+
+.as-pj.is-me {
+  border-color: rgba(180, 83, 9, 0.35);
+  background: linear-gradient(135deg, #fffaf0 0%, #f3faf6 100%);
+}
+
+.as-pj-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--emerald);
+  color: #fcd34d;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.as-pj-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.as-pj-text strong {
+  font-size: 0.92rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.as-pj-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.as-pj-take {
+  flex: none;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(180, 83, 9, 0.4);
+  background: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #b45309;
+  cursor: pointer;
+}
+
+.as-pj-take:focus-visible,
+.as-pj-check:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-pj-check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #f1cf94;
+  background: #fff8ed;
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  text-align: left;
+  color: #7c3a06;
+  cursor: pointer;
+}
+
+.as-gap {
+  margin: 0;
+  padding: 6px 16px 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #5b6b62;
+}
+
+.as-gap strong {
+  color: #8e1b12;
+}
+
+.as-gap.is-mine {
+  color: #7c3a06;
+  background: #fff8ed;
+}
+
+.as-summary .is-kept strong { color: #075985; }
+
+@keyframes as-pj-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-pj { animation: none; }
+}
+
+@media (max-width: 420px) {
+  .as-pj { flex-wrap: wrap; }
+  .as-pj-take { width: 100%; }
 }
 
 /* Collapsible, mobile-first disclosure for parent-submitted izin/sakit */

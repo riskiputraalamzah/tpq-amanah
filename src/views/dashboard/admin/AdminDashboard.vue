@@ -54,7 +54,13 @@
                 <ul class="ad-legend">
                   <li v-for="st in STATUS" :key="st.key" :class="`is-${st.key}`"><strong>{{ d.today.sesi[s.key][st.key] }}</strong> {{ st.label }}</li>
                   <li class="is-none"><strong>{{ d.today.sesi[s.key].notRecorded }}</strong> belum dicatat</li>
+                  <li v-if="d.today.sesi[s.key].kept" class="is-kept"><strong>{{ d.today.sesi[s.key].kept }}</strong> dikosongkan (hujan)</li>
                 </ul>
+                <!-- PJ Absen: who opened this sesi's roll call -->
+                <p v-if="d.today.sesi[s.key].pj" class="ad-pj">
+                  PJ Absen: <strong>{{ d.today.sesi[s.key].pj.name }}</strong><template v-if="d.today.sesi[s.key].pj.earlyHelp"> (bantu dari sesi lain)</template>
+                </p>
+                <p v-else-if="sesiStarted(s.key)" class="ad-pj is-none">Belum ada PJ Absen</p>
                 <p v-if="d.today.sesi[s.key].fromWali" class="ad-note">{{ d.today.sesi[s.key].fromWali }} izin/sakit dari wali lewat portal</p>
               </div>
             </div>
@@ -237,12 +243,17 @@ const updatedText = computed(() => {
 })
 const shortDate = (iso) => `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1].slice(0, 3)} ${iso.slice(0, 4)}`
 
-// one bar per sesi: hadir / izin / sakit / alfa / not recorded, as parts of everything expected that day
+// one bar per sesi: hadir / izin / sakit / alfa / not recorded; the parts always fill the bar (they add up to it)
 function stackParts(s) {
-  const whole = Math.max(s.expected, s.recorded) || 1
-  return [...STATUS.map((st) => ({ key: st.key, n: s[st.key] })), { key: 'none', n: s.notRecorded }]
+  const whole = (s.recorded || 0) + (s.notRecorded || 0) + (s.kept || 0) || 1
+  return [...STATUS.map((st) => ({ key: st.key, n: s[st.key] })), { key: 'kept', n: s.kept || 0 }, { key: 'none', n: s.notRecorded }]
     .filter((p) => p.n > 0)
     .map((p) => ({ key: p.key, pct: (p.n / whole) * 100 }))
+}
+// the sesi has started (Sore 15:00, Malam 18:00 WIB): only then is "no PJ yet" worth saying
+const sesiStarted = (key) => {
+  const t = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(11, 16)
+  return t >= (key === 'wave_2' ? '18:00' : '15:00')
 }
 const stackLabel = (s) => `${s.hadir} hadir, ${s.izin} izin, ${s.sakit} sakit, ${s.alfa} alfa, ${s.notRecorded} belum dicatat`
 const monthParts = computed(() => {
@@ -565,6 +576,7 @@ onBeforeUnmount(() => {
 .ad-stack .is-sakit { background: var(--sakit); }
 .ad-stack .is-alfa { background: var(--alfa); }
 .ad-stack .is-none { background: var(--none); }
+.ad-stack .is-kept { background: #7dd3fc; }
 
 .ad-legend {
   display: flex;
@@ -585,6 +597,25 @@ onBeforeUnmount(() => {
 .ad-legend .is-izin strong { color: var(--izin); }
 .ad-legend .is-sakit strong { color: var(--sakit); }
 .ad-legend .is-alfa strong { color: var(--alfa); }
+
+.ad-pj {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted, #5b6b62);
+}
+
+.ad-pj strong {
+  color: #0a5c40;
+}
+
+.ad-pj.is-none {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.ad-legend .is-kept strong {
+  color: #075985;
+}
 
 .ad-note {
   margin: 6px 0 0;
