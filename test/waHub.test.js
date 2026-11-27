@@ -40,12 +40,12 @@ test("one menu item for everything WhatsApp; announcements sit with it under Kom
   const layout = squash(read("src/views/dashboard/DashboardLayout.vue"));
   const start = layout.indexOf(squash("const ADMIN_GROUPS = ["));
   const admin = layout.slice(start, layout.indexOf(squash("const menuGroups"), start));
-  const titles = [...admin.matchAll(/title:'([^']+)'/g)].map((m) => m[1]);
+  const titles = [...admin.matchAll(/title:"([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(titles, ["Santri&Wali", "BelajarMengajar", "Keuangan", "Komunikasi", "Pengaturan"]);
-  for (const old of ["label:'BroadcastWA'", "label:'PengingatWAGuru'", "label:'Riwayat&AntreanWA'"]) assert.ok(!admin.includes(old), `${old} is a tab now, not a menu item`);
+  for (const old of ['label:"BroadcastWA"', 'label:"PengingatWAGuru"', 'label:"Riwayat&AntreanWA"']) assert.ok(!admin.includes(old), `${old} is a tab now, not a menu item`);
   assert.ok(has(admin, "{ to: '/dashboard/whatsapp', label: 'Pusat WhatsApp'"));
-  const komunikasi = admin.slice(admin.indexOf("title:'Komunikasi'"), admin.indexOf("title:'Pengaturan'"));
-  assert.deepEqual([...komunikasi.matchAll(/label:'([^']+)'/g)].map((m) => m[1]), ["PusatWhatsApp", "PengumumanWali", "PengumumanGuru&Web"]);
+  const komunikasi = admin.slice(admin.indexOf('title:"Komunikasi"'), admin.indexOf('title:"Pengaturan"'));
+  assert.deepEqual([...komunikasi.matchAll(/label:"([^"]+)"/g)].map((m) => m[1]), ["PusatWhatsApp", "PengumumanWali", "PengumumanGuru&Web"]);
 });
 
 test("the WhatsApp pages share one tab bar with the live bot status", () => {
