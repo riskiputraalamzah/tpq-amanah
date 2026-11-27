@@ -60,11 +60,14 @@
 import { ref, computed, onMounted } from 'vue'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
+import { peek } from '@/utils/waliCache'
+import { WALI_KEYS } from '@/utils/waliData'
 import { formatWibDateTime, joinNames, renderWaMarkdownHtml } from '@/utils/waFormat'
 
 // Every announcement & activity info shown now; opening the tab marks them as seen (clears bottom-bar badge)
 const { list, refresh, markAllSeen } = useWaliAnnouncements()
-const loading = ref(true)
+// the skeleton only when this phone has never had the list; otherwise it shows at once and refreshes
+const loading = ref(!peek(WALI_KEYS.announcements))
 const filter = ref('all')
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']

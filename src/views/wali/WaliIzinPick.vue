@@ -21,32 +21,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 
-// The "Izin" tab: one child goes straight to their form; with more, the parent picks
+// The "Izin" tab: one child goes straight to their form; with more, the parent picks. The children come from the
+// shared store (Beranda already has them), so this shows at once; the tab itself links straight to a single child.
 const router = useRouter()
-const loading = ref(true)
-const loadError = ref('')
-const santri = ref([])
+const me = useWaliResource(() => WALI_KEYS.me, () => waliFetch.me())
+const santri = computed(() => me.data.value?.santri || [])
+const loading = computed(() => me.loading.value || (santri.value.length === 1 && !me.error.value))
+const loadError = computed(() => me.error.value)
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : '')
 const initials = (name) => String(name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
 
-onMounted(async () => {
-  try {
-    const { data } = await api.get('/wali/me', { cache: false })
-    santri.value = data.santri || []
-    if (santri.value.length === 1) {
-      router.replace(`/wali/santri/${santri.value[0].santriId}/izin`)
-      return
-    }
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Belum bisa dimuat. Periksa koneksi lalu coba lagi.'
-  }
-  loading.value = false
-})
+watch(
+  santri,
+  (list) => {
+    if (list.length === 1) router.replace(`/wali/santri/${list[0].santriId}/izin`)
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

@@ -299,6 +299,17 @@ export const useAuthStore = defineStore('auth', () => {
         setToken(null)
         sessionVerified = false
         clearApiCache()
+        // the wali portal's data on this phone (a shared phone keeps nothing of this parent)
+        try {
+            const [{ clearWaliCache }, { resetWaliAnnouncements }] = await Promise.all([
+                import('@/utils/waliCache'),
+                import('@/composables/useWaliAnnouncements'),
+            ])
+            clearWaliCache()
+            resetWaliAnnouncements()
+        } catch (err) {
+            console.log('Wali cache clear error:', err)
+        }
     }
 
     async function refreshToken() {

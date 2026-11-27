@@ -216,20 +216,31 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { STATUS } from '@/utils/santriProfile'
 import { REG_STATUS, longDate } from '@/utils/pendaftaran'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
 import { SHOW_NEW_REGISTRATION } from '@/utils/waliFeatures'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch, warmUpWali } from '@/utils/waliData'
+import { put } from '@/utils/waliCache'
 
-const loading = ref(true)
-const loadError = ref('')
-const wali = ref(null)
-const santri = ref([])
-const requests = ref([])
-const registrations = ref([])
+// shown at once from the last visit (this phone), refreshed in the background (utils/waliCache.js)
+const me = useWaliResource(() => WALI_KEYS.me, () => waliFetch.me())
+const regs = useWaliResource(() => WALI_KEYS.regs, () => waliFetch.regs())
+const feedbacks = useWaliResource(() => WALI_KEYS.feedback, () => waliFetch.feedback())
+const saveError = ref('')
+const loading = computed(() => me.loading.value)
+const loadError = computed(() => saveError.value || me.error.value)
+const wali = computed(() => me.data.value?.wali || null)
+const santri = computed(() => me.data.value?.santri || [])
+const requests = computed(() => me.data.value?.requests || [])
+// accepted: the child is under Ananda now; cancelled by the parent themselves: nothing to show (a failure: none shown)
+const registrations = computed(() =>
+  (Array.isArray(regs.data.value) ? regs.data.value : []).filter((r) => r.status !== 'accepted' && !(r.status === 'cancelled' && r.cancelledBy === 'wali')),
+)
 const expanded = ref([])
 // announcements: shared with the Pengumuman tab and its badge (closed ones are remembered on this phone)
 const { onHome: annOnHome, refresh: refreshAnnouncements, dismiss } = useWaliAnnouncements()
@@ -238,7 +249,7 @@ const toggleMore = (id) => {
 }
 const nameInput = ref('')
 const savingName = ref(false)
-const repliedFeedbackCount = ref(0)
+const repliedFeedbackCount = computed(() => (Array.isArray(feedbacks.data.value) ? feedbacks.data.value.filter((f) => f.reply?.text).length : 0))
 
 const TILES = [
   { key: 'hadir', label: 'hadir' },
@@ -273,43 +284,32 @@ const regLine = (r) => {
 const dataDone = (s) => ['submitted', 'verified'].includes(s.profileStatus)
 const actionClass = (s) => (['submitted', 'verified'].includes(s.profileStatus) ? 'w-btn-ghost' : 'w-btn-primary')
 
-async function load() {
-  loading.value = true
-  loadError.value = ''
-  try {
-    const [{ data }, regs, feedbacks] = await Promise.all([
-      api.get('/wali/me', { cache: false }),
-      // a failure here must not hide the children
-      api.get('/pendaftaran/mine', { cache: false }).then((r) => r.data || []).catch(() => []),
-      api.get('/wali-feedback/mine', { cache: false }).then((r) => r.data || []).catch(() => []),
-      refreshAnnouncements({ force: true }),
-    ])
-    wali.value = data.wali
-    santri.value = data.santri || []
-    requests.value = data.requests || []
-    repliedFeedbackCount.value = Array.isArray(feedbacks) ? feedbacks.filter((f) => f.reply?.text).length : 0
-    // accepted: the child is under Ananda now; cancelled by the parent themselves: nothing to show
-    registrations.value = regs.filter((r) => r.status !== 'accepted' && !(r.status === 'cancelled' && r.cancelledBy === 'wali'))
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Data belum bisa dimuat. Periksa koneksi lalu muat ulang.'
-  } finally {
-    loading.value = false
-  }
-}
-
 async function saveName() {
   savingName.value = true
+  saveError.value = ''
   try {
     const { data } = await api.put('/wali/me', { name: nameInput.value })
-    wali.value = data
+    put(WALI_KEYS.me, { ...(me.data.value || {}), wali: data })
   } catch (err) {
-    loadError.value = err.response?.data?.error || 'Nama belum tersimpan.'
+    saveError.value = err.response?.data?.error || 'Nama belum tersimpan.'
   } finally {
     savingName.value = false
   }
 }
 
-onMounted(load)
+// the next pages (code + each child's progress and izin) are made ready while the phone is idle
+let warmed = false
+watch(
+  () => me.ready.value && santri.value.length,
+  (ok) => {
+    if (!ok || warmed) return
+    warmed = true
+    warmUpWali(santri.value)
+  },
+  { immediate: true },
+)
+
+onMounted(() => refreshAnnouncements({ force: true }))
 </script>
 
 <style scoped>

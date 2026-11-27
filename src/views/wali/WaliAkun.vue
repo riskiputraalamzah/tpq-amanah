@@ -59,44 +59,57 @@
 
 <script setup>
 import { SHOW_NEW_REGISTRATION } from '@/utils/waliFeatures'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
+import { put } from '@/utils/waliCache'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { ask } = useDialog()
 const toast = useToast()
 
-const loading = ref(true)
-const wali = ref(null)
+// shown at once from the shared store (Beranda has it), refreshed in the background
+const me = useWaliResource(() => WALI_KEYS.me, () => waliFetch.me())
+const loading = computed(() => me.loading.value)
+const wali = computed(() => me.data.value?.wali || null)
 const nameInput = ref('')
 const savingName = ref(false)
 
 const phone = computed(() => String(wali.value?.phone || '').replace(/^62/, '0').replace(/(\d{4})(\d{4})(\d+)/, '$1 $2 $3'))
 const initials = computed(() => String(wali.value?.name || 'W').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join(''))
 
-onMounted(async () => {
-  try {
-    const { data } = await api.get('/wali/me', { cache: false })
-    wali.value = data.wali
-    nameInput.value = data.wali?.name || ''
-  } catch (err) {
-    toast.error(err.response?.data?.error || 'Data akun belum bisa dimuat.')
-  } finally {
-    loading.value = false
-  }
+// the name field starts from the saved name (not overwritten while the parent is typing)
+let nameEdited = false
+watch(
+  () => wali.value?.name,
+  (n) => {
+    if (!nameEdited) nameInput.value = n || ''
+  },
+  { immediate: true },
+)
+watch(nameInput, (v) => {
+  if (v !== (wali.value?.name || '')) nameEdited = true
 })
+watch(
+  () => me.error.value,
+  (e) => {
+    if (e) toast.error(e)
+  },
+)
 
 async function saveName() {
   savingName.value = true
   try {
     const { data } = await api.put('/wali/me', { name: nameInput.value })
-    wali.value = data
+    put(WALI_KEYS.me, { ...(me.data.value || {}), wali: data })
+    nameEdited = false
     toast.success('Nama tersimpan')
   } catch (err) {
     toast.error(err.response?.data?.error || 'Nama belum tersimpan.')

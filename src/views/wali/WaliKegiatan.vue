@@ -80,17 +80,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { PAYMENT_TONE, STATUS_TONE, dayLabel, formatRupiah, paymentLine } from '@/utils/kegiatan'
 import { formatWibDateTime, renderWaMarkdownHtml } from '@/utils/waFormat'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 
 const route = useRoute()
-const data = ref(null)
-const loading = ref(true)
-const loadError = ref('')
+// shown at once from the last visit, refreshed in the background (utils/waliCache.js)
+const santriId = route.params.santriId
+const res = useWaliResource(() => WALI_KEYS.kegiatan(santriId), () => waliFetch.kegiatan(santriId))
+const data = computed(() => res.data.value)
+const loading = computed(() => res.loading.value)
+const loadError = computed(() => res.error.value)
 
 // "Lunas" is already the label next to it: say what it rests on instead of repeating it
 const waliPaymentLine = (p) => (p.state === 'lunas'
@@ -100,15 +104,6 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
 const doneCount = (k) => k.requirements.filter((r) => r.done).length
 const shortDay = (iso) => (iso ? dayLabel(new Date(new Date(iso).getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10)) : '')
 
-onMounted(async () => {
-  try {
-    data.value = (await api.get(`/wali/santri/${route.params.santriId}/kegiatan`, { cache: false })).data
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Belum bisa dimuat. Periksa koneksi lalu muat ulang.'
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

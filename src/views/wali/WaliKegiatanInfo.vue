@@ -69,20 +69,31 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useWaliAnnouncements } from '@/composables/useWaliAnnouncements'
 import { STATUS_TONE, dayLabel } from '@/utils/kegiatan'
 import { formatLocalPhone, formatWibDateTime, normalizeWaPhone, renderWaMarkdownHtml } from '@/utils/waFormat'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 
 const route = useRoute()
 const { markSeen } = useWaliAnnouncements()
 
-const data = ref(null)
-const loading = ref(true)
-const loadError = ref('')
+// shown at once from the last visit, refreshed in the background (utils/waliCache.js)
+const santriId = route.params.santriId
+const activityId = route.params.activityId
+const res = useWaliResource(() => WALI_KEYS.kegiatanInfo(santriId, activityId), () => waliFetch.kegiatanInfo(santriId, activityId))
+const data = computed(() => res.data.value)
+const loading = computed(() => res.loading.value)
+const loadError = computed(() => res.error.value)
+// the updates shown are read: the Pengumuman badge goes down
+watch(
+  () => res.data.value?.updates,
+  (updates) => (updates || []).forEach((u) => markSeen(`kegiatan_${u.id}`)),
+  { immediate: true },
+)
 
 const highlightId = computed(() => String(route.query.highlight || ''))
 const fromPengumuman = computed(() => route.query.from === 'pengumuman')
@@ -90,17 +101,6 @@ const backTo = computed(() => (fromPengumuman.value ? '/wali/pengumuman' : `/wal
 const backLabel = computed(() => (fromPengumuman.value ? '← Pengumuman' : '← Kegiatan & tabungan'))
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
 
-onMounted(async () => {
-  try {
-    const res = await api.get(`/wali/santri/${route.params.santriId}/kegiatan/${route.params.activityId}/info`, { cache: false })
-    data.value = res.data
-    ;(res.data?.updates || []).forEach((u) => markSeen(`kegiatan_${u.id}`))
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Info kegiatan belum bisa dimuat.'
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

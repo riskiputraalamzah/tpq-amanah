@@ -57,10 +57,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 
 const route = useRoute()
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
@@ -70,20 +71,12 @@ const shortDate = (iso) => (iso ? `${Number(iso.slice(8, 10))} ${MONTHS[Number(i
 // scores the Indonesian way: 8,5
 const fmt = (n) => (Number.isInteger(n) ? String(n) : String(n).replace('.', ','))
 
-const loading = ref(true)
-const loadError = ref('')
-const data = ref(null)
-
-onMounted(async () => {
-  try {
-    const { data: d } = await api.get(`/wali/santri/${route.params.santriId}/rapor`, { cache: false })
-    data.value = d
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Rapor belum bisa dimuat. Periksa koneksi lalu coba lagi.'
-  } finally {
-    loading.value = false
-  }
-})
+// shown at once from the last visit, refreshed in the background (utils/waliCache.js)
+const santriId = route.params.santriId
+const res = useWaliResource(() => WALI_KEYS.rapor(santriId), () => waliFetch.rapor(santriId))
+const loading = computed(() => res.loading.value)
+const loadError = computed(() => res.error.value)
+const data = computed(() => res.data.value)
 </script>
 
 <style scoped>

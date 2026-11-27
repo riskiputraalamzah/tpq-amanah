@@ -87,11 +87,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import { useToast } from '@/composables/useToast'
 import { timeAgo, fullDateTime } from '@/utils/timeAgo'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
+import { put } from '@/utils/waliCache'
 
 const toast = useToast()
 
@@ -112,27 +115,24 @@ const STATUS_MAP = {
 const category = ref('aplikasi')
 const message = ref('')
 const sending = ref(false)
-const loading = ref(true)
+// the parent's earlier messages: shown at once from the last visit, refreshed in the background
+const feedback = useWaliResource(() => WALI_KEYS.feedback, () => waliFetch.feedback())
+const loading = computed(() => feedback.loading.value)
+const items = computed(() => (Array.isArray(feedback.data.value) ? feedback.data.value : []))
+watch(
+  () => feedback.error.value,
+  (e) => {
+    if (e) toast.error(e)
+  },
+)
 const formError = ref('')
 const sentNotice = ref('')
-const items = ref([])
 const now = ref(new Date())
 let clockTimer = null
 
 const categoryLabel = (val) => CATEGORIES.find((c) => c.value === val)?.label || 'Lainnya'
 const statusInfo = (st) => STATUS_MAP[st] || STATUS_MAP.open
 
-async function load() {
-  loading.value = true
-  try {
-    const { data } = await api.get('/wali-feedback/mine', { cache: false })
-    items.value = Array.isArray(data) ? data : []
-  } catch (err) {
-    toast.error(err.response?.data?.error || 'Riwayat masukan belum bisa dimuat.')
-  } finally {
-    loading.value = false
-  }
-}
 
 async function submitFeedback() {
   formError.value = ''
@@ -148,7 +148,7 @@ async function submitFeedback() {
       category: category.value,
       message: clean,
     })
-    items.value = [data, ...items.value]
+    put(WALI_KEYS.feedback, [data, ...items.value])
     message.value = ''
     sentNotice.value = 'Jazakumullahu khairan. Saran & masukan Bapak/Ibu sudah terkirim ke pengurus TPQ.'
     toast.success('Masukan terkirim ke pengurus TPQ')
@@ -163,7 +163,6 @@ onMounted(() => {
   clockTimer = setInterval(() => {
     now.value = new Date()
   }, 30000)
-  load()
 })
 
 onBeforeUnmount(() => {

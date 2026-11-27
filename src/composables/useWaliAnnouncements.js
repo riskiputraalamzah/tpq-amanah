@@ -1,7 +1,9 @@
 // The TPQ's announcements for the signed-in wali: one shared list for the home cards, the Pengumuman tab and its
 // badge. "Seen" (the badge) and "closed" (the home card) are remembered on this phone only.
+// The list itself rides on the wali store (utils/waliCache.js): shown at once from the last visit, refreshed quietly.
 import { ref, computed } from 'vue'
-import api from '@/services/api'
+import { peek, fetchFresh } from '@/utils/waliCache'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 
 const SEEN_KEY = 'wali_ann_seen'
 const DISMISS_KEY = 'wali_ann_dismissed'
@@ -27,13 +29,22 @@ const dismissed = ref(read(DISMISS_KEY))
 let loadedAt = 0
 let pending = null
 
+// logout: nothing of this parent stays on screen for the next one
+export function resetWaliAnnouncements() {
+  list.value = []
+  loadedAt = 0
+}
+
 export function useWaliAnnouncements() {
+  if (!list.value.length) {
+    const cached = peek(WALI_KEYS.announcements)
+    if (Array.isArray(cached?.data)) list.value = cached.data
+  }
   async function refresh({ force = false } = {}) {
     if (!force && Date.now() - loadedAt < 60 * 1000) return list.value
     if (pending) return pending
-    pending = api
-      .get('/wali-announcements/mine', { cache: false })
-      .then(({ data }) => {
+    pending = fetchFresh(WALI_KEYS.announcements, waliFetch.announcements)
+      .then((data) => {
         list.value = Array.isArray(data) ? data : []
         loadedAt = Date.now()
         return list.value

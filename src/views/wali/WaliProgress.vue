@@ -151,16 +151,24 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch, warmUpMonth } from '@/utils/waliData'
 
 const route = useRoute()
 const router = useRouter()
-const loading = ref(true)
-const loadError = ref('')
-const data = ref(null)
+const santriId = route.params.santriId
+const monthQ = computed(() => (typeof route.query.bulan === 'string' ? route.query.bulan : ''))
+// shown at once from the last visit (or the warm-up after Beranda); another month keeps this one on screen until it
+// arrives (no blank page between months)
+const progress = useWaliResource(() => WALI_KEYS.progress(santriId, monthQ.value), (k) => waliFetch.progress(santriId, monthQ.value), { keepPrevious: true })
+const reportsRes = useWaliResource(() => WALI_KEYS.reports(santriId), () => waliFetch.reports(santriId))
+const loading = computed(() => progress.loading.value)
+const loadError = computed(() => progress.error.value)
+const data = computed(() => progress.data.value)
 
 const TILES = [
   { key: 'hadir', label: 'Hadir' },
@@ -210,9 +218,16 @@ const longDate = (iso) => {
 const index = computed(() => data.value?.months.indexOf(data.value.month) ?? -1)
 const older = computed(() => (index.value >= 0 ? data.value.months[index.value + 1] : null))
 const newer = computed(() => (index.value > 0 ? data.value.months[index.value - 1] : null))
+// the month before is made ready quietly: "‹" then shows at once
+watch(older, (m) => warmUpMonth(santriId, m), { immediate: true })
 
-// reports of the last 30 days, by `${date}|${slot}`
-const reports = ref({})
+// reports of the last 30 days, by `${date}|${slot}` (the server's list, plus the ones just sent from this page)
+const sentReports = ref({})
+const reports = computed(() => {
+  const map = {}
+  for (const r of reportsRes.data.value?.reports || []) map[`${r.date}|${r.slot}`] = r
+  return { ...map, ...sentReports.value }
+})
 const formKey = ref('')
 const form = ref({ want: '', note: '' })
 const formError = ref('')
@@ -226,16 +241,7 @@ const unreportedAlfas = computed(() =>
   (data.value?.meetings || []).filter((m) => canReport(m) && !reportOf(m)),
 )
 
-async function loadReports() {
-  try {
-    const res = await api.get(`/wali/santri/${route.params.santriId}/absen-reports`, { cache: false })
-    const map = {}
-    for (const r of res.data.reports || []) map[`${r.date}|${r.slot}`] = r
-    reports.value = map
-  } catch {
-    reports.value = {}
-  }
-}
+const loadReports = () => reportsRes.refresh()
 
 function openForm(m) {
   formKey.value = keyOf(m)
@@ -261,7 +267,8 @@ async function sendReport(m) {
   formError.value = ''
   try {
     const res = await api.post(`/wali/santri/${route.params.santriId}/absen-reports`, { date: m.date, slot: m.slot, want: form.value.want, note: form.value.note })
-    reports.value = { ...reports.value, [keyOf(m)]: res.data }
+    sentReports.value = { ...sentReports.value, [keyOf(m)]: res.data }
+    loadReports()
     formKey.value = ''
   } catch (err) {
     formError.value = err.response?.data?.error || 'Laporan belum terkirim. Periksa koneksi lalu coba lagi.'
@@ -271,35 +278,24 @@ async function sendReport(m) {
   }
 }
 
-async function load() {
-  loading.value = true
-  loadError.value = ''
-  try {
-    const month = typeof route.query.bulan === 'string' ? route.query.bulan : ''
-    const [res] = await Promise.all([
-      api.get(`/wali/santri/${route.params.santriId}/progress`, { params: month ? { month } : {}, cache: false }),
-      loadReports(),
-    ])
-    data.value = res.data
+// from the kabar alfa link (?koreksi=YYYY-MM-DD): once the fresh progress and reports are in, open its report form
+let korDone = false
+watch(
+  () => progress.ready.value && !progress.refreshing.value && !reportsRes.refreshing.value,
+  (ok) => {
     const kor = typeof route.query.koreksi === 'string' ? route.query.koreksi : ''
-    if (kor && unreportedAlfas.value.length) {
-      const target = kor === 'terbaru'
-        ? unreportedAlfas.value[0]
-        : unreportedAlfas.value.find((m) => m.date === kor) || unreportedAlfas.value[0]
-      if (target) jumpToReport(target)
-    }
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Progres belum bisa dimuat. Periksa koneksi lalu muat ulang.'
-  } finally {
-    loading.value = false
-  }
-}
+    if (!ok || korDone || !kor) return
+    korDone = true
+    if (!unreportedAlfas.value.length) return
+    const target = kor === 'terbaru' ? unreportedAlfas.value[0] : unreportedAlfas.value.find((m) => m.date === kor) || unreportedAlfas.value[0]
+    if (target) jumpToReport(target)
+  },
+  { immediate: true },
+)
 function go(month) {
   if (month) router.replace({ query: { ...route.query, bulan: month } })
 }
 
-watch(() => route.query.bulan, load)
-onMounted(load)
 </script>
 
 <style scoped>

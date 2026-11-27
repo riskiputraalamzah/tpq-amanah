@@ -129,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/services/api'
 import { cancelPlan, noticeLine, cancelResultText, NOTE_INPUT } from '@/utils/izinNotice'
@@ -137,6 +137,9 @@ import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
 import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
+import { useWaliResource } from '@/composables/useWaliResource'
+import { WALI_KEYS, waliFetch } from '@/utils/waliData'
+import { invalidate } from '@/utils/waliCache'
 
 const route = useRoute()
 const { ask } = useDialog()
@@ -163,9 +166,11 @@ const dayLabel = (iso) => `${iso === today ? 'Hari ini' : DAYS_LONG[wd(iso)]} ${
 const isSchoolDay = (iso) => wd(iso) > 0 && wd(iso) < 6
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : '')
 
-const loading = ref(true)
-const loadError = ref('')
-const page = ref(null)
+// shown at once from the last visit (or the warm-up after Beranda), refreshed in the background
+const res = useWaliResource(() => WALI_KEYS.izin(santriId), () => waliFetch.izin(santriId))
+const loading = computed(() => res.loading.value)
+const loadError = computed(() => res.error.value)
+const page = computed(() => res.data.value)
 const type = ref('izin')
 const slot = ref('wave_1')
 const dates = ref([])
@@ -217,6 +222,7 @@ watch(reason, (v) => {
 })
 
 function setSlot(s) {
+  slotTouched = true
   slot.value = s
   dates.value = dates.value.filter((d) => days.value.includes(d))
   sendError.value = ''
@@ -229,6 +235,7 @@ function toggleDay(d) {
 
 function prefillEdit(x) {
   done.value = null
+  slotTouched = true
   slot.value = x.slot || slot.value
   type.value = x.type === 'sakit' ? 'sakit' : 'izin'
   const openSet = new Set(page.value?.days?.[slot.value] || [])
@@ -245,16 +252,20 @@ function isIdenticalToOverlap(existing) {
   return sameDates && existing.type === type.value && String(existing.reason || '').trim().toLowerCase() === reason.value.trim().toLowerCase()
 }
 
+// the child's usual sesi is the starting choice (until the parent picks one)
+let slotTouched = false
+watch(
+  () => page.value?.slot,
+  (s) => {
+    if (s && !slotTouched && !done.value) slot.value = s
+  },
+  { immediate: true },
+)
+
+// after a change: this page asks again now; Beranda (counts) and the progress months on their next look
 async function load() {
-  try {
-    const { data } = await api.get(`/wali/santri/${santriId}/izin`, { cache: false })
-    page.value = data
-    if (!done.value) slot.value = data.slot
-  } catch (err) {
-    loadError.value = err.response?.data?.error || 'Belum bisa dimuat. Periksa koneksi lalu coba lagi.'
-  } finally {
-    loading.value = false
-  }
+  await res.refresh()
+  invalidate(WALI_KEYS.me, `progress:${santriId}:*`)
 }
 
 async function send(forceReplace = false) {
@@ -367,7 +378,6 @@ async function cancel(x) {
   }
 }
 
-onMounted(load)
 </script>
 
 <style scoped>
