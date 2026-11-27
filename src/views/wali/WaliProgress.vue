@@ -1,44 +1,67 @@
 <template>
   <div>
-    <router-link to="/wali" class="w-link back-link">← Beranda</router-link>
+    <router-link to="/wali" class="w-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+      Beranda
+    </router-link>
+
+    <WaliChildSwitch :active-id="santriId" section="progres" />
 
     <PageSkeleton v-if="loading && !data" :rows="4" label="Memuat progres ananda" />
     <p v-else-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
     <template v-else-if="data">
-      <h1 class="w-title">{{ data.santri.name }}</h1>
-      <p class="w-lead sub">
-        {{ levelName(data.santri.classId) }}<template v-if="data.teacher"> · Pengajar: {{ data.teacher }}</template>
-      </p>
+      <header class="pg-head">
+        <h1 class="w-title">{{ data.santri.name }}</h1>
+        <div class="pg-meta">
+          <span class="pg-level">{{ levelName(data.santri.classId) }}</span>
+          <span v-if="data.teacher" class="pg-teacher">Pengajar: {{ data.teacher }}</span>
+        </div>
+      </header>
 
-      <!-- the latest material, the first thing a parent wants to know -->
+      <!-- Latest material: the #1 thing a parent checks after ngaji -->
       <section v-if="data.lastMaterial" class="w-card last-card" aria-labelledby="last-title">
-        <p id="last-title" class="card-label">Materi terakhir · {{ longDate(data.lastMaterial.date) }}</p>
+        <div class="last-top">
+          <span class="last-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+          </span>
+          <p id="last-title" class="card-label">Materi terakhir · {{ longDate(data.lastMaterial.date) }}</p>
+        </div>
         <p class="last-material">{{ data.lastMaterial.material }}</p>
         <p v-if="data.lastMaterial.supportingMaterial" class="last-support"><span class="note-label">Materi penunjang:</span> {{ data.lastMaterial.supportingMaterial }}</p>
         <div v-if="data.lastMaterial.notes" class="teacher-note">
-          <span class="note-label">Catatan ustadz/ustadzah</span>
+          <span class="note-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+            Catatan ustadz/ustadzah
+          </span>
           <p class="teacher-note-text">{{ data.lastMaterial.notes }}</p>
         </div>
       </section>
 
-      <!-- month switcher -->
-      <div class="month-bar" role="group" aria-label="Pilih bulan">
-        <button type="button" class="month-btn" :disabled="!older" aria-label="Bulan sebelumnya" @click="go(older)">‹</button>
-        <h2 class="month-title" aria-live="polite">{{ monthTitle(data.month) }}</h2>
-        <button type="button" class="month-btn" :disabled="!newer" aria-label="Bulan berikutnya" @click="go(newer)">›</button>
-      </div>
-
-      <div class="tiles" role="list" aria-label="Rekap kehadiran">
-        <div v-for="t in TILES" :key="t.key" class="tile" :class="`is-${t.key}`" role="listitem">
-          <strong>{{ data.summary[t.key] }}</strong>
-          <span>{{ t.label }}</span>
+      <!-- Cohesive monthly attendance card: month switcher + 4-column summary together -->
+      <section class="w-card month-card" aria-label="Rekap kehadiran bulanan">
+        <div class="month-bar" role="group" aria-label="Pilih bulan">
+          <button type="button" class="month-btn" :disabled="!older" aria-label="Bulan sebelumnya" @click="go(older)">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+          </button>
+          <h2 class="month-title" aria-live="polite">{{ monthTitle(data.month) }}</h2>
+          <button type="button" class="month-btn" :disabled="!newer" aria-label="Bulan berikutnya" @click="go(newer)">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+          </button>
         </div>
-      </div>
+
+        <div class="tiles" role="list" aria-label="Rekap kehadiran">
+          <div v-for="t in TILES" :key="t.key" class="tile" :class="[`is-${t.key}`, { 'is-zero': !(data.summary[t.key] > 0) }]" role="listitem">
+            <strong>{{ data.summary[t.key] }}</strong>
+            <span>{{ t.label }}</span>
+          </div>
+        </div>
+      </section>
 
       <!-- Banner crosscheck bila ada pertemuan 7 hari terakhir yang tercatat alfa dan belum dilaporkan -->
       <section v-if="unreportedAlfas.length" class="w-card alfa-alert" aria-labelledby="alfa-alert-title">
         <div class="alfa-alert-top">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
           <strong id="alfa-alert-title">Crosscheck Absen Alfa ({{ unreportedAlfas.length }} pertemuan)</strong>
         </div>
         <p class="alfa-alert-text">
@@ -54,20 +77,26 @@
             @click="jumpToReport(m)"
           >
             <span>Crosscheck {{ shortDate(m.date) }} ({{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }})</span>
-            <span aria-hidden="true">›</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </button>
         </div>
       </section>
 
-      <h2 class="w-section-title">Pertemuan</h2>
+      <div class="w-section-head">
+        <h2 class="w-section-title">Pertemuan</h2>
+        <span v-if="data.meetings.length" class="mt-count">{{ data.meetings.length }} catatan</span>
+      </div>
+
       <p v-if="!data.meetings.length" class="w-card empty">Belum ada catatan KBM untuk ananda di bulan ini.</p>
-      <ul v-else class="meetings">
+
+      <!-- Single clean chronological ledger card instead of 20 heavy floating cards -->
+      <ol v-else class="w-card meetings">
         <li
           v-for="(m, i) in data.meetings"
           :id="`mt-${keyOf(m)}`"
           :key="`${m.date}-${i}`"
-          class="w-card meeting"
-          :class="{ 'is-holiday': m.status === 'libur' }"
+          class="meeting"
+          :class="[`is-st-${m.status}`, { 'is-holiday': m.status === 'libur', 'is-open-form': formKey === keyOf(m) }]"
         >
           <div class="meeting-head">
             <span class="meeting-date">{{ shortDate(m.date) }}<span class="meeting-slot"> · {{ m.slot === 'wave_2' ? 'Malam' : 'Sore' }}</span></span>
@@ -82,7 +111,10 @@
             <p v-else-if="m.noKbm" class="meeting-support">Belum ada catatan materi untuk sesi ini.</p>
             <p v-if="m.supportingMaterial" class="meeting-support"><span class="note-label">Materi penunjang:</span> {{ m.supportingMaterial }}</p>
             <div v-if="m.notes" class="teacher-note is-compact">
-              <span class="note-label">Catatan ustadz/ustadzah</span>
+              <span class="note-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                Catatan ustadz/ustadzah
+              </span>
               <p class="teacher-note-text">{{ m.notes }}</p>
             </div>
             <p v-if="m.guruName" class="meeting-teacher">{{ m.guruName }}<template v-if="m.badal"> (menggantikan)</template></p>
@@ -104,7 +136,7 @@
           <template v-else-if="canReport(m)">
             <button v-if="formKey !== keyOf(m)" type="button" class="report-open" @click="openForm(m)">
               <span>Absen ini keliru? Crosscheck / Koreksi</span>
-              <span aria-hidden="true">›</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
             <form v-else class="report-form" @submit.prevent="sendReport(m)">
               <p :id="`rp-${keyOf(m)}`" class="report-q">Yang benar, ananda pada hari tersebut:</p>
@@ -119,6 +151,7 @@
                   :key="qn"
                   type="button"
                   class="report-quick-btn"
+                  :class="{ 'is-picked': form.note === qn }"
                   @click="form.note = qn"
                 >
                   {{ qn }}
@@ -140,10 +173,10 @@
             </form>
           </template>
         </li>
-      </ul>
+      </ol>
 
       <p class="w-help foot">
-        Data dari catatan KBM ustadz/ustadzah. Bila absen alfa keliru (7 hari terakhir), ketuk "Laporkan" pada pertemuannya; untuk yang lain,
+        Data dari catatan KBM ustadz/ustadzah. Bila absen alfa keliru (7 hari terakhir), ketuk "Crosscheck / Koreksi" pada pertemuannya; untuk yang lain,
         hubungi pengajar ananda.
       </p>
     </template>
@@ -155,6 +188,7 @@ import { ref, computed, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
+import WaliChildSwitch from './WaliChildSwitch.vue'
 import { useWaliResource } from '@/composables/useWaliResource'
 import { WALI_KEYS, waliFetch, warmUpMonth } from '@/utils/waliData'
 
@@ -295,26 +329,249 @@ watch(
 function go(month) {
   if (month) router.replace({ query: { ...route.query, bulan: month } })
 }
-
 </script>
 
 <style scoped>
-.alfa-alert {
-  margin-top: 14px;
-  padding: 14px 15px;
-  background: #fff8ed;
-  border-color: #f1cf94;
+.pg-head {
+  margin-bottom: 14px;
 }
 
-.alfa-alert-top strong {
-  font-size: 0.96rem;
+.pg-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.pg-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.78rem;
   font-weight: 800;
+}
+
+.pg-teacher {
+  font-size: 0.86rem;
+  color: var(--w-body);
+}
+
+/* Latest material highlight */
+.last-card {
+  background: linear-gradient(160deg, #fffdf6, #fff8e3);
+  border-color: #eed085;
+}
+
+.last-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.last-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fde6a8;
+  color: #8f4106;
+}
+
+.card-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #7c5214;
+}
+
+.last-material {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--w-ink);
+  overflow-wrap: anywhere;
+}
+
+.last-support {
+  margin: 5px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--w-body);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.note-label {
+  font-weight: 700;
+  color: var(--w-ink);
+}
+
+/* Teacher note: full subtle border & soft warm tint (no one-sided bar) */
+.teacher-note {
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(180, 83, 9, 0.24);
+}
+
+.teacher-note .note-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #8f4106;
+}
+
+.teacher-note-text {
+  margin: 3px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #213c2f;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.teacher-note.is-compact {
+  margin: 6px 0 2px;
+  padding: 8px 10px;
+  background: #fcfaf3;
+  border-color: rgba(180, 83, 9, 0.2);
+}
+
+.teacher-note.is-compact .teacher-note-text {
+  font-size: 0.84rem;
+}
+
+/* Cohesive monthly attendance card */
+.month-card {
+  margin-top: 12px;
+  padding: 12px 14px 14px;
+}
+
+.month-bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.month-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--w-ink);
+}
+
+.month-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 59, 42, 0.16);
+  background: var(--w-surface-soft);
+  color: var(--w-emerald);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.month-btn:hover:not(:disabled) {
+  background: var(--w-emerald-soft);
+}
+
+.month-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.month-btn:focus-visible,
+.alfa-alert-btn:focus-visible,
+.report-open:focus-visible,
+.report-quick-btn:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 10px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: #f6f9f7;
+}
+
+.tile strong {
+  font-size: 1.42rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.tile span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--w-muted);
+}
+
+.tile.is-hadir strong { color: #0a5c40; }
+.tile.is-izin strong { color: #19487f; }
+.tile.is-sakit strong { color: #8c4009; }
+.tile.is-alfa strong { color: #9f1b12; }
+
+.tile.is-alfa:not(.is-zero) {
+  background: #fdf2f0;
+}
+
+.tile.is-zero strong {
+  color: #6b7b72;
+  font-weight: 700;
+}
+
+/* Alfa alert card */
+.alfa-alert {
+  margin-top: 12px;
+  padding: 13px 14px;
+  background: #fff8ed;
+  border-color: #eec982;
+}
+
+.alfa-alert-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #7c3a0d;
 }
 
+.alfa-alert-top strong {
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
 .alfa-alert-text {
-  margin: 4px 0 10px;
-  font-size: 0.85rem;
+  margin: 5px 0 10px;
+  font-size: 0.84rem;
   line-height: 1.5;
   color: #5b3a06;
 }
@@ -331,36 +588,158 @@ function go(month) {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 12px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(180, 83, 9, 0.35);
+  border-radius: 11px;
+  border: 1.5px solid rgba(154, 71, 8, 0.35);
   background: #fff;
   color: #7c3a0d;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-align: left;
   cursor: pointer;
 }
 
+.mt-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--w-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unified chronological meetings ledger */
+.meetings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.meeting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 16px;
+  scroll-margin-top: 76px;
+}
+
+.meeting + .meeting {
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.meeting.is-st-alfa {
+  background: #fff7f6;
+}
+
+.meeting.is-st-sakit {
+  background: #fffcf3;
+}
+
+.meeting.is-st-izin {
+  background: #f6faff;
+}
+
+.meeting.is-holiday {
+  background: #f0f9ff;
+}
+
+.meeting-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meeting-date {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--w-ink);
+}
+
+.meeting-slot {
+  font-weight: 600;
+  color: var(--w-muted);
+}
+
+.meeting-material {
+  margin: 2px 0 0;
+  font-size: 0.94rem;
+  line-height: 1.4;
+  color: var(--w-ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meeting-support,
+.meeting-teacher {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.42;
+  color: var(--w-muted);
+  overflow-wrap: anywhere;
+}
+
+.meeting-teacher {
+  margin-top: 1px;
+}
+
+.w-pill.is-holiday {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.meeting-holiday-reason {
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #075985;
+  overflow-wrap: anywhere;
+}
+
+.meeting-holiday-note {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+/* Crosscheck / report controls */
 .report-open {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
   min-height: 44px;
-  padding: 6px 14px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(142, 27, 18, 0.3);
+  padding: 6px 12px;
+  border-radius: 11px;
+  border: 1.5px solid rgba(142, 27, 18, 0.32);
   background: #fff;
   color: #8e1b12;
   font: inherit;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-align: left;
   cursor: pointer;
+}
+
+.report-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 13px;
+  background: #fff;
+  border: 1px solid rgba(11, 59, 42, 0.14);
+}
+
+.report-q,
+.report-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--w-ink);
 }
 
 .report-quick {
@@ -370,11 +749,12 @@ function go(month) {
 }
 
 .report-quick-btn {
-  padding: 5px 10px;
-  border-radius: 8px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 9px;
   border: 1px solid rgba(10, 92, 64, 0.22);
   background: #eef6f1;
-  color: #0a5c40;
+  color: var(--w-emerald);
   font: inherit;
   font-size: 0.78rem;
   font-weight: 700;
@@ -382,35 +762,20 @@ function go(month) {
   cursor: pointer;
 }
 
-.report-hint {
-  margin: 0;
-}
-
-.report-open:focus-visible {
-  outline: 3px solid var(--w-gold-deep);
-  outline-offset: 2px;
-}
-
-.report-form {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(11, 59, 42, 0.1);
-}
-
-.report-q,
-.report-label {
-  margin: 0;
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--w-ink);
+.report-quick-btn.is-picked {
+  background: var(--w-emerald);
+  border-color: var(--w-emerald);
+  color: #fff;
 }
 
 .report-note {
   min-height: 72px;
   padding-top: 10px;
   resize: vertical;
+}
+
+.report-hint {
+  margin: 0;
 }
 
 .report-actions {
@@ -420,16 +785,16 @@ function go(month) {
 }
 
 .report-actions .w-btn {
-  min-height: 48px;
-  font-size: 0.92rem;
+  min-height: 46px;
+  font-size: 0.9rem;
 }
 
 .report-state {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding: 8px 10px;
   border-radius: 10px;
   background: rgba(11, 59, 42, 0.05);
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   line-height: 1.45;
   color: var(--w-ink);
 }
@@ -444,230 +809,9 @@ function go(month) {
   color: #0a5c40;
 }
 
-.back-link {
-  display: inline-block;
-  margin: -4px 0 6px;
-  text-decoration: none;
-}
-
-.sub {
-  margin-bottom: 14px;
-}
-
-.last-card {
-  background: #fffbeb;
-  border-color: #f3d58b;
-}
-
-.card-label {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #5b6b62;
-}
-
-.last-material {
-  margin: 0;
-  font-size: 1.08rem;
-  font-weight: 800;
-  color: #0b3b2a;
-  overflow-wrap: anywhere;
-}
-
-.last-support {
-  margin: 4px 0 0;
-  font-size: 0.88rem;
-  color: #475a50;
-  overflow-wrap: anywhere;
-  white-space: pre-line;
-}
-
-.note-label {
-  font-weight: 700;
-  color: #0b3b2a;
-}
-
-/* the teacher's "Catatan guru" from the KBM journal, only when filled in */
-.teacher-note {
-  margin: 10px 0 0;
-  padding: 8px 12px;
-  border-left: 3px solid #b45309;
-  border-radius: 0 10px 10px 0;
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.teacher-note .note-label {
-  display: block;
-  font-size: 0.78rem;
-  color: #92400e;
-}
-
-.teacher-note-text {
-  margin: 2px 0 0;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: #1f3a2e;
-  overflow-wrap: anywhere;
-  white-space: pre-line;
-}
-
-.teacher-note.is-compact {
-  margin: 6px 0 2px;
-  padding: 6px 10px;
-  background: #fbf9f3;
-}
-
-.teacher-note.is-compact .teacher-note-text {
-  font-size: 0.85rem;
-}
-
-.month-bar {
-  display: grid;
-  grid-template-columns: 48px 1fr 48px;
-  align-items: center;
-  gap: 8px;
-  margin: 20px 0 12px;
-}
-
-.month-title {
-  margin: 0;
-  text-align: center;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #0b3b2a;
-}
-
-.month-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(11, 59, 42, 0.2);
-  background: #fff;
-  color: #0a5c40;
-  font: inherit;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.month-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.month-btn:focus-visible {
-  outline: 3px solid #b45309;
-  outline-offset: 2px;
-}
-
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 12px 4px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid rgba(11, 59, 42, 0.12);
-}
-
-.tile strong {
-  font-size: 1.5rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-
-.tile span {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #5b6b62;
-}
-
-.tile.is-hadir strong { color: #0a5c40; }
-.tile.is-izin strong { color: #1d4f8a; }
-.tile.is-sakit strong { color: #7c3a0d; }
-.tile.is-alfa strong { color: #8e1b12; }
-
-.meetings {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.meeting {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-}
-
-.meeting-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.meeting-date {
-  font-weight: 800;
-  color: #0b3b2a;
-}
-
-.meeting-slot {
-  font-weight: 600;
-  color: #5b6b62;
-}
-
-.meeting-material {
-  margin: 2px 0 0;
-  color: #0b3b2a;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.meeting-support,
-.meeting-teacher {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #5b6b62;
-  overflow-wrap: anywhere;
-}
-
-.meeting.is-holiday {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-}
-
-.w-pill.is-holiday {
-  background: #e0f2fe;
-  color: #075985;
-}
-
-.meeting-holiday-reason {
-  margin: 2px 0 0;
-  font-size: 0.94rem;
-  font-weight: 700;
-  color: #075985;
-  overflow-wrap: anywhere;
-}
-
-.meeting-holiday-note {
-  margin: 4px 0 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #0369a1;
-}
-
 .empty {
   margin: 0;
-  color: #475a50;
+  color: var(--w-body);
 }
 
 .foot {

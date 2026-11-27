@@ -1,6 +1,9 @@
 <template>
   <div>
-    <router-link :to="backTo" class="w-link back-link">{{ backLabel }}</router-link>
+    <router-link :to="backTo" class="w-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+      {{ backLabel }}
+    </router-link>
 
     <PageSkeleton v-if="loading && !data" :rows="4" label="Memuat info kegiatan" />
     <p v-else-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
@@ -8,7 +11,7 @@
     <template v-else-if="data">
       <div class="w-card ki-head-card">
         <div class="ki-head-top">
-          <div>
+          <div class="ki-head-text">
             <h1 class="w-title ki-title">{{ data.activity.title }}</h1>
             <p class="ki-sub">
               {{ data.activity.typeLabel }}<template v-if="data.activity.date"> · {{ dayLabel(data.activity.date) }}</template>
@@ -18,17 +21,21 @@
             {{ data.activity.closed ? 'Selesai' : data.activity.statusLabel }}
           </span>
         </div>
-        <p class="ki-child">Ananda: <strong>{{ data.santri.name }}</strong> · {{ levelName(data.santri.classId) }}</p>
+        <p class="ki-child">
+          Ananda: <strong>{{ data.santri.name }}</strong>
+          <span class="ki-level">{{ levelName(data.santri.classId) }}</span>
+        </p>
         <p v-if="data.activity.description" class="ki-desc">{{ data.activity.description }}</p>
         <router-link :to="`/wali/santri/${route.params.santriId}/kegiatan`" class="ki-status-link">
-          Lihat pembayaran &amp; persyaratan kegiatan ›
+          <span>Lihat pembayaran &amp; persyaratan kegiatan</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
         </router-link>
       </div>
 
-      <h2 class="w-section-title">
-        Info &amp; pengumuman kegiatan
-        <span v-if="data.updates.length" class="ki-count">({{ data.updates.length }})</span>
-      </h2>
+      <div class="w-section-head">
+        <h2 class="w-section-title">Info &amp; pengumuman kegiatan</h2>
+        <span v-if="data.updates.length" class="ki-count">{{ data.updates.length }} info</span>
+      </div>
 
       <div v-if="!data.updates.length" class="w-card w-center">
         <p class="w-help">Belum ada info tambahan untuk kegiatan ini.</p>
@@ -57,7 +64,8 @@
               rel="noopener noreferrer"
               class="ki-wa-btn"
             >
-              Hubungi {{ u.contactName || 'Ustadz/ustadzah' }} via WhatsApp ({{ formatLocalPhone(u.contactPhone) }})
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-3.3-.8-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.4.6-.3.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z" /></svg>
+              <span>Hubungi {{ u.contactName || 'Ustadz/ustadzah' }} ({{ formatLocalPhone(u.contactPhone) }})</span>
             </a>
           </div>
         </li>
@@ -98,23 +106,15 @@ watch(
 const highlightId = computed(() => String(route.query.highlight || ''))
 const fromPengumuman = computed(() => route.query.from === 'pengumuman')
 const backTo = computed(() => (fromPengumuman.value ? '/wali/pengumuman' : `/wali/santri/${route.params.santriId}/kegiatan`))
-const backLabel = computed(() => (fromPengumuman.value ? '← Pengumuman' : '← Kegiatan & tabungan'))
+const backLabel = computed(() => (fromPengumuman.value ? 'Pengumuman' : 'Kegiatan & tabungan'))
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
-
 </script>
 
 <style scoped>
-.back-link {
-  display: inline-block;
-  margin: -4px 0 8px;
-  text-decoration: none;
-}
-
 .ki-head-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 14px;
 }
 
 .ki-head-top {
@@ -124,35 +124,68 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
   gap: 10px;
 }
 
+.ki-head-text {
+  min-width: 0;
+}
+
 .ki-title {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.28rem;
 }
 
 .ki-sub,
-.ki-child,
 .ki-desc {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #475a50;
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: var(--w-body);
   line-height: 1.5;
 }
 
-.ki-status-link {
+.ki-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--w-body);
+}
+
+.ki-level {
   display: inline-flex;
   align-items: center;
-  margin-top: 2px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(11, 59, 42, 0.1);
-  color: #0a5c40;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ki-status-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+  color: var(--w-emerald);
   font-size: 0.86rem;
   font-weight: 800;
   text-decoration: none;
 }
 
+.ki-status-link:focus-visible,
+.ki-wa-btn:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
+}
+
 .ki-count {
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #5b6b62;
+  color: var(--w-muted);
 }
 
 .ki-list {
@@ -170,12 +203,12 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
 }
 
 .ki-item.is-latest {
-  border-color: rgba(10, 92, 64, 0.32);
-  background: linear-gradient(160deg, #ffffff, #f5fbf7);
+  border-color: rgba(10, 92, 64, 0.28);
+  background: linear-gradient(160deg, #ffffff, #f4faf6);
 }
 
 .ki-item.is-highlight {
-  border-color: #0a5c40;
+  border-color: var(--w-emerald);
   box-shadow: 0 0 0 2px rgba(10, 92, 64, 0.14);
 }
 
@@ -185,12 +218,12 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  color: #5b6b62;
+  color: var(--w-muted);
 }
 
 .ki-time {
   font-weight: 700;
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .ki-body {
@@ -202,29 +235,35 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
 
 .ki-contact {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   padding-top: 10px;
-  border-top: 1px dashed rgba(11, 59, 42, 0.15);
+  border-top: 1px dashed rgba(11, 59, 42, 0.16);
 }
 
 .ki-wa-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  gap: 8px;
+  min-height: 46px;
   padding: 8px 14px;
   border-radius: 12px;
-  background: #e3f1ea;
-  border: 1px solid rgba(10, 92, 64, 0.28);
-  color: #0a5c40;
-  font-size: 0.88rem;
+  background: var(--w-emerald-soft);
+  border: 1px solid rgba(10, 92, 64, 0.26);
+  color: var(--w-emerald);
+  font-size: 0.87rem;
   font-weight: 700;
   text-decoration: none;
   text-align: center;
+  transition: background-color 0.15s ease;
 }
 
 .ki-wa-btn:hover {
-  background: #d2eadf;
+  background: #d5ebdf;
+}
+
+.ki-wa-btn svg {
+  flex: none;
 }
 
 .ki-foot {
@@ -237,10 +276,10 @@ const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` 
 .wa-rich :deep(.wa-gap) { height: 8px; }
 .wa-rich :deep(.wa-quote) {
   margin: 4px 0;
-  padding: 4px 10px;
-  border-left: 3px solid #0a5c40;
-  border-radius: 4px;
-  background: rgba(10, 92, 64, 0.07);
+  padding: 6px 10px;
+  border: 1px solid rgba(10, 92, 64, 0.18);
+  border-radius: 8px;
+  background: rgba(10, 92, 64, 0.06);
 }
 .wa-rich :deep(.wa-li) {
   display: flex;

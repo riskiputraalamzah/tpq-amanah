@@ -1,14 +1,18 @@
 <template>
   <div>
-    <router-link to="/wali" class="w-back">← Beranda</router-link>
+    <router-link to="/wali" class="w-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+      Beranda
+    </router-link>
+
     <h1 class="w-title">Saran &amp; Kritik</h1>
     <p class="w-lead">
       Sampaikan saran, kritik, atau kendala Bapak/Ibu agar aplikasi dan pelayanan TPQ Amanah menjadi semakin baik.
     </p>
 
     <form class="w-card fb-form" novalidate @submit.prevent="submitFeedback">
-      <div class="w-field">
-        <label id="fb-cat-label">Topik masukan</label>
+      <div class="w-field fb-field">
+        <span id="fb-cat-label" class="w-label">Topik masukan</span>
         <div class="fb-cats" role="radiogroup" aria-labelledby="fb-cat-label">
           <button
             v-for="c in CATEGORIES"
@@ -26,7 +30,7 @@
         </div>
       </div>
 
-      <div class="w-field">
+      <div class="w-field fb-field">
         <label for="fb-msg">Saran atau kritik Bapak/Ibu</label>
         <textarea
           id="fb-msg"
@@ -53,8 +57,8 @@
 
     <h2 class="w-section-title">Riwayat masukan Bapak/Ibu</h2>
     <PageSkeleton v-if="loading" :rows="2" label="Memuat riwayat masukan" />
-    <div v-else-if="!items.length" class="w-card">
-      <p class="w-help" style="margin: 0">Belum ada saran atau kritik yang dikirim.</p>
+    <div v-else-if="!items.length" class="w-card empty-box">
+      <p class="w-help">Belum ada saran atau kritik yang dikirim.</p>
     </div>
     <div v-else class="fb-list">
       <article v-for="item in items" :key="item.id" class="w-card fb-item">
@@ -79,7 +83,8 @@
           <p class="fb-reply-body">{{ item.reply.text }}</p>
         </div>
         <p v-else-if="item.status === 'noted' || item.status === 'done'" class="fb-noted">
-          ✓ Masukan Bapak/Ibu sudah dicatat dan ditindaklanjuti oleh pengurus TPQ. Jazakumullahu khairan.
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+          <span>Masukan Bapak/Ibu sudah dicatat dan ditindaklanjuti oleh pengurus TPQ. Jazakumullahu khairan.</span>
         </p>
       </article>
     </div>
@@ -99,10 +104,10 @@ import { put } from '@/utils/waliCache'
 const toast = useToast()
 
 const CATEGORIES = [
-  { value: 'aplikasi', label: 'Aplikasi & Portal Wali', hint: 'Kemudahan, fitur, atau kendala di HP' },
-  { value: 'kbm', label: 'Kegiatan Belajar & Mengajar', hint: 'KBM, jadwal, materi, atau kehadiran' },
-  { value: 'pelayanan', label: 'Pelayanan & Komunikasi TPQ', hint: 'Informasi, administrasi, pengumuman' },
-  { value: 'lainnya', label: 'Lainnya', hint: 'Masukan umum untuk TPQ Amanah' },
+  { value: 'aplikasi', label: 'Aplikasi & Portal', hint: 'Kemudahan atau kendala di HP' },
+  { value: 'kbm', label: 'Kegiatan KBM', hint: 'Jadwal, materi, atau kehadiran' },
+  { value: 'pelayanan', label: 'Pelayanan TPQ', hint: 'Informasi & administrasi' },
+  { value: 'lainnya', label: 'Lainnya', hint: 'Masukan umum untuk TPQ' },
 ]
 
 const STATUS_MAP = {
@@ -132,7 +137,6 @@ let clockTimer = null
 
 const categoryLabel = (val) => CATEGORIES.find((c) => c.value === val)?.label || 'Lainnya'
 const statusInfo = (st) => STATUS_MAP[st] || STATUS_MAP.open
-
 
 async function submitFeedback() {
   formError.value = ''
@@ -171,31 +175,24 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.w-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 8px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #0a5c40;
-  text-decoration: none;
-}
-
 .fb-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+.fb-field {
+  margin-bottom: 0;
+}
+
+/* Compact 2x2 grid keeps the textarea visible above the fold on 360px-390px phones */
 .fb-cats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 6px;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 320px) {
   .fb-cats {
     grid-template-columns: 1fr;
   }
@@ -206,35 +203,47 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 10px 12px;
-  border-radius: 14px;
+  min-height: 64px;
+  padding: 10px 11px;
+  border-radius: 13px;
   border: 1.5px solid rgba(11, 59, 42, 0.14);
-  background: #fbf9f3;
-  color: #0b3b2a;
+  background: var(--w-bg);
+  color: var(--w-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.fb-cat:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
 }
 
 .fb-cat strong {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .fb-cat span {
-  font-size: 0.76rem;
-  color: #5b6b62;
-  line-height: 1.35;
+  font-size: 0.74rem;
+  color: var(--w-muted);
+  line-height: 1.3;
 }
 
 .fb-cat.is-active {
-  border-color: #0a5c40;
-  background: #e6f4ec;
+  border-color: var(--w-emerald);
+  background: var(--w-emerald);
+  color: #fff;
+}
+
+.fb-cat.is-active span {
+  color: rgba(209, 250, 229, 0.9);
 }
 
 .fb-textarea {
-  min-height: 108px;
+  min-height: 104px;
   resize: vertical;
   line-height: 1.5;
 }
@@ -244,13 +253,18 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .fb-counter {
+  flex: none;
   font-size: 0.78rem;
-  color: #5b6b62;
+  color: var(--w-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.empty-box .w-help {
+  margin: 0;
 }
 
 .fb-list {
@@ -263,6 +277,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 0;
 }
 
 .fb-item-top {
@@ -276,8 +291,8 @@ onBeforeUnmount(() => {
 .fb-cat-tag {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #0a5c40;
-  background: #e6f4ec;
+  color: var(--w-emerald);
+  background: var(--w-emerald-soft);
   padding: 3px 9px;
   border-radius: 999px;
 }
@@ -285,14 +300,14 @@ onBeforeUnmount(() => {
 .fb-item-time {
   margin: 0;
   font-size: 0.78rem;
-  color: #5b6b62;
+  color: var(--w-muted);
 }
 
 .fb-item-msg {
   margin: 0;
-  font-size: 0.94rem;
+  font-size: 0.93rem;
   line-height: 1.55;
-  color: #0b3b2a;
+  color: var(--w-ink);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -300,9 +315,9 @@ onBeforeUnmount(() => {
 .fb-reply {
   margin-top: 4px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 13px;
   background: linear-gradient(160deg, #f1f9f4, #e5f3eb);
-  border: 1px solid rgba(10, 92, 64, 0.22);
+  border: 1px solid rgba(10, 92, 64, 0.2);
 }
 
 .fb-reply-head {
@@ -317,30 +332,39 @@ onBeforeUnmount(() => {
 .fb-reply-head strong {
   font-size: 0.84rem;
   font-weight: 800;
-  color: #0a5c40;
+  color: var(--w-emerald);
 }
 
 .fb-reply-head span {
   font-size: 0.76rem;
-  color: #475a50;
+  color: var(--w-body);
 }
 
 .fb-reply-body {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.55;
-  color: #0b3b2a;
+  color: var(--w-ink);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .fb-noted {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
   margin: 2px 0 0;
   padding: 8px 11px;
   border-radius: 10px;
   background: #f3f7f4;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #0a5c40;
+  line-height: 1.45;
+  color: var(--w-emerald);
+}
+
+.fb-noted svg {
+  flex: none;
+  margin-top: 2px;
 }
 </style>

@@ -3,26 +3,33 @@
     <PageSkeleton v-if="loading" :rows="3" label="Memuat data" />
 
     <template v-else>
-      <h1 class="w-title">Assalamu'alaikum{{ wali?.name ? `, ${wali.name}` : '' }}</h1>
-      <p class="w-lead">Lihat kehadiran dan materi ananda, dan lengkapi datanya agar TPQ mudah menghubungi Bapak/Ibu.</p>
+      <header class="home-head">
+        <h1 class="w-title">Assalamu'alaikum{{ wali?.name ? `, ${wali.name}` : '' }}</h1>
+        <p class="home-sub">{{ homeLead }}</p>
+      </header>
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
-      <!-- announcements from the TPQ -->
+      <!-- Compact, scannable announcements from the TPQ (no eyebrow kicker; expands inline) -->
       <section v-if="annOnHome.length" class="ann-list" aria-label="Pengumuman TPQ">
         <article v-for="a in annOnHome" :key="a.id" class="ann-card">
-          <div class="ann-top">
-            <span class="ann-kicker">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1Z" /><path d="M16 9a3 3 0 0 1 0 6" /></svg>
-              Pengumuman TPQ
+          <div class="ann-row">
+            <span class="ann-icon" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1Z" /><path d="M16 9a3 3 0 0 1 0 6" /></svg>
             </span>
-            <button type="button" class="ann-close" :aria-label="`Tutup pengumuman ${a.title}`" @click="dismiss(a.id)">×</button>
+            <div class="ann-content">
+              <div class="ann-head">
+                <h2 class="ann-title">{{ a.title }}</h2>
+                <button type="button" class="ann-close" :aria-label="`Tutup pengumuman ${a.title}`" @click="dismiss(a.id)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              </div>
+              <p class="ann-body" :class="{ 'is-clamped': !expanded.includes(a.id) && a.body.length > 130 }">{{ a.body }}</p>
+              <button v-if="a.body.length > 130" type="button" class="ann-more" @click="toggleMore(a.id)">
+                {{ expanded.includes(a.id) ? 'Tutup' : 'Baca selengkapnya' }}
+              </button>
+            </div>
           </div>
-          <h2 class="ann-title">{{ a.title }}</h2>
-          <p class="ann-body" :class="{ 'is-clamped': !expanded.includes(a.id) && a.body.length > 220 }">{{ a.body }}</p>
-          <button v-if="a.body.length > 220" type="button" class="w-link ann-more" @click="toggleMore(a.id)">
-            {{ expanded.includes(a.id) ? 'Tutup' : 'Baca selengkapnya' }}
-          </button>
         </article>
       </section>
 
@@ -36,7 +43,10 @@
             <span class="w-pill" :class="`is-${regStatus(r).tone}`">{{ regStatus(r).label }}</span>
           </span>
           <span class="reg-line">{{ regLine(r) }}</span>
-          <span class="reg-more">{{ r.status === 'draft' ? 'Lanjutkan mengisi ›' : r.fixRequest ? 'Perbaiki data ›' : 'Lihat status ›' }}</span>
+          <span class="reg-more">
+            {{ r.status === 'draft' ? 'Lanjutkan mengisi' : r.fixRequest ? 'Perbaiki data' : 'Lihat status' }}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+          </span>
         </router-link>
       </template>
 
@@ -52,7 +62,7 @@
             <strong>Pengkinian data santri</strong>
             <span>Ketuk di sini, lalu ketik kode dari slip kertas yang dibawa ananda</span>
           </span>
-          <span class="start-go" aria-hidden="true">›</span>
+          <svg class="start-go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
         </router-link>
         <p class="start-help">
           <strong>Belum dapat slip, atau slipnya hilang?</strong>
@@ -71,66 +81,94 @@
 
       <!-- The children -->
       <template v-else>
-        <h2 class="w-section-title">Ananda</h2>
-        <article v-for="s in santri" :key="s.santriId" class="w-card child-card">
+        <div class="w-section-head ananda-head">
+          <h2 class="w-section-title">Ananda</h2>
+          <nav v-if="santri.length > 1" class="kid-jumps" aria-label="Lompat ke ananda">
+            <button v-for="s in santri" :key="s.santriId" type="button" class="kid-jump" @click="scrollToChild(s.santriId)">
+              {{ firstName(s.name) }}
+              <span v-if="needsAttention(s)" class="kid-jump-dot" aria-hidden="true"></span>
+            </button>
+          </nav>
+        </div>
+
+        <article v-for="s in santri" :id="`child-${s.santriId}`" :key="s.santriId" class="w-card child-card">
+          <!-- Identity row -->
           <div class="child-head">
             <div class="child-avatar" aria-hidden="true">{{ initials(s.name) }}</div>
             <div class="child-text">
-              <strong>{{ s.name }}</strong>
-              <span>{{ levelName(s.classId) }}<template v-if="s.nomorInduk"> · No. induk {{ s.nomorInduk }}</template></span>
+              <div class="child-name-row">
+                <strong>{{ s.name }}</strong>
+              </div>
+              <div class="child-meta">
+                <span class="child-level">{{ levelName(s.classId) }}</span>
+                <span v-if="s.nomorInduk" class="child-induk">No. induk {{ s.nomorInduk }}</span>
+              </div>
             </div>
           </div>
 
-          <!-- this month's attendance; tap for the meetings and material -->
+          <!-- Monthly attendance summary: one integrated strip, zero counts muted so real numbers pop -->
           <router-link :to="`/wali/santri/${s.santriId}/progres`" class="month-strip" :aria-label="`Kehadiran dan materi ${s.name}`">
-            <span class="month-strip-title">Kehadiran {{ monthName(s.thisMonth?.month) }}</span>
-            <span class="month-strip-counts">
-              <span v-for="t in TILES" :key="t.key" :class="`is-${t.key}`"><strong>{{ s.thisMonth?.[t.key] ?? 0 }}</strong> {{ t.label }}</span>
-            </span>
-            <span class="month-strip-more">Lihat kehadiran &amp; materi ›</span>
+            <div class="month-strip-top">
+              <span class="month-strip-title">Kehadiran {{ monthName(s.thisMonth?.month) }}</span>
+              <span class="month-strip-more">
+                Riwayat &amp; materi
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              </span>
+            </div>
+            <div class="month-strip-grid">
+              <div v-for="t in TILES" :key="t.key" class="ms-cell" :class="[`is-${t.key}`, { 'is-zero': !(s.thisMonth?.[t.key] > 0) }]">
+                <strong>{{ s.thisMonth?.[t.key] ?? 0 }}</strong>
+                <span>{{ t.label }}</span>
+              </div>
+            </div>
           </router-link>
 
+          <!-- Alfa crosscheck shortcut (only when alfa > 0) -->
           <router-link
             v-if="s.thisMonth?.alfa > 0"
             :to="`/wali/santri/${s.santriId}/progres?koreksi=terbaru`"
             class="alfa-crosscheck-row"
           >
+            <svg class="alfa-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
             <span class="alfa-crosscheck-text">
-              Tercatat <strong>{{ s.thisMonth.alfa }} alfa</strong> · Ajukan crosscheck / koreksi absen
+              Tercatat <strong>{{ s.thisMonth.alfa }} alfa</strong> · Ajukan crosscheck / koreksi
             </span>
-            <span class="alfa-crosscheck-go" aria-hidden="true">›</span>
+            <svg class="alfa-crosscheck-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </router-link>
 
-          <!-- the child's other pages: three tiles, thumb-sized -->
+          <!-- Unified 3-column action dock (not nested floating cards) -->
           <nav class="tiles" :aria-label="`Menu ${s.name}`">
             <router-link :to="`/wali/santri/${s.santriId}/izin`" class="tile">
               <span class="tile-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9.5 14.5 5 5m0-5-5 5" /></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9.5 14.5 5 5m0-5-5 5" /></svg>
               </span>
               <span class="tile-label">Izin / sakit</span>
             </router-link>
             <router-link :to="`/wali/santri/${s.santriId}/rapor`" class="tile">
               <span class="tile-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6" /><path d="M15.5 13.2 17 22l-5-3-5 3 1.5-8.8" /></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6" /><path d="M15.5 13.2 17 22l-5-3-5 3 1.5-8.8" /></svg>
               </span>
               <span class="tile-label">Rapor &amp; jilid</span>
             </router-link>
             <router-link :to="`/wali/santri/${s.santriId}/kegiatan`" class="tile">
               <span class="tile-icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" /><path d="M4 6v12a2 2 0 0 0 2 2h14v-4" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4" /><path d="M4 6v12a2 2 0 0 0 2 2h14v-4" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg>
                 <span v-if="s.activities?.length" class="tile-dot">{{ s.activities.length }}</span>
               </span>
               <span class="tile-label">Kegiatan &amp; tabungan</span>
             </router-link>
           </nav>
 
-          <!-- open activities (munaqosyah, ...) with their payment -->
-          <ul v-if="s.activities?.length" class="act-lines">
-            <li v-for="k in s.activities" :key="k.id" class="act-line">
-              <strong>{{ k.title }}</strong>
-              <span class="w-pill" :class="`is-${k.paymentState === 'lunas' || k.paymentState === 'gratis' ? 'ok' : k.paymentState === 'sebagian' ? 'warn' : 'danger'}`">{{ k.payment }}</span>
-            </li>
-          </ul>
+          <!-- Open activities (clickable: opens Kegiatan & tabungan directly) -->
+          <div v-if="s.activities?.length" class="act-lines">
+            <router-link v-for="k in s.activities" :key="k.id" :to="`/wali/santri/${s.santriId}/kegiatan`" class="act-line">
+              <strong class="act-title">{{ k.title }}</strong>
+              <span class="act-right">
+                <span class="w-pill" :class="`is-${k.paymentState === 'lunas' || k.paymentState === 'gratis' ? 'ok' : k.paymentState === 'sebagian' ? 'warn' : 'danger'}`">{{ k.payment }}</span>
+                <svg class="w-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+              </span>
+            </router-link>
+          </div>
 
           <!-- Data ananda: verified with an active advisory note keeps the verified pill AND calls out what to update -->
           <div v-if="s.profileStatus === 'verified' && s.verifiedNote" class="data-cta is-verified-note">
@@ -155,7 +193,7 @@
             <span class="data-row-label">Data ananda</span>
             <span class="w-pill" :class="`is-${status(s).tone}`">{{ status(s).label }}</span>
             <span class="data-row-hint">Lihat / ubah</span>
-            <span class="data-row-go" aria-hidden="true">›</span>
+            <svg class="w-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </router-link>
           <div v-else class="data-cta" :class="{ 'is-danger': s.profileStatus === 'needs_fix' }">
             <p class="data-cta-text">
@@ -168,9 +206,12 @@
           <p v-if="s.hasPendingIdentity" class="w-note is-warn child-note">Perubahan identitas sedang dicek pengurus TPQ.</p>
         </article>
 
-        <!-- another child: kept small here (also under Akun) -->
+        <!-- Secondary utilities: calmer hierarchy below the children -->
         <div class="add-row" role="group" aria-label="Tambah ananda">
-          <router-link to="/wali/tautkan" class="add-link">+ Tambah anak lain (pakai kode slip)</router-link>
+          <router-link to="/wali/tautkan" class="add-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            Tambah anak lain (pakai kode slip)
+          </router-link>
           <router-link v-if="SHOW_NEW_REGISTRATION" to="/wali/daftar/baru" class="add-link">+ Daftarkan santri baru</router-link>
         </div>
       </template>
@@ -202,14 +243,14 @@
       <!-- Saran & kritik untuk menjadikan platform dan layanan TPQ Amanah lebih baik -->
       <router-link to="/wali/masukan" class="w-card feedback-card">
         <span class="feedback-icon" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
         </span>
         <span class="feedback-text">
           <strong>Saran &amp; Kritik</strong>
           <span>Bantu kami menjadikan aplikasi &amp; layanan TPQ Amanah lebih baik</span>
         </span>
         <span v-if="repliedFeedbackCount" class="w-pill is-ok">{{ repliedFeedbackCount }} tanggapan</span>
-        <span class="feedback-go" aria-hidden="true">›</span>
+        <svg class="w-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
       </router-link>
     </template>
   </div>
@@ -251,11 +292,19 @@ const nameInput = ref('')
 const savingName = ref(false)
 const repliedFeedbackCount = computed(() => (Array.isArray(feedbacks.data.value) ? feedbacks.data.value.filter((f) => f.reply?.text).length : 0))
 
+const dataDone = (s) => ['submitted', 'verified'].includes(s.profileStatus)
+const needsAttention = (s) => !dataDone(s) || !!s.verifiedNote || (s.thisMonth?.alfa > 0)
+const homeLead = computed(() => {
+  if (!santri.value.length) return 'Tautkan data ananda dengan kode slip dari TPQ Amanah.'
+  if (santri.value.some((s) => !dataDone(s) || s.verifiedNote)) return 'Pantau kehadiran, materi, dan lengkapi data ananda.'
+  return 'Pantau kehadiran, materi, dan kabar mengaji ananda.'
+})
+
 const TILES = [
-  { key: 'hadir', label: 'hadir' },
-  { key: 'izin', label: 'izin' },
-  { key: 'sakit', label: 'sakit' },
-  { key: 'alfa', label: 'alfa' },
+  { key: 'hadir', label: 'Hadir' },
+  { key: 'izin', label: 'Izin' },
+  { key: 'sakit', label: 'Sakit' },
+  { key: 'alfa', label: 'Alfa' },
 ]
 const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
 const monthName = (ym) => {
@@ -264,6 +313,7 @@ const monthName = (ym) => {
 }
 const levelName = (id) => (String(id) === '7' ? 'Marhalah' : id ? `Jilid ${id}` : 'Belum ada jilid')
 const initials = (name) => String(name || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('')
+const firstName = (name) => String(name || '').trim().split(/\s+/)[0] || 'Ananda'
 const status = (s) => STATUS[s.profileStatus] || STATUS.empty
 const actionLabel = (s) => ({
   empty: 'Isi data sekarang',
@@ -281,8 +331,13 @@ const regLine = (r) => {
   if (r.status === 'contacted') return `${r.number} · Sudah dihubungi, menunggu jadwal penempatan`
   return `${r.number} · Ustadz/ustadzah akan menghubungi Bapak/Ibu`
 }
-const dataDone = (s) => ['submitted', 'verified'].includes(s.profileStatus)
-const actionClass = (s) => (['submitted', 'verified'].includes(s.profileStatus) ? 'w-btn-ghost' : 'w-btn-primary')
+
+function scrollToChild(santriId) {
+  const el = document.getElementById(`child-${santriId}`)
+  if (el && typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
 
 async function saveName() {
   savingName.value = true
@@ -313,100 +368,170 @@ onMounted(() => refreshAnnouncements({ force: true }))
 </script>
 
 <style scoped>
+.home-head {
+  margin-bottom: 14px;
+}
+
+.home-sub {
+  margin: 2px 0 0;
+  color: var(--w-body);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* Compact announcement banner */
 .ann-list {
   display: grid;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .ann-card {
-  padding: 14px 16px 12px;
-  border-radius: 18px;
-  background: linear-gradient(160deg, #fffdf5, #fff8e1);
-  border: 1px solid #f3d58b;
-  box-shadow: 0 10px 24px -20px rgba(120, 80, 10, 0.5);
+  padding: 12px 12px 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fffdf6, #fff7dd);
+  border: 1px solid #eed085;
+  box-shadow: 0 8px 20px -18px rgba(120, 80, 10, 0.45);
 }
 
-.ann-top {
+.ann-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
 }
 
-.ann-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #b45309;
-}
-
-.ann-close {
-  width: 36px;
-  height: 36px;
-  border: 0;
+.ann-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-top: 2px;
   border-radius: 10px;
-  background: transparent;
-  color: #7c5a1a;
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
+  background: #fde6a8;
+  color: #8f4106;
 }
 
-.ann-close:focus-visible {
-  outline: 3px solid #b45309;
-  outline-offset: 2px;
+.ann-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ann-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .ann-title {
-  margin: 2px 0 4px;
-  font-size: 1.08rem;
+  margin: 2px 0 2px;
+  font-size: 0.98rem;
   font-weight: 800;
+  line-height: 1.3;
   color: #3b2404;
 }
 
+.ann-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: -6px -4px -4px 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #7c5214;
+  cursor: pointer;
+}
+
+.ann-close:hover {
+  background: rgba(154, 71, 8, 0.1);
+}
+
+.ann-close:focus-visible,
+.ann-more:focus-visible,
+.kid-jump:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
+}
+
 .ann-body {
-  margin: 0;
-  font-size: 0.93rem;
-  line-height: 1.55;
-  color: #4a3510;
+  margin: 2px 0 0;
+  font-size: 0.87rem;
+  line-height: 1.5;
+  color: #4f370f;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .ann-body.is-clamped {
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .ann-more {
-  padding-bottom: 0;
+  margin-top: 4px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: #0a5c40;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
-.name-card {
-  margin-top: 20px;
+/* Multi-child quick jumps */
+.ananda-head {
+  margin-top: 18px;
 }
 
-.data-status {
+.kid-jumps {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #475a50;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
+.kid-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(11, 59, 42, 0.16);
+  background: #fff;
+  color: var(--w-ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kid-jump:active {
+  background: var(--w-emerald-soft);
+}
+
+.kid-jump-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c2410c;
+}
+
+/* Child card: one calm surface, internal hairline rhythm, zero nested card bloat */
 .child-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  scroll-margin-top: 72px;
 }
 
 .child-head {
@@ -417,94 +542,169 @@ onMounted(() => refreshAnnouncements({ force: true }))
 
 .child-avatar {
   flex: none;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
-  background: #0a5c40;
-  color: #fcd34d;
+  background: linear-gradient(145deg, #0a5c40, #053d2c);
+  color: var(--w-gold);
+  font-size: 0.96rem;
   font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .child-text {
   display: flex;
   flex-direction: column;
+  gap: 3px;
   min-width: 0;
 }
 
-.child-text strong {
-  font-size: 1.05rem;
-  color: #0b3b2a;
+.child-name-row strong {
+  font-size: 1.04rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--w-ink);
 }
 
-.child-text span {
-  font-size: 0.85rem;
-  color: #5b6b62;
-}
-
-.data-status .w-pill {
-  align-self: center;
-}
-
-.child-note {
-  margin: 0;
-}
-
-.month-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #f4f8f5;
-  border: 1px solid rgba(11, 59, 42, 0.12);
-  color: #0b3b2a;
-  text-decoration: none;
-}
-
-.month-strip:focus-visible {
-  outline: 3px solid #b45309;
-  outline-offset: 2px;
-}
-
-.month-strip-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #5b6b62;
-}
-
-.month-strip-counts {
+.child-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 0.9rem;
-  color: #475a50;
+  align-items: center;
+  gap: 6px;
 }
 
-.month-strip-counts strong {
-  font-size: 1.05rem;
+.child-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.child-induk {
+  font-size: 0.78rem;
+  color: var(--w-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.month-strip-counts .is-hadir strong { color: #0a5c40; }
-.month-strip-counts .is-izin strong { color: #1d4f8a; }
-.month-strip-counts .is-sakit strong { color: #7c3a0d; }
-.month-strip-counts .is-alfa strong { color: #8e1b12; }
+/* Monthly attendance strip: unified grid inside child card */
+.month-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 12px 10px;
+  border-radius: 14px;
+  background: #f3f7f4;
+  border: 1px solid rgba(11, 59, 42, 0.09);
+  color: var(--w-ink);
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
 
-.alfa-crosscheck-row {
+.month-strip:hover {
+  background: #ebf3ee;
+}
+
+.month-strip:active {
+  background: #e3eee7;
+}
+
+.month-strip:focus-visible,
+.alfa-crosscheck-row:focus-visible,
+.act-line:focus-visible,
+.add-link:focus-visible,
+.tile:focus-visible,
+.data-row:focus-visible,
+.feedback-card:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
+  outline-offset: 2px;
+}
+
+.month-strip-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.month-strip-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--w-muted);
+}
+
+.month-strip-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--w-emerald);
+}
+
+.month-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(11, 59, 42, 0.07);
+}
+
+.ms-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 0;
+}
+
+.ms-cell strong {
+  font-size: 1.18rem;
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-cell span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--w-muted);
+}
+
+.ms-cell.is-hadir strong { color: #0a5c40; }
+.ms-cell.is-izin strong { color: #19487f; }
+.ms-cell.is-sakit strong { color: #8c4009; }
+.ms-cell.is-alfa strong { color: #9f1b12; }
+
+/* Mute zero counts so real absences & attendances pop immediately */
+.ms-cell.is-zero strong {
+  color: #6b7b72;
+  font-weight: 700;
+}
+
+/* Alfa crosscheck callout */
+.alfa-crosscheck-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fff8ed;
-  border: 1px solid #f1cf94;
+  background: #fff7e6;
+  border: 1px solid #eec982;
   color: #7c3a0d;
   font-size: 0.84rem;
   font-weight: 700;
   text-decoration: none;
+}
+
+.alfa-icon,
+.alfa-crosscheck-go {
+  flex: none;
 }
 
 .alfa-crosscheck-text {
@@ -513,178 +713,179 @@ onMounted(() => refreshAnnouncements({ force: true }))
   line-height: 1.35;
 }
 
-.alfa-crosscheck-go {
-  flex: none;
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.act-lines {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.act-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px 10px;
-  font-size: 0.92rem;
-  color: #0b3b2a;
-}
-
-.month-strip-more {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #0a5c40;
-}
-
-.add-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.add-link {
-  display: grid;
-  place-items: center;
-  min-height: 46px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1.5px dashed rgba(11, 59, 42, 0.25);
-  color: #0a5c40;
-  font-size: 0.86rem;
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
-}
-
-.add-link:only-child {
-  grid-column: 1 / -1;
-}
-
-.add-link:focus-visible,
-.tile:focus-visible,
-.data-row:focus-visible {
-  outline: 3px solid #b45309;
-  outline-offset: 2px;
-}
-
-/* the child's pages as tiles */
+/* Unified 3-column action dock (flat, quiet, touch-friendly) */
 .tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #f6f7f4;
 }
 
 .tile {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 86px;
-  padding: 12px 6px 10px;
-  border-radius: 14px;
+  min-height: 76px;
+  padding: 10px 6px 8px;
+  border-radius: 11px;
   background: #fff;
-  border: 1px solid rgba(11, 59, 42, 0.12);
-  color: #0b3b2a;
+  border: 1px solid rgba(11, 59, 42, 0.07);
+  color: var(--w-ink);
   text-decoration: none;
   text-align: center;
+  transition: background-color 0.14s ease, transform 0.12s ease;
+}
+
+.tile:hover {
+  background: #f4faf6;
 }
 
 .tile:active {
-  background: #f1f8f4;
+  background: #e7f3ec;
+  transform: scale(0.97);
 }
 
 .tile-icon {
   position: relative;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #e3f1ea;
-  color: #0a5c40;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
 }
 
 .tile-dot {
   position: absolute;
   top: -5px;
-  right: -7px;
-  min-width: 18px;
-  height: 18px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
   padding: 0 4px;
   border-radius: 999px;
   background: #b45309;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 800;
-  line-height: 18px;
+  line-height: 17px;
+  text-align: center;
 }
 
 .tile-label {
-  font-size: 0.8rem;
+  font-size: 0.77rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.22;
 }
 
-/* data ananda */
+/* Open activities: clickable summary rows */
+.act-lines {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+  padding-top: 6px;
+}
+
+.act-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 2px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--w-ink);
+  text-decoration: none;
+}
+
+.act-line:active {
+  background: var(--w-surface-soft);
+}
+
+.act-title {
+  min-width: 0;
+  font-weight: 700;
+}
+
+.act-right {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Data ananda row & callout */
 .data-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0 4px;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: -4px;
+  padding: 6px 2px 0;
   border-top: 1px solid rgba(11, 59, 42, 0.08);
-  color: #0b3b2a;
+  color: var(--w-ink);
   text-decoration: none;
 }
 
 .data-row-label {
   flex: 1;
-  font-size: 0.92rem;
+  min-width: 0;
+  font-size: 0.86rem;
   font-weight: 700;
+  color: var(--w-body);
+  white-space: nowrap;
 }
 
 .data-row-hint {
-  font-size: 0.82rem;
+  flex: none;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #0a5c40;
+  color: var(--w-emerald);
+  white-space: nowrap;
 }
 
-.data-row-go {
-  font-size: 1.4rem;
-  line-height: 1;
-  color: #0a5c40;
+@media (max-width: 375px) {
+  .data-row {
+    gap: 6px;
+  }
+
+  .data-row .w-pill {
+    padding: 2px 8px;
+    font-size: 0.73rem;
+  }
+
+  .data-row-hint {
+    font-size: 0.74rem;
+  }
 }
 
 .data-cta {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 12px 13px;
+  border-radius: 13px;
   background: #fffbeb;
-  border: 1px solid #f3d58b;
+  border: 1px solid #eed085;
 }
 
 .data-cta.is-danger {
-  background: #fdf3f2;
-  border-color: #f5b5ad;
+  background: #fdf2f0;
+  border-color: #f3b5ad;
 }
 
 .data-cta-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
   color: #5b3a06;
 }
 
@@ -701,8 +902,8 @@ onMounted(() => refreshAnnouncements({ force: true }))
 }
 
 .data-cta-head strong {
-  font-size: 0.92rem;
-  color: #0b3b2a;
+  font-size: 0.9rem;
+  color: var(--w-ink);
 }
 
 .data-cta-pills {
@@ -712,15 +913,58 @@ onMounted(() => refreshAnnouncements({ force: true }))
 }
 
 .data-cta-sub {
-  font-size: 0.82rem;
-  color: #7c5a1a;
+  font-size: 0.8rem;
+  color: #7c5214;
 }
 
+.child-note {
+  margin: 0;
+}
+
+/* Secondary actions */
+.add-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 13px;
+  border: 1px dashed rgba(11, 59, 42, 0.24);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--w-emerald);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.add-link:hover {
+  background: #fff;
+}
+
+.add-link:only-child {
+  grid-column: 1 / -1;
+}
+
+.name-card {
+  margin-top: 18px;
+}
+
+/* Registration & start cards */
 .reg-card {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: #0b3b2a;
+  color: var(--w-ink);
   text-decoration: none;
   background: #fffdf7;
   border-color: rgba(180, 83, 9, 0.28);
@@ -728,7 +972,7 @@ onMounted(() => refreshAnnouncements({ force: true }))
 
 .reg-card:focus-visible,
 .start-card:focus-visible {
-  outline: 3px solid #b45309;
+  outline: 3px solid var(--w-gold-deep);
   outline-offset: 2px;
 }
 
@@ -741,18 +985,22 @@ onMounted(() => refreshAnnouncements({ force: true }))
 }
 
 .reg-top strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
 }
 
 .reg-line {
-  font-size: 0.88rem;
-  color: #475a50;
+  font-size: 0.86rem;
+  color: var(--w-body);
 }
 
 .reg-more {
-  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 0.86rem;
   font-weight: 700;
-  color: #0a5c40;
+  color: var(--w-emerald);
 }
 
 .start {
@@ -772,32 +1020,31 @@ onMounted(() => refreshAnnouncements({ force: true }))
   border-radius: 18px;
   background: #fff;
   border: 1.5px solid rgba(11, 59, 42, 0.14);
-  color: #0b3b2a;
+  color: var(--w-ink);
   text-decoration: none;
   box-shadow: 0 10px 24px -18px rgba(3, 41, 29, 0.35);
 }
 
 .start-main {
-  min-height: 92px;
+  min-height: 90px;
 }
 
 .start-go {
+  flex: none;
   margin-left: auto;
-  font-size: 1.8rem;
-  line-height: 1;
   opacity: 0.9;
 }
 
 .start-help {
-  margin: 2px 4px 14px;
-  font-size: 0.92rem;
+  margin: 2px 4px 12px;
+  font-size: 0.9rem;
   line-height: 1.5;
-  color: #475a50;
+  color: var(--w-body);
 }
 
 .start-help strong {
   display: block;
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .start-card.is-new {
@@ -813,13 +1060,13 @@ onMounted(() => refreshAnnouncements({ force: true }))
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: #e3f1ea;
-  color: #0a5c40;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
 }
 
 .start-card.is-new .start-icon {
-  background: #fcd34d;
-  color: #053d2c;
+  background: var(--w-gold);
+  color: var(--w-emerald-dark);
 }
 
 .start-text {
@@ -829,16 +1076,16 @@ onMounted(() => refreshAnnouncements({ force: true }))
 }
 
 .start-text strong {
-  font-size: 1.02rem;
+  font-size: 1rem;
 }
 
 .start-text span {
-  font-size: 0.86rem;
-  color: #5b6b62;
+  font-size: 0.85rem;
+  color: var(--w-muted);
 }
 
 .start-card.is-new .start-text span {
-  color: rgba(209, 250, 229, 0.85);
+  color: rgba(209, 250, 229, 0.88);
 }
 
 .request-card {
@@ -858,44 +1105,44 @@ onMounted(() => refreshAnnouncements({ force: true }))
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 18px;
-  padding: 13px 15px;
+  margin-top: 14px;
+  padding: 13px 14px;
   text-decoration: none;
-  color: #0b3b2a;
+  color: var(--w-ink);
+  transition: background-color 0.15s ease;
+}
+
+.feedback-card:hover {
+  background: #fafcf9;
 }
 
 .feedback-icon {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #e3f1ea;
-  color: #0a5c40;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
 }
 
 .feedback-text {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
 .feedback-text strong {
-  font-size: 0.96rem;
+  font-size: 0.94rem;
   font-weight: 800;
 }
 
 .feedback-text span {
-  font-size: 0.82rem;
-  color: #5b6b62;
+  font-size: 0.8rem;
+  color: var(--w-muted);
   line-height: 1.35;
-}
-
-.feedback-go {
-  font-size: 1.35rem;
-  color: #0a5c40;
 }
 </style>

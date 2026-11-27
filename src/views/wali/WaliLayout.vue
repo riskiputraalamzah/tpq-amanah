@@ -1,18 +1,20 @@
 <template>
   <div class="wali-shell" :class="{ 'has-nav': showNav }">
     <header class="wali-bar">
-      <router-link to="/wali" class="wali-brand" aria-label="Beranda wali santri">
-        <img :src="logoUrl" alt="" width="32" height="32" />
-        <span>
-          <strong>TPQ Amanah</strong>
-          <small>Wali Santri</small>
+      <div class="wali-bar-inner">
+        <router-link to="/wali" class="wali-brand" aria-label="Beranda wali santri">
+          <img :src="logoUrl" alt="" width="32" height="32" />
+          <span>
+            <strong>TPQ Amanah</strong>
+            <small>Wali Santri</small>
+          </span>
+        </router-link>
+        <!-- newer data on its way (the page already shows the last one): a quiet mark, never a blank page -->
+        <span class="wali-sync" :class="{ 'is-on': syncShown }" role="status" aria-live="polite">
+          <span class="wali-sync-dot" aria-hidden="true"></span>
+          <span>{{ syncShown ? 'Memperbarui…' : '' }}</span>
         </span>
-      </router-link>
-      <!-- newer data on its way (the page already shows the last one): a quiet mark, never a blank page -->
-      <span class="wali-sync" :class="{ 'is-on': syncShown }" role="status" aria-live="polite">
-        <span class="wali-sync-dot" aria-hidden="true"></span>
-        <span>{{ syncShown ? 'Memperbarui…' : '' }}</span>
-      </span>
+      </div>
     </header>
 
     <!-- pull down at the top of a page (phone): everything on screen is asked again -->

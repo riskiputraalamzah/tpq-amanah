@@ -7,9 +7,21 @@
     </div>
 
     <template v-else>
-      <router-link to="/wali" class="w-link back-link">← Beranda</router-link>
-      <h1 class="w-title">Izin / sakit</h1>
-      <p class="w-lead">{{ page.santri.name }} · {{ levelName(page.santri.classId) }}. Langsung tercatat di daftar hadir TPQ dan diteruskan ke ustadz/ustadzah jilidnya, tidak perlu mengabari lagi.</p>
+      <router-link to="/wali" class="w-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+        Beranda
+      </router-link>
+
+      <WaliChildSwitch :active-id="santriId" section="izin" />
+
+      <header class="iz-head">
+        <h1 class="w-title">Izin / sakit</h1>
+        <div class="iz-who">
+          <strong>{{ page.santri.name }}</strong>
+          <span v-if="levelName(page.santri.classId)" class="iz-level">{{ levelName(page.santri.classId) }}</span>
+        </div>
+        <p class="w-lead iz-lead">Langsung tercatat di daftar hadir TPQ dan diteruskan ke ustadz/ustadzah jilidnya, tidak perlu mengabari lagi.</p>
+      </header>
 
       <!-- just sent -->
       <div v-if="done" class="w-card done-card" role="status">
@@ -47,14 +59,16 @@
         </div>
 
         <div class="w-field">
-          <span id="iz-days" class="w-label">Tanggal<span class="w-req" aria-hidden="true">*</span></span>
+          <div class="days-head">
+            <span id="iz-days" class="w-label">Tanggal<span class="w-req" aria-hidden="true">*</span></span>
+            <span v-if="dates.length" class="days-picked">{{ dates.length }} hari dipilih</span>
+          </div>
           <div class="day-grid" role="group" aria-labelledby="iz-days">
             <button
               v-for="d in days"
               :key="d"
               type="button"
-              class="day-chip"
-              :class="{ 'has-existing': !!activeByDay.get(d) }"
+              class="day-chip" :class="{ 'has-existing': !!activeByDay.get(d) }"
               :aria-pressed="dates.includes(d)"
               @click="toggleDay(d)"
             >
@@ -94,7 +108,7 @@
           <input id="iz-reason" v-model="reason" class="w-input" :class="{ 'is-invalid': errors.reason }" maxlength="200"
             :placeholder="type === 'sakit' ? 'Contoh: demam sejak semalam' : 'Contoh: acara keluarga'" :aria-invalid="!!errors.reason" />
           <div class="quick">
-            <button v-for="q in QUICK[type]" :key="q" type="button" class="quick-chip" @click="reason = q">{{ q }}</button>
+            <button v-for="q in QUICK[type]" :key="q" type="button" class="quick-chip" :class="{ 'is-picked': reason === q }" @click="reason = q">{{ q }}</button>
           </div>
           <span v-if="errors.reason" class="w-error" role="alert">{{ errors.reason }}</span>
         </div>
@@ -103,6 +117,7 @@
         <button type="submit" class="w-btn w-btn-primary" :disabled="sending">
           <template v-if="sending">Mengirim…</template>
           <template v-else-if="overlappingExisting.length">Perbarui {{ type === 'sakit' ? 'kabar sakit' : 'izin' }} yang ada</template>
+          <template v-else-if="dates.length">Kirim {{ type === 'sakit' ? 'kabar sakit' : 'izin' }} ({{ dates.length }} hari)</template>
           <template v-else>Kirim {{ type === 'sakit' ? 'kabar sakit' : 'izin' }}</template>
         </button>
       </form>
@@ -119,8 +134,8 @@
           <p class="w-help">"{{ x.reason }}"<template v-if="x.byName"> · dari {{ x.byName }}</template></p>
           <p v-if="x.status === 'active' && noticeLine(x.notice)" class="w-help past-wa" :class="{ 'is-waiting': cancelPlan(x.notice) === 'retract' }">{{ noticeLine(x.notice) }}</p>
           <div v-if="x.cancellable" class="past-actions">
-            <button type="button" class="w-link past-edit" @click="prefillEdit(x)">Ubah izin</button>
-            <button type="button" class="w-link past-cancel" @click="cancel(x)">Batalkan izin ini</button>
+            <button type="button" class="past-btn past-edit" @click="prefillEdit(x)">Ubah izin</button>
+            <button type="button" class="past-btn past-cancel" @click="cancel(x)">Batalkan izin ini</button>
           </div>
         </article>
       </template>
@@ -135,6 +150,7 @@ import api from '@/services/api'
 import { cancelPlan, noticeLine, cancelResultText, NOTE_INPUT } from '@/utils/izinNotice'
 import PageSkeleton from '@/components/PageSkeleton.vue'
 import LineIcon from '@/components/LineIcon.vue'
+import WaliChildSwitch from './WaliChildSwitch.vue'
 import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
 import { useWaliResource } from '@/composables/useWaliResource'
@@ -377,23 +393,62 @@ async function cancel(x) {
     toast.error(err.response?.data?.error || 'Belum berhasil. Coba lagi.')
   }
 }
-
 </script>
 
 <style scoped>
-.back-link {
-  display: inline-block;
-  margin-bottom: 6px;
-  text-decoration: none;
+.iz-head {
+  margin-bottom: 14px;
+}
+
+.iz-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.iz-who strong {
+  font-size: 0.96rem;
+  color: var(--w-ink);
+}
+
+.iz-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.iz-lead {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
 }
 
 .izin-form .w-field:last-of-type {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+}
+
+.days-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.days-picked {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--w-emerald);
 }
 
 .day-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -403,14 +458,19 @@ async function cancel(x) {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 62px;
-  padding: 8px 4px;
+  min-height: 64px;
+  padding: 8px 6px;
   border-radius: 12px;
-  border: 1.5px solid rgba(11, 59, 42, 0.2);
+  border: 1.5px solid rgba(11, 59, 42, 0.18);
   background: #fff;
   font: inherit;
-  color: #0b3b2a;
+  color: var(--w-ink);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.day-chip:active {
+  transform: scale(0.97);
 }
 
 .day-chip.has-existing {
@@ -420,12 +480,13 @@ async function cancel(x) {
 
 .day-chip strong {
   font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .day-top {
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   font-weight: 700;
-  color: #5b6b62;
+  color: var(--w-muted);
 }
 
 .day-tag {
@@ -433,30 +494,33 @@ async function cancel(x) {
   padding: 1px 6px;
   border-radius: 999px;
   background: #fef3c7;
-  color: #92400e;
-  font-size: 0.64rem;
+  color: #8f4106;
+  font-size: 0.66rem;
   font-weight: 800;
   line-height: 1.3;
 }
 
 .day-chip[aria-pressed="true"] {
-  border-color: #0a5c40;
-  background: #0a5c40;
+  border-color: var(--w-emerald);
+  background: var(--w-emerald);
   color: #fff;
+  box-shadow: 0 4px 12px -6px rgba(5, 61, 44, 0.6);
 }
 
 .day-chip[aria-pressed="true"] .day-top {
-  color: #fcd34d;
+  color: var(--w-gold);
 }
 
 .day-chip[aria-pressed="true"] .day-tag {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
 .day-chip:focus-visible,
-.quick-chip:focus-visible {
-  outline: 3px solid #b45309;
+.quick-chip:focus-visible,
+.past-btn:focus-visible,
+.dup-btn:focus-visible {
+  outline: 3px solid var(--w-gold-deep);
   outline-offset: 2px;
 }
 
@@ -475,7 +539,7 @@ async function cancel(x) {
 .dup-detail,
 .dup-hint {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   line-height: 1.45;
   color: #5b3a06;
 }
@@ -488,9 +552,9 @@ async function cancel(x) {
 }
 
 .dup-btn {
-  min-height: 36px;
+  min-height: 40px;
   padding: 0 12px;
-  border-radius: 9px;
+  border-radius: 10px;
   border: 1px solid rgba(120, 53, 15, 0.3);
   background: #fff;
   color: #78350f;
@@ -509,18 +573,27 @@ async function cancel(x) {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 2px;
 }
 
 .quick-chip {
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 13px;
   border-radius: 999px;
-  border: 1px solid rgba(11, 59, 42, 0.18);
-  background: #f4f8f5;
+  border: 1px solid rgba(11, 59, 42, 0.16);
+  background: var(--w-surface-soft);
   font: inherit;
-  font-size: 0.82rem;
-  color: #0a4a34;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--w-emerald);
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.quick-chip.is-picked {
+  background: var(--w-emerald-soft);
+  border-color: var(--w-emerald);
+  color: var(--w-ink);
 }
 
 .done-card {
@@ -531,7 +604,7 @@ async function cancel(x) {
 
 .done-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -542,20 +615,21 @@ async function cancel(x) {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #0a5c40;
-  color: #fcd34d;
+  background: var(--w-emerald);
+  color: var(--w-gold);
 }
 
 .done-title {
   margin: 0;
   font-weight: 800;
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .done-text {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #475a50;
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--w-body);
 }
 
 .done-teacher {
@@ -579,7 +653,8 @@ async function cancel(x) {
 .past-days {
   margin: 0;
   font-size: 0.92rem;
-  color: #0b3b2a;
+  font-weight: 600;
+  color: var(--w-ink);
 }
 
 .past-card .w-help {
@@ -592,22 +667,40 @@ async function cancel(x) {
 }
 
 .past-wa.is-waiting {
-  color: #b45309;
-  font-weight: 600;
+  color: var(--w-gold-deep);
+  font-weight: 700;
 }
 
 .past-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(11, 59, 42, 0.08);
+}
+
+.past-btn {
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 59, 42, 0.16);
+  background: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .past-edit {
-  color: #0a5c40;
+  color: var(--w-emerald);
+  border-color: rgba(10, 92, 64, 0.25);
+  background: var(--w-surface-soft);
 }
 
 .past-cancel {
   color: #8e1b12;
+  border-color: rgba(142, 27, 18, 0.25);
+  background: #fff;
 }
 </style>

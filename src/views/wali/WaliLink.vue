@@ -38,7 +38,10 @@
 
     <!-- enter the code -->
     <template v-else-if="mode === 'code'">
-      <router-link to="/wali" class="w-link back-link">← Kembali</router-link>
+      <router-link to="/wali" class="w-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+        Kembali
+      </router-link>
       <h1 class="w-title">Ketik kode dari slip</h1>
       <p class="w-lead">Kode ada di <strong>slip kertas</strong> yang dibawa ananda (8 huruf/angka, contoh <strong>AB2C-D3EF</strong>).
         Belum punya? Minta ke ustadz/ustadzah ananda.</p>
@@ -52,7 +55,7 @@
         </div>
 
         <!-- whose code this is, before it is used -->
-        <p v-if="checking" class="w-help" role="status">Mengecek kode…</p>
+        <p v-if="checking" class="w-help checking" role="status">Mengecek kode…</p>
         <div v-else-if="preview?.status === 'valid'" class="w-note code-for" role="status">
           <span>Kode ini untuk <strong>{{ preview.santriName }}</strong> · {{ levelName(preview.classId) }}.
             Pastikan ini ananda Bapak/Ibu.</span>
@@ -81,15 +84,18 @@
         </button>
       </form>
 
-      <p class="w-center lost">
-        Slip hilang dan ustadz/ustadzah sulit dihubungi?
+      <div class="lost-box">
+        <p class="lost">Slip hilang dan ustadz/ustadzah sulit dihubungi?</p>
         <button type="button" class="w-link" @click="mode = 'request'; error = ''">Ajukan ke admin</button>
-      </p>
+      </div>
     </template>
 
     <!-- lost code: a request -->
     <template v-else>
-      <button type="button" class="w-link back-link" @click="mode = 'code'; error = ''">← Pakai kode saja</button>
+      <button type="button" class="w-back" @click="mode = 'code'; error = ''">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+        Pakai kode saja
+      </button>
       <h1 class="w-title">Ajukan tautan</h1>
       <p class="w-lead">Tulis nama ananda. Admin atau ustadz/ustadzah akan mencocokkan dan menautkannya.</p>
 
@@ -200,20 +206,27 @@ async function submitRequest() {
   text-align: left;
 }
 
+.checking {
+  margin: 0 0 12px;
+}
+
 .code-for {
   margin: 0 0 16px;
 }
 
-.back-link {
-  display: inline-block;
-  margin: -4px 0 8px;
-  text-decoration: none;
+.lost-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 18px;
+  text-align: center;
 }
 
 .lost {
-  margin-top: 16px;
-  font-size: 0.9rem;
-  color: #475a50;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--w-body);
 }
 
 .done-secondary {

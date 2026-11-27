@@ -22,9 +22,15 @@
     </div>
 
     <template v-else>
-      <router-link to="/wali" class="w-link back-link">← Beranda</router-link>
-      <h1 class="w-title">{{ santri.name }}</h1>
-      <p class="w-lead santri-sub">{{ levelName(santri.classId) }}</p>
+      <router-link to="/wali" class="w-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+        Beranda
+      </router-link>
+
+      <header class="sf-head">
+        <h1 class="w-title">{{ santri.name }}</h1>
+        <span v-if="levelName(santri.classId)" class="sf-level">{{ levelName(santri.classId) }}</span>
+      </header>
 
       <p v-if="status === 'needs_fix' && adminNote" class="w-note is-danger" role="alert">
         <span><strong>Perlu diperbaiki:</strong> {{ adminNote }}</span>
@@ -42,7 +48,7 @@
       </template>
       <p v-if="pendingIdentity.length" class="w-note is-warn">Ada perubahan identitas yang sedang dicek pengurus TPQ.</p>
 
-      <!-- progress -->
+      <!-- Progress bar + clear numbered step pills -->
       <div class="w-steps" aria-hidden="true">
         <span v-for="(s, i) in allSteps" :key="s.key" :class="{ 'is-done': i < step, 'is-current': i === step }"></span>
       </div>
@@ -411,20 +417,33 @@ onMounted(load)
 </script>
 
 <style scoped>
-.back-link {
-  display: inline-block;
-  margin: -4px 0 6px;
-  text-decoration: none;
+.sf-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.santri-sub {
-  margin-bottom: 12px;
+.sf-head .w-title {
+  margin: 0;
+}
+
+.sf-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .name-note {
   display: block; /* .w-note is a flex row: keep the sentence flowing around the bold words */
   margin: 6px 0 0;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
 }
 
 .step-hint {
@@ -437,8 +456,8 @@ onMounted(load)
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  min-height: 50px;
-  padding: 0 4px 0 14px;
+  min-height: 48px;
+  padding: 0 6px 0 14px;
   border-radius: 12px;
   background: #f3f6f4;
   border: 1.5px dashed rgba(11, 59, 42, 0.2);
@@ -448,7 +467,7 @@ onMounted(load)
   font-weight: 700;
   letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .kk-box {
@@ -490,7 +509,7 @@ onMounted(load)
 .review-group + .review-group {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(11, 59, 42, 0.1);
+  border-top: 1px solid rgba(11, 59, 42, 0.09);
 }
 
 .review-head {
@@ -500,7 +519,7 @@ onMounted(load)
 }
 
 .review-head strong {
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .review-group dl {
@@ -512,17 +531,17 @@ onMounted(load)
   grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
   gap: 10px;
   padding: 4px 0;
-  font-size: 0.9rem;
+  font-size: 0.89rem;
 }
 
 .review-row dt {
-  color: #5b6b62;
+  color: var(--w-muted);
 }
 
 .review-row dd {
   margin: 0;
   font-weight: 600;
-  color: #0b3b2a;
+  color: var(--w-ink);
   overflow-wrap: anywhere;
 }
 
@@ -533,25 +552,28 @@ onMounted(load)
 }
 
 .agree-title {
-  color: #0b3b2a;
+  color: var(--w-ink);
 }
 
 .agree ul {
   margin: 8px 0 12px;
   padding-left: 18px;
-  font-size: 0.88rem;
+  font-size: 0.87rem;
   line-height: 1.55;
-  color: #475a50;
+  color: var(--w-body);
 }
 
 .check {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #0b3b2a;
+  margin-bottom: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--w-surface-soft);
+  font-size: 0.88rem;
+  line-height: 1.48;
+  color: var(--w-ink);
   cursor: pointer;
 }
 
@@ -560,7 +582,7 @@ onMounted(load)
   width: 22px;
   height: 22px;
   margin-top: 1px;
-  accent-color: #0a5c40;
+  accent-color: var(--w-emerald);
 }
 
 .form-error {
@@ -568,6 +590,6 @@ onMounted(load)
 }
 
 .later {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 </style>
