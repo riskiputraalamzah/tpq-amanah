@@ -94,7 +94,8 @@ const active = computed(() => {
   const p = route.path
   if (p === '/wali/izin' || /^\/wali\/santri\/[^/]+\/izin$/.test(p)) return 'izin'
   if (p.startsWith('/wali/pengumuman') || (route.name === 'WaliKegiatanInfo' && route.query.from === 'pengumuman')) return 'pengumuman'
-  if (p.startsWith('/wali/akun')) return 'akun'
+  // Panduan and Tanda tangan are opened from Akun
+  if (p.startsWith('/wali/akun') || p.startsWith('/wali/panduan') || p.startsWith('/wali/tanda-tangan')) return 'akun'
   return 'home'
 })
 

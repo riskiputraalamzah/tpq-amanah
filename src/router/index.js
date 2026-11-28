@@ -133,6 +133,8 @@ const routes = [
       { path: "rapor/:periodId", name: "RaporBoard", component: () => import("../views/dashboard/rapor/RaporBoard.vue") },
       { path: "rapor/:periodId/santri/:santriId", name: "RaporEdit", component: () => import("../views/dashboard/rapor/RaporEdit.vue") },
       { path: "rapor/:periodId/santri/:santriId/cetak", name: "RaporPrint", component: () => import("../views/dashboard/rapor/RaporPrint.vue") },
+      // Panduan for admin (admin, guru, wali guides) and guru (guru, wali)
+      { path: "panduan", name: "PanduanDashboard", component: () => import("../views/panduan/PanduanDashboard.vue") },
       // Guru routes
       {
         path: "kbm",
@@ -367,6 +369,7 @@ const routes = [
       { path: "santri/:santriId/prestasi", name: "WaliPrestasi", component: () => import("../views/wali/WaliPrestasi.vue") },
       { path: "santri/:santriId/prestasi/cetak", name: "WaliPrestasiCetak", component: () => import("../views/wali/WaliPrestasiCetak.vue"), meta: { hideNav: true } },
       { path: "tanda-tangan", name: "WaliTandaTangan", component: () => import("../views/wali/WaliTandaTangan.vue") },
+      { path: "panduan", name: "PanduanWali", component: () => import("../views/panduan/PanduanWali.vue") },
       { path: "santri/:santriId/izin", name: "WaliIzin", component: () => import("../views/wali/WaliIzin.vue") },
       // pendaftaran santri baru ("baru" starts one, or continues the unfinished one)
       { path: "daftar/:id", name: "WaliDaftar", component: () => import("../views/wali/WaliDaftar.vue"), meta: { hideNav: true } },
@@ -374,6 +377,24 @@ const routes = [
   },
   // the short link on the landing page, posters and WhatsApp: tpqamanahsawotratap.com/daftar
   { path: "/daftar", redirect: "/wali/daftar/baru" },
+  // Panduan: one address for everybody; signed in -> the guide inside their own area (wali portal / dashboard)
+  {
+    path: "/panduan",
+    name: "Panduan",
+    component: () => import("../views/panduan/PanduanPublic.vue"),
+    beforeEnter: async (to) => {
+      const auth = useAuthStore();
+      if (!auth.authChecked && auth.token) {
+        try {
+          await auth.checkAuth();
+        } catch {
+          /* a visitor then */
+        }
+      }
+      if (!auth.isAuthenticated) return true;
+      return { path: auth.user?.role === "wali" ? "/wali/panduan" : "/dashboard/panduan", query: to.query, hash: to.hash };
+    },
+  },
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",

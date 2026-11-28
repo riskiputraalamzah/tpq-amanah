@@ -74,6 +74,14 @@
 
       <h2 class="w-section-title">Bantuan &amp; masukan</h2>
       <div class="links">
+        <router-link to="/wali/panduan" class="link-row">
+          <span class="link-icon" aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" /></svg>
+          </span>
+          <span class="link-text"><strong>Panduan portal wali</strong><span>Cara memakai kartu prestasi, rapor, izin, dan lainnya</span></span>
+          <span v-if="panduanNew" class="w-pill is-warn">Baru</span>
+          <svg class="w-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+        </router-link>
         <router-link to="/wali/masukan" class="link-row">
           <span class="link-icon" aria-hidden="true">
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
@@ -104,6 +112,7 @@ import { useToast } from '@/composables/useToast'
 import { useWaliResource } from '@/composables/useWaliResource'
 import { WALI_KEYS, waliFetch } from '@/utils/waliData'
 import { put } from '@/utils/waliCache'
+import { unseenReleases } from '@/content/panduan'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -116,6 +125,7 @@ const loading = computed(() => me.loading.value)
 const wali = computed(() => me.data.value?.wali || null)
 const santri = computed(() => me.data.value?.santri || [])
 const nameInput = ref('')
+const panduanNew = unseenReleases('wali').length
 const savingName = ref(false)
 
 const phone = computed(() => String(wali.value?.phone || '').replace(/^62/, '0').replace(/(\d{4})(\d{4})(\d+)/, '$1 $2 $3'))

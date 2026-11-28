@@ -10,6 +10,13 @@
 
       <p v-if="loadError" class="w-note is-danger" role="alert">{{ loadError }}</p>
 
+      <!-- a new feature in the portal: one line to its guide, gone once the guide was opened on this phone -->
+      <router-link v-if="newFeatures.length && santri.length" :to="`/wali/panduan#wali-${newFeatures[0].topics.wali}`" class="new-feat">
+        <span class="new-feat-pill">Baru</span>
+        <span class="new-feat-text">{{ newFeatures.map((r) => r.title.split(' (')[0]).join(' · ') }}<small>Lihat cara pakainya</small></span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+      </router-link>
+
       <!-- Compact, scannable announcements from the TPQ (no eyebrow kicker; expands inline) -->
       <section v-if="annOnHome.length" class="ann-list" aria-label="Pengumuman TPQ">
         <article v-for="a in annOnHome" :key="a.id" class="ann-card">
@@ -274,6 +281,7 @@ import { SHOW_NEW_REGISTRATION } from '@/utils/waliFeatures'
 import { useWaliResource } from '@/composables/useWaliResource'
 import { WALI_KEYS, waliFetch, warmUpWali } from '@/utils/waliData'
 import { put } from '@/utils/waliCache'
+import { unseenReleases } from '@/content/panduan'
 
 // shown at once from the last visit (this phone), refreshed in the background (utils/waliCache.js)
 const me = useWaliResource(() => WALI_KEYS.me, () => waliFetch.me())
@@ -301,6 +309,9 @@ const repliedFeedbackCount = computed(() => (Array.isArray(feedbacks.data.value)
 
 const dataDone = (s) => ['submitted', 'verified'].includes(s.profileStatus)
 const needsAttention = (s) => !dataDone(s) || !!s.verifiedNote || (s.thisMonth?.alfa > 0)
+// releases of the portal this phone has not opened in Panduan yet
+const newFeatures = ref(unseenReleases('wali'))
+
 const homeLead = computed(() => {
   if (!santri.value.length) return 'Tautkan data ananda dengan kode slip dari TPQ Amanah.'
   if (santri.value.some((s) => !dataDone(s) || s.verifiedNote)) return 'Pantau kehadiran, materi, dan lengkapi data ananda.'
@@ -718,6 +729,43 @@ onMounted(() => refreshAnnouncements({ force: true }))
   flex: 1;
   min-width: 0;
   line-height: 1.35;
+}
+
+.new-feat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(150deg, #0a5c40, #053d2c);
+  color: #fbf9f3;
+  text-decoration: none;
+}
+
+.new-feat-pill {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fcd34d;
+  color: #3a2405;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.new-feat-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.new-feat-text small {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #b6d3c4;
 }
 
 /* Unified action dock (flat, quiet, touch-friendly): 4 tiles in a row, 2 x 2 on a very narrow phone */

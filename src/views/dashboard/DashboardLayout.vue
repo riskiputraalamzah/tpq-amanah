@@ -216,6 +216,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useAnnouncementStore } from "@/stores/announcements";
 import AnnouncementBanner from "@/components/AnnouncementBanner.vue";
 import MobileChrome from "@/components/MobileChrome.vue";
+import { unseenReleases } from "@/content/panduan";
 import { usePageTransition } from "@/composables/usePageTransition";
 import PageSkeleton from "@/components/PageSkeleton.vue";
 import api from "@/services/api";
@@ -267,8 +268,11 @@ const ICON = {
   building: '<path d="M3 21h18" /><path d="M5 21V7l8-4 6 3v15" /><path d="M9 10h2" /><path d="M9 14h2" /><path d="M9 18h2" />',
   person: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />',
   edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />',
+  book: '<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" />',
   gallery: '<rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 15-4.5-4.5a1.5 1.5 0 0 0-2.1 0L7 18" />',
 }
+// Panduan: its own small group, never folded by default (a new release shows its badge right there)
+const BANTUAN = { key: 'bantuan', title: 'Bantuan', items: [{ to: '/dashboard/panduan', label: 'Panduan', icon: ICON.book, badge: 'panduan' }] }
 const ADMIN_GROUPS = [
   {
     key: 'santri',
@@ -324,7 +328,7 @@ const ADMIN_GROUPS = [
   },
 ]
 const menuGroups = computed(() => {
-  if (isAdmin.value) return ADMIN_GROUPS
+  if (isAdmin.value) return [...ADMIN_GROUPS, BANTUAN]
   if (!isGuru.value) return []
   const groups = [
     {
@@ -356,6 +360,7 @@ const menuGroups = computed(() => {
       items: specialMenus.value.map((m) => ({ to: m.to, label: m.label, icon: m.icon, badge: m.id === 'pendaftaran' ? 'pendaftaran' : m.id === 'gallery-manage' ? 'komentar' : '' })),
     })
   }
+  groups.push(BANTUAN)
   groups.push({ key: 'akun', title: 'Akun', items: [{ to: '/dashboard/profile', label: 'Profil Saya', icon: ICON.person }] })
   return groups
 })
@@ -490,12 +495,21 @@ const { count: feedbackWaiting, refresh: refreshFeedback } = useWaliFeedbackBadg
 const { count: newComments, refresh: refreshComments } = useGalleryCommentBadge();
 const seesComments = computed(() => isAdmin.value || hasPermission("gallery-manage"));
 // every badge of the menus, by the key a menu item names (sidebar, the phone's tabs and its Menu sheet)
-const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses", masukan: "masukan wali belum diproses", komentar: "komentar baru" };
+const BADGE_LABEL = { pendaftaran: "pendaftar baru", wali: "data wali perlu diproses", masukan: "masukan wali belum diproses", komentar: "komentar baru", panduan: "fitur baru di panduan" };
+// Panduan: releases this device has not opened yet (content/panduan.js), refreshed when the guide is opened
+const panduanNew = ref(0);
+const refreshPanduan = () => {
+  panduanNew.value = isAdmin.value || isGuru.value ? unseenReleases(isAdmin.value ? "admin" : "guru").length : 0;
+};
+refreshPanduan();
+onMounted(() => window.addEventListener("panduan-seen", refreshPanduan));
+onBeforeUnmount(() => window.removeEventListener("panduan-seen", refreshPanduan));
 const badges = computed(() => ({
   pendaftaran: seesRegistrations.value ? newRegistrations.value : 0,
   wali: isAdmin.value || isGuru.value ? waliWaiting.value : 0,
   masukan: isAdmin.value ? feedbackWaiting.value : 0,
   komentar: seesComments.value ? newComments.value : 0,
+  panduan: panduanNew.value,
 }));
 
 watch(
