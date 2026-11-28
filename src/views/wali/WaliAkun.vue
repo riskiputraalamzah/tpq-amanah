@@ -51,6 +51,27 @@
         </router-link>
       </div>
 
+      <h2 class="w-section-title">Kartu prestasi</h2>
+      <section class="w-card kabar" aria-labelledby="kabar-title">
+        <div class="kabar-head">
+          <strong id="kabar-title">Kabar prestasi lewat WhatsApp</strong>
+          <span>Setelah ananda dites mengaji oleh ustadz/ustadzah. Berlaku untuk semua ananda.</span>
+        </div>
+        <label v-for="o in PRESTASI_WA" :key="o.key" class="kabar-opt" :class="{ 'is-on': prestasiWa === o.key }">
+          <input type="radio" name="prestasi-wa" :value="o.key" :checked="prestasiWa === o.key" :disabled="savingPref" @change="savePref(o.key)" />
+          <span><strong>{{ o.label }}</strong><small>{{ o.help }}</small></span>
+        </label>
+      </section>
+      <div class="links">
+        <router-link to="/wali/tanda-tangan" class="link-row">
+          <span class="link-icon" aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-6 5-9 7-9s-1 9 2 9 3-5 5-5 2 3 4 3" /><path d="M3 21h18" /></svg>
+          </span>
+          <span class="link-text"><strong>Tanda tangan saya</strong><span>Gambar sekali, dipakai setiap kali memaraf kartu prestasi</span></span>
+          <svg class="w-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+        </router-link>
+      </div>
+
       <h2 class="w-section-title">Bantuan &amp; masukan</h2>
       <div class="links">
         <router-link to="/wali/masukan" class="link-row">
@@ -137,6 +158,28 @@ async function saveName() {
   }
 }
 
+// Kabar prestasi lewat WA (backend utils/kps_notices.js): harian / mingguan / mati
+const PRESTASI_WA = [
+  { key: 'harian', label: 'Setiap hari ananda dites', help: 'Disarankan · sore ±17.15, malam ±20.15 (satu pesan untuk semua ananda)' },
+  { key: 'mingguan', label: 'Rekap mingguan', help: 'Ahad pagi, ringkasan satu pekan' },
+  { key: 'mati', label: 'Tidak usah', help: 'Cukup lihat di portal wali' },
+]
+const prestasiWa = computed(() => wali.value?.prestasiWa || 'harian')
+const savingPref = ref(false)
+async function savePref(pref) {
+  if (pref === prestasiWa.value) return
+  savingPref.value = true
+  try {
+    const { data } = await api.put('/wali/me/prestasi-wa', { pref })
+    put(WALI_KEYS.me, { ...(me.data.value || {}), wali: data })
+    toast.success('Pilihan kabar prestasi tersimpan')
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Pilihan belum tersimpan.')
+  } finally {
+    savingPref.value = false
+  }
+}
+
 async function logout() {
   const ok = await ask({ title: 'Keluar dari portal wali?', message: 'Untuk masuk lagi, cukup nomor WhatsApp dan kode yang dikirim TPQ.', confirmText: 'Keluar' })
   if (!ok) return
@@ -146,6 +189,66 @@ async function logout() {
 </script>
 
 <style scoped>
+.kabar {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.kabar-head {
+  display: grid;
+  gap: 2px;
+}
+
+.kabar-head strong {
+  font-size: 0.98rem;
+  color: var(--w-ink);
+}
+
+.kabar-head span {
+  font-size: 0.82rem;
+  color: var(--w-muted);
+}
+
+.kabar-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--w-line);
+  background: #fff;
+  cursor: pointer;
+}
+
+.kabar-opt.is-on {
+  border: 1.5px solid var(--w-emerald);
+  background: #f0f8f3;
+}
+
+.kabar-opt input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--w-emerald);
+}
+
+.kabar-opt span {
+  display: grid;
+  gap: 2px;
+}
+
+.kabar-opt strong {
+  font-size: 0.92rem;
+  color: var(--w-ink);
+}
+
+.kabar-opt small {
+  font-size: 0.8rem;
+  color: var(--w-muted);
+}
+
 .me {
   display: flex;
   flex-direction: column;

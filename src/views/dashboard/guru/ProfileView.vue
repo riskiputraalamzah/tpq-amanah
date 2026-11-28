@@ -148,6 +148,15 @@
           </div>
         </form>
       </div>
+
+      <!-- "Tanda tangan saya": stamped on the Kartu Prestasi paraf (and later the rapor) -->
+      <div v-if="!loading" class="glass-card signature-card">
+        <SignatureEditor
+          lead="Gambar sekali dengan jari atau mouse. Paraf Anda di kartu prestasi santri otomatis saat menyimpan tes; gambar ini yang tampil di portal wali dan hasil cetak."
+          :name="form.displayName || user?.displayName || ''"
+          :caption="user?.role === 'admin' ? 'Administrator' : 'Ustadz/Ustadzah'"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -157,6 +166,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/services/api'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import SignatureEditor from '@/components/signature/SignatureEditor.vue'
 import { useToast } from '@/composables/useToast'
 
 const authStore = useAuthStore()
@@ -397,5 +407,9 @@ onMounted(() => {
   margin-top: var(--space-xl);
   padding-top: var(--space-lg);
   border-top: 1px solid var(--gray-100);
+}
+.signature-card {
+  margin-top: 20px;
+  max-width: 560px;
 }
 </style>

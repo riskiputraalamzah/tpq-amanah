@@ -28,6 +28,14 @@
       @done="onTakeoverDone"
     />
     <PjRecheckSheet :open="recheckOpen" :items="recheckItems" :takeover="recheckTakeover" @pick="onRecheckPick" @close="recheckOpen = false" />
+    <KpsTestSheet
+      :open="kpsSheet.open"
+      :santri="kpsSheet.santri"
+      :hadir="kpsSheet.hadir"
+      :kps="kps"
+      :my-name="myName"
+      @close="kpsSheet.open = false"
+    />
     <SessionHolidaySheet v-if="isAdmin" :open="holidayOpen" :default-date="date" :default-slot="slot" @close="holidayOpen = false" @changed="onHolidayChanged" />
     <div v-if="sheet && sheet.daysBack === 0 && !sheet.dayOff" ref="hintWrap" class="as-hint-wrap">
       <!-- Desktop: concise inline hint; Mobile: compact tooltip trigger so it does not eat screen space -->
@@ -103,6 +111,14 @@
           <span class="as-save" :class="`is-${saveState}`">{{ saveLabel }}</span>
           <button v-if="saveState === 'error'" type="button" class="as-retry" @click="retryNow">Coba lagi</button>
         </template>
+      </div>
+      <!-- Kartu Prestasi: the same list, Lanjut / Ulang instead of the status (only the children who came) -->
+      <div v-if="isLive" class="as-mode" role="group" aria-label="Yang dicatat">
+        <button type="button" :aria-pressed="mode === 'absen'" @click="setMode('absen')">Absen</button>
+        <button type="button" :aria-pressed="mode === 'tes'" @click="setMode('tes')">
+          Tes mengaji
+          <span v-if="kpsReady && kps.testedCount.value" class="as-mode-count">{{ kps.testedCount.value }}</span>
+        </button>
       </div>
     </div>
 
@@ -338,7 +354,19 @@
         </label>
       </div>
 
-      <template v-for="g in shownGroups" :key="g.classId">
+      <div v-if="mode === 'tes' && isLive" class="as-tes-info" role="status" aria-live="polite">
+        <p>
+          <strong>Isi yang dites saja, tidak wajib semua.</strong> Ketuk <b>Lanjut</b> atau <b>Ulang</b>: halaman terisi otomatis dan
+          langsung tersimpan. Nilai &amp; catatan boleh dikosongkan (ikon pensil). Lupa saat KBM? Bisa diisi sampai pukul 24.00, atau
+          besok sampai 12.00 dengan memilih tanggal kemarin.
+        </p>
+        <p v-if="kps.error.value" class="as-tes-warn">{{ kps.error.value }}</p>
+        <p v-else-if="kpsReady && !kps.day.value.canEdit && kps.day.value.reason" class="as-tes-warn">{{ kps.day.value.reason }}</p>
+        <span v-if="kpsSaveLabel" class="as-save" :class="`is-${kps.state.value}`">{{ kpsSaveLabel }}</span>
+        <button v-if="kps.state.value === 'error'" type="button" class="as-retry" @click="kps.retryNow()">Coba lagi</button>
+      </div>
+
+      <template v-for="g in listGroups" :key="g.classId">
         <!-- each sesi keeps its own attendance: the other sesi's jilid are said to be so -->
         <p v-if="g === firstOther && !search" class="as-others-note">
           Di bawah ini jilid yang jadwalnya <strong>sesi {{ otherSlot.label }}</strong>. Yang tercatat di sini hanya santrinya yang
@@ -351,17 +379,17 @@
               <span class="as-group-count">{{ groupCountText(g) }}</span>
               <span class="as-chevron" aria-hidden="true">{{ isOpen(g) ? '▾' : '▸' }}</span>
             </button>
-            <button v-if="canMark && isOpen(g) && g.own && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
+            <button v-if="mode !== 'tes' && canMark && isOpen(g) && g.own && g.recorded < g.items.length" type="button" class="as-all" @click="markRest(g)">
               Tandai sisanya hadir
             </button>
             <button v-if="!g.own && otherSheetHas(g.classId)" type="button" class="as-jump" @click="jumpTo(g.classId)">
               Lihat di sesi {{ otherSlot.label }} · {{ otherRecordedOf(g.classId) }}/{{ g.items.length }} dicatat ›
             </button>
           </div>
-        <p v-if="!search && groupGap(g)" class="as-gap" :class="{ 'is-mine': groupGap(g).mine }">
+        <p v-if="mode !== 'tes' && !search && groupGap(g)" class="as-gap" :class="{ 'is-mine': groupGap(g).mine }">
           <strong>{{ groupGap(g).count }} belum dicatat</strong> · tanggung jawab {{ groupGap(g).who }}
         </p>
-        <p v-if="!search && awayOf(g.classId).length" class="as-away">
+        <p v-if="mode !== 'tes' && !search && awayOf(g.classId).length" class="as-away">
           Dititipkan ke sesi lain: {{ awayOf(g.classId).map((x) => `${x.name} (${slotName(x.titip.slot)}, ${x.titip.hostGuruName})`).join(', ') }}
         </p>
         <ul v-if="isOpen(g)" class="as-list">
@@ -377,12 +405,21 @@
                 {{ recordOf(s.id).source === 'kbm' ? 'dari KBM' : 'oleh' }} {{ recordOf(s.id).byName }}<template v-if="recordOf(s.id).changedFrom">
                   · menggantikan {{ recordOf(s.id).changedFrom.status }} dari wali</template>
               </span>
+              <span v-if="mode === 'tes' && tesSub(s)" class="as-by is-tes">{{ tesSub(s) }}</span>
               <span v-if="!statusOf(s.id) && keptOf(s.id)" class="as-by is-kept">Dikosongkan (Mode Hujan) oleh {{ keptOf(s.id).byName || 'guru KBM' }}</span>
               <button v-if="canMark && isLocked(s.id)" type="button" class="as-unlock" :aria-label="`Ubah status ${s.name}`" @click="unlock(s)">
                 🔒 Ubah status
               </button>
             </div>
-            <div class="as-choices" role="group" :aria-label="`Status ${s.name}`">
+            <div v-if="mode === 'tes'" class="as-tes" role="group" :aria-label="`Tes ${s.name}`">
+              <button type="button" class="as-tes-place" :class="{ 'is-empty': !tesPlaceOk(s) }" :disabled="!kpsCan" @click="openKps(s)">{{ tesPlaceLabel(s) }}</button>
+              <button type="button" class="as-tes-btn is-lanjut" :aria-pressed="tesResult(s) === 'lanjut'" :disabled="!kpsCan" @click="tapKps(s, 'lanjut')">Lanjut</button>
+              <button type="button" class="as-tes-btn is-ulang" :aria-pressed="tesResult(s) === 'ulang'" :disabled="!kpsCan" @click="tapKps(s, 'ulang')">Ulang</button>
+              <button type="button" class="as-tes-more" :aria-label="`Nilai, catatan, atau jenis tes lain untuk ${s.name}`" :disabled="!kpsCan" @click="openKps(s)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+              </button>
+            </div>
+            <div v-else class="as-choices" role="group" :aria-label="`Status ${s.name}`">
               <button v-for="st in STATUSES" :key="st.key" type="button" class="as-choice" :class="`is-${st.key}`"
                 :aria-pressed="statusOf(s.id) === st.key" :disabled="!canMark || isLocked(s.id)" @click="choose(s.id, st.key)">
                 {{ st.label }}
@@ -392,9 +429,9 @@
         </ul>
         </section>
       </template>
-      <p v-if="!shownGroups.length" class="as-empty">Tidak ada santri yang cocok.</p>
+      <p v-if="!listGroups.length" class="as-empty">{{ mode === 'tes' && !search ? 'Belum ada santri yang tercatat hadir di sesi ini. Tandai hadir dulu di mode Absen.' : 'Tidak ada santri yang cocok.' }}</p>
 
-      <button v-if="!search && !myJilidFilterActive && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
+      <button v-if="mode !== 'tes' && !search && !myJilidFilterActive && otherGroups.length" type="button" class="as-more" @click="showOthers = !showOthers">
         {{ showOthers ? 'Sembunyikan jilid lain' : `Ada santri jilid lain yang ikut sesi ${slotLabel}? Tampilkan jilid lain (${otherCount} santri)` }}
       </button>
       <p class="as-foot">
@@ -406,7 +443,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 import api from '@/services/api'
 import PageSkeleton from '@/components/PageSkeleton.vue'
@@ -417,6 +454,9 @@ import SessionHolidaySheet from '@/components/absen/SessionHolidaySheet.vue'
 import PjOpenCard from '@/components/absen/PjOpenCard.vue'
 import PjTakeoverSheet from '@/components/absen/PjTakeoverSheet.vue'
 import PjRecheckSheet from '@/components/absen/PjRecheckSheet.vue'
+import KpsTestSheet from '@/components/kps/KpsTestSheet.vue'
+import { useKpsDay } from '@/composables/useKpsDay'
+import { mainKind, placeChip, scoreText, shortDay } from '@/utils/kps'
 import { useAuthStore } from '@/stores/auth'
 import { useDialog } from '@/composables/useDialog'
 import { useToast } from '@/composables/useToast'
@@ -694,7 +734,7 @@ function otherRecordedOf(classId) {
   return Object.entries(sh.records || {}).filter(([id, r]) => ids.has(id) && r?.status).length
 }
 // own jilid: "8/8 dicatat"; another sesi's jilid: only who came to this sesi
-const groupCountText = (g) => (g.own || g.searching
+const groupCountText = (g) => (mode.value === 'tes' ? `${g.tested}/${g.items.length} dites` : g.own || g.searching
   ? `${g.recorded}/${g.items.length} dicatat`
   : g.recorded ? `${g.recorded} ikut sesi ${slotLabel.value}` : `belum ada yang ikut sesi ${slotLabel.value}`)
 const otherCount = computed(() => otherGroups.value.reduce((n, g) => n + g.items.length, 0))
@@ -733,6 +773,98 @@ const shownGroups = computed(() => {
     .filter((g) => g.items.length)
 })
 const firstOther = computed(() => shownGroups.value.find((g) => !g.own) || null)
+
+// ---------------------------------------------------------------------------------------------------------------
+// Kartu Prestasi ("Tes mengaji"): the children who came, Lanjut / Ulang in one tap (composables/useKpsDay.js)
+const MODE_KEY = 'tpq.absen.mode'
+const mode = ref((() => {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'tes' ? 'tes' : 'absen'
+  } catch {
+    return 'absen'
+  }
+})())
+const kps = useKpsDay({ onRefused: (msg) => showError(msg) })
+const kpsSheet = ref({ open: false, santri: null, hadir: false })
+const myName = computed(() => authStore.user?.displayName || authStore.user?.name || '')
+// the tes data shown belongs to the day and sesi on screen
+const kpsReady = computed(() => !!kps.day.value && kps.day.value.date === sheet.value?.date && kps.day.value.slot === sheet.value?.slot)
+const kpsCan = computed(() => kpsReady.value && !!kps.day.value.canEdit)
+const hadirIds = computed(() => (sheet.value?.santri || []).filter((s) => statusOf(s.id) === 'hadir').map((s) => s.id))
+const kpsAsked = new Set()
+function loadKps({ silent = false } = {}) {
+  if (mode.value !== 'tes' || !sheet.value || !isLive.value) return
+  const ids = hadirIds.value
+  ids.forEach((id) => kpsAsked.add(id))
+  kps.load({ date: sheet.value.date, slot: sheet.value.slot, ids, silent })
+}
+function setMode(m) {
+  mode.value = m
+  try {
+    localStorage.setItem(MODE_KEY, m)
+  } catch {
+    /* private mode */
+  }
+  if (m === 'tes') loadKps({ silent: kpsReady.value })
+}
+// every new answer of the sheet (another day, sesi, or the minute's refresh): the tests of that sesi too
+watch(sheet, (sh, old) => {
+  if (!sh) return
+  const same = !!old && old.date === sh.date && old.slot === sh.slot
+  if (!same) kpsAsked.clear()
+  loadKps({ silent: same && kpsReady.value })
+})
+// a child marked hadir after the tes data came: its page is fetched (once)
+let kpsAskTimer = null
+watch(hadirIds, (ids) => {
+  if (mode.value !== 'tes' || !kpsReady.value || !ids.some((id) => !kpsAsked.has(id))) return
+  clearTimeout(kpsAskTimer)
+  kpsAskTimer = setTimeout(() => loadKps({ silent: true }), 400)
+})
+const testsOf = (id) => (kpsReady.value ? kps.day.value.tests[id] || {} : {})
+const listGroups = computed(() => {
+  if (mode.value !== 'tes') return shownGroups.value
+  return shownGroups.value
+    .map((g) => {
+      const items = g.items.filter((s) => statusOf(s.id) === 'hadir' || Object.keys(testsOf(s.id)).length)
+      return { ...g, items, tested: items.filter((s) => Object.keys(testsOf(s.id)).length).length }
+    })
+    .filter((g) => g.items.length)
+})
+const kpsTest = (s) => testsOf(s.id)[mainKind(s.classId)] || null
+const tesResult = (s) => kpsTest(s)?.result || ''
+const tesPlace = (s) => (kpsReady.value ? kps.placeFor(s) : null)
+const tesPlaceOk = (s) => {
+  const p = tesPlace(s)
+  return !!p && !p.done
+}
+// "…" until the sesi's tests and pages have arrived (never a wrong "Atur hal." for a child who has a page)
+const tesPlaceLabel = (s) => (!kpsReady.value ? '…' : tesPlaceOk(s) ? placeChip(mainKind(s.classId), tesPlace(s)) : mainKind(s.classId) === 'jilid' ? 'Atur hal.' : 'Atur surat')
+// under the name: what was written today, else the last test
+function tesSub(s) {
+  if (!kpsReady.value) return ''
+  const t = kpsTest(s)
+  const others = Object.values(testsOf(s.id)).filter((x) => x !== t)
+  if (t) {
+    const parts = []
+    if (statusOf(s.id) !== 'hadir') parts.push('Tidak tercatat hadir')
+    if (t.score !== null && t.score !== undefined) parts.push(`Nilai ${scoreText(t.score)}${t.grade ? ` (${t.grade})` : ''}`)
+    if (t.notes) parts.push(t.notes)
+    if (others.length) parts.push(`+${others.length} tes lain`)
+    return parts.join(' · ')
+  }
+  if (others.length) return `${others.length} tes lain hari ini`
+  const last = kps.positionOf(s.id, mainKind(s.classId))?.last
+  return last ? `Terakhir: ${last.text} · ${last.result === 'lanjut' ? 'Lanjut' : 'Ulang'} · ${shortDay(last.date)}` : ''
+}
+function openKps(s) {
+  kpsSheet.value = { open: true, santri: s, hadir: statusOf(s.id) === 'hadir' }
+}
+function tapKps(s, result) {
+  if (kps.quick(s, result) === 'need-place') openKps(s)
+}
+const KPS_SAVE = { idle: '', saving: 'Menyimpan…', saved: 'Tersimpan ✓' }
+const kpsSaveLabel = computed(() => (kps.state.value === 'error' ? `Belum tersimpan (${kps.pendingCount.value}), dicoba lagi otomatis` : KPS_SAVE[kps.state.value] || ''))
 const isOpen = (g) => g.searching || (opened.value[g.classId] ?? g.own)
 const toggle = (classId) => {
   const g = groups.value.find((x) => x.classId === classId)
@@ -1152,23 +1284,31 @@ function setDate(d) {
 // ---------------------------------------------------------------------------------------------------------------
 // Leaving, coming back
 const onHide = () => {
-  if (document.visibilityState === 'hidden') flush()
+  if (document.visibilityState === 'hidden') {
+    flush()
+    kps.flush()
+  }
   // back on the tab: the sheet may have changed meanwhile (a parent's izin, another teacher)
   else if (!pending.size && sheet.value) load({ silent: true })
 }
-const onOnline = () => { if (pending.size) retryNow() }
+const onOnline = () => {
+  if (pending.size) retryNow()
+  if (kps.pendingCount.value) kps.retryNow()
+}
 const onBeforeUnload = (e) => {
-  if (!pending.size) return
+  if (!pending.size && !kps.pendingCount.value) return
   e.preventDefault()
   e.returnValue = ''
 }
 let poll = null
 onBeforeRouteLeave(async () => {
   await flush()
-  if (!pending.size) return true
+  await kps.flush()
+  const left = pending.size + kps.pendingCount.value
+  if (!left) return true
   return ask({
     title: 'Ada yang belum tersimpan',
-    message: `${pending.size} catatan absen belum terkirim ke server. Jika keluar sekarang, catatan itu hilang.`,
+    message: `${left} catatan absen/tes belum terkirim ke server. Jika keluar sekarang, catatan itu hilang.`,
     confirmText: 'Keluar',
     cancelText: 'Tetap di sini',
     tone: 'danger',
@@ -1223,7 +1363,10 @@ onBeforeUnmount(() => {
   clearInterval(poll)
   clearTimeout(retryTimer)
   clearTimeout(highlightTimer)
+  clearTimeout(kpsAskTimer)
   flush()
+  kps.flush()
+  kps.stop()
 })
 </script>
 
@@ -2486,5 +2629,149 @@ onBeforeUnmount(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Kartu Prestasi ("Tes mengaji") */
+.as-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #efe9dc;
+}
+
+.as-mode button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.as-mode button[aria-pressed="true"] {
+  background: #fff;
+  color: #0a5c40;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.as-mode button:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-mode-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #0a5c40;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+.as-tes-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #f1d9a8;
+  background: #fffaf0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #5c3b0b;
+}
+
+.as-tes-info p {
+  margin: 0;
+  flex: 1 1 100%;
+}
+
+.as-tes-info strong {
+  color: #6b3a05;
+}
+
+.as-tes-warn {
+  font-weight: 700;
+  color: #a3261b;
+}
+
+.as-by.is-tes {
+  color: #0a5c40;
+}
+
+.as-tes {
+  display: grid;
+  grid-template-columns: minmax(74px, 1.1fr) repeat(2, minmax(0, 1fr)) 44px;
+  gap: 6px;
+  flex: 1 1 300px;
+}
+
+.as-tes button {
+  min-height: 44px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.as-tes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.as-tes button:focus-visible {
+  outline: 3px solid #b45309;
+  outline-offset: 2px;
+}
+
+.as-tes-place {
+  padding: 0 8px;
+  border: 1.5px dashed rgba(11, 59, 42, 0.28);
+  background: #f6f3ec;
+  color: #0b3b2a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.as-tes-place.is-empty {
+  border-color: #d8a24a;
+  background: #fffaf0;
+  color: #8a4b07;
+}
+
+.as-tes-btn {
+  border: 1.5px solid rgba(11, 59, 42, 0.16);
+  background: #fff;
+}
+
+.as-tes-btn.is-lanjut { color: #0a5c40; border-color: rgba(10, 92, 64, 0.45); }
+.as-tes-btn.is-ulang { color: #a3261b; }
+.as-tes-btn.is-lanjut[aria-pressed="true"] { background: #0a5c40; border-color: #0a5c40; color: #fff; }
+.as-tes-btn.is-ulang[aria-pressed="true"] { background: #a3261b; border-color: #a3261b; color: #fff; }
+
+.as-tes-more {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1.5px solid rgba(11, 59, 42, 0.16);
+  background: #fff;
+  color: var(--body);
 }
 </style>

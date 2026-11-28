@@ -8,6 +8,9 @@ import { prefetch, invalidate } from '@/utils/waliCache'
 const MUTATIONS = [
   { re: /^\/?wali\/(santri\/[^/]+\/izin|izin\/)/, keys: () => ['me', 'izin:*', 'progress:*'] },
   { re: /^\/?wali\/santri\/[^/]+\/absen-reports/, keys: () => ['reports:*'] },
+  // Kartu Prestasi: a paraf changes the card and the badge on Beranda; a new signature changes how parafs look
+  { re: /^\/?wali\/santri\/[^/]+\/prestasi/, keys: () => ['prestasi:*', 'me'] },
+  { re: /^\/?signatures/, keys: () => ['prestasi:*'] },
   { re: /^\/?wali\/(santri\/|link|me)/, keys: () => ['me'] },
   { re: /^\/?pendaftaran/, keys: () => ['regs', 'me'] },
   { re: /^\/?wali-feedback/, keys: () => ['feedback'] },
@@ -39,6 +42,7 @@ export const WALI_KEYS = {
   progress: (santriId, month = '') => `progress:${santriId}:${month || 'now'}`,
   reports: (santriId) => `reports:${santriId}`,
   rapor: (santriId) => `rapor:${santriId}`,
+  prestasi: (santriId, month = '') => `prestasi:${santriId}:${month || 'now'}`,
   kegiatan: (santriId) => `kegiatan:${santriId}`,
   kegiatanInfo: (santriId, activityId) => `kegiatanInfo:${santriId}:${activityId}`,
 }
@@ -52,6 +56,7 @@ export const waliFetch = {
   progress: (santriId, month = '') => get(`/wali/santri/${santriId}/progress`, month ? { month } : null),
   reports: (santriId) => get(`/wali/santri/${santriId}/absen-reports`),
   rapor: (santriId) => get(`/wali/santri/${santriId}/rapor`),
+  prestasi: (santriId, month = '') => get(`/wali/santri/${santriId}/prestasi`, month ? { month } : null),
   kegiatan: (santriId) => get(`/wali/santri/${santriId}/kegiatan`),
   kegiatanInfo: (santriId, activityId) => get(`/wali/santri/${santriId}/kegiatan/${activityId}/info`),
 }
@@ -64,6 +69,7 @@ const PAGE_CHUNKS = [
   () => import('@/views/wali/WaliPengumuman.vue'),
   () => import('@/views/wali/WaliAkun.vue'),
   () => import('@/views/wali/WaliRapor.vue'),
+  () => import('@/views/wali/WaliPrestasi.vue'),
   () => import('@/views/wali/WaliKegiatan.vue'),
 ]
 

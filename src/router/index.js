@@ -378,6 +378,10 @@ const routes = [
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
       { path: "santri/:santriId/kegiatan/:activityId/info", name: "WaliKegiatanInfo", component: () => import("../views/wali/WaliKegiatanInfo.vue") },
       { path: "santri/:santriId/rapor", name: "WaliRapor", component: () => import("../views/wali/WaliRapor.vue") },
+      // Kartu Prestasi (the daily reading test), its print page (A4) and "Tanda tangan saya" for the paraf
+      { path: "santri/:santriId/prestasi", name: "WaliPrestasi", component: () => import("../views/wali/WaliPrestasi.vue") },
+      { path: "santri/:santriId/prestasi/cetak", name: "WaliPrestasiCetak", component: () => import("../views/wali/WaliPrestasiCetak.vue"), meta: { hideNav: true } },
+      { path: "tanda-tangan", name: "WaliTandaTangan", component: () => import("../views/wali/WaliTandaTangan.vue") },
       { path: "santri/:santriId/izin", name: "WaliIzin", component: () => import("../views/wali/WaliIzin.vue") },
       // pendaftaran santri baru ("baru" starts one, or continues the unfinished one)
       { path: "daftar/:id", name: "WaliDaftar", component: () => import("../views/wali/WaliDaftar.vue"), meta: { hideNav: true } },

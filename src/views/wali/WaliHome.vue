@@ -136,8 +136,15 @@
             <svg class="alfa-crosscheck-go" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
           </router-link>
 
-          <!-- Unified 3-column action dock (not nested floating cards) -->
+          <!-- Unified action dock (not nested floating cards) -->
           <nav class="tiles" :aria-label="`Menu ${s.name}`">
+            <router-link :to="`/wali/santri/${s.santriId}/prestasi`" class="tile" :aria-label="s.kpsUnsigned ? `Kartu prestasi, ${s.kpsUnsigned} belum diparaf` : 'Kartu prestasi'">
+              <span class="tile-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z" /><path d="M4 19.5A2 2 0 0 0 6 21.5h13" /><path d="m9 10 2 2 4-4" /></svg>
+                <span v-if="s.kpsUnsigned" class="tile-dot">{{ s.kpsUnsigned > 9 ? '9+' : s.kpsUnsigned }}</span>
+              </span>
+              <span class="tile-label">Kartu prestasi</span>
+            </router-link>
             <router-link :to="`/wali/santri/${s.santriId}/izin`" class="tile">
               <span class="tile-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9.5 14.5 5 5m0-5-5 5" /></svg>
@@ -713,10 +720,10 @@ onMounted(() => refreshAnnouncements({ force: true }))
   line-height: 1.35;
 }
 
-/* Unified 3-column action dock (flat, quiet, touch-friendly) */
+/* Unified action dock (flat, quiet, touch-friendly): 4 tiles in a row, 2 x 2 on a very narrow phone */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   padding: 4px;
   border-radius: 14px;
@@ -777,9 +784,15 @@ onMounted(() => refreshAnnouncements({ force: true }))
 }
 
 .tile-label {
-  font-size: 0.77rem;
+  font-size: 0.74rem;
   font-weight: 700;
   line-height: 1.22;
+}
+
+@media (max-width: 340px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Open activities: clickable summary rows */
