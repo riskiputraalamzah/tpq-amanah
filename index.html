@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover: when installed on an iPhone the top bar can run under the status bar (it pads itself) -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
 
     <!-- Preconnect to Google Fonts for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Amiri:wght@400;700&display=swap"
       rel="stylesheet"
       media="print"
-      onload="this.media='all'"
+      onload="this.media = 'all'"
     />
 
     <!-- Primary Meta Tags -->
@@ -30,7 +33,7 @@
     />
     <meta
       name="description"
-      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMP. Sesi sore dan malam, Senin sampai Jumat."
+      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMA. Sesi sore dan malam, Senin sampai Jumat."
     />
     <meta
       name="keywords"
@@ -48,7 +51,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="TPQ Amanah" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -59,7 +65,7 @@
     />
     <meta
       property="og:description"
-      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMP. Sesi sore dan malam, Senin sampai Jumat."
+      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMA. Sesi sore dan malam, Senin sampai Jumat."
     />
     <meta
       property="og:image"
@@ -79,7 +85,7 @@
     />
     <meta
       name="twitter:description"
-      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMP. Sesi sore dan malam, Senin sampai Jumat."
+      content="TPQ Amanah di Sawotratap, Sidoarjo: belajar Al-Qur'an metode At-Tartil 6 Jilid untuk anak usia 4 tahun sampai SMA. Sesi sore dan malam, Senin sampai Jumat."
     />
     <meta
       name="twitter:image"
@@ -131,7 +137,13 @@
             "openingHoursSpecification": [
               {
                 "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "dayOfWeek": [
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday"
+                ],
                 "opens": "15:30",
                 "closes": "19:30"
               }
@@ -153,12 +165,18 @@
         var COOLDOWN_MS = 30000;
         var WATCHDOG_MS = 8000;
 
-        if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
-          navigator.serviceWorker.getRegistrations().then(function (regs) {
-            regs.forEach(function (reg) {
-              reg.unregister();
-            });
-          }).catch(function () {});
+        if (
+          "serviceWorker" in navigator &&
+          navigator.serviceWorker.getRegistrations
+        ) {
+          navigator.serviceWorker
+            .getRegistrations()
+            .then(function (regs) {
+              regs.forEach(function (reg) {
+                reg.unregister();
+              });
+            })
+            .catch(function () {});
         }
 
         function forceFreshReload() {
@@ -175,10 +193,19 @@
           };
           if ("caches" in window && caches.keys) {
             Promise.race([
-              caches.keys().then(function (keys) {
-                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-              }).catch(function () {}),
-              new Promise(function (resolve) { setTimeout(resolve, 150); })
+              caches
+                .keys()
+                .then(function (keys) {
+                  return Promise.all(
+                    keys.map(function (k) {
+                      return caches.delete(k);
+                    }),
+                  );
+                })
+                .catch(function () {}),
+              new Promise(function (resolve) {
+                setTimeout(resolve, 150);
+              }),
             ]).finally(go);
           } else {
             go();
@@ -190,7 +217,8 @@
           try {
             var now = Date.now();
             var last = Number(sessionStorage.getItem(BOOT_KEY));
-            if (isFinite(last) && last > 0 && now - last < COOLDOWN_MS) return false;
+            if (isFinite(last) && last > 0 && now - last < COOLDOWN_MS)
+              return false;
             sessionStorage.setItem(BOOT_KEY, String(now));
           } catch (e) {
             return false;
@@ -213,7 +241,9 @@
             }
           };
           if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", apply, { once: true });
+            document.addEventListener("DOMContentLoaded", apply, {
+              once: true,
+            });
           } else {
             apply();
           }
@@ -224,18 +254,25 @@
           function (e) {
             if (window.__TPQ_BOOTED__) return;
             var el = e && e.target;
-            if (!el || (el.tagName !== "SCRIPT" && el.tagName !== "LINK")) return;
+            if (!el || (el.tagName !== "SCRIPT" && el.tagName !== "LINK"))
+              return;
             var src = el.src || el.href || "";
             if (src.indexOf("/assets/") === -1) return;
             if (!tryAutoReload()) {
-              showRecovery("Versi aplikasi baru sedang dimuat. Ketuk Muat Ulang.");
+              showRecovery(
+                "Versi aplikasi baru sedang dimuat. Ketuk Muat Ulang.",
+              );
             }
           },
-          true
+          true,
         );
 
         setTimeout(function () {
-          if (window.__TPQ_BOOTED__ || !document.getElementById("initial-loader")) return;
+          if (
+            window.__TPQ_BOOTED__ ||
+            !document.getElementById("initial-loader")
+          )
+            return;
           if (navigator.onLine === false) {
             showRecovery("Periksa koneksi internet Anda, lalu muat ulang.");
             return;

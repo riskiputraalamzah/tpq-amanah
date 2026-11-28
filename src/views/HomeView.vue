@@ -83,7 +83,7 @@
           class="hero-rise mt-6 max-w-[42rem] text-base leading-relaxed text-balance sm:text-lg text-emerald-100/90"
           style="--d: 220ms"
         >
-          Anak usia 4 tahun sampai SMP belajar membaca Al-Qur'an dengan
+          Anak usia 4 tahun sampai SMA belajar membaca Al-Qur'an dengan
           <strong class="font-semibold text-white whitespace-nowrap"
             >Metode At-Tartil 6 Jilid</strong
           >. Bacaan setiap anak disimak satu per satu oleh ustadz dan ustadzah
@@ -546,7 +546,7 @@
                 class="inline-flex items-center gap-2 font-semibold text-emerald-800"
               >
                 <i class="lp-diamond text-amber-600"></i>
-                Terbuka untuk usia 4 tahun sampai SMP
+                Terbuka untuk usia 4 tahun sampai SMA
               </span>
               <span>Kelas berjalan Senin sampai Jumat</span>
             </div>
@@ -2571,7 +2571,10 @@ const scrollToHash = (hash) => {
 };
 
 const onGalleryReady = () => {
-  if (typeof window !== "undefined" && window.location.hash === "#dokumentasi") {
+  if (
+    typeof window !== "undefined" &&
+    window.location.hash === "#dokumentasi"
+  ) {
     requestAnimationFrame(() => scrollToHash("#dokumentasi"));
   }
 };
