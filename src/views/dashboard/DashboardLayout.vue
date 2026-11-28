@@ -290,7 +290,7 @@ const ADMIN_GROUPS = [
       { to: '/dashboard/izin-santri', label: 'Izin Santri', icon: ICON.absensi },
       { to: '/dashboard/kbm-monitor', label: 'Monitor KBM', icon: ICON.monitor },
       { to: '/dashboard/admin-attendance', label: 'Rekap Absensi Guru', icon: ICON.rekap },
-      { to: '/dashboard/admin-grading', label: 'Kelola Penilaian', icon: ICON.doc },
+      { to: '/dashboard/rapor', label: 'Rapor', icon: ICON.doc },
     ],
   },
   {
@@ -335,7 +335,7 @@ const menuGroups = computed(() => {
         { to: '/dashboard/kbm', label: 'KBM / Mengajar', icon: ICON.kbm },
         { to: '/dashboard/absen-santri', label: 'Absen Santri', icon: ICON.absenSantri },
         { to: '/dashboard/izin-santri', label: 'Izin Santri', icon: ICON.absensi },
-        { to: '/dashboard/grading', label: 'Penilaian', icon: ICON.doc },
+        { to: '/dashboard/rapor', label: 'Rapor', icon: ICON.doc },
       ],
     },
     {

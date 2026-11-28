@@ -125,20 +125,14 @@ const routes = [
         meta: { role: "admin", feature: "admin-attendance-view" },
       },
       // Note: TeacherAttendanceDetail route removed - all info now on main page
-      {
-        path: "admin-grading",
-        name: "AdminGrading",
-        component: () =>
-          import("../views/dashboard/admin/AdminGradingView.vue"),
-        meta: { role: "admin" },
-      },
-      {
-        path: "admin-grading/:periodId",
-        name: "AdminGradingPeriod",
-        component: () =>
-          import("../views/dashboard/admin/AdminGradingPeriodView.vue"),
-        meta: { role: "admin" },
-      },
+      // the old free-form "Penilaian" became the Rapor (user decision 2026-11-28)
+      { path: "admin-grading", redirect: "/dashboard/rapor" },
+      { path: "admin-grading/:periodId", redirect: "/dashboard/rapor" },
+      // Rapor (Laporan Perkembangan Santri): admin and guru, the page shows what the role may do
+      { path: "rapor", name: "Rapor", component: () => import("../views/dashboard/rapor/RaporHome.vue") },
+      { path: "rapor/:periodId", name: "RaporBoard", component: () => import("../views/dashboard/rapor/RaporBoard.vue") },
+      { path: "rapor/:periodId/santri/:santriId", name: "RaporEdit", component: () => import("../views/dashboard/rapor/RaporEdit.vue") },
+      { path: "rapor/:periodId/santri/:santriId/cetak", name: "RaporPrint", component: () => import("../views/dashboard/rapor/RaporPrint.vue") },
       // Guru routes
       {
         path: "kbm",
@@ -207,19 +201,8 @@ const routes = [
         component: () => import("../views/dashboard/guru/AttendanceView.vue"),
         meta: { role: "guru" },
       },
-      {
-        path: "grading",
-        name: "Grading",
-        component: () => import("../views/dashboard/guru/GradingView.vue"),
-        meta: { role: "guru" },
-      },
-      {
-        path: "grading/:periodId",
-        name: "GradingPeriod",
-        component: () =>
-          import("../views/dashboard/guru/GradingPeriodView.vue"),
-        meta: { role: "guru" },
-      },
+      { path: "grading", redirect: "/dashboard/rapor" },
+      { path: "grading/:periodId", redirect: "/dashboard/rapor" },
       {
         path: "savings",
         name: "Savings",
@@ -378,6 +361,8 @@ const routes = [
       { path: "santri/:santriId/kegiatan", name: "WaliKegiatan", component: () => import("../views/wali/WaliKegiatan.vue") },
       { path: "santri/:santriId/kegiatan/:activityId/info", name: "WaliKegiatanInfo", component: () => import("../views/wali/WaliKegiatanInfo.vue") },
       { path: "santri/:santriId/rapor", name: "WaliRapor", component: () => import("../views/wali/WaliRapor.vue") },
+      { path: "santri/:santriId/rapor/:periodId", name: "WaliRaporDetail", component: () => import("../views/wali/WaliRaporDetail.vue") },
+      { path: "santri/:santriId/rapor/:periodId/cetak", name: "WaliRaporCetak", component: () => import("../views/wali/WaliRaporCetak.vue"), meta: { hideNav: true } },
       // Kartu Prestasi (the daily reading test), its print page (A4) and "Tanda tangan saya" for the paraf
       { path: "santri/:santriId/prestasi", name: "WaliPrestasi", component: () => import("../views/wali/WaliPrestasi.vue") },
       { path: "santri/:santriId/prestasi/cetak", name: "WaliPrestasiCetak", component: () => import("../views/wali/WaliPrestasiCetak.vue"), meta: { hideNav: true } },

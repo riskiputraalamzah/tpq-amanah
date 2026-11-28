@@ -157,6 +157,17 @@
           :caption="user?.role === 'admin' ? 'Administrator' : 'Ustadz/Ustadzah'"
         />
       </div>
+
+      <!-- only for the Kepala TPQ chosen by the admin (menu Rapor): the official signature on every published rapor -->
+      <div v-if="!loading && isKepala" class="glass-card signature-card">
+        <SignatureEditor
+          endpoint="/signatures/kepala"
+          title="Tanda tangan Kepala TPQ (rapor)"
+          lead="Antum dipilih admin sebagai Kepala TPQ. Tanda tangan ini tampil di bagian &quot;Mengetahui, Kepala TPQ&quot; pada setiap rapor yang terbit. Boleh berbeda dari paraf harian."
+          :name="form.displayName || user?.displayName || ''"
+          caption="Kepala TPQ Amanah"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -261,6 +272,17 @@ const saveProfile = async () => {
 
 onMounted(() => {
   loadProfile()
+})
+
+// Kepala TPQ (chosen by the admin in menu Rapor): their official signature for the rapor
+const isKepala = ref(false)
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/signatures/kepala', { cache: false })
+    isKepala.value = !!data?.isKepala
+  } catch {
+    isKepala.value = false
+  }
 })
 </script>
 
@@ -410,6 +432,13 @@ onMounted(() => {
 }
 .signature-card {
   margin-top: 20px;
-  max-width: 560px;
+  max-width: 640px;
+  padding: var(--space-2xl);
+}
+
+@media (max-width: 640px) {
+  .signature-card {
+    padding: 18px 16px;
+  }
 }
 </style>

@@ -1,0 +1,327 @@
+/* Rapor pages of the dashboard (RaporHome, RaporBoard, RaporEdit) and their sheets. Mobile first. */
+.rpx,
+.rpx-overlay {
+  --ink: #0b3b2a;
+  --body: #3d5146;
+  --muted: #55625b;
+  --line: rgba(11, 59, 42, 0.11);
+  --line-strong: rgba(11, 59, 42, 0.2);
+  --emerald: #0a5c40;
+  --emerald-dark: #053d2c;
+  --emerald-soft: #e6f3ec;
+  --gold: #b45309;
+  --gold-soft: #fdf0d9;
+  --danger: #a3261b;
+  --danger-soft: #fde4e1;
+  --ivory: #fbf9f3;
+  --sand: #f2efe6;
+}
+
+.rpx {
+  max-width: 920px;
+  margin-inline: auto;
+  color: var(--ink);
+}
+
+.rpx-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-bottom: 14px;
+}
+
+.rpx-head h1 {
+  margin: 0 0 4px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.rpx-head p {
+  margin: 0;
+  color: var(--body);
+  line-height: 1.5;
+}
+
+.rpx-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 2px rgba(3, 41, 29, 0.04), 0 8px 22px -18px rgba(3, 41, 29, 0.25);
+}
+
+.rpx-card + .rpx-card {
+  margin-top: 12px;
+}
+
+.rpx-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rpx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rpx-btn.is-primary {
+  border: 0;
+  background: var(--emerald);
+  color: #fff;
+  font-weight: 800;
+}
+
+.rpx-btn.is-gold {
+  border: 0;
+  background: #e9c46a;
+  color: #3a2405;
+  font-weight: 800;
+}
+
+.rpx-btn.is-danger {
+  border-color: rgba(163, 38, 27, 0.35);
+  color: var(--danger);
+}
+
+.rpx-btn.is-small {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 0.84rem;
+  border-radius: 12px;
+}
+
+.rpx-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rpx-btn:focus-visible,
+.rpx-chip:focus-visible,
+.rpx-row:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.rpx-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rpx-pill.is-muted { background: var(--sand); color: var(--muted); }
+.rpx-pill.is-warn { background: var(--gold-soft); color: #7c3a06; }
+.rpx-pill.is-danger { background: var(--danger-soft); color: var(--danger); }
+.rpx-pill.is-ok { background: var(--emerald-soft); color: var(--emerald); }
+.rpx-pill.is-dark { background: var(--emerald-dark); color: #fbf9f3; }
+
+.rpx-grade {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.rpx-grade.is-A { background: #dff1e7; color: var(--emerald); }
+.rpx-grade.is-B { background: var(--gold-soft); color: #7c3a06; }
+.rpx-grade.is-C { background: var(--danger-soft); color: var(--danger); }
+.rpx-grade.is-none { background: var(--sand); color: var(--muted); }
+
+.rpx-note {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4f7f5;
+  border: 1px solid var(--line);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--body);
+}
+
+.rpx-note.is-warn { background: #fffaf0; border-color: #f1d9a8; color: #6b3a05; }
+.rpx-note.is-danger { background: #fff4f2; border-color: #f3c3bd; color: var(--danger); }
+
+.rpx-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.rpx-chips::-webkit-scrollbar { display: none; }
+
+.rpx-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.rpx-chip[aria-pressed='true'] {
+  background: var(--emerald);
+  border-color: var(--emerald);
+  color: #fff;
+  font-weight: 800;
+}
+
+.rpx-chip small {
+  font-size: 0.74rem;
+  opacity: 0.85;
+}
+
+.rpx-bar {
+  display: block;
+  height: 7px;
+  border-radius: 7px;
+  background: #ece7da;
+  overflow: hidden;
+}
+
+.rpx-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--emerald);
+}
+
+.rpx-empty {
+  padding: 22px 16px;
+  text-align: center;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* bottom sheet (teleported: carries the variables itself) */
+.rpx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(3, 25, 17, 0.45);
+}
+
+@media (min-width: 768px) {
+  .rpx-overlay { align-items: center; }
+}
+
+.rpx-sheet {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  background: var(--ivory);
+  color: var(--ink);
+  box-sizing: border-box;
+  animation: rpx-in 240ms ease-out;
+}
+
+@media (min-width: 768px) {
+  .rpx-sheet { border-radius: 22px; padding: 22px; }
+}
+
+.rpx-sheet h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.rpx-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #33413a;
+}
+
+.rpx-field small {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.rpx-input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border-radius: 13px;
+  border: 1.5px solid #e4ded1;
+  background: #fff;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+textarea.rpx-input {
+  min-height: 96px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.rpx-input:focus {
+  outline: none;
+  border-color: var(--emerald);
+  box-shadow: 0 0 0 3px rgba(10, 92, 64, 0.15);
+}
+
+.rpx-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@keyframes rpx-in {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpx-sheet { animation: none; }
+}

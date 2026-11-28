@@ -6,7 +6,8 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
         Kartu prestasi
       </router-link>
-      <button type="button" class="w-btn w-btn-primary" :disabled="!data" @click="print">Cetak / Simpan PDF</button>
+      <!-- printed only from the newest data (the phone may show an older copy for a moment) -->
+      <button type="button" class="w-btn w-btn-primary" :disabled="!data || refreshing" @click="print">{{ refreshing ? 'Memperbarui…' : 'Cetak / Simpan PDF' }}</button>
       <p class="w-help">Pilih "Simpan sebagai PDF" di jendela cetak untuk menyimpan ke HP. Ukuran kertas A4 tegak.</p>
     </div>
 
@@ -96,6 +97,7 @@ const res = useWaliResource(() => WALI_KEYS.prestasi(santriId, month), () => wal
 const data = computed(() => res.data.value)
 const loading = computed(() => res.loading.value)
 const loadError = computed(() => res.error.value)
+const refreshing = computed(() => res.refreshing.value)
 // oldest first, like a paper card filled day by day
 const rows = computed(() => [...(data.value?.tests || [])].reverse())
 // the parent's name (from the shared store: instant when Beranda was opened before)

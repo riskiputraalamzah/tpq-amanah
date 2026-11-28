@@ -1,7 +1,7 @@
 <template>
   <!-- "Tanda tangan saya": drawn once, stamped on every paraf (wali portal Akun, dashboard Profil) -->
-  <section class="se" aria-labelledby="se-title">
-    <h2 id="se-title" class="se-title">{{ title }}</h2>
+  <section class="se" :aria-label="title">
+    <h2 class="se-title">{{ title }}</h2>
     <p class="se-lead">{{ lead }}</p>
 
     <p v-if="loading" class="se-muted">Memuat…</p>
@@ -41,11 +41,13 @@ import { useDialog } from '@/composables/useDialog'
 import SignaturePad from './SignaturePad.vue'
 import SignatureImage from './SignatureImage.vue'
 
-defineProps({
+const props = defineProps({
   title: { type: String, default: 'Tanda tangan saya' },
   lead: { type: String, default: 'Gambar sekali saja. Setiap kali menekan Paraf, tanda tangan ini yang ditempel, lengkap dengan nama dan waktunya.' },
   name: { type: String, default: '' },
   caption: { type: String, default: 'Tercatat atas akun dan waktunya' },
+  // where the signature is kept: the person's own (/signatures/me) or the Kepala TPQ's (/signatures/kepala)
+  endpoint: { type: String, default: '/signatures/me' },
 })
 const emit = defineEmits(['changed'])
 const { ask } = useDialog()
@@ -62,7 +64,7 @@ const pad = ref(null)
 async function load() {
   loading.value = true
   try {
-    const { data } = await api.get('/signatures/me', { cache: false })
+    const { data } = await api.get(props.endpoint, { cache: false })
     saved.value = data?.signature || null
   } catch {
     saved.value = null
@@ -80,7 +82,7 @@ async function save() {
   busy.value = true
   message.value = ''
   try {
-    const { data } = await api.put('/signatures/me', draft.value)
+    const { data } = await api.put(props.endpoint, draft.value)
     saved.value = data.signature
     draft.value = null
     redraw.value = false
@@ -105,7 +107,7 @@ async function remove() {
   if (!ok) return
   busy.value = true
   try {
-    await api.delete('/signatures/me')
+    await api.delete(props.endpoint)
     saved.value = null
     isError.value = false
     message.value = 'Tanda tangan dihapus.'

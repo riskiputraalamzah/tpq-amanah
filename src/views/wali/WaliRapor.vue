@@ -22,6 +22,30 @@
         </div>
       </header>
 
+      <!-- the published rapor (Laporan Perkembangan Santri), newest first -->
+      <h2 class="w-section-title">Rapor</h2>
+      <div v-if="!published.length" class="w-card w-center empty">
+        <p class="w-help">Rapor ananda muncul di sini setelah diterbitkan TPQ. Ayah/Bunda akan dikabari lewat WhatsApp.</p>
+      </div>
+      <router-link v-for="r in published" :key="r.periodId" :to="`/wali/santri/${santriId}/rapor/${r.periodId}`" class="w-card rr">
+        <div class="rr-top">
+          <div class="rr-text">
+            <strong>{{ r.name }}</strong>
+            <span>{{ levelName(r.classId) }}<template v-if="r.publishedAt"> · terbit {{ shortDate(r.publishedAt.slice(0, 10)) }}</template></span>
+          </div>
+          <div class="rp-avg" :aria-label="`Rata-rata ${fmtN(r.average)}`">
+            <strong>{{ fmtN(r.average) }}</strong>
+            <span>{{ r.grade ? `kriteria ${r.grade}` : 'rata-rata' }}</span>
+          </div>
+        </div>
+        <div class="rr-meta">
+          <span v-if="r.rank" class="rr-chip">Ranking {{ r.rank }} dari {{ r.rankOf }}</span>
+          <span v-if="r.decisionText" class="rr-chip is-dec">{{ r.decisionText }}</span>
+          <span class="rr-chip" :class="r.signed ? 'is-ok' : 'is-warn'">{{ r.signed ? '✓ Sudah ditandatangani' : 'Belum ditandatangani' }}</span>
+        </div>
+        <span class="rr-open">Lihat rapor lengkap ›</span>
+      </router-link>
+
       <!-- riwayat jilid inside a structured card -->
       <h2 class="w-section-title">Riwayat jilid</h2>
       <section class="w-card jl-card" aria-label="Riwayat jilid">
@@ -37,11 +61,8 @@
         <p class="w-help jl-help">Tanggal diambil dari catatan KBM dan perubahan jilid oleh admin.</p>
       </section>
 
-      <!-- nilai -->
-      <h2 class="w-section-title">Nilai dari ustadz/ustadzah</h2>
-      <div v-if="!data.rapor.length" class="w-card w-center empty">
-        <p class="w-help">Belum ada nilai untuk ananda. Nilai muncul di sini setelah ustadz/ustadzah mengisinya.</p>
-      </div>
+      <!-- the old free-form Penilaian (before the Rapor module): only when there is some -->
+      <h2 v-if="data.rapor.length" class="w-section-title">Penilaian sebelumnya</h2>
       <article v-for="p in data.rapor" :key="p.id" class="w-card rp">
         <header class="rp-head">
           <div class="rp-head-text">
@@ -88,6 +109,7 @@ const longDate = (iso) => `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice
 const shortDate = (iso) => (iso ? `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1].slice(0, 3)} ${iso.slice(0, 4)}` : '')
 // scores the Indonesian way: 8,5
 const fmt = (n) => (Number.isInteger(n) ? String(n) : String(n).replace('.', ','))
+const fmtN = (n) => (n === null || n === undefined ? '–' : fmt(n))
 
 // If every criteria in a period was graded by the same teacher, show the teacher once in the header instead of repeating per row
 const commonGuru = (p) => {
@@ -108,9 +130,77 @@ const res = useWaliResource(() => WALI_KEYS.rapor(santriId), () => waliFetch.rap
 const loading = computed(() => res.loading.value)
 const loadError = computed(() => res.error.value)
 const data = computed(() => res.data.value)
+const published = computed(() => data.value?.published || [])
 </script>
 
 <style scoped>
+.rr {
+  display: grid;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.rr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rr-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rr-text strong {
+  font-size: 1.04rem;
+  font-weight: 800;
+  color: var(--w-ink);
+}
+
+.rr-text span {
+  font-size: 0.82rem;
+  color: var(--w-muted);
+}
+
+.rr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rr-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--w-emerald-soft);
+  color: var(--w-emerald);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.rr-chip.is-dec {
+  background: #fef3c7;
+  color: #7c3a0d;
+}
+
+.rr-chip.is-warn {
+  background: #fdf0d9;
+  color: #7c3a06;
+}
+
+.rr-chip.is-ok {
+  background: #dff1e7;
+  color: #0a5c40;
+}
+
+.rr-open {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--w-emerald);
+}
+
 .rp-page-head {
   margin-bottom: 6px;
 }

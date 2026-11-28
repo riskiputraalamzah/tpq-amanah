@@ -95,7 +95,8 @@ test("signature: drawn once, saved as an SVG path; also on the staff profile", (
   const pad = read("components/signature/SignaturePad.vue");
   assert.ok(has(pad, "touch-action: none"));
   const editor = read("components/signature/SignatureEditor.vue");
-  assert.ok(has(editor, "api.put('/signatures/me', draft.value)"));
+  assert.ok(has(editor, "api.put(props.endpoint, draft.value)"));
+  assert.ok(has(editor, "endpoint: { type: String, default: '/signatures/me' }"));
   const profile = read("views/dashboard/guru/ProfileView.vue");
   assert.ok(has(profile, "<SignatureEditor"));
 });

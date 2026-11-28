@@ -60,8 +60,16 @@ const point = (e) => {
   const r = canvas.value.getBoundingClientRect()
   return { x: Math.round((e.clientX - r.left) * 10) / 10, y: Math.round((e.clientY - r.top) * 10) / 10 }
 }
+// The box may change size after it appears (the page slides in, a sidebar folds, the phone turns): measure again
+// whenever it differs, so a stroke always lands where the finger is
+function ensureSize() {
+  const r = canvas.value?.getBoundingClientRect()
+  if (!r || !r.width) return
+  if (!ctx || Math.round(r.width) !== size.w || Math.round(r.height) !== size.h) setup()
+}
 function start(e) {
   e.preventDefault()
+  ensureSize()
   canvas.value.setPointerCapture?.(e.pointerId)
   drawing = [point(e)]
   strokes.value = [...strokes.value, drawing]
@@ -101,11 +109,19 @@ function clear() {
 }
 defineExpose({ clear })
 
+let observer = null
 onMounted(() => {
   setup()
-  window.addEventListener('resize', setup)
+  window.addEventListener('resize', ensureSize)
+  if (typeof ResizeObserver !== 'undefined' && canvas.value) {
+    observer = new ResizeObserver(() => ensureSize())
+    observer.observe(canvas.value)
+  }
 })
-onBeforeUnmount(() => window.removeEventListener('resize', setup))
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', ensureSize)
+  observer?.disconnect()
+})
 </script>
 
 <style scoped>
