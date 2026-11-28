@@ -10,8 +10,13 @@ import { squash, has } from "./helpers/sourceText.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const read = (rel) => squash(fs.readFileSync(path.join(here, "..", "src", rel), "utf8"));
 
-test("the layout centres a page that caps its own width", () => {
-  assert.ok(has(read("views/dashboard/DashboardLayout.vue"), ".dashboard-content > div > * { margin-inline: auto; }"));
+test("the layout centres a page that caps its own width, never the inside of the loading skeleton", () => {
+  const layout = read("views/dashboard/DashboardLayout.vue");
+  assert.ok(has(layout, ".dashboard-content > .dashboard-page > * { margin-inline: auto; }"));
+  assert.ok(!has(layout, ".dashboard-content > div > *"), "a rule on every div child reached the skeleton's blocks (narrow, then wide)");
+  assert.ok(has(layout, '<div v-show="!routeLoading" class="dashboard-page">'));
+  assert.ok(has(layout, '<PageSkeleton v-if="routeLoading" heading :stats="3" :rows="6" class="route-skeleton"'));
+  assert.ok(has(layout, ".route-skeleton { max-width: 1180px; margin-inline: auto; }"));
 });
 
 test("narrow pages are one centred column (title and content together)", () => {

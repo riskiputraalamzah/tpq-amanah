@@ -178,8 +178,9 @@
     <!-- Main Content -->
     <main class="dashboard-main">
       <div class="dashboard-content">
-        <PageSkeleton v-if="routeLoading" :stats="3" :rows="6" />
-        <div v-show="!routeLoading">
+        <!-- a page's code is still downloading: the shape of a page (title, cards, list) at a page's usual width -->
+        <PageSkeleton v-if="routeLoading" heading :stats="3" :rows="6" class="route-skeleton" label="Memuat halaman" />
+        <div v-show="!routeLoading" class="dashboard-page">
           <router-view v-slot="{ Component }">
             <!-- the old and the new page slide together; the direction follows where you are going (usePageTransition) -->
             <transition :name="pageTransition" @before-leave="onBeforeLeave">
@@ -1275,8 +1276,15 @@ onMounted(() => {
 }
 
 /* A page that caps its own width (a form, a list of contacts) sits in the middle of the work area, never stuck to the
-   left with an empty right side. Full-width pages are not affected. The leaving page of a slide sets margin 0 inline. */
-.dashboard-content > div > * {
+   left with an empty right side. Full-width pages are not affected. The leaving page of a slide sets margin 0 inline.
+   Only the page itself (.dashboard-page > *): the rule once reached the inside of the loading skeleton too, where
+   auto margins in a flex column shrank every block to a narrow strip that then jumped to full width. */
+.dashboard-content > .dashboard-page > * {
+  margin-inline: auto;
+}
+
+.route-skeleton {
+  max-width: 1180px;
   margin-inline: auto;
 }
 

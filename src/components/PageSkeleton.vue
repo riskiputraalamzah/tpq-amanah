@@ -2,6 +2,12 @@
   <div class="page-skeleton" role="status" aria-busy="true">
     <span class="ps-sr-only">{{ label }}</span>
 
+    <!-- the page's title and its line under it -->
+    <div v-if="heading" class="ps-heading" aria-hidden="true">
+      <span class="ps-bone ps-title"></span>
+      <span class="ps-bone ps-subtitle"></span>
+    </div>
+
     <div v-if="stats > 0" class="ps-stats" aria-hidden="true">
       <div v-for="i in stats" :key="i" class="ps-surface ps-stat">
         <span class="ps-bone ps-avatar"></span>
@@ -65,6 +71,7 @@ defineProps({
   rows: { type: Number, default: 5 },
   stats: { type: Number, default: 0 },
   label: { type: String, default: 'Memuat data' },
+  heading: { type: Boolean, default: false },
 })
 </script>
 
@@ -83,6 +90,23 @@ defineProps({
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.ps-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.25rem 0 0.5rem;
+}
+
+.ps-title {
+  width: min(320px, 70%);
+  height: 1.9rem;
+}
+
+.ps-subtitle {
+  width: min(520px, 90%);
+  height: 0.9rem;
 }
 
 .ps-surface {
@@ -169,6 +193,17 @@ defineProps({
 .ps-w-60 { width: 60%; }
 .ps-w-80 { width: 80%; }
 .ps-w-100 { width: 100%; }
+
+/* a phone: two stat cards a row; an odd last one takes the whole row instead of sitting alone on the left */
+@media (max-width: 560px) {
+  .ps-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ps-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
 
 @keyframes ps-shimmer {
   0% { background-position: 200% 0; }
